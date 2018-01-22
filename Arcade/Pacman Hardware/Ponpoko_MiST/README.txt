@@ -1,0 +1,24 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: Ponpoko for MiST by Gehstock
+-- 21 November 2017
+-- 
+---------------------------------------------------------------------------------
+-- A simulation model of Pacman hardware
+-- Copyright (c) MikeJ - Feb 2007
+---------------------------------------------------------------------------------
+-- 
+--
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   ESC         : Coin
+--   F1          : Start 1 player
+--   F2          : Start 2 players
+--   SPACE,CTRL  : Jump
+--   UP,DOWN,LEFT,RIGHT arrows : Movements
+--
+-- Joystick support.
+-- 
+---------------------------------------------------------------------------------
