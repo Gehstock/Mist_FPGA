@@ -92,7 +92,6 @@ wire [7:0]RAM_DO;
 //Color RAM
 wire [3:0]COL_DI;
 wire [3:0]COL_DO;
-wire [3:0]COL_rDO;
 //SID
 wire [7:0]SID_DO;
 //CARD
@@ -192,9 +191,11 @@ cpu_6510 U5 (
 //PLA	MOS6703
 pla_6703 pla_6703 (
 	.A(ADDR_BUS[15:10]),
+	.DI(),// Color Data
+	.DO(),// DataBUS
 	.CLK(clk_cpu),
 	.BA(BA),
-	.RW_IN(~RW),
+	.RW_IN(RW),
 	.RAM(nRAM), 						//invert
 	.EXRAM(nEXTRAM), 					//invert
 	.VIC(nVIC),  						//invert
@@ -204,32 +205,8 @@ pla_6703 pla_6703 (
 	.ROML(nROML),  					//invert
 	.ROMH(nROMH), 						//invert
 	.BUF(BUF),							//not invert
-	.RW_OUT(nRW_PLA)  					//invert
+	.RW_OUT(nRW_PLA)  				//invert
 	);	
-
-	
-always@(posedge clk_cpu) begin
-	if (~nRW_PLA) begin
-		if (~nRAM) begin 
-			RAM_DO =CPU_DI;
-		if (~nVIC) begin 
-			VIC_DO =CPU_DI;
-		end
-		end
-	end
-	if (~RW) begin
-		if (~nSID) begin 
-			SID_DO =CPU_DI;
-		end
-	//	if (~nCARD) begin 
-//			CARD_DO =CPU_DI;
-//		end
-		if (~nCIA_PLA) begin 
-			CIA_DO =CPU_DI;
-		end		
-	end
-	COL_DO = COL_rDO ? (BUF & ~nCOLRAM) : 4'b0;
-end	
 
 
 
@@ -240,7 +217,7 @@ COLRAM U11 (
 	.data(CPU_DO),
 	.rden(~nCOLRAM),
 	.wren(~nRW_PLA),
-	.q(COL_rDO)
+	.q(COL_DO)
 	);
 
 //MAINRAM 2048x8
