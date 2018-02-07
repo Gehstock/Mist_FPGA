@@ -36,7 +36,7 @@ The Z1013 core was developed and sucessfully tested with ARM firmware version AT
 ## Supported features
 
 Z1013.01:
-- 32 kByte RAM (0000h - 3FFFh)
+- 32 kByte RAM (0000h - 7FFFh)
 - 1 kByte video RAM (EC00h - EFFFh)
 - 2 kByte ROM (F000h - F7FFh), Riesa monitor 2.02
 - keyboard mapping from PS/2 scancodes to 8x4 matrix
