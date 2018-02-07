@@ -1,0 +1,97 @@
+Here is a list of games that will start on mist-Z1013.
+Sometimes there are problems with keyboard if you type too fast.
+Some games contain a basic interpreter, if you got 'READY>', just type RUN.
+The games will start automatically, if loaded from monitor prompt, otherwise use '''J <startaddress''' to jump in.
+The start address is shown on top of screen on loading.
+
+filename                start command
+--------                -------------
+aladin.z80              J 800
+alf.z80                 J 100
+auto_laby(900).z80      J 800
+boulderdash_1_0.z80     J 1500
+chess-master.z80        J 3450
+demolation.z80          J B50
+eidechse_a_2.z80        J 103
+encounter.z80           J 100
+fighter_ls.z80          J 100
+galactica.z80           J 200
+geisterfahrer.z80       J 103
+ghost+voice.z80         J 200
+gost_hut.z80            J 200
+graverobber.z80         J 2810 
+hindernislauf.z80       J 103
+huby_flie.z80           J 100
+irrgarten.z80           J 200 
+knossost_[b].z80        J 103
+kraftfeld.z80           J 100
+labyrinth.z80           J E50
+labyrinth1.z80          J 645
+last_chance_iii.z80     J 106
+mauer.z80               J 100
+mazog_deutsch.z80       J 400
+minefiled.z80           J 100
+mondbasis.z80           J 1000
+new_york.z80            J 100
+ohio_judith.z80         J 100
+ohne_fleiss_k_pr.z80    J 100
+pyramide.z80            J 900
+reaktor.z80             J 100
+river_raid_ls.z80       J 100
+schach.z80              J 2000
+schiessbude_1_0.z80     J 100
+solo_commotion.z80      J 100
+turtle_player.z80       J 100
+uboot.z80               J 200
+univers.z80             J 200
+vampi.z80               J 1000
+vampir_f1.z80           J 100
+
+
+programs working with joystick (practic 1/88):
+
+ALADIN+J.z80            J 800
+AUTO+J.z80              J 1520
+C.SUPERSKI_m.PIO.z80    J 100
+HINDERNISLAUF+J.z80     J 51B
+Labirinto.z80           J 100
+encounter+prJ.z80       J 2C20
+fighter+prJ.z80         J 3FF0
+galaktika+prJ.z80       J 1200
+galaxis+prJ.z80         J CF0
+ghost_hut+j.z80         J 200
+jumping_jack+prJ.z80    J DC0
+laby_prJ.z80            J 7F9
+mauer+prJ.z80           J 100
+mazog+j.z80             J 2004
+vampir+prJ.z80          J 1521
+wall+prJ.z80            J 32D0
+
+
+programs working with joystick (ju+te 6/87):
+
+Labirinto.z80           J 100
+aladin.z80              J 800
+galactica.z80           J 200
+labyrinth.z80           J E50
+
+
+
+not working files       remark
+-----------------       ------
+C.ALADIN_J+T-JOYST.z80  need more RAM
+C.FUSSGAENGER.z80       no reaction on key or joystick
+heartrunner__bro.z80    no load
+kings_valley_bro.z80    need more RAM
+ladder_8_4.z80          need more RAM
+ladder_prJ.z80          need more RAM
+miami.z80               didn't start
+miami+prJ.z80           didn't start
+pilot.z80               need more RAM
+ping-pong.z80           need more RAM
+spiele_1.z80            need more RAM
+super_dame.z80          need more RAM
+voice_dice.z80          need more RAM
+wizard_of_danger.z80    need more RAM
+wall+j.z80              diffrent joystick mapping on PIO A
+
