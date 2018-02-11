@@ -1,0 +1,13 @@
+{ "" "" "" "Verilog HDL or VHDL warning at vectrex.vhd(417): conditional expression evaluates to a constant" {  } {  } 0 10037 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL Signal Declaration warning at vectrex.vhd(126): used implicit default value for signal \"video_csync\" because signal was never assigned a value or an explicit default value. Use of implicit default value may introduce unintended design optimizations." {  } {  } 0 10541 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10235 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 14284 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10873 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10541 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10492 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 13004 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 13024 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 15705 "" 0 0 "Quartus II" 0 -1 0 ""}
