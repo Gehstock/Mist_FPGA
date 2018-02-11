@@ -28,7 +28,7 @@ localparam CONF_STR = {
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [9:0] kbjoy;
+wire  [7:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        ypbpr;
@@ -40,12 +40,12 @@ wire 			hs, vs, cs;
 wire  [3:0] r, g, b;
 wire       	blankn;
 wire 			cart_rd;
-wire [14:0] cart_addr;
+wire [13:0] cart_addr;
 wire  [7:0] cart_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
-wire [14:0] ioctl_addr;
+wire [13:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 
@@ -76,7 +76,7 @@ card card (
 	.clock			( cpu_clock		),
 	.address			( ioctl_downl ? ioctl_addr : cart_addr),//16kb only for now
 	.data				( ioctl_dout	),
-	.rden				( !ioctl_downl && cart_rd),
+	.clken			( !ioctl_downl && cart_rd),
 	.wren				( ioctl_downl && ioctl_wr),
 	.q					( cart_do		)
 	);
@@ -89,7 +89,7 @@ vectrex vectrex (
 	.video_r			( r				),
 	.video_g			( g				),
 	.video_b			( b				),
-	.video_csync	(					),
+	.video_csync	( cs				),
 	.video_blankn	( blankn			),
 	.video_hs		( hs				),
 	.video_vs		( vs				),
@@ -121,16 +121,16 @@ dac dac (
 	);
 assign AUDIO_R = AUDIO_L;
 
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer (
+video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(0)) video_mixer (
 	.clk_sys			( clk_25			),
 	.ce_pix			( clk_6p25		),
 	.ce_pix_actual	( clk_6p25		),
 	.SPI_SCK			( SPI_SCK		),
 	.SPI_SS3			( SPI_SS3		),
 	.SPI_DI			( SPI_DI			),
-	.R					( blankn ? r : "0000"),
-	.G					( blankn ? g : "0000"),
-	.B					( blankn ? b : "0000"),
+	.R					( blankn ? {r,r[1:0]} : "000000"),
+	.G					( blankn ? {g,g[1:0]} : "000000"),
+	.B					( blankn ? {b,b[1:0]} : "000000"),
 	.HSync			( hs				),
 	.VSync			( vs				),
 	.VGA_R			( VGA_R			),
