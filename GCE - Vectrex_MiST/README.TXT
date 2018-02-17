@@ -1,12 +1,14 @@
 
 GCE(General Consumer Electronics) - Vectrex For Mist FPGA
 
+Max 16kb Roms supported
+
 Controls:
  Movement: 	Joystick, Keyboard(Arrow Keys)
  Buttons: 	1-2 on Joystick Fire Buttons
 		1-4 on Keyboard 1-4
 
-ToDo: Fix Rom Loader
+ToDo: Fix Reset
 
 
 

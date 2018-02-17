@@ -45,7 +45,7 @@ wire  [7:0] cart_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
-wire [13:0] ioctl_addr;
+wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 
@@ -73,10 +73,10 @@ pll pll (
 	);
 
 card card (
-	.clock			( cpu_clock		),
-	.address			( ioctl_downl ? ioctl_addr : cart_addr),//16kb only for now
+	.clock			( clk_25		),
+	.address			( ioctl_downl ? ioctl_addr : cart_addr),
 	.data				( ioctl_dout	),
-	.clken			( !ioctl_downl && cart_rd),
+	.rden				( !ioctl_downl && cart_rd),
 	.wren				( ioctl_downl && ioctl_wr),
 	.q					( cart_do		)
 	);
@@ -97,16 +97,16 @@ vectrex vectrex (
 	.cart_addr		( cart_addr		),
 	.cart_do			( cart_do		),
 	.cart_rd			( cart_rd		),	
-	.rt_1				( joystick_0[4] | joystick_1[4] | kbjoy[4]),//1
-	.lf_1				( joystick_0[5] | joystick_1[5] | kbjoy[5]),//2
-	.dn_1				( kbjoy[6]		),//3
-	.up_1				( kbjoy[7]		),//4
+	.btn11			( joystick_0[4] | joystick_1[4] | kbjoy[4]),
+	.btn12			( joystick_0[5] | joystick_1[5] | kbjoy[5]),
+	.btn13			( kbjoy[6]		),
+	.btn14			( kbjoy[7]		),
 	.pot_x_1			( pot_x			),
 	.pot_y_1			( pot_y			),
-	.rt_2				( joystick_0[4] | joystick_1[4] | kbjoy[4]),//1
-	.lf_2				( joystick_0[5] | joystick_1[5 ] | kbjoy[5]),//2
-	.dn_2				( kbjoy[6]		),//3
-	.up_2				( kbjoy[7]		),//4
+	.btn21			( joystick_0[4] | joystick_1[4] | kbjoy[4]),
+	.btn22			( joystick_0[5] | joystick_1[5] | kbjoy[5]),
+	.btn23			( kbjoy[6]		),
+	.btn24			( kbjoy[7]		),
 	.pot_x_2			( pot_x			),
 	.pot_y_2			( pot_y			),
 	.leds				(					),
@@ -121,16 +121,16 @@ dac dac (
 	);
 assign AUDIO_R = AUDIO_L;
 
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(0)) video_mixer (
+video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer (
 	.clk_sys			( clk_25			),
 	.ce_pix			( clk_6p25		),
 	.ce_pix_actual	( clk_6p25		),
 	.SPI_SCK			( SPI_SCK		),
 	.SPI_SS3			( SPI_SS3		),
 	.SPI_DI			( SPI_DI			),
-	.R					( blankn ? {r,r[1:0]} : "000000"),
-	.G					( blankn ? {g,g[1:0]} : "000000"),
-	.B					( blankn ? {b,b[1:0]} : "000000"),
+	.R					( blankn ? r : "0000"),
+	.G					( blankn ? g : "0000"),
+	.B					( blankn ? b : "0000"),
 	.HSync			( hs				),
 	.VSync			( vs				),
 	.VGA_R			( VGA_R			),

@@ -128,23 +128,21 @@ port
 	audio_out    : out std_logic_vector(9 downto 0);
 	cart_addr    : out std_logic_vector(13 downto 0);
 	cart_do      : in std_logic_vector( 7 downto 0);
-	cart_rd     : out std_logic;	
-	up_1      : in std_logic;
-	dn_1      : in std_logic;
-	lf_1      : in std_logic;
-	rt_1      : in std_logic;
-	pot_x_1   : in signed(7 downto 0);
-	pot_y_1   : in signed(7 downto 0);
-
-	up_2      : in std_logic;
-	dn_2      : in std_logic;
-	lf_2      : in std_logic;
-	rt_2      : in std_logic;
-	pot_x_2   : in signed(7 downto 0);
-	pot_y_2   : in signed(7 downto 0);
-
-	leds : out std_logic_vector(9 downto 0);	
-	dbg_cpu_addr: out std_logic_vector(15 downto 0)
+	cart_rd      : out std_logic;	
+	btn11        : in std_logic;
+	btn12        : in std_logic;
+	btn13        : in std_logic;
+	btn14        : in std_logic;
+	pot_x_1      : in signed(7 downto 0);
+	pot_y_1      : in signed(7 downto 0);
+	btn21        : in std_logic;
+	btn22        : in std_logic;
+	btn23      	 : in std_logic;
+	btn24        : in std_logic;
+	pot_x_2      : in signed(7 downto 0);
+	pot_y_2      : in signed(7 downto 0);
+	leds 			 : out std_logic_vector(9 downto 0);	
+	dbg_cpu_addr : out std_logic_vector(15 downto 0)
   );
 end vectrex;
 
@@ -369,7 +367,7 @@ via_pa_i <= ay_do;
 via_pb_i <= "00"&compare&"00000";
 
 -- players controls
-players_switches <= not(rt_2&lf_2&dn_2&up_2&rt_1&lf_1&dn_1&up_1);
+players_switches <= not(btn24&btn23&btn22&btn21&btn14&btn13&btn12&btn11);
 
 with dac_mux select
 pot <= pot_x_1 when "00",
