@@ -8,7 +8,7 @@ Controls:
  Buttons: 	1-2 on Joystick Fire Buttons
 		1-4 on Keyboard 1-4
 
-ToDo: Fix Reset
+ToDo: Fix Reset( hangs sometimes)
 
 
 
