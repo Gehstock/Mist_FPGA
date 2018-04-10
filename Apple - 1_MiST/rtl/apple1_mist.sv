@@ -17,7 +17,7 @@ module apple1_mist(
 
 );
 
-//`include "src\build_id.v" 
+`include "rtl\build_id.v" 
 
 localparam CONF_STR = {
 	"APPLE 1;;",
@@ -33,14 +33,9 @@ wire hs, vs;
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] kbjoy;
-
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
 wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
-wire  [15:0] audiol, audior;
 assign LED = 1;
 
 wire RESET;
@@ -93,7 +88,7 @@ video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
 	.hq2x(status[4:3]==1),
 	.ypbpr_full(1),
 	.line_start(0),
-	.mono(0)
+	.mono(1)
 );
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
@@ -111,8 +106,6 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.ypbpr          (ypbpr          ),
 	.ps2_kbd_clk    (ps2_kbd_clk    ),
 	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joystick_0     ),
-	.joystick_1     (joystick_1     ),
 	.status         (status         )
 );
 
