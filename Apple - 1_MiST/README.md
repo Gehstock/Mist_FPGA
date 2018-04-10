@@ -1,7 +1,11 @@
-![Apple One](media/apple-logo.png)
 
 
 Mist Port of a Apple 1 totally untestet
+
+
+
+
+
 
 This is a basic implementation of the original Apple 1 in Verilog. It can run the Apple 1 WozMon and Integer Basic via the serial or VGA 640x480 video with PS/2 keyboard standalone. This makes this a very compact little set up. So far fully tested and supported boards are:
 - [iCE40HX8K-B-EVN breakout](http://www.latticesemi.com/Products/DevelopmentBoardsAndKits/iCE40HX8KBreakoutBoard.aspx)
@@ -14,9 +18,6 @@ Contributor supported boards (YMMV):
 - [TinyFPGA B2](http://tinyfpga.com/)
 - [Upduino](http://gnarlygrey.atspace.cc/development-platform.html)
 
-<p align="center">
- <img src="media/apple-one.png" alt="Apple One Running">
-</p>
 
 This project borrows heavily from the *awesome* work of Andrew Holme and his ["Pool"](http://www.aholme.co.uk/6502/Main.htm) project and [Arlet Otten's](https://github.com/Arlet/verilog-6502) tiny 6502 core. Also many special thanks to ["sbprojects.com"](https://www.sbprojects.com/projects/apple1/index.php) for the wealth of information I gleaned from there.
 
