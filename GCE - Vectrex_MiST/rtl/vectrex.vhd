@@ -124,7 +124,7 @@ port
 	video_vs     : out std_logic;
 	video_blankn : out std_logic;
 	video_csync  : out std_logic;
-	
+	frame		    : out std_logic;
 	audio_out    : out std_logic_vector(9 downto 0);
 	cart_addr    : out std_logic_vector(13 downto 0);
 	cart_do      : in std_logic_vector( 7 downto 0);
@@ -300,6 +300,27 @@ architecture syn of vectrex is
  signal pot     : signed(7 downto 0);
  signal compare : std_logic;
  signal players_switches : std_logic_vector(7 downto 0);
+ 
+ component ym2149 is port
+(
+	CLK       : in  std_logic;
+	CE        : in  std_logic;
+	RESET     : in  std_logic;
+	BDIR      : in  std_logic;
+	BC        : in  std_logic;
+	DI        : in  std_logic_vector(7 downto 0);
+	DO        : out std_logic_vector(7 downto 0);
+	CHANNEL_A : out std_logic_vector(7 downto 0);
+	CHANNEL_B : out std_logic_vector(7 downto 0);
+	CHANNEL_C : out std_logic_vector(7 downto 0);
+	SEL       : in  std_logic;
+	MODE      : in  std_logic;
+	IOA_in    : in  std_logic_vector(7 downto 0);
+	IOA_out   : out std_logic_vector(7 downto 0);
+	IOB_in    : in  std_logic_vector(7 downto 0);
+	IOB_out   : out std_logic_vector(7 downto 0)
+);
+end component ym2149;
  
 begin
 
@@ -636,22 +657,8 @@ end process;
 video_blankn <= not (hblank or vblank);
 
 scan_video_addr <= vcnt_video * std_logic_vector(to_unsigned(max_h,10)) + hcnt_video;
-		
--- sound	
-process (cpu_clock)
-begin
-	if rising_edge(cpu_clock) then
-		if ay_audio_chan = "00" then ay_chan_a <= ay_audio_muxed; end if;
-		if ay_audio_chan = "01" then ay_chan_b <= ay_audio_muxed; end if;
-		if ay_audio_chan = "10" then ay_chan_c <= ay_audio_muxed; end if;
-	end if;	
-end process;
-
-audio_out <= 	("00"&ay_chan_a) +
-					("00"&ay_chan_b) +
-					("00"&ay_chan_c) +
-					("00"&dac_sound);
 	
+frame <= frame_line;	
 ---------------------------
 -- components
 ---------------------------			
@@ -660,6 +667,7 @@ audio_out <= 	("00"&ay_chan_a) +
 main_cpu : entity work.cpu09
 port map(	
 	clk      => cpu_clock,-- E clock input (falling edge)
+	ce			=> '1',
 	rst      => reset,    -- reset input (active high)
 	vma      => open,     -- valid memory address (active high)
    lic_out  => open,     -- last instruction cycle (active high)
@@ -674,8 +682,8 @@ port map(
 	irq      => cpu_irq,  -- interrupt request input (active high)
 	firq     => cpu_firq, -- fast interrupt request input (active high)
 	nmi      => '0',      -- non maskable interrupt request input (active high)
-	halt     => '0',      -- halt input (active high) grants DMA
-	hold_in  => '0'       -- hold input (active high) extend bus cycle
+	halt     => '0'--,      -- halt input (active high) grants DMA
+--	hold_in  => '0'       -- hold input (active high) extend bus cycle
 );
 
 		
@@ -768,36 +776,31 @@ port map(
  ENA_4           => via_en_4      -- 4x system clock (4HZ)   _-_-_-_-_-
 );
 
+
+
 -- AY-3-8910
-ay_3_8910_2 : entity work.YM2149
-port map(
-  -- data bus
-  I_DA       => via_pa_o,    -- in  std_logic_vector(7 downto 0);
-  O_DA       => ay_do,     -- out std_logic_vector(7 downto 0);
-  O_DA_OE_L  => open,      -- out std_logic;
-  -- control
-  I_A9_L     => '0',       -- in  std_logic;
-  I_A8       => '1',       -- in  std_logic;
-  I_BDIR     => via_pb_o(4),  -- in  std_logic;
-  I_BC2      => '1',       -- in  std_logic;
-  I_BC1      => via_pb_o(3),   -- in  std_logic;
-  I_SEL_L    => '0',       -- in  std_logic;
-
-  O_AUDIO    => ay_audio_muxed, -- out std_logic_vector(7 downto 0);
-  O_CHAN     => ay_audio_chan,  -- out std_logic_vector(1 downto 0);
-  
-  -- port a
-  I_IOA      => players_switches, -- in  std_logic_vector(7 downto 0);
-  O_IOA      => open,            -- out std_logic_vector(7 downto 0);
-  O_IOA_OE_L => open,            -- out std_logic;
-  -- port b
-  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
-  O_IOB      => open,            -- out std_logic_vector(7 downto 0);
-  O_IOB_OE_L => open,            -- out std_logic;
-
-  ENA        => '1', --cpu_ena,         -- in  std_logic; -- clock enable for higher speed operation
-  RESET_L    => reset_n,        -- in  std_logic;
-  CLK        => cpu_clock        -- in  std_logic  -- note 6 Mhz
+ym2149_inst : ym2149
+port map
+(
+	CLK       => cpu_clock,
+	CE        => '1',
+	RESET     => reset,
+	BDIR      => via_pb_o(4),
+	BC        => via_pb_o(3),
+	DI        => via_pa_o,
+	DO        => ay_do,
+	CHANNEL_A => ay_chan_a,
+	CHANNEL_B => ay_chan_b,
+	CHANNEL_C => ay_chan_c,
+	SEL       => '0',
+	MODE      => '0',
+	IOA_in    => players_switches,
+	IOB_in    => (others => '0')
 );
+
+audio_out <= 	("00"&ay_chan_a) +
+					("00"&ay_chan_b) +
+					("00"&ay_chan_c) +
+					("00"&dac_sound);
 
 end SYN;

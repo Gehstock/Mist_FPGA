@@ -5,10 +5,20 @@ Max 16kb Roms supported
 
 Controls:
  Movement: 	Joystick, Keyboard(Arrow Keys)
- Buttons: 	1-2 on Joystick Fire Buttons
-		1-4 on Keyboard 1-4
+ Buttons: 	1-4 on Joystick Fire Buttons
+		(Player 1) 1-4 on Keyboard 1-4 and WASD
+		(Player 2) NUM, /, *, - on Numpad and Arrow Keys
 
-ToDo: Fix Reset( hangs sometimes)
+ToDo: Reset (hold Button longer for a Correct Reset)
+
+
+
+
+
+
+
+
+
 
 
 
