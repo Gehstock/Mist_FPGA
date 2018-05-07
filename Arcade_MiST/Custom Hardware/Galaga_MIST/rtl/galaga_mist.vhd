@@ -1,37 +1,3 @@
----------------------------------------------------------------------------------
--- Mist FPGA Top level for Galaga Midway by Gehstock. Original DE2 Toplevel by Dar (darfpga@aol.fr) (December 2016)
--- http://darfpga.blogspot.fr
----------------------------------------------------------------------------------
--- Educational use only
--- Do not redistribute synthetized file with roms
--- Do not redistribute roms whatever the form
--- Use at your own risk
----------------------------------------------------------------------------------
---
--- Main features :
---  PS2 keyboard input
---  Joystick input
---  Sigma Delta sound output
---  NO board SRAM/Flash used
---
--- Uses 1 pll for 18MHz, 11MHz and 14khz generation from 27MHz
---
--- Board key :
---      0 : reset
---
--- Keyboard inputs :
---   ESC : Add coin
---   1 : Start 1 player
---   2 : Start 2 players
---   SPACE       : Fire player 1 & 2
---   UP arrow : Move right player 1 & 2
---   DOWN arrow  : Move left player 1 & 2
---
--- Dip switch and other details : see galaga.vhd
-
----------------------------------------------------------------------------------
-
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.ALL;
@@ -235,8 +201,8 @@ galaga : entity work.galaga
 		pix_ce       => pix_ce,
 
 		audio        => audio,
-		b_test       => '0', --no Function at all
-		b_svce       => '0', --no Function at all 
+		b_test       => '0',
+		b_svce       => '0',
 		coin         => kbd_joy(3) or status(1),
 		start1       => kbd_joy(1) or status(2),
 		start2       => kbd_joy(2) or status(3), 
@@ -248,9 +214,9 @@ galaga : entity work.galaga
 		fire2        => joy0(4) or joy1(4) or kbd_joy(0)
 );
 
-VGA_R_O <= r        when blankn = '1' else "000";
-VGA_G_O <= g        when blankn = '1' else "000";
-VGA_B_O <= b & b(1) when blankn = '1' else "000";
+VGA_R_O <= r        	when blankn = '1' else "000";
+VGA_G_O <= g        	when blankn = '1' else "000";
+VGA_B_O <= b&b(1) 	when blankn = '1' else "000";
 
 u_dac : entity work.dac
 	port  map(

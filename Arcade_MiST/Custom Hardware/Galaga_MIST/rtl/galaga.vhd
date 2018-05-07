@@ -17,8 +17,13 @@
 -- Do not redistribute roms whatever the form
 -- Use at your own risk
 ---------------------------------------------------------------------------------
------------------
 -- Galaga releases
+--
+-- Release 0.3 - 06/05/2018 - Dar
+--    add mb88 explosion sound ship 
+--
+-- Release 0.2 - 06/11/2017 - Dar
+--    fixes twice bullets on single shot => add edge detection en fire
 --
 -- Release 0.1 - 04/11/2017 - Dar
 --		fixes 2 ships bullet bug (swap 2xH/2xV command bits)
@@ -29,14 +34,14 @@
 --  Features :
 --   TV 15KHz mode only (atm)
 --   Coctail mode ok
---   Sound ok, Ship explode missing (custom chip 0x54XX todo)
+--   Sound ok
 --   Starfield from MAME information  
 
 --  Use with MAME roms from galagamw.zip
 --
 --  Use make_galaga_proms.bat to build vhd file from binaries
 
--- 	 galaga_cpu1.vhd   : 3200a.bin, 3300b.bin, 3400c.bin,3500d.bin, 
+--   galaga_cpu1.vhd   : 3200a.bin, 3300b.bin, 3400c.bin,3500d.bin, 
 --   galaga_cpu2.vhd   : 3600e.bin
 --   galaga_cpu3.vhd   : 3700g.bin
 --   bg_graphx.vhd     : 2600j.bin
@@ -77,7 +82,7 @@
 --      simplified emulation in vhdl : 1coin/1credit, 1 or 2 players start
 --
 --    Namco 54XX for sound effects 
---      no emulation in vhdl atm
+--      m88 ok
 --
 --    Namco sound waveform and frequency synthetizer
 --      full original emulation in vhdl
@@ -99,14 +104,15 @@ use ieee.numeric_std.all;
 
 entity galaga is
 port(
- clock_18       : in std_logic;
- reset          : in std_logic;
+ clock_18     : in std_logic;
+ reset        : in std_logic;
+-- tv15Khz_mode : in std_logic;
  video_r        : out std_logic_vector(2 downto 0);
  video_g        : out std_logic_vector(2 downto 0);
  video_b        : out std_logic_vector(1 downto 0);
- video_hs       : out std_logic;
- video_vs       : out std_logic;
  video_blankn   : out std_logic;
+ video_hs     : out std_logic;
+ video_vs     : out std_logic;
  pix_ce         : out std_logic;
  audio          : out std_logic_vector(9 downto 0);
 
@@ -125,7 +131,6 @@ port(
 end galaga;
 
 architecture struct of galaga is
-
  signal reset_n: std_logic;
  signal clock_18n : std_logic;
 
@@ -144,7 +149,7 @@ architecture struct of galaga is
  signal cpu1_mreq_n : std_logic;
  signal cpu1_irq_n  : std_logic;
  signal cpu1_nmi_n  : std_logic;
-
+ signal cpu1_m1_n   : std_logic;
 
  signal cpu2_addr   : std_logic_vector(15 downto 0);
  signal cpu2_di     : std_logic_vector( 7 downto 0);
@@ -152,7 +157,7 @@ architecture struct of galaga is
  signal cpu2_wr_n   : std_logic;
  signal cpu2_mreq_n : std_logic;
  signal cpu2_irq_n : std_logic;
-
+ signal cpu2_m1_n   : std_logic;
  
  signal cpu3_addr   : std_logic_vector(15 downto 0);
  signal cpu3_di     : std_logic_vector( 7 downto 0);
@@ -160,7 +165,7 @@ architecture struct of galaga is
  signal cpu3_wr_n   : std_logic;
  signal cpu3_mreq_n : std_logic;
  signal cpu3_nmi_n  : std_logic;
-
+ signal cpu3_m1_n   : std_logic;
 
  signal bgtile_addr : std_logic_vector(15 downto 0);
  signal sprite_addr : std_logic_vector(15 downto 0);
@@ -191,10 +196,10 @@ architecture struct of galaga is
  signal cs06XX_do      : std_logic_vector( 7 downto 0);
  signal cs06XX_di      : std_logic_vector( 7 downto 0);
 
- signal cs51XX_data_cnt           : std_logic_vector( 1 downto 0);
- signal cs51XX_coin_mode_cnt      : std_logic_vector( 2 downto 0);
- signal cs51XX_switch_mode        : std_logic;
- signal cs51XX_credit_mode        : std_logic;
+ signal cs51XX_data_cnt           : std_logic_vector( 1 downto 0) := "00";
+ signal cs51XX_coin_mode_cnt      : std_logic_vector( 2 downto 0) := "000";
+ signal cs51XX_switch_mode        : std_logic := '0';
+ signal cs51XX_credit_mode        : std_logic := '1';
  signal cs51XX_do                 : std_logic_vector( 7 downto 0);
  signal cs51XX_switch_mode_do     : std_logic_vector( 7 downto 0);
  signal cs51XX_non_switch_mode_do : std_logic_vector( 7 downto 0);
@@ -202,8 +207,23 @@ architecture struct of galaga is
  signal credit_bcd_0              : std_logic_vector( 3 downto 0);
  signal credit_bcd_1              : std_logic_vector( 3 downto 0);
  
- signal cs54XX_cmd        : std_logic_vector( 3 downto 0);
- signal cs54XX_do         : std_logic_vector( 7 downto 0);
+-- signal cs54xx_cmd        : std_logic_vector( 3 downto 0);
+ signal cs54xx_do         : std_logic_vector( 7 downto 0);
+ 
+ signal cs54xx_ena      : std_logic;
+ signal cs54xx_ena_div  : std_logic_vector(2 downto 0) := "000";
+ signal cs5Xxx_rw       : std_logic;
+ 
+ signal cs54xx_rom_addr : std_logic_vector(10 downto 0); 
+ signal cs54xx_rom_do   : std_logic_vector( 7 downto 0); 
+ 
+ signal cs54xx_irq_n      : std_logic := '1'; 
+ signal cs54xx_irq_cnt    : std_logic_vector( 3 downto 0); 
+ signal cs54xx_k_port_in  : std_logic_vector( 3 downto 0); 
+ signal cs54xx_r0_port_in : std_logic_vector( 3 downto 0); 
+ signal cs54xx_audio_1    : std_logic_vector( 3 downto 0); 
+ signal cs54xx_audio_2    : std_logic_vector( 3 downto 0); 
+ signal cs54xx_audio_3    : std_logic_vector( 3 downto 0); 
 
  signal cs05XX_ctrl       : std_logic_vector( 5 downto 0);
  
@@ -218,7 +238,7 @@ architecture struct of galaga is
  signal bggraphx_addr  : std_logic_vector(11 downto 0);
  signal bggraphx_do    : std_logic_vector( 7 downto 0);
  signal bgpalette_addr : std_logic_vector( 7 downto 0);
- signal bgpalette_do   : std_logic_vector( 3 downto 0); 
+ signal bgpalette_do   : std_logic_vector( 7 downto 0); 
  signal bgbits         : std_logic_vector( 3 downto 0);
 
  signal rgb_palette_addr : std_logic_vector( 4 downto 0);
@@ -239,7 +259,7 @@ architecture struct of galaga is
  signal spgraphx_addr  : std_logic_vector(12 downto 0);
  signal spgraphx_do    : std_logic_vector(7 downto 0);
  signal sppalette_addr : std_logic_vector(7 downto 0);
- signal sppalette_do   : std_logic_vector(3 downto 0); 
+ signal sppalette_do   : std_logic_vector(7 downto 0); 
  signal spbits_wr      : std_logic_vector(3 downto 0);
  signal spbits_rd      : std_logic_vector(3 downto 0);
  signal spflip_V ,spflip_H  : std_logic;
@@ -282,13 +302,19 @@ architecture struct of galaga is
 
  signal snd_ram_0_we : std_logic;
  signal snd_ram_1_we : std_logic;
+ signal snd_audio    : std_logic_vector(9 downto 0);
 
  signal coin_r   : std_logic;
  signal start1_r : std_logic;
  signal start2_r : std_logic;
+ 
+ signal fire1_r   : std_logic;
+ signal fire2_r   : std_logic;
+ signal fire1_mem : std_logic;
+ signal fire2_mem : std_logic;
+ 
 
 begin
-
 pix_ce <= ena_vidgen;
 clock_18n <= not clock_18;
 reset_n   <= not reset;
@@ -297,6 +323,10 @@ dip_switch_a <= "11110111"; --  cab:7 / na:6 / test:5 / freeze:4 / demo sound:3 
 dip_switch_b <= "10010111"; --lives:7-6/ bonus:5-3 / coinage:2-0
 dip_switch_do <= 	dip_switch_a(to_integer(unsigned(mux_addr(3 downto 0)))) & 
 									dip_switch_b(to_integer(unsigned(mux_addr(3 downto 0))));
+
+audio <= ("00" & cs54xx_audio_1 &  "0000" ) + ("00" & cs54xx_audio_2 &  "0000" )+ ('0'&snd_audio(9 downto 1));
+--audio <= ("00" & cs54xx_audio_1 &  "00000" ) + ('0'&snd_audio);
+--audio <= ('0'&snd_audio);
 
 -- make access slots from 18MHz
 -- 6MHz for pixel clock and sound machine
@@ -312,14 +342,16 @@ process (clock_18)
 begin
  if rising_edge(clock_18) then
   ena_vidgen      <= '0';
-	ena_snd_machine <= '0';
+  ena_snd_machine <= '0';
   cpu1_ena   <= '0';
   cpu2_ena   <= '0';
   cpu3_ena   <= '0';
+  cs54xx_ena <= '0';
 	
   if slot = "101" then
    slot <= (others => '0');
-	else
+	cs54xx_ena_div <= cs54xx_ena_div +'1';
+  else
 		slot <= std_logic_vector(unsigned(slot) + 1);
   end if;   
 	
@@ -328,6 +360,8 @@ begin
 	if slot = "101" then cpu1_ena <= '1';	end if;
 	if slot = "000" then cpu2_ena <= '1';	end if;	
 	if slot = "001" then cpu3_ena <= '1';	end if;
+	
+	if slot = "000" and cs54xx_ena_div = "000" then cs54xx_ena <= '1'; end if;
 		
  end if;
 end process;
@@ -439,15 +473,15 @@ spflips <= 	"0000000"                       & spflip_V & spflip_2H & spflip_V & 
 
 with spdata(3 downto 2) select
 spgraphx_addr <=  (sptile_num(6 downto 0)                             & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when "00",
-									(sptile_num(6 downto 1) & 						sphcnt(4)     & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when "01",
-									(sptile_num(6 downto 2) & spvcnt(4) & sptile_num(0) & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when "10",
-									(sptile_num(6 downto 2) & spvcnt(4) & sphcnt(4)     & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when others;
+						(sptile_num(6 downto 1) & 						sphcnt(4) & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when "01",
+						(sptile_num(6 downto 2) & spvcnt(4) & sptile_num(0) & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when "10",
+						(sptile_num(6 downto 2) & spvcnt(4) & sphcnt(4)     & spvcnt(3) & sphcnt(3 downto 2) & spvcnt(2 downto 0) ) xor spflips when others;
 
 sppalette_addr <= sptile_color(5 downto 0) &
 									spgraphx_do(to_integer(unsigned('1' & ((not sphcnt(1 downto 0)) xor spflip_2H )))) &
 									spgraphx_do(to_integer(unsigned('0' & ((not sphcnt(1 downto 0)) xor spflip_2H )))); 
 
-spbits_wr <= 	sppalette_do;
+spbits_wr <= 	sppalette_do(3 downto 0);
 
 --- BACKGROUND TILES MACHINE ---
 -----------------------_--------
@@ -456,12 +490,12 @@ spbits_wr <= 	sppalette_do;
 -- 0x8400-0x87FF : tile color
 
 bgtile_addr <= 	"10000" & hcnt(1) & vcnt(7 downto 3) & hcnt(7 downto 3)                                when (hcnt(8)='1' and flip_h='0') else
-								"10000" & hcnt(1) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(3) & vcnt(7 downto 3) when (hcnt(8)='0' and flip_h='0') else
-								"10000" & hcnt(1) & not( vcnt(7 downto 3) & hcnt(7 downto 3))                          when (hcnt(8)='1' and flip_h='1') else
-								"10000" & hcnt(1) & not( hcnt(4) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(3) & vcnt(7 downto 3));
+						"10000" & hcnt(1) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(3) & vcnt(7 downto 3) when (hcnt(8)='0' and flip_h='0') else
+						"10000" & hcnt(1) & not( vcnt(7 downto 3) & hcnt(7 downto 3))                          when (hcnt(8)='1' and flip_h='1') else
+						"10000" & hcnt(1) & not( hcnt(4) & hcnt(4) & hcnt(4) & hcnt(4) & hcnt(3) & vcnt(7 downto 3));
 								
 
--- Attention : slot et hcnt ne sont pas entierement synchronisÃ©s
+-- Attention : slot et hcnt ne sont pas entierement synchronisés
 -- slot  |0 |1 | 2 |3 |4 |5 | ...
 -- hcnt  | 0 or 1  | 1 or 2 | ...
 
@@ -488,7 +522,7 @@ bgpalette_addr <= bgtile_color_r(5 downto 0) &
 									bggraphx_do(to_integer(unsigned('1' & (hcnt(1 downto 0)) xor (flip_h & flip_h)))) &
 									bggraphx_do(to_integer(unsigned('0' & (hcnt(1 downto 0)) xor (flip_h & flip_h)))); 
 
-bgbits <= bgpalette_do;
+bgbits <= bgpalette_do(3 downto 0);
 
 --- STARS MACHINE --- 
 ---------------------
@@ -557,7 +591,7 @@ port  map(
 process (clock_18)
 	subtype speed is integer range -3 to 3;
 	type speed_array is array(0 to 7) of speed; 
-	constant speeds : speed_array := ( -1, -2, -3, 0, 3, 2, 1, 0 ); 
+	variable speeds : speed_array := ( -1, -2, -3, 0, 3, 2, 1, 0 ); 
 begin
  if rising_edge(clock_18) then 
 
@@ -591,20 +625,19 @@ end process;
 
 rgb_palette_addr <= ('0' & spbits_rd) when bgbits = "1111" else ('1' & bgbits);
 
-process (clock_18) begin
-	if rising_edge(clock_18) then
-		if ena_vidgen = '1' then
-			if rgb_palette_addr(3 downto 0) = "1111" then
-				video_r <= star_color(1 downto 0) & star_color(1);
-				video_g <= star_color(3 downto 2) & star_color(3);
-				video_b <= star_color(5 downto 4);
-			else
-				video_r <= rgb_palette_do(2 downto 0);
-				video_g <= rgb_palette_do(5 downto 3);
-				video_b <= rgb_palette_do(7 downto 6);
-			end if;
-		end if;
+process (clock_18, rgb_palette_addr)
+begin
+ if rising_edge(clock_18)then
+  if rgb_palette_addr(3 downto 0) = "1111" then
+		video_r <= star_color(1 downto 0) & "0";
+		video_g <= star_color(3 downto 2) & "0";
+		video_b <= star_color(5 downto 4);		
+	else
+		video_r <= rgb_palette_do(2 downto 0);
+		video_g <= rgb_palette_do(5 downto 3);
+		video_b <= rgb_palette_do(7 downto 6);	
 	end if;
+ end if;
 end process;
 
 
@@ -620,7 +653,7 @@ cpu_addr  => mux_addr(3 downto 0),
 cpu_do    => mux_cpu_do(3 downto 0), 
 ram_0_we  => snd_ram_0_we,
 ram_1_we  => snd_ram_1_we,
-audio     => audio
+audio     => snd_audio
 );
 
 --- CPUS -------------
@@ -636,17 +669,17 @@ mux_addr <= 	cpu1_addr   when "000",
 
 with slot select
 mux_cpu_do <= 	cpu1_do when "000",
-								cpu2_do when "001",
-								cpu3_do when "010",
-								X"00"   when others;
+					cpu2_do when "001",
+					cpu3_do when "010",
+					X"00"   when others;
 
 mux_cpu_we <= 	(not cpu1_wr_n and cpu1_ena)or
-								(not cpu2_wr_n and cpu2_ena)or
-								(not cpu3_wr_n and cpu3_ena);
+					(not cpu2_wr_n and cpu2_ena)or
+					(not cpu3_wr_n and cpu3_ena);
 
 mux_cpu_mreq <= 	(not cpu1_mreq_n and cpu1_ena) or
-									(not cpu2_mreq_n and cpu2_ena) or
-									(not cpu3_mreq_n and cpu3_ena);
+						(not cpu2_mreq_n and cpu2_ena) or
+						(not cpu3_mreq_n and cpu3_ena);
 									
 latch_we <= '1' when mux_cpu_we = '1' and mux_addr(15 downto 11) = "01101" else '0';
 io_we    <= '1' when mux_cpu_we = '1' and mux_addr(15 downto 11) = "01110" else '0';
@@ -671,8 +704,13 @@ begin
 			cpu2_irq_n  <= '1';
 			cs51XX_coin_mode_cnt <= "000";
 			cs51XX_data_cnt <= "00";
+			cs51XX_switch_mode <= '0';
+			cs51XX_credit_mode <= '1';
 			cs05XX_ctrl <= "000000";
 			flip_h <= '0';
+			cs54xx_irq_n <= '1';
+			cs54xx_irq_cnt <= X"0";
+			
  else 
   if rising_edge(clock_18n) then 
 		if latch_we ='1' and mux_addr(5 downto 4) = "10" then 
@@ -696,10 +734,26 @@ begin
 		elsif vcnt = std_logic_vector(to_unsigned(240,9)) then cpu2_irq_n <= '0';
 		end if;
 		
+		if cs54xx_irq_cnt = X"0" then 
+		  cs54xx_irq_n <= '1';
+		else 
+			if cs54xx_ena = '1' then
+				cs54xx_irq_cnt <= cs54xx_irq_cnt - '1';
+			end if;
+		end if;
+		
 		-- write to cs06XX
 		if io_we = '1' then 
 			-- write to data register (0x7000)
 		  if mux_addr(8) = '0' then
+				-- write data to device#4 (cs54XX)
+				if cs06XX_control(3 downto 0) = "1000" then
+						-- write data for k and r#0 port and launch irq to advice cs50xx
+						cs54xx_k_port_in <= mux_cpu_do(7 downto 4);
+						cs54xx_r0_port_in <= mux_cpu_do(3 downto 0);
+						cs54xx_irq_n <= '0';
+						cs54xx_irq_cnt <= X"7";						
+				end if;		  
 				-- write data to device#1 (cs51XX)
 				if cs06XX_control(3 downto 0) = "0001" then
 					-- when not in coin mode
@@ -745,7 +799,7 @@ begin
 		-- generate periodic nmi when timer is on
 		if cs06XX_nmi_cnt >= 1 then
 			if cpu1_ena = '1' then  -- to get 333ns tick
-				-- 600 * 333ns = 200Âµs
+				-- 600 * 333ns = 200µs
 				if cs06XX_nmi_cnt < 600 then  
 					cs06XX_nmi_cnt := cs06XX_nmi_cnt + 1;
 					cpu1_nmi_n <= '1';
@@ -763,13 +817,25 @@ begin
 				change_next <= '1';
 			end if;
 		end if ;
-		-- cycle data_cnt at each read
+		-- cycle data_cnt at each read and clear firex_mem in switch mode
 		if change_next = '1' then
 			if cs06XX_control(3 downto 0) = "0001" then
+			
 				if cs51XX_data_cnt = "10" then cs51XX_data_cnt <= "00"; 
 				else cs51XX_data_cnt <= cs51XX_data_cnt + "01"; end if;
+				
+				if cs51XX_data_cnt = "10" then 
+					fire1_mem <= '0';
+					fire2_mem <= '0';
+				end if;
+				
 			end if;				
 		end if;
+		-- manage fire button rising edge detection
+		fire1_r <= fire1;
+		fire2_r <= fire2;
+		if fire1_r ='0' and fire1 ='1' then fire1_mem <= '1'; end if;
+		if fire2_r ='0' and fire2 ='1' then fire2_mem <= '1'; end if;
 		
 		-- manage credit count (bcd)
 		--   increase at each coin up to 99
@@ -787,7 +853,7 @@ begin
 			end if; 
 		end if;
 		
-	  --   decrease only when in credit mode
+	   --   decrease only when in credit mode
 		if cs51XX_credit_mode = '1' then
 			if (start1 = '1' and start1_r = '0') then
 				cs51XX_credit_mode <= '0';
@@ -825,37 +891,35 @@ end process;
 
 with cs51XX_data_cnt select
 cs51XX_switch_mode_do <= 	not (left2 & '0' & right2 & '0' & left1 & '0' & right1 & '0' )       when "00",
-													not (b_test & b_svce & '0' & coin & start2 & start1 & fire2 & fire1) when "01",
-													X"00" when others;	
+									not (b_test & b_svce & '0' & coin & start2 & start1 & fire2_mem & fire1_mem) when "01",
+									X"00" when others;	
 
 with cs51XX_data_cnt select
 cs51XX_non_switch_mode_do <= 	credit_bcd_1 & credit_bcd_0 when "00", -- credits (cpu spy this)
-															not ("110" & fire1 & left1 & '0' & right1 & '0' ) when "01",
-															not ("110" & fire2 & left2 & '0' & right2 & '0' ) when "10",
-															X"00" when "11"; -- N.U.	
+										not ("110" & fire1_mem & left1 & '0' & right1 & '0' ) when "01",
+										not ("110" & fire2_mem & left2 & '0' & right2 & '0' ) when "10",
+										X"00" when "11"; -- N.U.	
 
 cs51XX_do <= cs51XX_switch_mode_do when cs51XX_switch_mode = '1' else cs51XX_non_switch_mode_do;
 
-cs54XX_do <= X"FF"; -- todo (maybe)
+cs54XX_do <= X"FF"; -- no data from CS54XX
 
 with cs06XX_control(3 downto 0) select
 cs06XX_di <= cs51XX_do when "0001",
-						 cs54XX_do when "1000",
-						 X"00" when others;
+				 cs54XX_do when "1000",
+				 X"00" when others;
 
 cs06XX_do <= cs06XX_di when mux_addr(8)= '0' else cs06XX_control;
 
 process (clock_18, nmion_n)
 begin
-	if nmion_n = '1' then
-	elsif rising_edge(clock_18) then
-		if ena_vidgen = '1' then
-			if hcnt = "100000000" then
-				if vcnt = "001000000" or vcnt = "011000000" then cpu3_nmi_n <= '0'; end if;
-				if vcnt = "001000001" or vcnt = "011000001" then cpu3_nmi_n <= '1'; end if;
-			end if;
+ if nmion_n = '1' then
+ elsif rising_edge(clock_18) and ena_vidgen = '1' then
+		if hcnt = "100000000" then
+			if vcnt = "001000000" or vcnt = "011000000" then cpu3_nmi_n <= '0'; end if;
+			if vcnt = "001000001" or vcnt = "011000001" then cpu3_nmi_n <= '1'; end if;
 		end if;
-	end if;
+ end if;
 end process;
 
 with cpu1_addr(15 downto 11) select
@@ -920,7 +984,7 @@ port map(
   INT_n   => cpu1_irq_n,
   NMI_n   => cpu1_nmi_n,
   BUSRQ_n => '1',
-  M1_n    => open,
+  M1_n    => cpu1_m1_n,
   MREQ_n  => cpu1_mreq_n,
   IORQ_n  => open,
   RD_n    => open,
@@ -945,7 +1009,7 @@ port map(
   INT_n   => cpu2_irq_n,
   NMI_n   => '1', --cpu_int_n,
   BUSRQ_n => '1',
-  M1_n    => open,
+  M1_n    => cpu2_m1_n,
   MREQ_n  => cpu2_mreq_n,
   IORQ_n  => open,
   RD_n    => open,
@@ -970,7 +1034,7 @@ port map(
   INT_n   => '1',
   NMI_n   => cpu3_nmi_n,
   BUSRQ_n => '1',
-  M1_n    => open,
+  M1_n    => cpu3_m1_n,
   MREQ_n  => cpu3_mreq_n,
   IORQ_n  => open,
   RD_n    => open,
@@ -981,6 +1045,47 @@ port map(
   A       => cpu3_addr,
   DI      => cpu3_di,
   DO      => cpu3_do
+);
+
+-- mb88 - cs54xx (28 pins IC, 1024 bytes rom)
+mb88_54xx : entity work.mb88
+port map(
+ reset_n    => reset_cpu_n, --reset_n,
+ clock      => clock_18,
+ ena        => cs54xx_ena,
+
+ r0_port_in  => cs54xx_r0_port_in, -- pin 12,13,15,16
+ r1_port_in  => X"0",
+ r2_port_in  => X"0",
+ r3_port_in  => X"0",
+ r0_port_out => open,
+ r1_port_out => cs54xx_audio_3,   -- pin 17,18,19,20 (resistor divider )
+ r2_port_out => open,
+ r3_port_out => open,
+ k_port_in   => cs54xx_k_port_in, -- pin 24,25,26,27
+ ol_port_out => cs54xx_audio_1,   -- pin  4, 5, 6, 7 (resistor divider 150K/22K)
+ oh_port_out => cs54xx_audio_2,   -- pin  8, 9,10,11 (resistor divider  47K/10K)
+ p_port_out  => open,
+
+ stby_n    => '0',
+ tc_n      => '0',
+ irq_n     => cs54xx_irq_n,
+ sc_in_n   => '0',
+ si_n      => '0',
+ sc_out_n  => open,
+ so_n      => open,
+ to_n      => open,
+ 
+ rom_addr  => cs54xx_rom_addr,
+ rom_data  => cs54xx_rom_do
+);
+
+-- cs54xx program ROM
+cs54xx_prog : entity work.cs54xx_prog
+port map(
+ clk  => clock_18n,
+ addr => cs54xx_rom_addr(9 downto 0),
+ data => cs54xx_rom_do
 );
 
 -- cpu1 program ROM
