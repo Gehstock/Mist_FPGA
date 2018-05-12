@@ -1,0 +1,12 @@
+Ram dynamique :
+ RAS
+ CAS
+ R/W
+
+RAM STATIQUE
+ CS
+ R/W
+ clk
+
+ cs = Page 0-2 + Page 4-BF
+ CLK = CAS
