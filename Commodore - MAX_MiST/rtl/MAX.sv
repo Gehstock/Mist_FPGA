@@ -36,7 +36,7 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-
+assign LED = 1;
 
 reg [7:0] reset_cnt;
 always @(posedge clk_cpu) begin
@@ -95,14 +95,14 @@ wire [3:0]COL_DO;
 //SID
 wire [7:0]SID_DO;
 //CARD
-wire [7:0]CARD_DO;
+wire [7:0]CART_DO;
 wire [7:0]cia_pai;
 wire [7:0]cia_pao;
 wire [7:0]cia_pbi;
 wire [7:0]cia_pbo;
 
 wire enableCPU, enableCIA, enableVIC = 1;
-wire enablePixel;
+wire enablePixel = 1;
 wire pulseRd;
 
 pll pll(
@@ -144,7 +144,7 @@ video_mixer #(.LINE_LENGTH(600), .HALF_DEPTH(0)) video_mixer
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.scandoubler_disable(1),//scandoubler_disable),
+	.scandoubler_disable(scandoubler_disable),
 	.hq2x(status[4:3]==1),
 	.ypbpr(ypbpr),
 	.ypbpr_full(1),
@@ -174,7 +174,7 @@ assign AUDIO_R = AUDIO_L;
 	
 //CPU MOS6510
 cpu_6510 U5 (
-	.clk(clk_cpu),
+	.clk(phi0_cpu),
 	.reset(reset),
 	.enable(enableCPU),
 	.nmi_n(nNMI),
@@ -191,8 +191,8 @@ cpu_6510 U5 (
 //PLA	MOS6703
 pla_6703 pla_6703 (
 	.A(ADDR_BUS[15:10]),
-	.DI(),// Color Data
-	.DO(),// DataBUS
+	.DI(CPU_DO),// Color Data
+	.DO(),//CPU_DI),// DataBUS
 	.CLK(clk_cpu),
 	.BA(BA),
 	.RW_IN(RW),
@@ -266,9 +266,9 @@ vic_656x vic_656x (
 
 fpga64_rgbcolor fpga64_rgbcolor (
 	.index(VIC_ColIndex),
-	.r(r),
-	.g(g),
-	.b(b)
+	.r(r[5:0]),
+	.g(g[5:0]),
+	.b(b[5:0])
 	);
 
 //CIA MOS6526
@@ -300,7 +300,7 @@ sid_6581 sid_6581 (
 	.reset(reset),   	
 	.cs(~nSID),
    .we(~RW),
-	.addr({4'b0,ADDR_BUS[3:0]}),
+	.addr(ADDR_BUS[3:0]),
    .data_i(CPU_DO),
    .data_o(SID_DO),
    .poti_x(~(cia_pao[7] & JoyA[5]) | (cia_pao[6] & JoyB[5])),//todo
