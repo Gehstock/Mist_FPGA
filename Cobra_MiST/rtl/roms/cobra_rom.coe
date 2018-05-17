@@ -1,0 +1,162 @@
+memory_initialization_radix=16;
+memory_initialization_vector=
+c3,03,c0,d3,1f,31,f0,bf,cd,f7,c6,cd,d7,c5,d3,1b,
+22,46,bf,21,00,00,18,05,22,46,bf,e1,2b,ed,73,48,
+bf,31,46,bf,e3,e5,d5,c5,f5,ed,57,f3,47,0e,0d,e2,
+33,c0,0c,c5,d9,08,18,03,00,00,00,e5,d5,c5,f5,dd,
+; addr=0x0040
+e5,fd,e5,21,4a,bf,0e,02,46,05,78,b9,30,1b,23,5e,
+23,56,23,1a,fe,df,20,f1,7e,e5,2a,46,bf,ed,52,e1,
+12,20,e6,0d,18,e3,00,00,00,2e,4a,70,cd,2e,c2,21,
+ea,c1,0d,cc,3b,c1,21,76,c0,e5,2e,d3,c5,e5,21,84,
+; addr=0x0080
+c0,cd,ac,c4,06,20,43,4f,42,52,41,e1,c1,3e,3a,cd,
+92,c4,3e,0d,cd,8f,c4,c8,be,23,5e,23,56,23,46,23,
+28,17,30,f4,e5,21,b2,c0,cd,6b,c3,e1,31,2e,bf,c3,
+2b,c2,20,45,52,52,4f,52,00,3e,3a,cd,92,c4,05,28,
+; addr=0x00c0
+0e,0e,00,cd,5e,c2,e5,03,28,04,10,f7,18,d6,05,eb,
+e9,e1,e9,43,e7,c2,02,44,9e,c2,03,46,00,c0,02,47,
+08,c3,04,48,00,c0,02,4b,23,c1,02,4c,77,c3,02,4d,
+0b,c1,01,4f,42,c2,03,53,00,c4,04,55,d1,c0,07,58,
+; addr=0x0100
+33,c1,01,59,36,c1,01,5a,33,c2,04,cd,5e,c2,c8,eb,
+06,08,c5,cd,6d,c1,c1,c8,13,10,f7,eb,08,cd,18,c2,
+08,18,ec,e1,30,03,2a,48,bf,2b,36,c0,2b,36,10,22,
+48,bf,c9,2e,ea,01,2e,ff,cd,8f,c4,f5,3a,fd,bf,4f,
+; addr=0x0140
+f1,47,7e,28,0f,0e,2d,b8,28,0d,23,23,7e,e6,7f,20,
+f6,c3,a4,c0,cd,92,c4,46,23,cd,25,c2,16,bf,5e,23,
+e5,cd,74,c1,e1,c8,7e,a7,20,ea,c3,2e,c2,01,2d,00,
+fe,2c,28,12,13,1a,1b,cb,78,c4,d5,c1,cd,97,c1,79,
+; addr=0x0180
+cd,92,c4,ee,2d,c0,cd,5e,c2,d8,f5,7d,12,13,cb,78,
+28,02,7c,12,f1,1b,c9,78,fe,46,1a,20,38,d9,21,b3,
+c1,06,08,4f,cb,01,3e,2e,30,01,7e,cd,92,c4,23,10,
+f3,d9,c9,53,5a,58,48,58,50,4e,43,0e,02,5f,06,11,
+; addr=0x01c0
+af,8f,27,ed,6a,10,fa,0d,20,f3,67,7d,6b,cd,dc,c1,
+7c,cd,d5,c1,7d,cd,d8,c1,07,07,07,07,f5,e6,0f,c6,
+90,27,ce,40,27,cd,92,c4,f1,c9,46,3e,41,3f,42,41,
+43,40,44,43,45,42,48,45,4c,44,d3,48,d0,46,00,46,
+; addr=0x0200
+34,41,35,42,37,43,36,44,39,45,38,48,3b,4c,3a,d8,
+32,d9,30,49,3d,4d,3c,00,cd,2e,c2,cd,d0,c1,3e,20,
+18,0e,cd,92,c4,3e,3d,18,07,3e,0a,cd,92,c4,3e,0d,
+c3,92,c4,c2,a4,c0,c1,d1,e1,7b,95,7a,9c,d8,71,23,
+; addr=0x0240
+18,f7,20,ef,d1,e1,e5,19,3e,53,cd,22,c2,cd,1b,c2,
+e1,af,ed,52,3e,44,cd,22,c2,cd,d0,c1,18,d0,2a,46,
+bf,cd,8f,c4,cd,8c,c2,38,05,cd,7f,c2,37,c9,21,00,
+00,29,29,29,29,b5,6f,cd,8f,c4,cd,8c,c2,38,f2,fe,
+; addr=0x0280
+0d,c8,fe,2c,28,04,fe,20,20,a9,a7,c9,d6,30,fe,0a,
+d8,d6,11,fe,06,30,03,d6,f6,c9,c6,41,a7,c9,20,93,
+d1,e1,cd,18,c2,f5,3a,ff,bf,47,f1,cd,1e,c2,7e,cd,
+d5,c1,23,7b,95,7a,9c,da,29,c2,10,ef,f5,cd,cc,c2,
+; addr=0x02c0
+f1,18,df,0a,0d,20,42,52,45,41,4b,00,3e,fe,db,ff,
+1f,d8,3e,bf,db,ff,1f,d8,e5,21,c3,c2,cd,6b,c3,e1,
+f1,31,f0,bf,c3,10,c0,cd,25,c2,e1,cb,7c,28,13,e5,
+eb,af,6f,65,3e,2d,ed,52,cd,92,c4,cd,bb,c1,cd,1e,
+; addr=0x0300
+c2,e1,cd,bb,c1,c3,2e,c2,21,4a,bf,71,35,0d,23,d1,
+28,0b,73,23,72,23,1a,77,3e,df,12,18,f0,ed,53,46,
+bf,e1,fd,e1,dd,e1,f1,c1,d1,e1,08,d9,f1,ed,47,21,
+f3,c3,38,02,2e,fb,f1,c1,d1,e3,ed,7b,48,bf,c3,44,
+; addr=0x0340
+bf,e5,cd,68,c3,e1,31,f0,bf,c3,10,c0,20,53,54,41,
+52,54,20,54,41,50,45,2e,2e,00,20,53,54,4f,50,20,
+54,41,50,45,20,21,21,00,21,5a,c3,7e,fe,00,28,06,
+cd,17,c5,23,18,f5,c9,f5,21,4c,c3,cd,6b,c3,f1,e1,
+; addr=0x0380
+30,02,60,68,f5,e5,11,ed,b0,d1,d3,1b,cd,b8,c4,f5,
+cd,cc,c2,f1,cd,db,c4,fe,03,ca,41,c3,ee,3a,20,f4,
+21,5c,bf,47,a7,3f,f5,cd,db,c4,77,f1,37,3f,04,10,
+08,7e,e6,3f,4f,c6,05,47,af,86,23,10,e7,c2,e4,c3,
+; addr=0x03c0
+2a,5d,bf,7d,6c,67,19,d5,11,60,bf,79,a7,eb,18,b7,
+20,53,41,56,45,2e,2e,00,20,54,41,50,45,20,45,52,
+52,4f,52,00,e5,21,d8,c3,cd,6b,c3,e1,31,f0,bf,c3,
+10,c0,3e,03,cd,c2,c4,e5,cd,68,c3,e1,cd,2e,c2,c9,
+; addr=0x0400
+f5,e5,21,d0,c3,cd,6b,c3,21,60,03,2b,af,cd,c2,c4,
+7c,b5,20,f7,e1,f1,28,05,0d,ca,a4,c0,d5,c1,08,e1,
+d1,af,ed,52,d8,23,c5,f5,cd,cc,c2,f1,01,20,00,ed,
+42,30,03,09,4d,68,e5,21,5c,bf,71,23,72,23,73,23,
+; addr=0x0440
+70,23,03,eb,ed,b0,eb,1b,cd,59,c4,e1,7d,b4,20,d7,
+d1,3c,08,c2,f2,c3,d5,18,db,21,5c,bf,cd,83,c4,01,
+3a,d3,1b,cd,b8,c4,7e,c6,05,47,af,10,01,77,04,96,
+a7,3f,f5,af,7e,cd,c2,c4,f1,23,10,ef,cd,83,c4,02,
+; addr=0x0480
+0d,0a,c9,e3,46,23,7e,cd,c2,c4,10,f9,23,e3,c9,cd,
+7c,c6,37,cd,99,c4,fe,0d,c0,f5,c5,06,01,38,04,3e,
+0a,06,02,cd,17,c5,af,10,fa,c1,f1,c9,e3,46,23,7e,
+cd,17,c5,10,f9,23,e3,c9,f5,3a,1f,f8,2f,32,1f,f8,
+; addr=0x04c0
+f1,c9,c3,f1,bf,c5,f5,0e,0b,b7,38,02,d3,1f,06,67,
+10,fe,37,cb,1f,0d,20,f2,f1,c1,c9,c3,f4,bf,c5,d5,
+db,ff,cb,17,cb,17,38,f8,06,34,10,fe,db,ff,cb,17,
+cb,17,38,ec,0e,80,59,06,67,10,fe,db,ff,cb,17,cb,
+; addr=0x0500
+17,cb,19,30,f2,cb,13,30,05,51,0e,01,18,e9,79,fe,
+80,20,cd,7a,d1,c1,c9,c3,f7,bf,fe,00,c8,f5,f5,3a,
+fe,bf,fe,00,28,06,db,ff,cb,6f,28,fa,f1,e6,7f,c5,
+d5,e5,01,0a,00,21,48,c5,11,a0,20,ed,b1,2e,51,09,
+; addr=0x0540
+6e,e5,2a,54,bf,cb,be,c9,16,18,0d,17,0a,0b,08,19,
+09,5b,5c,96,6a,72,7e,82,78,8b,91,77,23,cd,9a,c5,
+cb,fe,22,54,bf,e1,d1,c1,f1,c9,2b,cd,9a,c5,cb,fe,
+18,f0,01,e0,ff,09,18,e5,3e,e0,a5,6f,18,e2,0e,20,
+; addr=0x0580
+18,f3,3e,3f,23,a5,28,dd,72,18,f7,cd,c9,c5,18,d5,
+e1,21,00,f8,18,ca,cb,fe,18,c2,7c,fe,f7,28,f1,fe,
+fb,c0,d5,c5,01,20,00,ed,42,cb,be,e5,01,e0,02,11,
+00,f8,21,20,f8,ed,b0,21,e0,fa,3e,20,77,23,7c,fe,
+; addr=0x05c0
+fb,20,f7,e1,cb,fe,c1,d1,c9,e5,3e,20,77,23,7c,fe,
+fb,20,f7,e1,cb,fe,c9,3e,16,cd,17,c5,3e,18,cd,17,
+c5,c9,21,ff,ff,01,ff,fe,ed,78,f6,01,f6,e0,57,2f,
+fe,01,9f,b0,a5,6f,7c,a2,67,cb,00,ed,78,38,ed,cb,
+; addr=0x0600
+1f,cb,14,3e,ff,bd,20,01,c9,cd,0e,c6,7e,c9,44,4d,
+16,00,cb,28,9f,f6,26,2e,05,95,85,37,cb,19,38,fa,
+0c,48,2d,2e,01,20,f3,21,2d,c6,5f,19,37,c9,5a,58,
+43,56,41,53,44,46,47,51,57,45,52,54,31,32,33,34,
+; addr=0x0640
+35,30,39,38,37,36,50,4f,49,55,59,0d,4c,4b,4a,48,
+20,2c,4d,4e,42,0a,3a,3b,3d,08,09,03,0a,0b,0b,00,
+7e,7f,1b,21,22,23,24,25,30,29,28,27,26,0c,5e,5d,
+5b,40,0d,2f,2a,2d,2b,20,2e,3e,3c,3f,c3,fa,bf,c5,
+; addr=0x0680
+f5,d5,e5,01,ff,00,ed,78,e6,1f,fe,1f,20,02,18,f6,
+cd,d7,c6,cd,e2,c5,fe,0c,20,05,cd,d7,c5,18,e4,fe,
+ff,28,e0,fe,00,20,08,32,56,bf,cd,d7,c6,18,d4,f5,
+3a,56,bf,fe,00,20,1d,f1,d6,40,f5,cd,e2,c5,fe,ff,
+; addr=0x06c0
+20,f9,d3,1b,cd,d7,c6,f1,47,e1,d1,f1,3e,ff,32,56,
+bf,78,c1,c9,f1,18,e3,11,ff,1f,1d,20,fd,15,20,fa,
+c9,c5,f5,d5,e5,cd,e2,c5,32,57,bf,e1,d1,f1,c1,c9,
+f5,79,cd,17,c5,f1,c9,3e,c3,32,f1,bf,32,f4,bf,32,
+; addr=0x0700
+f7,bf,32,fa,bf,32,fe,bf,32,56,bf,21,c5,c4,22,f2,
+bf,21,de,c4,22,f5,bf,21,1a,c5,22,f8,bf,21,7f,c6,
+22,fb,bf,3e,08,32,ff,bf,3e,0d,32,fd,bf,c9,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+; addr=0x0740
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+; addr=0x0780
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+; addr=0x07c0
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,
+ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff;
+ 
