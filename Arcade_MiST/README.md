@@ -1,7 +1,13 @@
 Arcade Cores
 
-#Custom Hardware
+#Atari Hardware
 	Computer Space
+	Sprint 2
+	Sprint One
+	Super Breakout
+	Ultra Tank
+
+#Custom Hardware
 	Galaga
 	Phoenix
 	Pooyan
