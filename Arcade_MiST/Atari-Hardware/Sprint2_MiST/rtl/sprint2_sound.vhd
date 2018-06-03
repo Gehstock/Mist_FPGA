@@ -233,11 +233,11 @@ port map(
 	
 	
 -- Audio mixer, also mutes sound in attract mode
-Audio1 <= ('0' & motor1_snd) + ("00" & screech1) + ('0' & bang_filtered);-- when attract = '0'
-				--else "0000000";
+Audio1 <= ('0' & motor1_snd) + ("00" & screech1) + ('0' & bang_filtered) when attract = '0'
+				else "0000000";
 				
-Audio2 <= ('0' & motor2_snd) + ("00" & screech2) + ('0' & bang_filtered);-- when attract = '0'
-				--else "0000000";	
+Audio2 <= ('0' & motor2_snd) + ("00" & screech2) + ('0' & bang_filtered) when attract = '0'
+				else "0000000";	
 		
 
 

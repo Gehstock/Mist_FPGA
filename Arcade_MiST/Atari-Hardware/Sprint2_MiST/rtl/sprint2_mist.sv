@@ -87,14 +87,19 @@ sprint2 sprint2 (
 	.Lamp2_O(led2)
 );
 
-dac dac (
+dac dac1 (
 	.CLK(clk_48),
 	.RESET(1'b0),
-	.DACin({audio1, audio2}),
+	.DACin(audio1),
 	.DACout(AUDIO_L)
 	);
-
-assign AUDIO_R = AUDIO_L;
+	
+dac dac2 (
+	.CLK(clk_48),
+	.RESET(1'b0),
+	.DACin(audio2),
+	.DACout(AUDIO_R)
+	);
 
 wire hs, vs;
 wire hb, vb;
