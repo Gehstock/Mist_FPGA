@@ -5,7 +5,7 @@ del /s *.rej
 del /s *~
 rmdir /s /q db
 rmdir /s /q incremental_db
-rmdir /s /q output_files
+rmdir /s /q output
 rmdir /s /q simulation
 rmdir /s /q greybox_tmp
 rmdir /s /q hc_output

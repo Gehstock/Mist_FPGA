@@ -61,7 +61,7 @@ module ps2(clk, reset,
 	end
 
 	//
-	// PS/2���͏������
+	// PS/2“ü—Íˆ—ŽÀ‘•
 	//
 	wire  dten;
 	wire [7:0] kdata;
@@ -215,7 +215,7 @@ module ps2(clk, reset,
 				8'h4A: begin key_tble[0] <= key_f0; key_f0 <= 1'b0; end	// ?
 				8'h51: begin key_tble[0] <= key_f0; key_f0 <= 1'b0; end	// _
 				8'h11: begin key_tble[0] <= key_f0; key_f0 <= 1'b0; end	// GRPH
-				8'h13: begin key_tbl6[5] <= key_f0; key_f0 <= 1'b0; end	// �J�i
+				8'h13: begin key_tbl6[5] <= key_f0; key_f0 <= 1'b0; end	// ƒJƒi
 				8'h12: begin key_tbl8[0] <= ( key_f0 | key_e0 ) & (key_tbl8[0] | ~key_e0 ); key_f0 <= 1'b0; key_e0 <= 1'b0; end	// SHIFT
 				8'h59: begin key_tbl8[5] <= ( key_f0 | key_e0 ) & (key_tbl8[5] | ~key_e0 ); key_f0 <= 1'b0; key_e0 <= 1'b0; end	// SHIFT
 				8'h14: begin key_tble[0] <= key_f0; key_f0 <= 1'b0; end	// CTRL

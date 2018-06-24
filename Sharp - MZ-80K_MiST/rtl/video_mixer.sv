@@ -23,7 +23,7 @@ module video_mixer
 	parameter LINE_LENGTH  = 768,
 	parameter HALF_DEPTH   = 0,
 
-	parameter OSD_COLOR    = 3'd4,
+	parameter OSD_COLOR    = 3'd7,
 	parameter OSD_X_OFFSET = 10'd0,
 	parameter OSD_Y_OFFSET = 10'd0
 )

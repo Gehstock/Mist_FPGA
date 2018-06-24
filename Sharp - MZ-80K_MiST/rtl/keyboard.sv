@@ -29,18 +29,14 @@ always @(negedge clk) begin
 
 	if(input_strobe) begin
 		case(code)
-			'h16: joystick[1] <= ~release_btn; // 1
-			'h1E: joystick[2] <= ~release_btn; // 2
-
-			'h75: joystick[4] <= ~release_btn; // arrow up
+			'h75: joystick[7] <= ~release_btn; // arrow up
+			'h74: joystick[6] <= ~release_btn; // arrow right
 			'h72: joystick[5] <= ~release_btn; // arrow down
-			'h6B: joystick[6] <= ~release_btn; // arrow left
-			'h74: joystick[7] <= ~release_btn; // arrow right
-
-			'h29: joystick[0] <= ~release_btn; // Space
-//			'h11: joystick[1] <= ~release_btn; // Left Alt
-//			'h0d: joystick[2] <= ~release_btn; // Tab
-			'h76: joystick[3] <= ~release_btn; // Escape
+			'h6B: joystick[4] <= ~release_btn; // arrow left
+			'h16: joystick[3] <= ~release_btn; // 1
+			'h1E: joystick[2] <= ~release_btn; // 2
+			'h26: joystick[1] <= ~release_btn; // 3
+			'h25: joystick[0] <= ~release_btn; // 4
 		endcase
 	end
 end

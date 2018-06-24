@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module sound(CLK_50MHZ, SW, TP1);
 	input CLK_50MHZ;
-	input [7:0] SW;
+	input SW;
 	output TP1;
 	reg [14:0] count = 0;
 	reg [14:0] count2 = 1;

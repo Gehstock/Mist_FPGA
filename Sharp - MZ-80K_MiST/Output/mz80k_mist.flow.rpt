@@ -1,0 +1,136 @@
+Flow report for mz80k_mist
+Sun Jun 24 13:31:32 2018
+Quartus II 64-Bit Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Flow Summary
+  3. Flow Settings
+  4. Flow Non-Default Global Settings
+  5. Flow Elapsed Time
+  6. Flow OS Summary
+  7. Flow Log
+  8. Flow Messages
+  9. Flow Suppressed Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 1991-2013 Altera Corporation
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, Altera MegaCore Function License 
+Agreement, or other applicable license agreement, including, 
+without limitation, that your use is for the sole purpose of 
+programming logic devices manufactured by Altera and sold by 
+Altera or its authorized distributors.  Please refer to the 
+applicable agreement for further details.
+
+
+
++---------------------------------------------------------------------------------+
+; Flow Summary                                                                    ;
++------------------------------------+--------------------------------------------+
+; Flow Status                        ; Successful - Sun Jun 24 13:31:32 2018      ;
+; Quartus II 64-Bit Version          ; 13.1.0 Build 162 10/23/2013 SJ Web Edition ;
+; Revision Name                      ; mz80k_mist                                 ;
+; Top-level Entity Name              ; mz80k_mist                                 ;
+; Family                             ; Cyclone III                                ;
+; Device                             ; EP3C25E144C8                               ;
+; Timing Models                      ; Final                                      ;
+; Total logic elements               ; 3,012 / 24,624 ( 12 % )                    ;
+;     Total combinational functions  ; 2,886 / 24,624 ( 12 % )                    ;
+;     Dedicated logic registers      ; 891 / 24,624 ( 4 % )                       ;
+; Total registers                    ; 891                                        ;
+; Total pins                         ; 31 / 83 ( 37 % )                           ;
+; Total virtual pins                 ; 0                                          ;
+; Total memory bits                  ; 311,296 / 608,256 ( 51 % )                 ;
+; Embedded Multiplier 9-bit elements ; 0 / 132 ( 0 % )                            ;
+; Total PLLs                         ; 1 / 4 ( 25 % )                             ;
++------------------------------------+--------------------------------------------+
+
+
++-----------------------------------------+
+; Flow Settings                           ;
++-------------------+---------------------+
+; Option            ; Setting             ;
++-------------------+---------------------+
+; Start date & time ; 06/24/2018 13:29:56 ;
+; Main task         ; Compilation         ;
+; Revision Name     ; mz80k_mist          ;
++-------------------+---------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------+
+; Flow Non-Default Global Settings                                                                                           ;
++-------------------------------------+---------------------------------------+---------------+-------------+----------------+
+; Assignment Name                     ; Value                                 ; Default Value ; Entity Name ; Section Id     ;
++-------------------------------------+---------------------------------------+---------------+-------------+----------------+
+; COMPILER_SIGNATURE_ID               ; 84440844040061.152983979606548        ; --            ; --          ; --             ;
+; EDA_OUTPUT_DATA_FORMAT              ; Vhdl                                  ; --            ; --          ; eda_simulation ;
+; EDA_SIMULATION_TOOL                 ; ModelSim-Altera (VHDL)                ; <None>        ; --          ; --             ;
+; MAX_CORE_JUNCTION_TEMP              ; 85                                    ; --            ; --          ; --             ;
+; MIN_CORE_JUNCTION_TEMP              ; 0                                     ; --            ; --          ; --             ;
+; OUTPUT_IO_TIMING_FAR_END_VMEAS      ; Half Signal Swing                     ; --            ; --          ; --             ;
+; OUTPUT_IO_TIMING_FAR_END_VMEAS      ; Half Signal Swing                     ; --            ; --          ; --             ;
+; OUTPUT_IO_TIMING_NEAR_END_VMEAS     ; Half Vccio                            ; --            ; --          ; --             ;
+; OUTPUT_IO_TIMING_NEAR_END_VMEAS     ; Half Vccio                            ; --            ; --          ; --             ;
+; PARTITION_COLOR                     ; 16764057                              ; --            ; --          ; Top            ;
+; PARTITION_FITTER_PRESERVATION_LEVEL ; PLACEMENT_AND_ROUTING                 ; --            ; --          ; Top            ;
+; PARTITION_NETLIST_TYPE              ; SOURCE                                ; --            ; --          ; Top            ;
+; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                   ; --            ; --          ; --             ;
+; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW ; --            ; --          ; --             ;
+; PRE_FLOW_SCRIPT_FILE                ; quartus_sh:rtl/build_id.tcl           ; --            ; --          ; --             ;
+; PROJECT_OUTPUT_DIRECTORY            ; Output                                ; --            ; --          ; --             ;
+; VERILOG_INPUT_VERSION               ; SystemVerilog_2005                    ; Verilog_2001  ; --          ; --             ;
+; VERILOG_SHOW_LMF_MAPPING_MESSAGES   ; Off                                   ; --            ; --          ; --             ;
++-------------------------------------+---------------------------------------+---------------+-------------+----------------+
+
+
++-------------------------------------------------------------------------------------------------------------------------------+
+; Flow Elapsed Time                                                                                                             ;
++---------------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
++---------------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Analysis & Synthesis      ; 00:00:17     ; 1.0                     ; 4725 MB             ; 00:00:17                           ;
+; Fitter                    ; 00:00:51     ; 2.0                     ; 5526 MB             ; 00:01:06                           ;
+; Assembler                 ; 00:00:03     ; 1.0                     ; 4627 MB             ; 00:00:03                           ;
+; TimeQuest Timing Analyzer ; 00:00:10     ; 1.3                     ; 4795 MB             ; 00:00:12                           ;
+; EDA Netlist Writer        ; 00:00:05     ; 1.0                     ; 4636 MB             ; 00:00:04                           ;
+; Total                     ; 00:01:26     ; --                      ; --                  ; 00:01:42                           ;
++---------------------------+--------------+-------------------------+---------------------+------------------------------------+
+
+
++----------------------------------------------------------------------------------------+
+; Flow OS Summary                                                                        ;
++---------------------------+------------------+-----------+------------+----------------+
+; Module Name               ; Machine Hostname ; OS Name   ; OS Version ; Processor type ;
++---------------------------+------------------+-----------+------------+----------------+
+; Analysis & Synthesis      ; DESKTOP-BA4AA0D  ; Windows 7 ; 6.2        ; x86_64         ;
+; Fitter                    ; DESKTOP-BA4AA0D  ; Windows 7 ; 6.2        ; x86_64         ;
+; Assembler                 ; DESKTOP-BA4AA0D  ; Windows 7 ; 6.2        ; x86_64         ;
+; TimeQuest Timing Analyzer ; DESKTOP-BA4AA0D  ; Windows 7 ; 6.2        ; x86_64         ;
+; EDA Netlist Writer        ; DESKTOP-BA4AA0D  ; Windows 7 ; 6.2        ; x86_64         ;
++---------------------------+------------------+-----------+------------+----------------+
+
+
+------------
+; Flow Log ;
+------------
+quartus_map --read_settings_files=on --write_settings_files=off mz80k_mist -c mz80k_mist
+quartus_fit --read_settings_files=off --write_settings_files=off mz80k_mist -c mz80k_mist
+quartus_asm --read_settings_files=off --write_settings_files=off mz80k_mist -c mz80k_mist
+quartus_sta mz80k_mist -c mz80k_mist
+quartus_eda --read_settings_files=off --write_settings_files=off mz80k_mist -c mz80k_mist
+
+
+

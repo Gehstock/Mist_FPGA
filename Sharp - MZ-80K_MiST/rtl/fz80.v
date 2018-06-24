@@ -367,7 +367,9 @@ mreq, iorq, rd, wr, data_out, busack_out, intack_out, mr,
 	//
 	wire mr = g_mr1 | g_mr2; // for debug
 	wire intack_out = (g_if | g_iack) & intack;
+	`ifdef M1
 	wire nmiack_out = g_iack & nmiack;
+	`endif
 	// load
 	wire tmp0 = s_if & (i_rs_r | i_setres_r);
 	wire tmp1 = s_if & (i_ldrr | incdec8) | s_imm1 & i_ldrn | s_mr1 & i_ldrhl | s_in & i_inrc;
@@ -661,6 +663,8 @@ mreq, iorq, rd, wr, data_out, busack_out, intack_out, mr,
 		sel_rld | sel_rrd,
 		sel_fr | sel_rrd
 	};
+	wire iff2;
+	wire co_pc;
 	//initial $monitor($stime,, self);
 	// sequencer
 	seq seq(.data_in(data), .busreq(busreq), .waitreq(waitreq1), .intreq(intreq), .nmireq(nmireq), .reset_in(reset_in), .clk(clk), 

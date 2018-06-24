@@ -18,13 +18,13 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 20:08:26  November 23, 2017
+# Date created = 23:59:05  March 16, 2017
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "13.1"
-DATE = "20:08:26  November 23, 2017"
+DATE = "23:59:05  March 16, 2017"
 
 # Revisions
 
-PROJECT_REVISION = "mz80k"
+PROJECT_REVISION = "mz80k_mist"

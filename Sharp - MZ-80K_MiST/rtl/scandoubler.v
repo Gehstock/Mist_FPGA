@@ -19,6 +19,18 @@
 
 // TODO: Delay vsync one line
 
+`define BITS_TO_FIT(N) ( \
+     N <=   2 ? 0 : \
+     N <=   4 ? 1 : \
+     N <=   8 ? 2 : \
+     N <=  16 ? 3 : \
+     N <=  32 ? 4 : \
+     N <=  64 ? 5 : \
+     N <= 128 ? 6 : \
+     N <= 256 ? 7 : \
+     N <= 512 ? 8 : \
+     N <=1024 ? 9 : 10 )
+
 module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
 (
 	// system interface

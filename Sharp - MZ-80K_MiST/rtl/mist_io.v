@@ -82,12 +82,13 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	output reg        ps2_kbd_data,
 	output            ps2_mouse_clk,
 	output reg        ps2_mouse_data,
-	input             ps2_caps_led,
 
 	// ARM -> FPGA download
+	input             ioctl_force_erase,
 	output reg        ioctl_download = 0, // signal indicating an active download
+	output reg        ioctl_erasing = 0,  // signal indicating an active erase
 	output reg  [7:0] ioctl_index,        // menu index used to upload the file
-	output            ioctl_wr,
+	output reg        ioctl_wr = 0,
 	output reg [24:0] ioctl_addr,
 	output reg  [7:0] ioctl_dout
 );
@@ -96,7 +97,7 @@ reg [7:0] b_data;
 reg [6:0] sbuf;
 reg [7:0] cmd;
 reg [2:0] bit_cnt;    // counts bits 0-7 0-7 ...
-reg [9:0] byte_cnt;   // counts bytes
+reg [7:0] byte_cnt;   // counts bytes
 reg [7:0] but_sw;
 reg [2:0] stick_idx;
 
@@ -118,8 +119,6 @@ wire [7:0] sd_cmd = { 4'h5, sd_conf, sd_sdhc, sd_wr, sd_rd };
 
 reg spi_do;
 assign SPI_DO = CONF_DATA0 ? 1'bZ : spi_do;
-
-wire [7:0] kbd_led = { 2'b01, 4'b0000, ps2_caps_led, 1'b1};
 
 // drive MISO only when transmitting core id
 always@(negedge SPI_SCK) begin
@@ -148,10 +147,6 @@ always@(negedge SPI_SCK) begin
 				// reading sd card write data
 				8'h18:
 						spi_do <= b_data[~bit_cnt];
-
-				// reading keyboard LED status
-				8'h1f:
-						spi_do <= kbd_led[~bit_cnt];
 
 				default:
 						spi_do <= 0;
@@ -451,7 +446,14 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 		if((cmd == UIO_FILE_TX) && (cnt == 15)) begin
 			// prepare 
 			if(SPI_DI) begin
-				addr <= 0;
+				case(ioctl_index) 
+							0: addr <= 'h080000; // BOOT ROM
+						'h01: addr <= 'h000100; // ROM file
+						'h41: addr <= 'h000100; // COM file
+						'h81: addr <= 'h000000; // C00 file
+						'hC1: addr <= 'h010000; // EDD file
+					default: addr <= 'h100000; // FDD file
+				endcase
 				ioctl_download <= 1; 
 			end else begin
 				addr_w <= addr;
@@ -471,20 +473,59 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 	end
 end
 
-assign ioctl_wr = |ioctl_wrd;
-reg [1:0] ioctl_wrd;
+reg  [24:0] erase_mask;
+wire [24:0] next_erase = (ioctl_addr + 1'd1) & erase_mask;
 
-always@(negedge clk_sys) begin
+always@(posedge clk_sys) begin
 	reg        rclkD, rclkD2;
+	reg        old_force = 0;
+	reg  [5:0] erase_clk_div;
+	reg [24:0] end_addr;
+	reg        erase_trigger = 0;
 
 	rclkD    <= rclk;
 	rclkD2   <= rclkD;
-	ioctl_wrd<= {ioctl_wrd[0],1'b0};
+	ioctl_wr <= 0;
 
 	if(rclkD & ~rclkD2) begin
 		ioctl_dout <= data_w;
 		ioctl_addr <= addr_w;
-		ioctl_wrd  <= 2'b11;
+		ioctl_wr   <= 1;
+	end
+
+	if(ioctl_download) begin
+		old_force     <= 0;
+		ioctl_erasing <= 0;
+		erase_trigger <= (ioctl_index == 1);
+	end else begin
+
+		old_force <= ioctl_force_erase;
+
+		// start erasing
+		if(erase_trigger) begin
+			erase_trigger <= 0;
+			erase_mask    <= 'hFFFF;
+			end_addr      <= 'h0100;
+			erase_clk_div <= 1;
+			ioctl_erasing <= 1;
+		end else if((ioctl_force_erase & ~old_force)) begin
+			erase_trigger <= 0;
+			ioctl_addr    <= 'h1FFFFFF;
+			erase_mask    <= 'h1FFFFFF;
+			end_addr      <= 'h0050000;
+			erase_clk_div <= 1;
+			ioctl_erasing <= 1;
+		end else if(ioctl_erasing) begin
+			erase_clk_div <= erase_clk_div + 1'd1;
+			if(!erase_clk_div) begin
+				if(next_erase == end_addr) ioctl_erasing <= 0;
+				else begin
+					ioctl_addr <= next_erase;
+					ioctl_dout <= 0;
+					ioctl_wr   <= 1;
+				end
+			end
+		end
 	end
 end
 
