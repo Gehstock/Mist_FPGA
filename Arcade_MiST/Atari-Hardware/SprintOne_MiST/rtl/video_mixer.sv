@@ -97,6 +97,11 @@ wire [DWIDTH:0] G_sd;
 wire [DWIDTH:0] B_sd;
 wire hs_sd, vs_sd;
 
+//reg Rd,Gd,Bd;
+//always @(posedge ce_pix) begin
+//   {Rd,Gd,Bd} <= {R,G,B};
+//end
+
 scandoubler #(.LENGTH(LINE_LENGTH), .HALF_DEPTH(HALF_DEPTH)) scandoubler
 (
 	.*,

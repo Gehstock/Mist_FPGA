@@ -7,6 +7,29 @@
 -- Do not redistribute roms whatever the form
 -- Use at your own risk
 ---------------------------------------------------------------------------------
+--  
+-- Vectrex releases
+--
+-- Release 0.2 - 12/06/2018 - Dar
+--	delays ramp related signals w.r.t. blank signal 
+--	result is not perfect but clean sweep maze is much more correct and playable
+--
+-- Release 0.1 - 05/05/2018 - Dar
+--	add sp0256-al2 VHDL speech simulation
+--	add speakjet interface (speech IC)
+--
+-- Release 0.0 - 10/02/2018 - Dar
+--	initial release
+--
+---------------------------------------------------------------------------------
+-- SP0256-al2 prom decoding scheme and speech synthesis algorithm are from :
+--
+-- Copyright Joseph Zbiciak, all rights reserved.
+-- Copyright tim lindner, all rights reserved.
+--
+-- See C source code and license in sp0256.c from MAME source
+--
+-- VHDL code is by Dar.
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
 -- Copyright 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -103,6 +126,7 @@
 --		pixel is displayed upper bits intensity as long as lower bits value not equal to 0
 --
 ---------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.std_logic_unsigned.all;
@@ -114,7 +138,7 @@ port
 	clock_24     : in std_logic;
 	clock_12     : in std_logic;
 	reset        : in std_logic;
-	cpu_clock_o	 : out std_logic;
+
 	 
 	video_r      : out std_logic_vector(3 downto 0);
 	video_g      : out std_logic_vector(3 downto 0);
@@ -122,9 +146,13 @@ port
 
 	video_hs     : out std_logic;
 	video_vs     : out std_logic;
-	video_blankn : out std_logic;
+	video_hblank : out std_logic;
+	video_vblank : out std_logic;
+
+	speech_mode  : in  std_logic;
 	video_csync  : out std_logic;
 	frame		    : out std_logic;
+	
 	audio_out    : out std_logic_vector(9 downto 0);
 	cart_addr    : out std_logic_vector(13 downto 0);
 	cart_do      : in std_logic_vector( 7 downto 0);
@@ -141,6 +169,10 @@ port
 	btn24        : in std_logic;
 	pot_x_2      : in signed(7 downto 0);
 	pot_y_2      : in signed(7 downto 0);
+	speakjet_cmd : out std_logic;
+	speakjet_rdy : in  std_logic;
+	speakjet_pwm : in  std_logic;
+	external_speech_mode : in std_logic_vector(1 downto 0);
 	leds 			 : out std_logic_vector(9 downto 0);	
 	dbg_cpu_addr : out std_logic_vector(15 downto 0)
   );
@@ -185,6 +217,8 @@ architecture syn of vectrex is
  
  signal clock_24n : std_logic;
  signal clock_div : std_logic_vector(2 downto 0);
+ signal clock_div2: std_logic_vector(6 downto 0);
+ signal clock_250k: std_logic;
  signal reset_n   : std_logic;
 
  signal cpu_clock  : std_logic;
@@ -194,6 +228,7 @@ architecture syn of vectrex is
  signal cpu_rw     : std_logic;
  signal cpu_irq    : std_logic;
  signal cpu_firq   : std_logic;
+ signal cpu_ifetch : std_logic;
  signal cpu_fetch  : std_logic;
 
  signal ram_cs   : std_logic;
@@ -217,6 +252,15 @@ architecture syn of vectrex is
  signal via_pb_o  : std_logic_vector(7 downto 0);
  signal via_irq_n : std_logic;
  signal via_en_4  : std_logic;
+ 
+  type delay_buffer_t is array(0 to 255) of std_logic_vector(17 downto 0);
+ signal delay_buffer : delay_buffer_t;
+
+ signal via_ca2_o_d : std_logic;
+ signal via_cb2_o_d : std_logic;
+ signal via_pa_o_d  : std_logic_vector(7 downto 0);
+ signal via_pb_o_d  : std_logic_vector(7 downto 0);
+
  
  signal sh_dac  : std_logic;
  signal dac_mux : std_logic_vector(2 downto 1);
@@ -296,44 +340,39 @@ architecture syn of vectrex is
  signal ay_chan_a      : std_logic_vector(7 downto 0);
  signal ay_chan_b      : std_logic_vector(7 downto 0);
  signal ay_chan_c      : std_logic_vector(7 downto 0);
+ signal ay_ioa_oe      : std_logic;
  
  signal pot     : signed(7 downto 0);
  signal compare : std_logic;
  signal players_switches : std_logic_vector(7 downto 0);
  
- component ym2149 is port
-(
-	CLK       : in  std_logic;
-	CE        : in  std_logic;
-	RESET     : in  std_logic;
-	BDIR      : in  std_logic;
-	BC        : in  std_logic;
-	DI        : in  std_logic_vector(7 downto 0);
-	DO        : out std_logic_vector(7 downto 0);
-	CHANNEL_A : out std_logic_vector(7 downto 0);
-	CHANNEL_B : out std_logic_vector(7 downto 0);
-	CHANNEL_C : out std_logic_vector(7 downto 0);
-	SEL       : in  std_logic;
-	MODE      : in  std_logic;
-	IOA_in    : in  std_logic_vector(7 downto 0);
-	IOA_out   : out std_logic_vector(7 downto 0);
-	IOB_in    : in  std_logic_vector(7 downto 0);
-	IOB_out   : out std_logic_vector(7 downto 0)
-);
-end component ym2149;
+ signal vectrex_bd_rate_div       : std_logic_vector(7 downto 0) := X"00";
+ signal vectrex_serial_bit_in     : std_logic;
+ signal vectrex_serial_bit_in_d   : std_logic;
+ signal vectrex_serial_data_shift : std_logic_vector(7 downto 0) := X"00";
+ signal vectrex_serial_bit_cnt    : std_logic_vector(3 downto 0) := X"0";
+ signal vectrex_serial_byte_rdy   : std_logic;
+ signal vectrex_serial_byte_out   : std_logic_vector(7 downto 0) := X"00";
+ 
+ signal audio_1        : std_logic_vector(9 downto 0);
+ signal audio_speech   : std_logic_vector(9 downto 0);
+ --signal speech_mode    : std_logic_vector(1 downto 0);
+ signal speech_rdy     : std_logic;
+ signal sp0256_rdy     : std_logic;
+
+
  
 begin
 
 -- debug
-process (clock_12, cpu_fetch)
+process (clock_12)
 begin 
-	if rising_edge(clock_12) then
-		dbg_cpu_addr <= cpu_addr;
+	if rising_edge(clock_12) then		
+		if cpu_ifetch = '1' then
+			dbg_cpu_addr <=  cpu_addr;
+		end if;
 	end if;		
 end process;
-
-leds(7 downto 0) <= dac_sound; 
---------------------
 
 -- clocks
 reset_n <= not reset;
@@ -356,7 +395,24 @@ end process;
 
 via_en_4  <= clock_div(0);
 cpu_clock <= clock_div(2);
-cpu_clock_o <= clock_div(2);
+
+process (clock_24, reset)
+begin
+	if reset='1' then
+		clock_div2 <= (others=>'0');
+	else 		
+		if rising_edge(clock_24) then
+			if clock_div2 >= 99 then
+				clock_div2 <= (others=>'0');
+			else
+				clock_div2 <= clock_div2 + '1';
+			end if;		
+		end if;
+	end if;	
+end process;
+
+clock_250k <= clock_div2(6);
+
 
 --static ADDRESS_MAP_START(vectrex_map, AS_PROGRAM, 8, vectrex_state )
 --	AM_RANGE(0x0000, 0x7fff) AM_NOP // cart area, handled at machine_start
@@ -388,27 +444,51 @@ via_pa_i <= ay_do;
 via_pb_i <= "00"&compare&"00000";
 
 -- players controls
-players_switches <= not(btn24&btn23&btn22&btn21&btn14&btn13&btn12&btn11);
+players_switches <= not(btn24&btn23&btn22&btn21&btn14&btn13&btn12&btn11) when speech_mode = '0' 
+							else speech_rdy&speech_rdy&speech_rdy&speech_rdy & not(btn14&btn13&btn12&btn11);
 
-with dac_mux select
+with via_pb_o(2 downto 1) select  -- dac_mux but not delayed
 pot <= pot_x_1 when "00",
 		 pot_y_1 when "01",
 		 pot_x_2 when "10",
 		 pot_y_2 when others;
 
-compare <= '1' when (pot(7)&pot) > dac else '0';
+compare <= '1' when (pot(7)&pot) > signed(via_pa_o(7)&via_pa_o) else '0'; -- dac but not delayed
 
 -- beam control
-sh_dac            <= via_pb_o(0);
-dac_mux           <= via_pb_o(2 downto 1);
-zero_integrator_n <= via_ca2_o;
-ramp_integrator_n <= via_pb_o(7);
-beam_blank_n      <= via_cb2_o;
-			 			 
-dac <= signed(via_pa_o(7)&via_pa_o); -- must ensure sign extension for 0x80 value to be used in integrator equation
+
+-- integrator related signals have to be delayed with respect to blank signal
+-- tuned value : ~94 @ clock_12
+-- (port A, port B, CA2 and CB2 are declared to be delayed. Unsued delayed signals/buffers
+-- will be removed automaticaly by compiler so no ressources will be wasted)
+
+process (clock_12)
+begin
+	if rising_edge(clock_12) then
+	
+		delay_buffer(0) <= via_cb2_o & via_ca2_o & via_pb_o & via_pa_o;
+		for i in 255 downto 1 loop
+			delay_buffer(i) <= delay_buffer(i-1) ;
+		end loop;
+		
+		via_pa_o_d  <= delay_buffer(94)( 7 downto 0);
+		via_pb_o_d  <= delay_buffer(94)(15 downto 8);
+		via_ca2_o_d <= delay_buffer(94)(16);
+		via_cb2_o_d <= delay_buffer(94)(17);
+		
+	end if;
+end process;	
+
+sh_dac            <= via_pb_o_d(0);
+dac_mux           <= via_pb_o_d(2 downto 1);
+zero_integrator_n <= via_ca2_o_d;
+ramp_integrator_n <= via_pb_o_d(7);
+beam_blank_n      <= via_cb2_o;      -- blank is not delayed
+	 			 
+dac <= signed(via_pa_o_d(7)&via_pa_o_d); -- must ensure sign extension for 0x80 value to be used in integrator equation
 
 z_level <=  "11" when dac_z > 128 else 
-				"10" when dac_Z >  64 else
+				"10" when dac_z >  64 else
 				"01" when dac_z >   0 else 
 				"00";
 
@@ -419,12 +499,13 @@ begin
 		null;
 	else
       if rising_edge(clock_12) then
+				
 			if sh_dac = '0' then
 				case dac_mux is
 				when "00"   => dac_y     <= dac;
 				when "01"   => ref_level <= dac;
-				when "10"   => dac_z     <= unsigned(via_pa_o);
-				when others => dac_sound <= via_pa_o;
+				when "10"   => dac_z     <= unsigned(via_pa_o_d);
+				when others => dac_sound <= via_pa_o_d;
 				end case;
 			end if;
 
@@ -567,6 +648,7 @@ begin
 	end if;
 end process;
 
+
 -- uncomment when vram_width is 4
 --
 --video_pixel <= pixel(3 downto 2)&"00" when (pixel(1 downto 0) > "00") and (hblank = '0') else "0000";
@@ -654,9 +736,27 @@ begin
 	end if;
 end process;
 
-video_blankn <= not (hblank or vblank);
-
+video_hblank <= hblank;
+video_vblank <= vblank;
 scan_video_addr <= vcnt_video * std_logic_vector(to_unsigned(max_h,10)) + hcnt_video;
+		
+-- sound	
+process (cpu_clock)
+begin
+	if rising_edge(cpu_clock) then
+		if ay_audio_chan = "00" then ay_chan_a <= ay_audio_muxed; end if;
+		if ay_audio_chan = "01" then ay_chan_b <= ay_audio_muxed; end if;
+		if ay_audio_chan = "10" then ay_chan_c <= ay_audio_muxed; end if;
+	end if;	
+end process;
+
+audio_1  <= 	("00"&ay_chan_a) +
+					("00"&ay_chan_b) +
+					("00"&ay_chan_c) +
+					("00"&dac_sound);
+
+audio_out <=  "000"&audio_1(9 downto 3) + audio_speech;
+
 	
 frame <= frame_line;	
 ---------------------------
@@ -779,28 +879,76 @@ port map(
 
 
 -- AY-3-8910
-ym2149_inst : ym2149
-port map
-(
-	CLK       => cpu_clock,
-	CE        => '1',
-	RESET     => reset,
-	BDIR      => via_pb_o(4),
-	BC        => via_pb_o(3),
-	DI        => via_pa_o,
-	DO        => ay_do,
-	CHANNEL_A => ay_chan_a,
-	CHANNEL_B => ay_chan_b,
-	CHANNEL_C => ay_chan_c,
-	SEL       => '0',
-	MODE      => '0',
-	IOA_in    => players_switches,
-	IOB_in    => (others => '0')
+ay_3_8910_2 : entity work.YM2149
+port map(
+  -- data bus
+  I_DA       => via_pa_o,    -- in  std_logic_vector(7 downto 0);
+  O_DA       => ay_do,     -- out std_logic_vector(7 downto 0);
+  O_DA_OE_L  => open,      -- out std_logic;
+  -- control
+  I_A9_L     => '0',       -- in  std_logic;
+  I_A8       => '1',       -- in  std_logic;
+  I_BDIR     => via_pb_o(4),  -- in  std_logic;
+  I_BC2      => '1',       -- in  std_logic;
+  I_BC1      => via_pb_o(3),   -- in  std_logic;
+  I_SEL_L    => '0',       -- in  std_logic;
+
+  O_AUDIO    => ay_audio_muxed, -- out std_logic_vector(7 downto 0);
+  O_CHAN     => ay_audio_chan,  -- out std_logic_vector(1 downto 0);
+  
+  -- port a
+  I_IOA      => players_switches, -- in  std_logic_vector(7 downto 0);
+  O_IOA      => open,             -- out std_logic_vector(7 downto 0);
+  O_IOA_OE_L => ay_ioa_oe,        -- out std_logic;
+  -- port b
+  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
+  O_IOB      => open,            -- out std_logic_vector(7 downto 0);
+  O_IOB_OE_L => open,            -- out std_logic;
+
+  ENA        => '1', --cpu_ena,  -- in  std_logic; -- clock enable for higher speed operation
+  RESET_L    => reset_n,         -- in  std_logic;
+  CLK        => cpu_clock        -- in  std_logic  -- note 6 Mhz
 );
 
-audio_out <= 	("00"&ay_chan_a) +
-					("00"&ay_chan_b) +
-					("00"&ay_chan_c) +
-					("00"&dac_sound);
+-- select hardware speakjet or VHDL sp0256
 
+-- hardware speakjet chip interface
+--speech_rdy <= speakjet_rdy;
+--
+--speakjet : entity work.vectrex_speakjet
+--port map(	
+--	cpu_clock    => cpu_clock,
+--	clock_25     => clock_24,
+--	reset        => reset,
+--	
+--	mode         => speech_mode,        -- "01" for sp0256, else for speakjet
+--		
+--	vectrex_serial_byte_out => vectrex_serial_byte_out,
+--	vectrex_serial_byte_rdy => vectrex_serial_byte_rdy,
+--	
+--	speakjet_cmd => speakjet_cmd,       -- serial data to speakjet chip
+--	speakjet_rdy => speakjet_rdy,       -- speakjet chip is ready to receive a new cmd
+--	speakjet_pwm => speakjet_pwm,       -- speakjet chip audio output
+--	
+--	audio_out    => audio_speech
+--
+--);
+
+-- sp0256 VHDL simulation
+speech_rdy <= not sp0256_rdy;
+ 
+sp0256 : entity work.sp0256
+port map(
+ clock_250k  => clock_250k,  
+ reset       => reset,
+ 
+ input_rdy      => sp0256_rdy,
+ allophone      => vectrex_serial_byte_out(5 downto 0),
+ trig_allophone => vectrex_serial_byte_rdy,
+ 
+ audio_out      => audio_speech
+  
+);
+
+ 
 end SYN;

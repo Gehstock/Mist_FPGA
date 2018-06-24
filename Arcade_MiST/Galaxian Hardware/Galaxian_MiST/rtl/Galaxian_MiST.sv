@@ -19,7 +19,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Galaxian
+module Galaxian_MiST
 (
 	output        LED,
 	output  [5:0] VGA_R,
@@ -43,9 +43,9 @@ module Galaxian
 localparam CONF_STR = {
 	"Galaxian;;",
 	"O2,Joystick Control,Upright,Normal;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.50.",`BUILD_DATE
 };
 
 wire [31:0] status;
@@ -60,17 +60,17 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clk_18, clk_12, clk_6, clk_4p5;
+wire clk_24, clk_18, clk_12, clk_6;
 wire pll_locked;
 
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_18),
-	.c1(clk_12),
-	.c2(clk_6),
-	.c3(clk_4p5)//for now, needs a fix
+	.c0(clk_24),
+	.c1(clk_18),
+	.c2(clk_12),
+	.c3(clk_6)
 );
 
 wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
@@ -83,7 +83,7 @@ wire m_start1 = kbjoy[1];
 wire m_start2 = kbjoy[2];
 wire m_coin   = kbjoy[3];
 
-galaxiant galaxiant
+galaxian galaxian
 (
 	.W_CLK_18M(clk_18),
 	.W_CLK_12M(clk_12),
@@ -106,7 +106,7 @@ wire [7:0] audio_a, audio_b;
 wire [10:0] audio = {1'b0, audio_b, 2'b0} + {3'b0, audio_a};
 
 dac dac (
-	.clk_i(clk_18),
+	.clk_i(clk_24),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -118,11 +118,11 @@ wire hs, vs;
 wire [2:0] r, g, b;
 wire hblank, vblank;
 wire blankn = ~(hblank | vblank);
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 (
-	.clk_sys(clk_18),
-	.ce_pix(clk_4p5),
-	.ce_pix_actual(clk_4p5),
+	.clk_sys(clk_24),
+	.ce_pix(clk_6),
+	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -137,8 +137,8 @@ video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.hq2x(status[4:3]==1),
+	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 2'b11, status[4:3] == 2'b10, status[4:3] == 2'b01}),
+	.hq2x(0),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
@@ -146,7 +146,7 @@ video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_18   	  ),
+	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -165,8 +165,8 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_18),
-	.reset(),
+	.clk(clk_24),
+	.reset(0),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
 	.joystick(kbjoy)

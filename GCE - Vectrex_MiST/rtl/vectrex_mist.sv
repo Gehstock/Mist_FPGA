@@ -21,14 +21,14 @@ module vectrex_mist
 
 localparam CONF_STR = {
 	"Vectrex;BINVECROM;",
-	"O2,Show Frame,No,Yes;",
-   "O3,Skip Logo,No,Yes;",		
+	"O2,Show Frame,Yes,No;",
+   "O3,Skip Logo,Yes,No;",
+	"O4,Second Joystick, Player 2, Player 1;",	
+//	"O5,Speech Mode,No,Yes;",
 //	"O23,Phosphor persistance,1,2,3,4;",
-//	"O8,Overburn,No,Yes;",
-	
-	
+//	"O8,Overburn,No,Yes;",	
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.50.",`BUILD_DATE
 };
 
 wire [31:0] status;
@@ -44,7 +44,8 @@ wire  [7:0]	pot_y_1, pot_y_2;
 wire  [9:0] audio;
 wire 			hs, vs, cs;
 wire  [3:0] r, g, b;
-wire       	blankn;
+wire 			hb, vb;
+wire       	blankn = ~(hb | vb);
 wire 			cart_rd;
 wire [13:0] cart_addr;
 wire  [7:0] cart_do;
@@ -60,7 +61,7 @@ assign LED = !ioctl_downl;
 wire 			clk_24, clk_12, clk_6;
 wire 			pll_locked;
 
-always @(clk_6)begin
+always @(clk_12)begin
 	pot_x_1 = 8'h00;
 	pot_y_1 = 8'h00;
 	pot_x_2 = 8'h00;
@@ -121,7 +122,9 @@ vectrex vectrex (
 	.video_g			( gg				),
 	.video_b			( bb				),
 	.video_csync	( cs				),
-	.video_blankn	( blankn			),
+	.video_hblank	( hb				),
+	.video_vblank	( vb				),
+//	.speech_mode   ( status[5]		),
 	.video_hs		( hs				),
 	.video_vs		( vs				),
 	.frame			( frame_line	),
@@ -129,16 +132,16 @@ vectrex vectrex (
 	.cart_addr		( cart_addr		),
 	.cart_do			( cart_do		),
 	.cart_rd			( cart_rd		),	
-	.btn11			( joystick_0[4] | kbjoy[4]),
-	.btn12			( joystick_0[5] | kbjoy[5]),
-	.btn13			( joystick_0[6] | kbjoy[6]),
-	.btn14			( joystick_0[7] | kbjoy[7]),
+	.btn11			( joystick_0[4] | kbjoy[4] | status[4] ? joystick_1[4] : 1'b0),
+	.btn12			( joystick_0[5] | kbjoy[5] | status[4] ? joystick_1[5] : 1'b0),
+	.btn13			( joystick_0[6] | kbjoy[6] | status[4] ? joystick_1[6] : 1'b0),
+	.btn14			( joystick_0[7] | kbjoy[7] | status[4] ? joystick_1[7] : 1'b0),
 	.pot_x_1			( pot_x_1			),
 	.pot_y_1			( pot_y_1			),
-	.btn21			( joystick_1[4] | kbjoy[12]),
-	.btn22			( joystick_1[5] | kbjoy[13]),
-	.btn23			( joystick_1[6] | kbjoy[14]),
-	.btn24			( joystick_1[7] | kbjoy[15]),
+	.btn21			( kbjoy[12] | ~status[4] ? joystick_1[4] : 1'b0),
+	.btn22			( kbjoy[13] | ~status[4] ? joystick_1[5] : 1'b0),
+	.btn23			( kbjoy[14] | ~status[4] ? joystick_1[6] : 1'b0),
+	.btn24			( kbjoy[15] | ~status[4] ? joystick_1[7] : 1'b0),
 	.pot_x_2			( pot_x_2			),
 	.pot_y_2			( pot_y_2			),
 	.leds				(					),
@@ -178,7 +181,7 @@ video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer (
 	.G					(  blankn ? g : "0000"),
 	.B					(  blankn ? b : "0000"),
 	.HSync			( hs				),
-	.VSync			( vs				),
+	.VSync			( vs			   ),
 	.VGA_R			( VGA_R			),
 	.VGA_G			( VGA_G			),
 	.VGA_B			( VGA_B			),
@@ -215,7 +218,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
 
 keyboard keyboard (
 	.clk				( clk_24			),
-	.reset			(					),
+	.reset			( 0				),
 	.ps2_kbd_clk	( ps2_kbd_clk	),
 	.ps2_kbd_data	( ps2_kbd_data	),
 	.joystick		( kbjoy			)

@@ -23,7 +23,7 @@ library ieee;
 
 --use work.pkg_galaxian.all;
 
-entity galaxiant is
+entity galaxian is
 	port(
 		W_CLK_18M  : in  std_logic;
 		W_CLK_12M  : in  std_logic;
@@ -46,7 +46,7 @@ entity galaxiant is
 	);
 end;
 
-architecture RTL of galaxiant is
+architecture RTL of galaxian is
 	--    CPU ADDRESS BUS
 	signal W_A                : std_logic_vector(15 downto 0) := (others => '0');
 	--    CPU IF
