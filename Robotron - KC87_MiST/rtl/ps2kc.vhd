@@ -34,8 +34,8 @@ entity ps2kc is
     port (
         clk      : in std_logic;
         res      : in std_logic;
-        ps2clk   : in std_logic;
-        ps2data  : in std_logic;
+        ps2clk   : inout std_logic;
+        ps2data  : inout std_logic;
         data     : out std_logic_vector(7 downto 0);
         ps2code  : out std_logic_vector(7 downto 0);
         ps2rcvd  : out std_logic;

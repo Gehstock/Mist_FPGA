@@ -78,9 +78,9 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	output reg        sd_buff_wr,
 
 	// ps2 keyboard emulation
-	output            ps2_kbd_clk,
+	inout            ps2_kbd_clk,
 	output reg        ps2_kbd_data,
-	output            ps2_mouse_clk,
+	inout            ps2_mouse_clk,
 	output reg        ps2_mouse_data,
 
 	// ARM -> FPGA download

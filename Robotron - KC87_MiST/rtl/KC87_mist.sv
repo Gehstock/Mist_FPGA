@@ -32,7 +32,7 @@ wire 			clk_12p5;
 wire 			clk_40;
 wire        scandoubler_disable;
 wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
+tri        ps2_kbd_clk, ps2_kbd_data;
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;

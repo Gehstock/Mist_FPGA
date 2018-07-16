@@ -36,8 +36,8 @@ entity kc87 is
         VGA_B       : out std_logic_vector(3 downto 0);
         VGA_HS      : out std_logic;
         VGA_VS      : out std_logic;    
-        PS2_CLK     : in std_logic;
-        PS2_DAT     : in std_logic;   
+        PS2_CLK     : inout std_logic;
+        PS2_DAT     : inout std_logic;   
         UART_TXD    : out std_logic;
         UART_RXD    : in std_logic;
         
@@ -192,24 +192,6 @@ begin
     process
     begin
         wait until rising_edge(clk);
-        
-        if (m1_n='0' and iorq_n='0') then
-            if intAckCTC='1' then 
-                testAddr1 <= (others => '0');
-                testAddr1(7 downto 0) <= cpu_di;
-            end if;
-            
-            if intAckPio1='1' then 
-                testAddr2 <= (others => '0');
-                testAddr2(7 downto 0) <= cpu_di;
-            end if;
-            
-            if intAckPio2='1' then 
-                testAddr3 <= (others => '0');
-                testAddr3(7 downto 0) <= cpu_di;
-            end if;      
-        end if;
-        
         if m1_n='0' and rd_n = '0' and ram_cs_n = '0' then
             lastIntE <= intE;
 --            lastM1Addr <= cpu_addr;
@@ -299,13 +281,11 @@ begin
     
     -- teh cpu
     cpu : entity work.T80se
-        generic map(Mode => 1, T2Write => 1, IOWait => 0)
+        generic map(Mode => 0, T2Write => 1, IOWait => 0)
         port map(
             RESET_n => resetInt,
             CLK_n   => clk,
             CLKEN   => kcSysClk or sysctl_d(1),
---            CLKEN   => clkEn,
---            CLKEN   => kcSysClk,
             WAIT_n  => wait_n,
             INT_n   => int_n,
             NMI_n   => nmi_n,
@@ -549,14 +529,14 @@ begin
         ramAddr => vgaramaddr,
         colData => vgacoldata,
         charData => vgachardata,
-        scanLine => '0'
+        scanLine => '1'
     );
     
     -- ps/2 interface
     ps2kc : entity work.ps2kc
     port map (
         clk     => clk,
-        res     => '1',
+        res     => '1',--resetInt,
         ps2clk  => PS2_CLK,
         ps2data => PS2_DAT,
         data    => open,
