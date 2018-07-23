@@ -3,6 +3,7 @@ del /s *.bak
 del /s *.orig
 del /s *.rej
 del /s *~
+rmdir /s /q output
 rmdir /s /q db
 rmdir /s /q incremental_db
 rmdir /s /q output_files

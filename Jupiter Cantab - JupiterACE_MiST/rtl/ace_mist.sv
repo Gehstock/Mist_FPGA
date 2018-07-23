@@ -68,7 +68,7 @@ pll pll(
 	.c0(clk_sys),//26.0Mhz
 	.c1(clk_65),//6.5Mhz
 	.c2(clk_cpu),//3.25Mhz
-	.c3(clk_sdram),//100Mhz
+	.c3(SDRAM_CLK),//100Mhz
 	.locked(locked)
 	);
 
@@ -127,7 +127,7 @@ video_mixer #(.LINE_LENGTH(800), .HALF_DEPTH(1)) video_mixer
 	.VGA_HS(VGA_HS)
 );
 
-wire [24:0]sd_addr;
+wire [14:0]sd_addr;
 wire [7:0]sd_dout;
 wire [7:0]sd_din;
 wire sd_we;
@@ -145,9 +145,9 @@ sram sram(
 	.SDRAM_nRAS(SDRAM_nRAS),
 	.SDRAM_nCAS(SDRAM_nCAS),
 	.SDRAM_CKE(SDRAM_CKE),
-	.init(~reset),
-	.clk_sdram(clk_sdram),			
-	.addr(sd_addr),   // 25 bit address
+	.init(~locked),
+	.clk_sdram(SDRAM_CLK),			
+	.addr({10'b0000000000,sd_addr}),   // 25 bit address
 	.dout(sd_dout),	// data output to cpu
 	.din(sd_din),     // data input from cpu
 	.we(sd_we),       // cpu requests write

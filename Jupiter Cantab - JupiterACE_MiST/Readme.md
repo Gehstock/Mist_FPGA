@@ -1,0 +1,1 @@
+use sdram für 32k ERAM need Test

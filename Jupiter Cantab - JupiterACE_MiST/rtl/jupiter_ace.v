@@ -33,9 +33,9 @@ module jupiter_ace (
 	output wire vsync,
    output wire mic,
    output wire spk,
-   output wire sd_addr,
-   input wire sd_dout,
-   output wire sd_din,
+   output wire [14:0] sd_addr,
+   input wire [7:0] sd_dout,
+   output wire [7:0] sd_din,
    output wire sd_we,
    output wire sd_rd,
    input wire sd_ready
@@ -111,8 +111,8 @@ module jupiter_ace (
         .we(~wr_n)
 		);
 		
-assign sd_addr = AZ80[13:0];
-//assign sd_dout = dout_eram;
+assign sd_addr = AZ80[14:0];
+assign dout_eram = sd_dout;
 assign sd_din = DoutZ80;
 assign sd_we = ~wr_n;
 assign sd_rd = eram_enable;
