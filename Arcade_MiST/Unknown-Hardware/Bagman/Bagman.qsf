@@ -40,7 +40,7 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.0.2
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:48:06 MAY 24,2017"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
@@ -124,8 +124,8 @@ set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 # Fitter Assignments
 # ==================
 set_global_assignment -name DEVICE EP3C25E144C8
-set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
-set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+#set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+#set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
