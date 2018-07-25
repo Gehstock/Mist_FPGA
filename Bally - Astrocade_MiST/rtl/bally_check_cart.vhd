@@ -70,25 +70,22 @@ end;
 
 architecture RTL of BALLY_CHECK_CART is
 
-  component BALLY_CHECK
-    port (
-      CLK         : in    std_logic;
-      ADDR        : in    std_logic_vector(10 downto 0);
-      DATA        : out   std_logic_vector(7 downto 0)
-      );
-  end component;
-
   signal dout : std_logic_vector(7 downto 0);
 
 begin
   -- chars 0-9, a = '-', b = 'E', c = 'H', d = 'L', e = 'P', f = blank
-  u_rom : entity work.BALLY_CHECK
-    port map (
-      clock         => CLK,
-      clken         => ENA,
-      address        => I_EXP_ADDR(10 downto 0),
-      q        => dout
-      );
+  	u_rom : entity work.sprom
+	generic map (
+		init_file         => ".\roms\balcheck.hex",
+		widthad_a         => 11,
+		width_a         	=> 8
+	)
+	port map (
+		address         	=> I_EXP_ADDR(10 downto 0),
+		clock	         	=> CLK,
+		q		        	 	=> dout
+	);
+
 
   p_dout : process(dout, I_EXP_ADDR)
   begin

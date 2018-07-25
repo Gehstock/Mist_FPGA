@@ -137,7 +137,6 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 # end ENTITY(bally_mist)
 # ----------------------
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/bally_mist.sv
-set_global_assignment -name VHDL_FILE rtl/bally_top.vhd
 set_global_assignment -name VHDL_FILE rtl/bally.vhd
 set_global_assignment -name VHDL_FILE rtl/ps2kbd.vhd
 set_global_assignment -name VHDL_FILE rtl/bally_rams.vhd
@@ -163,4 +162,5 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
 set_global_assignment -name VERILOG_FILE rtl/game.v
 set_global_assignment -name QIP_FILE rtl/cart.qip
+set_global_assignment -name VHDL_FILE rtl/bally_check_cart.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
