@@ -1,4 +1,4 @@
-Games that shold work on this hardware by Rom swap
+Games that should work on this hardware after Rom swap
 
 Nibbler
 Fantasy
