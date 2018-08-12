@@ -12,7 +12,7 @@ entity bagman is
 port(
   clock_12  : in std_logic;
   reset        : in std_logic;
-
+  tv15Khz_mode : in std_logic;
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
   video_b      : out std_logic_vector(1 downto 0);
@@ -151,6 +151,7 @@ signal pal16r6_data : std_logic_vector(5 downto 0);
 -- line doubler I/O
 signal video_i : std_logic_vector (7 downto 0);
 signal video_o : std_logic_vector (7 downto 0);
+signal video_s : std_logic_vector (7 downto 0);
 signal hsync_o : std_logic;
 signal vsync_o : std_logic;
 
@@ -202,15 +203,30 @@ begin
 	end if;
 end process;
 
-video_r     <= video_i(2 downto 0);
-video_g     <= video_i(5 downto 3);
-video_b     <= video_i(7 downto 6);
+video_r  <= video_s(2 downto 0);				
+video_g  <= video_s(5 downto 3);				
+video_b  <= video_s(7 downto 6);
+
 
 video_hblank <= hblank;
 video_vblank <= vblank;
 
-video_hs    <= hsync;
-video_vs    <= vsync;
+video_hs    <= hsync_o when tv15Khz_mode = '0' else hsync;
+video_vs    <= vsync_o when tv15Khz_mode = '0' else vsync;
+video_s  <= video_o when tv15Khz_mode = '0' else video_i;
+
+
+-- line doubler 
+line_doubler : entity work.line_doubler
+port map(
+	clock_12mhz  => clock_12,
+	video_i  => video_i,
+	hsync_i  => hsync,
+	vsync_i  => vsync,
+	video_o  => video_o,
+	hsync_o  => hsync_o,
+	vsync_o  => vsync_o
+);
 
 ------------------
 -- player controls
