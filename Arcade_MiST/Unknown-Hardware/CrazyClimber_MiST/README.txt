@@ -2,15 +2,6 @@
 Crazy Climber Port to Mist FPGA by Gehstock
 
 
-ToDo: Fix Video
-
-
-
-
-
-
-
-
 -------------------------------------------------
 Crazy climber FPGA by Dar - (darfpga@aol.fr)
 -- http://darfpga.blogspot.fr
