@@ -62,7 +62,7 @@ wire m_coin   = kbjoy[3];
 berzerk berzerk(
 	.clock_10(clk_10),
 	.reset(status[0] | status[6] | buttons[1]),
-	.tv15Khz_mode(1'b1),
+	.tv15Khz_mode(scandoubler_disable),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
@@ -106,7 +106,7 @@ assign AUDIO_R = AUDIO_L;
 wire 	hs, vs;
 wire  r, g, b;
 
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
 	.clk_sys(clk_40),
 	.ce_pix(clk_10),
@@ -124,7 +124,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoubler_disable),
+	.scandoubler_disable(1'b1),//scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
 	.ypbpr_full(1),

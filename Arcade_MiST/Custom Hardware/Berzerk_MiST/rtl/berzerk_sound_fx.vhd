@@ -13,7 +13,7 @@ port	(
 	cs     : in  std_logic;
 	addr   : in  std_logic_vector(4 downto 0);
 	di     : in  std_logic_vector(7 downto 0);
-	sample : out std_logic_vector(15 downto 0)
+	sample : out std_logic_vector(11 downto 0)
 );
 end berzerk_sound_fx;
 
@@ -48,7 +48,7 @@ constant vol : vol_type := (X"01", X"02", X"04", X"08", X"10", X"20", X"40", X"8
 signal snd1 : signed(8 downto 0);
 signal snd2 : signed(8 downto 0);
 signal snd3 : signed(8 downto 0);
-signal snd  : std_logic_vector(11 downto 0);
+--signal snd  : std_logic_vector(11 downto 0);
 
 signal ptm6840_q1_r : std_logic;
 signal ena_q1_clock : std_logic;
@@ -59,8 +59,7 @@ signal ena_external_clock : std_logic;
 
 begin
 
-snd <= std_logic_vector(snd1+snd2+snd3) + X"7FF";
-sample <= '0' & snd & "000";
+sample <= std_logic_vector(snd1+snd2+snd3) + X"7FF";
 
 -- make enable signal to replace misc clocks
 process(clock)

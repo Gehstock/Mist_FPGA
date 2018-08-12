@@ -51,7 +51,7 @@
 --
 -- Sound effects uses a ptm6840 timer (3 channel) + noise generator and volume control
 --
--- TODO : speech synthesis.
+
 --
 -----------------------------------------------------------------------------------------------
 -- Problème rencontré : cpu_int acquitée par iorq durant le cylce de capture du vecteur
@@ -74,7 +74,7 @@ port(
   clock_10     : in std_logic;
   reset        : in std_logic;
   tv15Khz_mode : in std_logic;
-  
+
   video_r      : out std_logic;
   video_g      : out std_logic;
   video_b      : out std_logic;
@@ -102,7 +102,8 @@ port(
   up2        : in std_logic;
   fire2      : in std_logic;
   
-  ledr        : out std_logic_vector(9 downto 0);
+  sw          : in std_logic_vector(9 downto 0);
+  ledr        : out std_logic_vector(9 downto 0) := "0000000000";
   dbg_cpu_di   : out std_logic_vector( 7 downto 0);
   dbg_cpu_addr : out std_logic_vector(15 downto 0);
   dbg_cpu_addr_latch : out std_logic_vector(15 downto 0)
@@ -198,7 +199,14 @@ signal video_s : std_logic_vector (3 downto 0);
 signal hsync_o : std_logic;
 signal vsync_o : std_logic;
 
+signal sound_out   : std_logic_vector(11 downto 0);
+signal speech_out  : std_logic_vector(11 downto 0);
+signal speech_busy : std_logic;
+
 begin
+
+audio_out <= ("00"&speech_out&"00")+('0'&sound_out&"000");
+
 
 clock_10n <= not clock_10;
 reset_n   <= not reset;
@@ -258,19 +266,7 @@ begin
 	end if;
 end process;
 
--- output
-video_s  <= video_i;--video_o when tv15Khz_mode = '0' else video_i;
 
-video_r  <= video_s(0);				
-video_g  <= video_s(1);				
-video_b  <= video_s(2);
-video_hi <= video_s(3);
-
-
-video_clk   <= clock_10;
-video_csync <= csync;
-video_hs    <= hsync;--hsync_o;
-video_vs    <= vsync;--vsync_o;
 
 ------------------
 -- player controls
@@ -379,10 +375,10 @@ with cpu_addr(15 downto 11) select
 		x"FF"        when others;
 
 -- I/O-2 mux
-with cpu_addr(2 downto 0) select 
+with cpu_addr(2 downto 0) select
 	cpu_di_io <=
-		X"BC"  when "000", -- 60 (F3)  (normal : BC, hatch test : BE, input test BD )
-		X"FC"  when "001", -- 61 (F2)  (normal : FC, signature analisys FF)
+		X"3C"  when "000", -- 60 (F3)  (normal French: BC, normal Spain: FC, hatch test : BE, input test BD ) DIP F3
+		X"FC"  when "001", -- 61 (F2)  (normal : FC, signature analisys FF)												DIP F2
 		X"F0"  when "010", -- 62 (F6)
 		X"F0"  when "011", -- 63 (F5)   
 		X"F0"  when "100", -- 64 (F4)
@@ -394,6 +390,7 @@ with cpu_addr(2 downto 0) select
 -- I/O-1 and final mux
 -- pull up on ZPU board
 cpu_di <=  "111111" & cpu_int_n & '0'           when cpu_iorq_n = '0' and cpu_m1_n = '0' -- interrupt vector
+		else '0'&not(speech_busy)&"000000"        when io1_cs = '1' and cpu_addr(3 downto 0) = X"4"  -- speech board
 		else player1                              when io1_cs = '1' and cpu_addr(3 downto 0) = X"8"  -- P1
 		else system                               when io1_cs = '1' and cpu_addr(3 downto 0) = X"9"  -- sys
 		else player2                              when io1_cs = '1' and cpu_addr(3 downto 0) = X"a"  -- P2
@@ -522,6 +519,21 @@ port map(
 	vsync_o  => vsync_o
 );
 
+
+--video_s <= video_i;
+--video_hs <= hsync;
+--video_vs <= vsync;
+video_r  <= video_s(0);				
+video_g  <= video_s(1);				
+video_b  <= video_s(2);
+video_hi <= video_s(3);
+
+-- output
+video_s  <= video_o when tv15Khz_mode = '0' else video_i;
+video_clk   <= clock_10;
+video_csync <= csync;
+video_hs    <= hsync_o when tv15Khz_mode = '0' else hsync;
+video_vs    <= vsync_o when tv15Khz_mode = '0' else vsync;
 -- Z80
 Z80 : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
@@ -606,7 +618,21 @@ port map(
 	cs     => io1_cs,
 	addr   => cpu_addr(4 downto 0),
 	di     => cpu_do,
-   sample => audio_out
+   sample => sound_out
+);
+
+-- speech synthesis (s14001a)
+berzerk_speech : entity work.berzerk_speech
+port map(
+	sw     => sw,
+	clock  => cpu_clock,
+	reset  => reset,
+	cs     => io1_cs,
+	wr_n   => cpu_wr_n,
+	addr   => cpu_addr(4 downto 0),
+	di     => cpu_do,
+	busy   => speech_busy,
+   sample => speech_out
 );
 ------------------------------------------
 end architecture;
