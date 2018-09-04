@@ -91,9 +91,9 @@ entity fpga64_sid_iec is
 		ces         : out std_logic_vector(3 downto 0);
 
 		--Connector to the SID
-		SIDclk      : out std_logic;
+		SIDclk      : buffer std_logic;
 		still       : out unsigned(15 downto 0);
-		audio_data  : out std_logic_vector(17 downto 0);
+		audio_data  : out std_logic_vector(15 downto 0);
 		extfilter_en: in  std_logic;
 
 		-- IEC
@@ -102,7 +102,7 @@ entity fpga64_sid_iec is
 		iec_clk_o	: out std_logic;
 		iec_clk_i	: in  std_logic;
 		iec_atn_o	: out std_logic;
-		iec_atn_i	: in  std_logic;
+--		iec_atn_i	: in  std_logic;
 		
 		disk_num    : out std_logic_vector(7 downto 0);
 
@@ -212,6 +212,10 @@ architecture rtl of fpga64_sid_iec is
 	signal cpuDi: unsigned(7 downto 0);
 	signal cpuDo: unsigned(7 downto 0);
 	signal cpuIO: unsigned(7 downto 0);
+	
+	signal ioF_ext: std_logic;
+	signal ioE_ext: std_logic;
+	signal io_data: unsigned(7 downto 0);
 
 	signal vicDi: unsigned(7 downto 0);
 	signal vicAddr: unsigned(15 downto 0);
@@ -246,9 +250,28 @@ architecture rtl of fpga64_sid_iec is
 	signal ntscMode : std_logic;
 	signal ntscModeInvert : std_logic := '0' ;
 	signal restore_key : std_logic;
-
+	
 	signal clk_1MHz     : std_logic_vector(31 downto 0);
 	signal voice_volume : signed(17 downto 0);
+	signal pot_x        : std_logic_vector(7 downto 0);
+	signal pot_y        : std_logic_vector(7 downto 0);
+
+	component sid8580
+		port (
+			reset    : in std_logic;
+			clk      : in std_logic;
+			ce_1m    : in std_logic;
+			we       : in std_logic;
+			addr     : in std_logic_vector(4 downto 0);
+			data_in  : in std_logic_vector(7 downto 0);
+			data_out : out std_logic_vector(7 downto 0);
+			pot_x    : in std_logic_vector(7 downto 0);
+			pot_y    : in std_logic_vector(7 downto 0);
+			audio_data   : out std_logic_vector(15 downto 0);
+			extfilter_en : in std_logic
+	  );
+	end component sid8580;
+	
 begin
 -- -----------------------------------------------------------------------
 -- Local signal to outside world
@@ -402,6 +425,9 @@ begin
 		max_ram => max_ram,
 
 		ramData => ramDataReg,
+--		ioF_ext => ioF_ext,
+--		ioE_ext => ioE_ext,
+--		io_data => io_data,
 
 		cpuWe => cpuWe,
 		cpuAddr => cpuAddr,
@@ -523,7 +549,7 @@ begin
 -- -----------------------------------------------------------------------
 -- SID
 -- -----------------------------------------------------------------------
-	div1m: process(clk32)				-- this process devides 32 MHz to 1MHz (for the SID)
+div1m: process(clk32)				-- this process devides 32 MHz to 1MHz (for the SID)
 	begin									
 		if (rising_edge(clk32)) then			    			
 			if (reset = '1') then				
@@ -535,30 +561,23 @@ begin
 		end if;
 	end process;
 
-	audio_data <= std_logic_vector(voice_volume);
-
-	sid: entity work.sid_top
+sid_8580 : sid8580
 	port map (
-		clock => clk32,
 		reset => reset,
-                      
-		addr => "000" & cpuAddr(4 downto 0),
-		wren => pulseWrRam and phi0_cpu and cs_sid,
-		wdata => std_logic_vector(cpuDo),
-		rdata => sid_do,
-		
-		potx => not std_logic((cia1_pao(7) and JoyA(5)) or (cia1_pao(6) and JoyB(5))),
-		poty => not std_logic((cia1_pao(7) and JoyA(6)) or (cia1_pao(6) and JoyB(6))),
-		comb_wave_l => '0',
-		comb_wave_r => '0',
-
-		extfilter_en => extfilter_en,
-
-		start_iter => clk_1MHz(31),
-		sample_left => voice_volume,
-		sample_right => open
+		clk => clk32,
+		ce_1m => clk_1MHz(31),
+		we => pulseWrRam and phi0_cpu and cs_sid,
+		addr => std_logic_vector(cpuAddr(4 downto 0)),
+		data_in => std_logic_vector(cpuDo),
+		data_out => sid_do,
+		pot_x => pot_x,
+		pot_y => pot_y,
+		audio_data => audio_data,
+		extfilter_en => extfilter_en
 	);
-
+	
+	pot_x <= X"FF" when ((cia1_pao(7) and JoyA(5)) or (cia1_pao(6) and JoyB(5))) = '0' else X"00";
+	pot_y <= X"FF" when ((cia1_pao(7) and JoyA(6)) or (cia1_pao(6) and JoyB(6))) = '0' else X"00";
 -- -----------------------------------------------------------------------
 -- CIAs
 -- -----------------------------------------------------------------------

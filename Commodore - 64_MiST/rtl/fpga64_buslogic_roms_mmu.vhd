@@ -141,7 +141,8 @@ begin
 			rdaddress => std_logic_vector(cpuAddr(14) & cpuAddr(12 downto 0)),
 			q => romData_c64
 		);
-		
+
+-- not enough BRAM on MIST FPGA		
 --	kernelromGS: entity work.rom_GS64
 --		port map 
 --		(
@@ -157,6 +158,7 @@ begin
 		
 
 	romData <= romData_c64gs when c64gs_ena = '1' else romData_c64;
+
 	process(clk)
 	begin
 		if rising_edge(clk) then

@@ -121,23 +121,20 @@ component sram is port
 );
 end component;
 
----------
--- Mist IO
----------
-
--- config string used by the io controller to fill the OSD
---constant CONF_STR : string := "C64;PRG;S1,D64;O2,Video standard,PAL,NTSC;O8A,Scandoubler Fx,None,HQ2x-320,HQ2x-160,CRT 25%,CRT 50%;O3,Joysticks,normal,swapped;O6,Audio filter,On,Off;T5,Reset;V0,v0.27.33";
-constant CONF_STR : string := "C64;;"&
-"S,D64,Mount Disk;"&
-"F,PRG,Load File;"&
-"F,CRT,Load Cartridge;" &
-"O2,Video standard,PAL,NTSC;"&
-"O8A,Scandoubler Fx,None,HQ2x-320,HQ2x-160,CRT 25%,CRT 50%;"&
-"O3,Joysticks,normal,swapped;"&
-"O6,Audio filter,On,Off;"&
---"OB,BIOS,C64,C64GS;" &
---"T5,Reset;"&
-"V0,v0.30.30";
+constant CONF_STR : string := 
+	"C64;;"&
+	"S,D64,Mount Disk;"&
+	"F,PRG,Load File;"&
+	"F,CRT,Load Cartridge;" &--3
+--	"F,TAP,Load File;"&--4
+--	"F,T64,Load File;"&--5
+	"O2,Video standard,PAL,NTSC;"&
+	"O8A,Scandoubler Fx,None,HQ2x-320,HQ2x-160,CRT 25%,CRT 50%;"&
+	"O3,Joysticks,normal,swapped;"&
+	"O6,Audio filter,On,Off;"&
+--	"OB,BIOS,C64,C64GS;" &
+	"T5,Reset & Detach Cartridge;"&
+	"V0,v0.35.00";
 
 -- convert string to std_logic_vector to be given to user_io
 function to_slv(s: string) return std_logic_vector is 
@@ -278,14 +275,15 @@ end component;
 	
 ---------
 -- audio
----------
+--------
 
 component sigma_delta_dac port
 (
-	CLK      : in std_logic;
-	RESET    : in std_logic;
-	DACin    : in std_logic_vector(14 downto 0);
-	DACout   : out std_logic
+	clk      : in std_logic;
+	ldatasum : in std_logic_vector(14 downto 0);
+	rdatasum : in std_logic_vector(14 downto 0);
+	aleft     : out std_logic;
+	aright    : out std_logic
 );
 
 end component sigma_delta_dac;
@@ -431,7 +429,6 @@ end component cartridge;
 	signal sd_change      : std_logic;
 	signal disk_readonly  : std_logic;
 	signal old_download     : std_logic;	
-	-- these need to be redirected to the SDRAM
 	signal sdram_we : std_logic;
 	signal sdram_ce : std_logic;
 
@@ -483,7 +480,7 @@ end component cartridge;
 	signal hsync_out : std_logic;
 	signal vsync_out : std_logic;
 	
-	signal audio_data : std_logic_vector(17 downto 0);
+	signal audio_data : std_logic_vector(15 downto 0);
 	
 	signal reset_counter    : integer;
 	signal reset_n          : std_logic;
@@ -492,7 +489,6 @@ end component cartridge;
 	signal nmi         :  std_logic;
 	signal nmi_ack     :  std_logic;
 	signal erasing          : std_logic;
--- temporary signal to extend c64_addr to 24bit	LCA
 	signal c64_addr_temp : std_logic_vector(24 downto 0);	
 	signal cart_blk_len     : std_logic_vector(31 downto 0);	
 	signal cart_hdr_cnt     : std_logic_vector(3 downto 0);
@@ -503,7 +499,7 @@ end component cartridge;
 begin
 
 	-- 1541 activity led
-	LED <= not led_disk;
+	LED <= not ioctl_download;
 
 	iec_cycle <= '1' when ces = "1011" else '0';
 		
@@ -638,7 +634,7 @@ begin
 			end if;
 
 			if ioctl_wr='1' then
-				if ioctl_index = 2 then
+				if ioctl_index = 2 then--prg
 					if ioctl_addr = 0 then
 						ioctl_load_addr(7 downto 0) <= ioctl_data;
 					elsif(ioctl_addr = 1) then
@@ -685,6 +681,15 @@ begin
 							if(cart_hdr_cnt = 15) then cart_hdr_wr <= '1';                        end if;
 						else
 							cart_blk_len <= cart_blk_len - "1";
+							ioctl_ram_wr <= '1';
+						end if;
+					end if;
+					
+					if ioctl_index = 4 then
+						if ioctl_addr = 0 then
+							ioctl_load_addr <= '0' & X"200000";
+							ioctl_ram_data <= ioctl_data;
+						else
 							ioctl_ram_wr <= '1';
 						end if;
 					end if;
@@ -806,29 +811,21 @@ begin
 		ce => sdram_ce
 	);
 
+   dac : sigma_delta_dac
+    port map (
+      clk => clk32,
+      ldatasum => audio_data(15 downto 1),
+		rdatasum => audio_data(15 downto 1),
+		aleft => AUDIO_L,
+		aright => AUDIO_R
+ 	);
 
-	-- decode audio
-   dac_l : sigma_delta_dac
-   port map (
-      CLK => clk32,
-      DACin => not audio_data(17) & audio_data(16 downto 3),
-		DACout => AUDIO_L,
-		RESET => '0'
-	);
-
-   dac_r : sigma_delta_dac
-   port map (
-      CLK => clk32,
-      DACin => not audio_data(17) & audio_data(16 downto 3),
-		DACout => AUDIO_R,
-		RESET => '0'
-	);
 
 	fpga64 : entity work.fpga64_sid_iec
 	port map(
 		clk32 => clk32,
 		reset_n => reset_n,
-		c64gs => status(11),
+		c64gs => status(11),-- not enough BRAM
 		kbd_clk => not ps2_clk,
 		kbd_dat => ps2_dat,
 		ramAddr => c64_addr_int,
@@ -873,12 +870,12 @@ begin
 		iec_clk_o  => c64_iec_clk_o,
 		iec_data_i => not c64_iec_data_i,
 		iec_clk_i  => not c64_iec_clk_i,
-		iec_atn_i  => not c64_iec_atn_i,
+--		iec_atn_i  => not c64_iec_atn_i,
 		disk_num => open,
 		c64rom_addr => ioctl_addr(13 downto 0),
 		c64rom_data => ioctl_data,
 		c64rom_wr => c64rom_wr,
-		cart_detach_key => cart_detach_key,
+--		cart_detach_key => cart_detach_key,
 		reset_key => reset_key
 	);
 

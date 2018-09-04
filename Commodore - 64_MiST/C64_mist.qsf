@@ -41,9 +41,8 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:40:24  MAY 17, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name FLOW_ENABLE_IO_ASSIGNMENT_ANALYSIS ON
 
@@ -312,59 +311,53 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to CONF_DATA0
 
 # Incremental Compilation Assignments
 # ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 # end DESIGN_PARTITION(Top)
 # -------------------------
 
 # end ENTITY(C64_MiST)
 # ----------------------
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name VERILOG_FILE rtl/1541/trkbuf.v
+set_global_assignment -name VHDL_FILE rtl/1541/rom_C1541.vhd
+set_global_assignment -name VHDL_FILE rtl/1541/c1541_sd.vhd
+set_global_assignment -name VHDL_FILE rtl/1541/c1541_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/1541/c1541_logic.vhd
 set_global_assignment -name VHDL_FILE rtl/c64_mist.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/wave_map.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_top.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_regs.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_mixer.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_filter.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_debug_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/sid_ctrl.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/Q_table.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/oscillator.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/my_math_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/mult_acc.vhd
-set_global_assignment -name VHDL_FILE rtl/sid/adsr_multi.vhd
+set_global_assignment -name VHDL_FILE rtl/fpga64_sid_iec.vhd
 set_global_assignment -name VHDL_FILE rtl/video_vicII_656x_e.vhd
 set_global_assignment -name VHDL_FILE rtl/video_vicII_656x_a.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/trkbuf.v
-set_global_assignment -name VERILOG_FILE rtl/sigma_delta_dac.v
-set_global_assignment -name VERILOG_FILE rtl/sdram.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sd_card.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VHDL_FILE rtl/rom_C1541.vhd
-set_global_assignment -name VHDL_FILE rtl/rom_c64_chargen.vhd
-set_global_assignment -name VHDL_FILE rtl/rom_C64.vhd
-set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VHDL_FILE rtl/m6522.vhd
-set_global_assignment -name VHDL_FILE rtl/io_ps2_keyboard.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/gcr_floppy.vhd
-set_global_assignment -name VHDL_FILE rtl/fpga64_sid_iec.vhd
 set_global_assignment -name VHDL_FILE rtl/fpga64_rgbcolor.vhd
 set_global_assignment -name VHDL_FILE rtl/fpga64_keyboard_matrix_mark_mcdougall.vhd
 set_global_assignment -name VHDL_FILE rtl/fpga64_bustiming.vhd
 set_global_assignment -name VHDL_FILE rtl/fpga64_buslogic_roms_mmu.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu65xx_fast.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu65xx_e.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu_6510.vhd
-set_global_assignment -name VHDL_FILE rtl/composite_sync.vhd
 set_global_assignment -name VHDL_FILE rtl/cia6526.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu_6510.vhd
+set_global_assignment -name VHDL_FILE rtl/m6522.vhd
 set_global_assignment -name VERILOG_FILE rtl/cartridge.v
-set_global_assignment -name VHDL_FILE rtl/c1541_sd.vhd
-set_global_assignment -name VHDL_FILE rtl/c1541_logic.vhd
+set_global_assignment -name VHDL_FILE rtl/rom_c64_chargen.vhd
+set_global_assignment -name VHDL_FILE rtl/rom_C64.vhd
 set_global_assignment -name VHDL_FILE rtl/rom_GS64.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sid8580.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sid_voice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sid_filters.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sid_envelope.sv
+set_global_assignment -name VERILOG_FILE rtl/sigma_delta_dac.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name VERILOG_FILE rtl/sdram.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sd_card.sv
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name VHDL_FILE rtl/io_ps2_keyboard.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/composite_sync.vhd
+set_global_assignment -name TEXT_FILE ../Text1.txt
+set_global_assignment -name VHDL_FILE rtl/1541/gcr_floppy.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
