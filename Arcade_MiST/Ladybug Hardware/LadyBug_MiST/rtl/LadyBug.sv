@@ -70,8 +70,7 @@ wire  [7:0] joystick_1;
 wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
-wire signed[7:0] audio_s;
-reg	[6:0] audio;
+reg	[7:0] audio;
 assign LED = 1;
 
 wire hblank, vblank;
@@ -88,9 +87,9 @@ video_mixer #(.LINE_LENGTH(292), .HALF_DEPTH(1)) video_mixer
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r} : "0"),
-	.G(blankn ? {g&g} : "00"),
-	.B(blankn ? {b} : "0"),
+	.R(blankn ? {r} : "000"),
+	.G(blankn ? {g} : "00"),
+	.B(blankn ? {b} : "000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -165,7 +164,7 @@ ladybugt ladybugt
 	.O_VBLANK(vblank),
 	.O_HBLANK(hblank),
 
-	.O_AUDIO(audio_s),
+	.O_AUDIO(audio),
 	
 	.but_coin_s(~{1'b0,m_coin}),
 	.but_fire_s(~{1'b0,m_fire}),
@@ -178,13 +177,11 @@ ladybugt ladybugt
 	.but_right_s(~{1'b0,m_right})
 );
 
-assign audio = audio_s;
-
 dac dac
 (
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({~audio[7], audio[6:0], 8'b00000000}),
 	.dac_o(AUDIO_L)
 	);
 

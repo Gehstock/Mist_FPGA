@@ -22,7 +22,7 @@ use ieee.std_logic_1164.all;
 entity dac is
 
   generic (
-    msbi_g : integer := 6
+    msbi_g : integer := 15
   );
   port (
     clk_i   : in  std_logic;
