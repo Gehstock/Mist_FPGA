@@ -37,12 +37,13 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clock_48, clock_12;
+wire clock_24, clock_12, clock_6;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.c0(clock_48),//48.784
-	.c1(clock_12)//12.196
+	.c0(clock_24),//48.784
+	.c1(clock_12),//12.196
+	.c2(clock_6)
 );
 
 crazy_climber crazy_climber (
@@ -82,7 +83,7 @@ crazy_climber crazy_climber (
 wire [15:0] audio;
 
 dac dac (
-	.CLK(clock_48),
+	.CLK(clock_24),
 	.RESET(1'b0),
 	.DACin(audio),
 	.DACout(AUDIO_L)
@@ -97,9 +98,9 @@ wire [2:0] r, g;
 wire [1:0] b;
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 (
-	.clk_sys(clock_48),
-	.ce_pix(clock_12),
-	.ce_pix_actual(clock_12),
+	.clk_sys(clock_24),
+	.ce_pix(clock_6),
+	.ce_pix_actual(clock_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -123,7 +124,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clock_48 	     ),
+	.clk_sys        (clock_24 	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -142,7 +143,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clock_48),
+	.clk(clock_24),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
