@@ -1,0 +1,7 @@
+{ "" "" "" "Verilog HDL macro warning at hq2x.sv(26): overriding existing definition for macro \"BITS_TO_FIT\", which was defined in \"rtl/scandoubler.v\", line 109" {  } {  } 0 10274 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Output port \"Cart_In\" at sg1000_top.sv(8) has no driver" {  } {  } 0 10034 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL information at scandoubler.v(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Net \"Cart_ram_Out\" at sg1000_top.sv(25) has no driver or initial value, using a default initial value '0'" {  } {  } 0 10030 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL Process Statement warning at vdp_main.vhd(117): signal \"mask_column0\" is read inside the Process Statement but isn't in the Process Statement's sensitivity list" {  } {  } 0 10492 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 14284 "" 0 0 "Quartus II" 0 -1 0 ""}
