@@ -1,0 +1,84 @@
+module ColecoVision_MiST(
+	input			CLOCK_27
+
+);
+
+wire clock_master_s, clock_mem_s, sdram_clock_o;
+wire pll_locked_s;
+
+pll pll (
+	.inclk0			(CLOCK_27),
+	.c0				(clock_master_s),//21.428571
+	.c1				(clock_mem_s),//100 MHz   0º
+	.c2				(sdram_clock_o),// 100 MHz -90°
+	.locked			(pll_locked_s)
+	);
+	
+wire por_n_s;
+wire clock_vdp_en_s, clock_5m_en_s, clock_3m_en_s;
+
+clocks clocks (
+	.clock_i			(clock_master_s),
+	.por_i			(~por_n_s),
+	.clock_vdp_en_o(clock_vdp_en_s),
+	.clock_5m_en_o	(clock_5m_en_s),
+	.clock_3m_en_o	(clock_3m_en_s)
+	);
+
+colecovision #(
+	.num_maq_g		(5),
+	.compat_rgb_g	(0))
+colecovision (
+	.clock_i				(clock_master_s),
+	.clk_en_10m7_i		(clock_vdp_en_s),
+	.clk_en_5m37_i		(clock_5m_en_s),
+	.clk_en_3m58_i		(clock_3m_en_s),
+	.reset_i				(reset_s),
+	.por_n_i				(por_n_s),
+//Controller Interface
+	.ctrl_p1_i			=> ctrl_p1_s,
+	.ctrl_p2_i			=> ctrl_p2_s,
+	.ctrl_p3_i			=> ctrl_p3_s,
+	.ctrl_p4_i			=> ctrl_p4_s,
+	.ctrl_p5_o			=> ctrl_p5_s,
+	.ctrl_p6_i			=> ctrl_p6_s,
+	.ctrl_p7_i			=> ctrl_p7_s,
+	.ctrl_p8_o			=> ctrl_p8_s,
+	.ctrl_p9_i			=> ctrl_p9_s,
+//CPU RAM Interface
+	.ram_addr_o			=> ram_addr_s,
+	.ram_ce_o				=> ram_ce_s,
+	.ram_we_o				=> ram_we_s,
+	.ram_oe_o				=> ram_oe_s,
+	.ram_data_i			=> d_from_ram_s,
+	.ram_data_o			=> d_to_ram_s,
+//Video RAM Interface
+	.vram_addr_o			=> vram_addr_s,
+	.vram_ce_o			=> vram_ce_s,
+	.vram_oe_o			=> vram_oe_s,
+	.vram_we_o			=> vram_we_s,
+	.vram_data_i			=> vram_do_s,
+	.vram_data_o			=> vram_di_s,
+//Cartridge ROM Interface
+	.cart_addr_o			=> open,
+	.cart_data_i			=> (others => '1'),
+	.cart_en_80_n_o		=> open,
+	.cart_en_a0_n_o		=> open,
+	.cart_en_c0_n_o		=> open,
+	.cart_en_e0_n_o		=> open,
+//Audio Interface
+	.audio_o				=> open,
+	.audio_signed_o		=> audio_signed_s,
+//RGB Video Interface
+	.col_o					=> rgb_col_s,
+	.rgb_r_o				=> open,
+	.rgb_g_o				=> open,
+	.rgb_b_o				=> open,
+	.hsync_n_o			=> rgb_hsync_n_s,
+	.vsync_n_o			=> rgb_vsync_n_s,
+	.comp_sync_n_o		=> open,
+//DEBUG
+	.D_cpu_addr			()
+	);
+
+endmodule 
