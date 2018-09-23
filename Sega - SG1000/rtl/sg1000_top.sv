@@ -3,9 +3,9 @@ input				RESET_n,
 input				sys_clk,//8
 input				clk_vdp,//16
 input				pause,
-//input 	[7:0]	Cart_Out,
-//output 	[7:0]	Cart_In,
-//output  [14:0]	Cart_Addr,
+input 	[7:0]	Cart_Out,
+output 	[7:0]	Cart_In,
+output  [14:0]	Cart_Addr,
 output 	[5:0] audio,
 output 			vblank, 
 output 			hblank,
@@ -19,10 +19,14 @@ input 	[7:0]	Joy_B
 );
 
 wire WAIT_n, MREQ_n, M1_n, IORQ_n, RFSH_n, INT_n;
-wire NMI_n = pause;//go to M1_n and generate CS_PSG_n
+wire NMI_n = pause;
 wire RD_n, WR_n;
-wire [7:0]D_in, D_out, RAM_D_out, Cart_ram_Out;
+wire [7:0]D_in, D_out, RAM_D_out;
+wire [7:0]Cart_ram_Out = 8'h00000000; 
+wire [7:0]Joy_Out = 8'h00000000; 
+wire [7:0]Kb_Out = 8'h00000000;
 wire [15:0]Addr;
+
 
 T80se #(
 	.Mode(0),
@@ -50,18 +54,18 @@ CPU (
 	);
 	
 spram #(
-	.widthad_a(10),
+	.widthad_a(11),//2k
 	.width_a(8))
 MRAM (
-	.address(Addr[9:0]),
+	.address(Addr[10:0]),
 	.clock(sys_clk),
 	.data(D_out),
 	.wren(~WR_n),
 	.q(RAM_D_out)
 	);
 	
-//assign Cart_Addr = Addr[14:0];	
-wire 	[7:0]	Cart_Out, Cart_In;
+assign Cart_Addr = Addr[14:0];	
+/*wire 	[7:0]	Cart_Out, Cart_In;
 wire [14:0] Cart_Addr = Addr[14:0];	
 
 sprom #(
@@ -69,15 +73,15 @@ sprom #(
 	.widthad_a(15),
 	.width_a(8))
 CART (
-	.address(Addr[14:0]),
+	.address(Cart_Addr),
 	.clock(sys_clk),
 	.q(Cart_Out)
-	);	
+	);	*/
 
 psg PSG (
 	.clk(sys_clk),
 	.WR_n(WR_n),
-	.D_in(D_out),
+	.D_in((CS_PSG_n == 1'b0) ? D_out : 8'b00000000),
 	.outputs(audio)
 	);
 	
@@ -93,7 +97,7 @@ vdp vdp (
 	.WR_n(VDP_WR_n),
 	.IRQ_n(IORQ_n),
 	.A(Addr[7:0]),
-	.D_in(VDP_WR_n ? D_out : 8'b00000000),
+	.D_in(D_out),
 	.D_out(vdp_D_out),
 	.x(x),
 	.y(y),
@@ -128,12 +132,16 @@ wire VDP_WR_n = (~IORQ_n & Addr[7:6] == "10") | WR_n ? 1'b0 : 1'b1;
 wire JOY_SEL_n = (~IORQ_n & Addr[7:6] == "11") | RD_n ? 1'b0 : 1'b1;
 wire KB_SEL_n = (~IORQ_n & Addr[7:6] == "11") ? 1'b0 : 1'b1;
 
-assign D_in = 	CS_WRAM_n ? RAM_D_out :
-					VDP_RD_n ? vdp_D_out  :
-					EXM1_n ? Cart_Out  :
-					EXM2_n ? Cart_ram_Out  :
-					8'b00000000;	
+always @(sys_clk) begin
 
+		D_in <= 	(CS_WRAM_n == 1'b0) ? RAM_D_out :
+					(VDP_RD_n == 1'b0) ? vdp_D_out  :
+					(EXM1_n == 1'b0) ? Cart_Out  :
+					(EXM2_n == 1'b0) ? Cart_ram_Out  :
+					(JOY_SEL_n == 1'b0) ? Joy_Out  :
+					(KB_SEL_n == 1'b0) ? Kb_Out  :
+					8'b00000000;	
+end
 endmodule 
 
 

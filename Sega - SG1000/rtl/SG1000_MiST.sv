@@ -44,11 +44,11 @@ wire hb, vb, hs, vs;
 wire blankn = ~(hb | vb);
 wire [5:0] audio;
 
-wire clk_8, clk_16, clk_32;
+wire clk_8, clk_16, clk_64;
 
 pll pll (
 	.inclk0(CLOCK_27),
-	.c0(clk_32),//64!!!
+	.c0(clk_64),
 	.c1(clk_16),
 	.c2(clk_8)
 	);
@@ -56,7 +56,7 @@ pll pll (
 mist_io #(
 	.STRLEN($size(CONF_STR)>>3)) 
 user_io (
-	.clk_sys(clk_32),
+	.clk_sys(clk_64),
 	.CONF_DATA0(CONF_DATA0),
 	.SPI_SCK(SPI_SCK),
 	.SPI_DI(SPI_DI),
@@ -82,9 +82,9 @@ video_mixer #(
 	.LINE_LENGTH(480), 
 	.HALF_DEPTH(0)) 
 video_mixer (
-	.clk_sys			( clk_32			),
-	.ce_pix			( clk_8			),
-	.ce_pix_actual	( clk_8			),
+	.clk_sys			( clk_64			),
+	.ce_pix			( clk_16			),
+	.ce_pix_actual	( clk_16			),
 	.SPI_SCK			( SPI_SCK		),
 	.SPI_SS3			( SPI_SS3		),
 	.SPI_DI			( SPI_DI			),
@@ -113,9 +113,9 @@ sg1000_top sg1000_top (
 	.sys_clk(clk_8),
 	.clk_vdp(clk_16),
 	.pause(status[5]),
-//	.Cart_In(Cart_In),
-//	.Cart_Out(Cart_Out),
-//	.Cart_Addr(Cart_Addr),
+	.Cart_In(Cart_In),
+	.Cart_Out(Cart_Out),
+	.Cart_Addr(Cart_Addr),
 	.audio(audio),
 	.vblank(vb), 
 	.hblank(hb),
@@ -127,7 +127,7 @@ sg1000_top sg1000_top (
 	.Joy_A(),
 	.Joy_B()
 );
-/*
+
 wire 	[7:0]	Cart_Out;
 wire 	[7:0]	Cart_In;
 wire [14:0] Cart_Addr;
@@ -138,17 +138,17 @@ spram #(
 	.width_a(8))
 CART (
 	.address(ioctl_download ? ioctl_addr[14:0] : Cart_Addr),
-	.clock(clk_32),
+	.clock(clk_64),
 	.data(ioctl_dout),
 	.wren(ioctl_wr),
 	.q(Cart_Out)
-	);	*/
+	);	
 
 dac #(
 	.msbi_g(5))
 dac (
-	.clk_i(clk_32),
-	.res_i(),
+	.clk_i(clk_64),
+	.res_i(1'b0),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
