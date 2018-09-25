@@ -39,17 +39,16 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clk_48, clk_12, clk_6, clk_24;
+wire clk_12, clk_6, clk_24;
 wire pll_locked;
 
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_48),
+	.c0(clk_24),
 	.c1(clk_12),
-	.c2(clk_6),
-	.c3(clk_24)
+	.c2(clk_6)
 );
 
 wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
@@ -92,7 +91,7 @@ burger_time burger_time(
 wire [10:0] audio;
 
 dac dac (
-	.clk_i(clk_48),
+	.clk_i(clk_24),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -107,7 +106,7 @@ wire       blankn;
 
 video_mixer #(.LINE_LENGTH(320), .HALF_DEPTH(1)) video_mixer
 (
-	.clk_sys(clk_48),
+	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
@@ -115,7 +114,7 @@ video_mixer #(.LINE_LENGTH(320), .HALF_DEPTH(1)) video_mixer
 	.SPI_DI(SPI_DI),
 	.R(blankn ? {r,r} : "000000"),
 	.G(blankn ? {g,g} : "000000"),
-	.B(blankn ? {b,b} : "0000"),
+	.B(blankn ? {b,b,b} : "000000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -133,7 +132,7 @@ video_mixer #(.LINE_LENGTH(320), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_48   	     ),
+	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -152,7 +151,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_48),
+	.clk(clk_24),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),

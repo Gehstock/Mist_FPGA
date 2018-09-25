@@ -218,7 +218,7 @@ end process;
 --  hcnt [0..255,256..383] => 384 pixels,  384/6Mhz => 1 line is 64us (15.625KHz)
 --  vcnt [8..255,256..279] => 272 lines, 1 frame is 272 x 64us = 17.41ms (57.44Hz)
 
-process (reset, clock_12)
+process (reset, clock_12, clock_6)
 begin
 	if reset='1' then
 		hcnt  <= (others => '0');
@@ -383,7 +383,7 @@ fg_ram_addr <= cpu_addr(4 downto 0) & cpu_addr(9 downto 5)   when "00",    -- cp
 -- latch sprite data, 
 -- manage fg and sprite graphix rom address
 -- manage sprite line buffer address
-process (clock_12)
+process (clock_12, clock_6)
 begin
 	if rising_edge(clock_12) and clock_6 = '1' then
 		
@@ -441,7 +441,7 @@ end process;
 sprite_buffer_addr_flip <= not (sprite_buffer_addr) when hcnt8_rr = '0' and cocktail_flip = '1' else sprite_buffer_addr;
 
 -- latch and shift foreground and sprite graphics
-process (clock_12)
+process (clock_12, clock_6)
 begin
 	if rising_edge(clock_12) and clock_6 = '1' then
 		if hcnt(2 downto 0) = "101" then
