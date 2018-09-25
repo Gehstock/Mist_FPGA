@@ -39,14 +39,15 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clk_40, clk_10;
+wire clk_20, clk_10, clk_5;
 
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_40),
-	.c1(clk_10)
+	.c0(clk_20),
+	.c1(clk_10),
+	.c2(clk_5)
 );
 
 wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
@@ -62,7 +63,7 @@ wire m_coin   = kbjoy[3];
 berzerk berzerk(
 	.clock_10(clk_10),
 	.reset(status[0] | status[6] | buttons[1]),
-	.tv15Khz_mode(scandoubler_disable),
+	.tv15Khz_mode(1'b1),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
@@ -95,7 +96,7 @@ berzerk berzerk(
 wire [15:0] audio;
 
 dac dac (
-	.clk_i(clk_40),
+	.clk_i(clk_20),
 	.res_n_i(1),
 	.dac_i(audio[15:4]),
 	.dac_o(AUDIO_L)
@@ -108,9 +109,9 @@ wire  r, g, b;
 
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
-	.clk_sys(clk_40),
-	.ce_pix(clk_10),
-	.ce_pix_actual(clk_10),
+	.clk_sys(clk_20),
+	.ce_pix(clk_5),
+	.ce_pix_actual(clk_5),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -124,7 +125,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(1'b1),//scandoubler_disable),
+	.scandoubler_disable(scandoubler_disable),//scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
 	.ypbpr_full(1),
@@ -134,7 +135,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_40   	     ),
+	.clk_sys        (clk_20   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -153,7 +154,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_40),
+	.clk(clk_20),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
