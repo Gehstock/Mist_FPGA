@@ -44,7 +44,7 @@ wire clk_12p5;
 wire locked;
 wire        scandoubler_disable;
 wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
+wire [10:0] PS2_KEY;
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -84,8 +84,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.scandoubler_disable(scandoubler_disable),
 	.ypbpr(ypbpr),
 	.status(status),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data)
+	.ps2_key(PS2_KEY)
 );
 
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
@@ -128,8 +127,7 @@ assign AUDIO_R = AUDIO_L;
 mz80k_top mz80k_top(
 	.CLK_50MHZ(clk_sys),
 	.RESET(reset),
-	.PS2_CLK(ps2_kbd_clk), 
-	.PS2_DATA(ps2_kbd_data),
+	.PS2_KEY(PS2_KEY), 
 	.VGA_RED(r), 
 	.VGA_GREEN(g), 
 	.VGA_BLUE(b), 
@@ -137,14 +135,6 @@ mz80k_top mz80k_top(
 	.VGA_VSYNC(vs),
 	.TURBO(status[2]),
 	.TP1(audio)
-	);
-	
-keyboard keyboard(
-	.clk(clk_sys),
-	.reset(0),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data),
-	.joystick(kb_ext)
 	);
 
 endmodule 

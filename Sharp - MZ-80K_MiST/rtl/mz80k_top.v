@@ -2,8 +2,7 @@
 module mz80k_top(
 	input		CLK_50MHZ,
 	input		RESET,
-	input		PS2_CLK, 
-	input		PS2_DATA,
+	input		[10:0] PS2_KEY, 
 	output	VGA_RED, 
 	output	VGA_GREEN, 
 	output	VGA_BLUE, 
@@ -42,22 +41,27 @@ module mz80k_top(
 	wire	start, waitreq;
 
 // I/O
-	wire	io_e000 = (cpu_addr[15:0] == 16'he000) & mreq;
-	wire	io_e001 = (cpu_addr[15:0] == 16'he001) & mreq;
+ /*   CS_E0_n             <= '0'  when CS_E_n='0' and T80_A16(11 downto 2)="0000000000"                                                     -- 8255
+                                else '1';
+    CS_E1_n             <= '0'  when CS_E_n='0' and T80_A16(11 downto 2)="0000000001"                                                     -- 8253
+                                else '1';
+    CS_E2_n             <= '0'  when CS_E_n='0' and T80_A16(11 downto 2)="0000000010"                                                     -- LS367
+                                else '1';
+    CS_ESWP_n           <= '0'  when CONFIG(MZ_A)='1' and CS_E_n='0' and T80_RD_n='0' and T80_A16(11 downto 5)="0000000"                  -- ROM/RAM Swap
+                                else '1';*/
+	//wire	io_e000 = (cpu_addr[15:0] == 16'he000) & mreq;
+	//wire	io_e001 = (cpu_addr[15:0] == 16'he001) & mreq;
 	wire	io_e002 = (cpu_addr[15:0] == 16'he002) & mreq;
 	wire	io_8253 = (cpu_addr[15:2] == 14'b11100000000001) & mreq;
+	wire	io_8255 = (cpu_addr[15:2] == 14'b11100000000000) & mreq;
 	wire	io_e008 = (cpu_addr[15:0] == 16'he008) & mreq;
 
-	reg		[3:0] key_no;
 	reg				speaker_enable;
 	always @(posedge CLK_CPU or posedge RESET) begin
 		if (RESET) begin
-			key_no <= 0;
 			speaker_enable <= 0;
 		end else  begin
-			if (io_e000 & wr ) begin
-				key_no <= cpu_data_out[3:0];
-			end else if (io_e008 & wr ) begin
+			if (io_e008 & wr ) begin
 				speaker_enable <= cpu_data_out[0];
 			end
 		end
@@ -103,18 +107,44 @@ module mz80k_top(
 		.out2(out2) 
 		);
 
-// KEYBOARD
-	wire [7:0] ps2_dat;
-	ps2 ps2_1(
-		.clk(CLK_50MHZ), 
-		.reset(RESET), 
-		.ps2_clk(PS2_CLK), 
-		.ps2_data(PS2_DATA), 
-		.cs(io_e001 & rd), 
-		.rd(rd), 
-		.addr(key_no), 
-		.data(ps2_dat)
-		);
+	wire	[7:0] i8255_data_out;	
+	wire	[7:0] i8255_PA_I;
+	wire	[7:0] i8255_PA_O;
+	wire	[7:0] i8255_PB_I;
+	wire	[7:0] i8255_PB_O;
+	wire	[7:0] i8255_PC_I;
+	wire	[7:0] i8255_PC_O;
+		
+i8255 i8255_1(
+      .RESET(RESET),
+      .CLK(CLK_CPU),
+      .ENA(1'b1),
+      .ADDR(cpu_addr[1:0]), 
+      .DI(cpu_data_out),
+      .DO(i8255_data_out),
+      .CS_n(~io_8255),
+      .RD_n(~rd),
+      .WR_n(~wr),
+      .PA_I(i8255_PA_I),
+      .PA_O(i8255_PA_O),
+      .PA_O_OE_n(),
+      .PB_I(i8255_PB_I),
+      .PB_O(i8255_PB_O),
+      .PB_O_OE_n(),
+      .PC_I(i8255_PC_I),
+      .PC_O(i8255_PC_O),
+      .PC_O_OE_n()
+    );
+		
+keymatrix keymatrix(
+		.RST_n(~RESET), 
+		.PA(i8255_PA_O[3:0]),
+		.PB(i8255_PB_I),
+		.STALL(i8255_PA_O[4]),
+		.PS2_KEY(PS2_KEY),
+		.KEY_BANK(3'b000),
+		.CKCPU(CLK_CPU)
+    );		
 		
 // VGA
 	wire [11:0] vga_addr;
@@ -172,9 +202,9 @@ module mz80k_top(
 	assign vram_wr = busack ? 1'b0 : wr;
 // Memory
 	assign cpu_data_in = 
-								( io_e001 & rd ) ? ps2_dat :
 								( io_e002 & rd ) ? {VGA_VSYNC, clk_count[24], 6'b0000000} :
 								( io_8253 & rd ) ? i8253_data_out :
+								( io_8255 & rd ) ? i8255_data_out :
 								( io_e008 & rd ) ? {7'b0000000, clk_count[19]} :		// MUSIC���Ȃǂ�WAIT�ŏd�v
 								(vram_select & rd) ? vram_data :
 								(ram_select & rd) ? ram_data_out: 8'hzz;
