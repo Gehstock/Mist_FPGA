@@ -18,9 +18,14 @@ output    [1:0] B
 
 assign Synco_n = ~Sync;
 assign CSDo = CSX_n & CSD_n;
+//Note should be "Video ~& Video" 
+assign R = {Bout[7] & Video & ~Video, Bout[1] & Video};
+assign G = {Bout[6] & Video & ~Video, Bout[2] & Video};
+assign B = {Bout[5] & Video & ~Video, Bout[3] & Video};
+/*
 assign R = {Bout[7], Bout[1]};
 assign G = {Bout[6], Bout[2]};
-assign B = {Bout[5], Bout[3]};
+assign B = {Bout[5], Bout[3]};*/
 
 wire [7:0] Ain, Bin, Aout, Bout;
 CPLD_74LS245 IC2 ( 
