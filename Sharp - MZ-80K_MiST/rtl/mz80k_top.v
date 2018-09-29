@@ -3,6 +3,7 @@ module mz80k_top(
 	input		CLK_50MHZ,
 	input		RESET,
 	input		[10:0] PS2_KEY, 
+	input		[1:0] color,
 	output	VGA_RED, 
 	output	VGA_GREEN, 
 	output	VGA_BLUE, 
@@ -149,7 +150,10 @@ keymatrix keymatrix(
 // VGA
 	wire [11:0] vga_addr;
 	vga vga1(
-		.CLK_50MHZ(CLK_50MHZ), 
+		.CLK_50MHZ(CLK_50MHZ),
+		.color(color),
+		.RD_n(~rd),
+      .WR_n(~wr),
 		.VGA_RED(VGA_RED), 
 		.VGA_GREEN(VGA_GREEN), 
 		.VGA_BLUE(VGA_BLUE),

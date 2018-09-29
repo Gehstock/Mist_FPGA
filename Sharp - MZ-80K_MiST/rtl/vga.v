@@ -20,9 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 module vga(
 	input 			CLK_50MHZ,
-	output 			VGA_RED, 
-	output 			VGA_GREEN, 
-	output 			VGA_BLUE, 
+	input 	[1:0] color,
+	input 			RD_n,
+	input 			WR_n,
+	output 	[1:0] VGA_RED, 
+	output 	[1:0] VGA_GREEN, 
+	output 	[1:0] VGA_BLUE, 
 	output 			VGA_HSYNC, 
 	output 			VGA_VSYNC,
 	output 			VGA_VBLANK,
@@ -66,19 +69,39 @@ module vga(
 		.clken(1'b1)
 		);
 
+wire [1:0] R, G, B;
+	Color_Card Color_Card(
+		.CLK(CLK_50MHZ),
+		.CSX_n(),
+		.WR_n(WR_n),
+		.CSD_n(),
+		.Sync(),
+		.RD_n(RD_n),
+		.Video(video),
+		.Din(VGA_DATA),
+		.Dout(),
+		.Addr(VGA_ADDR[11:0]),
+		.CSDo(),
+		.Synco_n(),
+		.R(R),
+		.G(G),
+		.B(B)
+);
 
 	wire [5:0] cx, cy;      //(0,0)-(79,24)
 	assign cx = gx >> 4;
 	assign cy = gy >> 4;
 	assign VGA_ADDR = (cy * 40) + cx;
 	assign cgrom_addr = {VGA_DATA, gy[3:1]}; 
-
+	wire video = display & (y[0] & 1) ? cgrom_data[7-(((gx+15)>>1) & 7)] : 0;
 //	assign BUS_REQ = ( (96+48-8) <= x & x < (96+48+640) ) & ( ( 2+29+40) <= y & y < (2+29+40+400));
 	assign BUS_REQ = ( (96+48-16) <= x & x < (96+48+640) ) & ( ( 2+29+40) <= y & y < (2+29+40+400));
 	assign display =( (96+48) <= x & x < (96+48+640) ) & ( ( 2+29+40) <= y & y < (2+29+40+400));
-	assign VGA_RED   = 0; //display ? (cgrom_data[7-((gx>>1) & 7)]) : 0;
-	assign VGA_GREEN = display & (y[0] & 1) ? cgrom_data[7-(((gx+15)>>1) & 7)] : 0;
-	assign VGA_BLUE  = 0; //display ? (cgrom_data[7-((gx>>1) & 7)]) : 0;
+	
+	assign VGA_RED   = color[1] ? R : color[0] ? 2'b00 : {video,video};
+	assign VGA_GREEN = color[1] ? G : {video,video};
+	assign VGA_BLUE  = color[1] ? B : color[0] ? 2'b00 : {video,video};
+	
 	assign VGA_HSYNC = x < 96 ? 0 : 1;
 	assign VGA_VSYNC = y < 2  ? 0 : 1;
 	assign VGA_VBLANK = (x == 639 & y == 499) ? 1 : 0;

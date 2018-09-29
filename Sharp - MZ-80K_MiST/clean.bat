@@ -1,4 +1,5 @@
 @echo off
+del /s PLLJ_PLLSPE_INFO.txt
 del /s *.bak
 del /s *.orig
 del /s *.rej

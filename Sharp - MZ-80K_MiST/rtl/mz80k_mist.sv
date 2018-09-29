@@ -32,15 +32,15 @@ module mz80k_mist(
 assign LED = 1;	 
 localparam CONF_STR = {
 		  "Sharp MZ80K;MZF;",
-		 // "O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 		  "O2,CPU Clock, 3Mhz, 6Mhz;",
+		  "O34,Screen, Gray, Green, Color;",
 		  "T5,Reset;",
-		  "V,v0.2.",`BUILD_DATE
+		  "V,v0.4.",`BUILD_DATE
 		};
 
 
 wire clk_sys;
-wire clk_12p5;
+wire clk_25, clk_12p5, clk_6p25;
 wire locked;
 wire        scandoubler_disable;
 wire        ypbpr;
@@ -49,14 +49,16 @@ wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
 wire audio;
-wire r, g, b;
+wire [1:0] r, g, b;
 wire hs, vs;
 wire  [7:0] kb_ext;
 pll pll(
 	.areset(),
 	.inclk0(CLOCK_27),
 	.c0(clk_sys),//50.0Mhz
-	.c1(clk_12p5),//12.5Mhz
+	.c1(clk_25),//25.0Mhz
+	.c2(clk_12p5),//12.5Mhz
+	.c3(clk_6p25),//6.25Mhz
 	.locked(locked)
 	);
 
@@ -73,7 +75,7 @@ wire reset = (reset_cnt != 8'd255);
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
 	.conf_str(CONF_STR),
-	.clk_sys(clk_sys),
+	.clk_sys(clk_25),
 	.SPI_SCK(SPI_SCK),
 	.CONF_DATA0(CONF_DATA0),
 	.SPI_SS2(SPI_SS2),
@@ -89,15 +91,13 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 (
-	.clk_sys(clk_sys),
-	.ce_pix(clk_12p5),
-	.ce_pix_actual(clk_12p5),
+	.clk_sys(clk_25),
+	.ce_pix(clk_6p25),
+	.ce_pix_actual(clk_6p25),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.scandoubler_disable(1),//scandoubler_disable),
-	.hq2x(status[4:3]==1),
 	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.R({r,r,r}),
@@ -118,7 +118,7 @@ sigma_delta_dac #(.MSBI(2)) sigma_delta_dac
 (	
 	.DACout(AUDIO_L),
 	.DACin({audio,audio,audio}),
-	.CLK(clk_sys),
+	.CLK(clk_25),
 	.RESET(0)
 );
 
@@ -127,6 +127,7 @@ assign AUDIO_R = AUDIO_L;
 mz80k_top mz80k_top(
 	.CLK_50MHZ(clk_sys),
 	.RESET(reset),
+	.color(status[4:3]),
 	.PS2_KEY(PS2_KEY), 
 	.VGA_RED(r), 
 	.VGA_GREEN(g), 
