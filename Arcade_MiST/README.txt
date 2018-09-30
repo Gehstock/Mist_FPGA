@@ -2,6 +2,7 @@ Arcade Cores
 
 #Atari Hardware
 	Computer Space
+	Dottori Kun
 	Sprint 2
 	Sprint One
 	Super Breakout
