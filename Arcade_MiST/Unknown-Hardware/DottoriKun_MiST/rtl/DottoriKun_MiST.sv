@@ -91,7 +91,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 	.hq2x(status[4:3]==1),
 	.ypbpr_full(1),
 	.line_start(0),
-	.mono(1)
+	.mono(0)
 );
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
