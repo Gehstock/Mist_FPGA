@@ -95,7 +95,7 @@ end
 
 
 // IC21: Pixel and sync gate
-assign {RED, GREEN, BLUE} = !nH_SYNC ? 3'b000 : PIXEL ? PAL_LATCH[2:0] : PAL_LATCH[5:3];	// 3'd7 : 3'd0;
+assign {BLUE, GREEN, RED} = !nH_SYNC ? 3'b000 : PIXEL ? PAL_LATCH[2:0] : PAL_LATCH[5:3];	// 3'd7 : 3'd0;
 assign vSYNC = V_SYNC;// ? 1'b0 : nH_SYNC;
 assign hSYNC = !nH_SYNC;
 // IC22: Pixel line serializer
