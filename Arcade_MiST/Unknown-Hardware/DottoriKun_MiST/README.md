@@ -3,6 +3,8 @@ https://github.com/furrtek/DottoriLog
 
 Based on information from Chris Covell: http://www.chrismcovell.com/dottorikun.html
 
+Need a Reset after Rom Switch
+
 Uses the TV80 Z80 core by Guy Hutchison.
 
 

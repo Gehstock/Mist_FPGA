@@ -1,4 +1,4 @@
-module DottoriLog_mist(
+module DottoriKun_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -19,7 +19,8 @@ module DottoriLog_mist(
 `include "rtl\build_id.sv" 
 
 localparam CONF_STR = {
-	"DottoriLog;;",
+	"DottoriKun;;",
+	"O12,ROM ,Old,Old,New,Mod;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
@@ -50,6 +51,7 @@ dottori dottori (
 	.RED(r),
 	.GREEN(g),
 	.BLUE(b),
+	.GAME(status[2:1]),
 	.vSYNC(vs),
 	.hSYNC(hs),
 	.nRESET(~(status[0] | status[6] | buttons[1])),

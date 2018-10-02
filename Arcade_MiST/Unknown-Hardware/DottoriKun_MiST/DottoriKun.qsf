@@ -43,22 +43,6 @@ set_global_assignment -name ORIGINAL_QUARTUS_VERSION 12.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "13:44:34  AUGUST 14, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/DottoriLog_mist.sv
-set_global_assignment -name VERILOG_FILE rtl/dottori.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/ROM.v
-set_global_assignment -name VERILOG_FILE rtl/RAM.v
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_reg.v
-set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_mcode.v
-set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_core.v
-set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_alu.v
-set_global_assignment -name VERILOG_FILE rtl/tv80/cpu_z80.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
 
 # Classic Timing Assignments
 # ==========================
@@ -70,7 +54,7 @@ set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY DottoriLog_mist
+set_global_assignment -name TOP_LEVEL_ENTITY DottoriKun_MiST
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
@@ -147,9 +131,6 @@ set_location_assignment PIN_13 -to CONF_DATA0
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
@@ -177,5 +158,25 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
-set_global_assignment -name CDF_FILE output_files/Chain1.cdf
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/DottoriKun_MiST.sv
+set_global_assignment -name VERILOG_FILE rtl/dottori.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VERILOG_FILE rtl/RAM.v
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_reg.v
+set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_mcode.v
+set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_core.v
+set_global_assignment -name VERILOG_FILE rtl/tv80/tv80_alu.v
+set_global_assignment -name VERILOG_FILE rtl/tv80/cpu_z80.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
+set_global_assignment -name VERILOG_FILE rtl/ROM1.v
+set_global_assignment -name VERILOG_FILE rtl/ROM2.v
+set_global_assignment -name VERILOG_FILE rtl/ROM3.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

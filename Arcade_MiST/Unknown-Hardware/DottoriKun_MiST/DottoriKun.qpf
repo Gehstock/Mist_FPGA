@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------- #
 #
-# Copyright (C) 1991-2012 Altera Corporation
+# Copyright (C) 1991-2013 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -16,16 +16,17 @@
 #
 # -------------------------------------------------------------------------- #
 #
-# Quartus II 32-bit
-# Version 12.0 Build 178 05/31/2012 SJ Web Edition
-# Date created = 13:44:34  August 14, 2017
+# Quartus II 64-Bit
+# Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Full Version
+# Date created = 23:48:09  October 02, 2018
 #
 # -------------------------------------------------------------------------- #
 
-QUARTUS_VERSION = "12.0"
-DATE = "13:44:34  August 14, 2017"
+QUARTUS_VERSION = "13.0"
+DATE = "23:48:09  October 02, 2018"
 
 # Revisions
 
+PROJECT_REVISION = "DottoriKun"
 PROJECT_REVISION = "dottorilog"
 PROJECT_REVISION = "VGATest"

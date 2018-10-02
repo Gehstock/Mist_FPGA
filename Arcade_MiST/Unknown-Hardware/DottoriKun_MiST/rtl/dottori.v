@@ -4,6 +4,7 @@
 
 module dottori(
 	input CLK_4M,
+	input [1:0] GAME,
 	output RED,
 	output GREEN,
 	output BLUE,
@@ -15,7 +16,10 @@ module dottori(
 
 wire [7:0] DATA_BUS;				// Z80
 wire [15:0] ADDRESS_BUS;		// Z80
-wire [7:0] ROM_DATA;
+wire [7:0] ROM_DATA1;
+wire [7:0] ROM_DATA2;
+wire [7:0] ROM_DATA3;
+reg [7:0] ROM_DATA_OUT;
 wire [7:0] RAM_DATA_OUT;
 wire [10:0] RAM_ADDRESS_BUS;	// Multiplexed (Z80 and render)
 
@@ -41,13 +45,15 @@ reg [3:0] COUNT_IC12;
 reg [3:0] COUNT_IC13;
 
 // Half clock delay (125ns)
-ROM MEM_ROM(ADDRESS_BUS[11:0], ~CLK_4M, ROM_DATA);
+ROM1 ROM1(ADDRESS_BUS[13:0], ~CLK_4M, ROM_DATA1);
+ROM2 ROM2(ADDRESS_BUS[13:0], ~CLK_4M, ROM_DATA2);
+ROM3 ROM3(ADDRESS_BUS[13:0], ~CLK_4M, ROM_DATA3);
 
 // Half clock delay (125ns)
 RAM MEM_RAM(RAM_ADDRESS_BUS, CLK_4M, DATA_BUS, ~nRAM_WR, RAM_DATA_OUT);
 
 assign DATA_BUS = (~nRAM_RD & nRAM_WR & nLD & ADDRESS_BUS[15] & ~nZ80MEMRD) ? RAM_DATA_OUT :		// RAM read
-								(~ADDRESS_BUS[15] & ~nZ80MEMRD) ? ROM_DATA :			// ROM read
+								(~ADDRESS_BUS[15] & ~nZ80MEMRD) ? ROM_DATA_OUT :			// ROM read
 								(~nINPUTS_RD) ? BUTTONS : 8'bzzzzzzzz;					// Inputs read	
 
 // IC5, IC4: RAM/VRAM write decode and gate
@@ -77,6 +83,16 @@ begin
 	else
 		PAL_LATCH <= DATA_BUS[5:0];
 end
+
+always @(posedge nCLK_4M)
+begin
+case (GAME)
+  2'b10 : ROM_DATA_OUT = ROM_DATA2;
+  2'b11 : ROM_DATA_OUT = ROM_DATA3;
+  default : ROM_DATA_OUT = ROM_DATA1;
+endcase
+end
+
 
 // IC21: Pixel and sync gate
 assign {RED, GREEN, BLUE} = !nH_SYNC ? 3'b000 : PIXEL ? PAL_LATCH[2:0] : PAL_LATCH[5:3];	// 3'd7 : 3'd0;
