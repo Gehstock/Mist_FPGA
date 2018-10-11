@@ -2,22 +2,26 @@ Arcade Cores
 
 #Atari Hardware
 	Computer Space
-	Dottori Kun
 	Sprint 2
 	Sprint One
 	Super Breakout
 	Ultra Tank
 
 #Custom Hardware
+	Bagman
+	Berzerk
+	Crazy Climber
+	Crazy Kong
 	Galaga
 	Phoenix
-	Pooyan
 	River Raid(Clone)
-	Time Pilot
 
 #Data East Cassette
 	Burnin Rubber
 	Burger Time
+
+#Dottori-Kun Hardware
+	Dottori Kun / Dottori-Man Jr
 
 #Galaxian Hardware
 	Azurian Attack
