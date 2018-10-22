@@ -1,0 +1,23 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: King and Balloon port to MiST by Gehstock
+-- 22 October 2018
+-- 
+---------------------------------------------------------------------------------
+-- A simulation model of Galaxian hardware
+-- Copyright(c) 2004 Katsumi Degawa
+---------------------------------------------------------------------------------
+-- VGA not Working(WIP)
+-- Only controls are rotated on VGA output.
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   F2         : Coin + Start 2 players
+--   F1         : Coin + Start 1 player
+--   SPACE 	: Fire
+--   ARROW KEYS : Movements
+--
+-- Joystick support.
+-- 
+---------------------------------------------------------------------------------
