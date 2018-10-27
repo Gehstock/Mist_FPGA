@@ -57,6 +57,7 @@ Arcade Cores
 	Space Invaders II(Deluxe)
 	Space Laser
 	Super Earth Invasion
+
 #Non Arcade
 	2048
 	FlappyBird
