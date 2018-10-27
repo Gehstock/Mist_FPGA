@@ -16,9 +16,11 @@ Arcade Cores
 	Phoenix
 	River Raid(Clone)
 
-#Data East Cassette
-	Burnin Rubber
-	Burger Time
+#Data East Burger Time Hardware
+	#Setup 1
+		Burnin Rubber
+	#Setup 2
+		Burger Time
 
 #Dottori-Kun Hardware
 	Dottori Kun / Dottori-Man Jr
