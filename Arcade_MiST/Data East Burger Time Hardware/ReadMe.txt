@@ -1,4 +1,4 @@
-Games that should work on this hardware after Rom swap
+Games that should work on this hardware
 
 Setup 1
 	Bogey Manor 
