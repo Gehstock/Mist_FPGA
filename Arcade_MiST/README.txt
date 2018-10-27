@@ -14,7 +14,6 @@ Arcade Cores
 	Crazy Kong
 	Galaga
 	Phoenix
-	River Raid(Clone)
 
 #Data East Burger Time Hardware
 	#Setup 1
@@ -58,6 +57,10 @@ Arcade Cores
 	Space Invaders II(Deluxe)
 	Space Laser
 	Super Earth Invasion
+#Non Arcade
+	2048
+	FlappyBird
+	River Raid(Clone)
 
 #Pacman Hardware
 	Ali Baba and 40 Thieves
