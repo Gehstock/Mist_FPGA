@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
--- FPGA GALAXIAN
+-- FPGA King and Balloon
 --
 -- Version  downto  2.50
 --
@@ -21,9 +21,7 @@ library ieee;
   use ieee.std_logic_unsigned.all;
   use ieee.numeric_std.all;
 
---use work.pkg_galaxian.all;
-
-entity galaxian is
+entity kingballoon is
 	port(
 		W_CLK_18M  : in  std_logic;
 		W_CLK_12M  : in  std_logic;
@@ -46,7 +44,7 @@ entity galaxian is
 	);
 end;
 
-architecture RTL of galaxian is
+architecture RTL of kingballoon is
 	--    CPU ADDRESS BUS
 	signal W_A                : std_logic_vector(15 downto 0) := (others => '0');
 	--    CPU IF

@@ -7,7 +7,7 @@
 -- A simulation model of Galaxian hardware
 -- Copyright(c) 2004 Katsumi Degawa
 ---------------------------------------------------------------------------------
--- VGA not Working(WIP)
+-- VGA not Working(WIP) Video needs Rework
 -- Only controls are rotated on VGA output.
 -- 
 -- 

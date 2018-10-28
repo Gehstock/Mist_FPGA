@@ -41,8 +41,8 @@ module KingBalloon_MiST
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"KingBalloon;;",
-	"O1,Test,off,on;",
+	"King and Ball.;;",
+//	"O1,Test,off,on;",
 //	"O2,Joystick Control,Upright,Normal;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
@@ -84,8 +84,7 @@ wire m_start1 = kbjoy[1];
 wire m_start2 = kbjoy[2];
 wire m_coin   = kbjoy[3];
 
-galaxian galaxian
-(
+kingballoon kingballoon(
 	.W_CLK_18M(clk_18),
 	.W_CLK_12M(clk_12),
 	.W_CLK_6M(clk_6),
@@ -97,10 +96,10 @@ galaxian galaxian
 	.W_B(b),
 	.W_H_SYNC(hs),
 	.W_V_SYNC(vs),
-	.W_SDAT_A(audio_a),
-	.W_SDAT_B(audio_b),
 	.HBLANK(hblank),
-	.VBLANK(vblank)
+	.VBLANK(vblank),
+	.W_SDAT_A(audio_a),
+	.W_SDAT_B(audio_b)
 );
 
 wire [7:0] audio_a, audio_b;
@@ -119,7 +118,7 @@ wire hs, vs;
 wire [2:0] r, g, b;
 wire hblank, vblank;
 wire blankn = ~(hblank | vblank);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(380), .HALF_DEPTH(1)) video_mixer
 (
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
@@ -138,8 +137,8 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 2'b11, status[4:3] == 2'b10, status[4:3] == 2'b01}),
-	.hq2x(0),
+	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
+	.hq2x(status[4:3]==1),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
