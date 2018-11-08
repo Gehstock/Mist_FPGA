@@ -43,7 +43,7 @@ wire [1:0] r, g, b;
 wire hb, vb, hs, vs;
 wire blankn = ~(hb | vb);
 wire [5:0] audio;
-
+wire  [7:0] joystick_0, joystick_1;
 wire clk_8, clk_16, clk_64;
 
 pll pll (
@@ -70,6 +70,8 @@ user_io (
 	.switches(switches),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
+	.joystick_0(joystick_0[5:0]),
+	.joystick_1(joystick_1[5:0]),
 	.ioctl_ce(1'b1),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_index(ioctl_index),
@@ -113,9 +115,11 @@ sg1000_top sg1000_top (
 	.sys_clk(clk_8),
 	.clk_vdp(clk_16),
 	.pause(status[5]),
-	.Cart_In(Cart_In),
-	.Cart_Out(Cart_Out),
-	.Cart_Addr(Cart_Addr),
+	.ps2_kbd_clk(ps2_kbd_clk),
+	.ps2_kbd_data(ps2_kbd_data),
+	//.Cart_In(Cart_In),
+	//.Cart_Out(Cart_Out),
+	//.Cart_Addr(Cart_Addr),
 	.audio(audio),
 	.vblank(vb), 
 	.hblank(hb),
