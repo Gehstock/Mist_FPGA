@@ -1,13 +1,15 @@
 module sg1000_top(
 input				RESET_n,
 input				sys_clk,//8
-input				clk_vdp,//16
+input				vdp_clk,//16
+input				vid_clk,//64
+input				pal,
 input				pause,
 input  			ps2_kbd_clk,
 input  			ps2_kbd_data,
-//input 	[7:0]	Cart_Out,
-//output 	[7:0]	Cart_In,
-//output  [14:0]	Cart_Addr,
+input 	[7:0]	Cart_In,
+output  [14:0]	Cart_Addr,
+output 			Cart_We, 
 output 	[5:0] audio,
 output 			vblank, 
 output 			hblank,
@@ -16,6 +18,10 @@ output 			vga_vs,
 output 	[1:0]	vga_r,
 output 	[1:0]	vga_g,
 output 	[1:0]	vga_b,
+output 	[1:0]	rgb_r,
+output 	[1:0]	rgb_g,
+output 	[1:0]	rgb_b,
+output 			csync,
 input 	[5:0]	Joy_A,
 input 	[5:0]	Joy_B
 );
@@ -61,7 +67,7 @@ CPU (
 	);
 	
 wire	[7:0]RAM_D_out;
-/*
+
 spram #(
 	.widthad_a(11),//2k
 	.width_a(8))
@@ -71,20 +77,12 @@ MRAM (
 	.data(D_out),
 	.wren(~WR_n),
 	.q(RAM_D_out)
-	);*/
-	
-RAM2K RAM2K(
-	.address(Addr[10:0]),
-	.clock(sys_clk),
-	.clken(~CS_WRAM_n),
-	.data(D_out),
-	.wren(~WR_n),
-	.q(RAM_D_out)
 	);
 	
 wire CS_PSG_n = (~IORQ_n) & (Addr[7:6] == "01") ? 1'b0 : 1'b1;
 psg PSG (
 	.clk(sys_clk),
+	.CS_n(CS_PSG_n),
 	.WR_n(WR_n),
 	.D_in(D_out),
 	.outputs(audio)
@@ -94,12 +92,12 @@ wire [7:0]vdp_D_out;
 wire [8:0]x;
 wire [7:0]y;
 wire [5:0] color;
-wire VDP_RD_n = (~IORQ_n & Addr[7:6] == "10") | RD_n ? 1'b0 : 1'b1;
-wire VDP_WR_n = (~IORQ_n & Addr[7:6] == "10") | WR_n ? 1'b0 : 1'b1;
+wire VDP_RD_n = (~IORQ_n) & (Addr[7:6] == "10") | RD_n ? 1'b0 : 1'b1;
+wire VDP_WR_n = (~IORQ_n) & (Addr[7:6] == "10") | WR_n ? 1'b0 : 1'b1;
 
 vdp vdp (
 	.cpu_clk(sys_clk),
-	.vdp_clk(clk_vdp),
+	.vdp_clk(vdp_clk),
 	.RD_n(VDP_RD_n),
 	.WR_n(VDP_WR_n),
 	.IRQ_n(IORQ_n),
@@ -112,9 +110,9 @@ vdp vdp (
 	.hblank(hblank),
 	.color(color)
 	);
-	
+
 vga_video vga_video (
-	.clk16(clk_vdp),
+	.clk16(vdp_clk),
 	.x(x),
 	.y(y),
 	.vblank(vblank),
@@ -126,9 +124,23 @@ vga_video vga_video (
 	.green(vga_g),
 	.blue(vga_b)
 	);
+	/*
+tv_video tv_video (
+	.clk8(sys_clk),
+	.clk64(vid_clk),
+	.pal(pal),
+	.x(x),
+	.y(y),
+	.vblank(vblank),
+	.hblank(hblank),
+	.csync(csync),
+	.color(color),
+	.video({rgb_b,rgb_g,rgb_r})
+	);*/
+
 	
 wire [7:0]Joy_Out;
-wire JOY_SEL_n = (~IORQ_n & Addr[7:6] == "11") | RD_n ? 1'b0 : 1'b1;
+wire JOY_SEL_n = (~IORQ_n) & (Addr[7:6] == "11") | RD_n ? 1'b0 : 1'b1;
 wire CON;
 TTL74_257 IC18(
 	.GN(JOY_SEL_n),
@@ -164,7 +176,7 @@ TTL74_257 IC21(
 	.Y1(Joy_Out[4])
 );
 
-wire KB_SEL_n = (~IORQ_n & Addr[7:6] == "11") ? 1'b0 : 1'b1;
+wire KB_SEL_n = (~IORQ_n) & (Addr[7:6] == "11") ? 1'b0 : 1'b1;
 wire [7:0]Kb_Out;
 
 keyboard keyboard(
@@ -180,9 +192,9 @@ keyboard keyboard(
 	.ps2_kbd_data(ps2_kbd_data)
 );
 
-wire EXM1_n = (~MREQ_n & Addr[15:14] == "10") ? 1'b0 : 1'b1;
-wire EXM2_n = (~MREQ_n | Addr[15]) ? 1'b0 : 1'b1;
-wire [7:0]Cart_Out; 
+wire EXM1_n = (~MREQ_n) & (Addr[15:14] == "10") ? 1'b0 : 1'b1;
+wire EXM2_n = (~MREQ_n) | (Addr[15]) ? 1'b0 : 1'b1;
+wire [7:0]Cart_Rom_Out, Cart_Ram_Out; 
 
 cart cart(
 	.DSRAM_n(DSRAM_n),
@@ -194,17 +206,18 @@ cart cart(
 	.CON(CON),
 	.EXM2_n(EXM2_n),
 	.M1_n,
-	.Addr(Addr[14:0]),
-	.Cart_Out(Cart_Out),
+	.Cart_Addr(Addr[14:0]),
+	.Cart_Rom_Out(Cart_Rom_Out),
 	.Cart_Ram_Out(Cart_Ram_Out),
-	.Cart_In(D_out)
+	.Cart_In(Cart_In),
+	.Cart_We(Cart_We)
 );
 
+//todo
 always @(sys_clk) begin
-
-		D_in <= 	~CS_WRAM_n ? RAM_D_out :
+		D_in = 	~CS_WRAM_n ? RAM_D_out :
 					~VDP_RD_n ? vdp_D_out  :
-					~EXM1_n ? Cart_Out  :
+					~EXM1_n ? Cart_Rom_Out  :
 					~EXM2_n ? Cart_Ram_Out  :
 					~JOY_SEL_n ? Joy_Out  :
 					~KB_SEL_n ? Kb_Out  :

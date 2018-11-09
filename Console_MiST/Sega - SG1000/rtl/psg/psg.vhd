@@ -5,6 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity psg is
 	port (clk	: in  STD_LOGIC;
 			WR_n	: in  STD_LOGIC;
+			CS_n	: in  STD_LOGIC;
 			D_in	: in  STD_LOGIC_VECTOR (7 downto 0);
 			outputs: out STD_LOGIC_VECTOR (5 downto 0)
 			);
@@ -91,9 +92,9 @@ begin
 	end process;
 	clk32 <= std_logic(clk_divide(5));
 
-	process (clk, WR_n)
+	process (clk, WR_n, CS_n)
 	begin
-		if rising_edge(clk) and WR_n='0' then
+		if rising_edge(clk) and WR_n='0' and CS_n='0' then
 			if D_in(7)='1' then
 				case D_in(6 downto 4) is
 					when "000" => tone0(3 downto 0) <= D_in(3 downto 0);

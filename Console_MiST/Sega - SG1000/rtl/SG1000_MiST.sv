@@ -23,6 +23,7 @@ localparam CONF_STR =
 {
 	"SG1000;BINSG ;",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O4,Video,NTSC,PAL;",
 	"O5,Pause,Off,On;",
 	"T6,Reset;",
 	"V,v1.0.",`BUILD_DATE
@@ -70,8 +71,8 @@ user_io (
 	.switches(switches),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
-	.joystick_0(joystick_0[5:0]),
-	.joystick_1(joystick_1[5:0]),
+	.joystick_0(joystick_0),
+	.joystick_1(joystick_1),
 	.ioctl_ce(1'b1),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_index(ioctl_index),
@@ -113,13 +114,16 @@ video_mixer (
 sg1000_top sg1000_top (
 	.RESET_n(~(status[0] | status[6] | buttons[1])),
 	.sys_clk(clk_8),
-	.clk_vdp(clk_16),
+	.vdp_clk(clk_16),
+	.vid_clk(clk_64),
+	.pal(status[4]),
 	.pause(status[5]),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
-	//.Cart_In(Cart_In),
-	//.Cart_Out(Cart_Out),
-	//.Cart_Addr(Cart_Addr),
+//	.Cart_In(Cart_In),
+//	.Cart_Out(Cart_Out),
+//	.Cart_Addr(Cart_Addr),
+// .Cart_We(Cart_We),
 	.audio(audio),
 	.vblank(vb), 
 	.hblank(hb),
@@ -128,25 +132,14 @@ sg1000_top sg1000_top (
 	.vga_r(r),
 	.vga_g(g),
 	.vga_b(b),
-	.Joy_A(),
-	.Joy_B()
+//	.rgb_r(r),
+//	.rgb_g(g),
+// .rgb_b(b),
+//	.csync(vs),
+	.Joy_A(joystick_0[5:0]),
+	.Joy_B(joystick_1[5:0])
 );
-
-wire 	[7:0]	Cart_Out;
-wire 	[7:0]	Cart_In;
-wire [14:0] Cart_Addr;
-
-spram #(
-	.init_file("roms/32.hex"),//Test
-	.widthad_a(15),
-	.width_a(8))
-CART (
-	.address(ioctl_download ? ioctl_addr[14:0] : Cart_Addr),
-	.clock(clk_64),
-	.data(ioctl_dout),
-	.wren(ioctl_wr),
-	.q(Cart_Out)
-	);	
+//assign hs= 1'b1;
 
 dac #(
 	.msbi_g(5))

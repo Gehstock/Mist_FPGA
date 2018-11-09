@@ -5,3 +5,4 @@
 { "" "" "" "Net \"Cart_ram_Out\" at sg1000_top.sv(25) has no driver or initial value, using a default initial value '0'" {  } {  } 0 10030 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "VHDL Process Statement warning at vdp_main.vhd(117): signal \"mask_column0\" is read inside the Process Statement but isn't in the Process Statement's sensitivity list" {  } {  } 0 10492 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "*" {  } {  } 0 14284 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10235 "" 0 0 "Quartus II" 0 -1 0 ""}
