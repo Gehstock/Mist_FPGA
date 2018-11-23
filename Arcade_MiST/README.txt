@@ -1,14 +1,15 @@
 Arcade Cores
 
-#Atari Hardware
+#Atari 6502 Black & White Raster Hardware
 	Canyon Bomber
-	Computer Space
 	Dominos
 	Sprint 2
 	Sprint One
 	Super Breakout
 	Ultra Tank
-	
+
+#Atari Hardware
+	Computer Space	
 
 #Custom Hardware
 	Bagman
