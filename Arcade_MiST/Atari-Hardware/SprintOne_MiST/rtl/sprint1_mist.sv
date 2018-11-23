@@ -36,15 +36,16 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio;
-wire			video;
+wire	[1:0] video;
 
-wire clk_48, clk_12;
+wire clk_48, clk_12, clk_6;
 wire locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.c0(clk_48),//48.384
+	.c0(clk_24),//24.192
 	.c1(clk_12),//12.096
+	.c2(clk_6),//6.048
 	.locked(locked)
 );
 
@@ -75,7 +76,7 @@ sprint1 sprint1 (
 );
 
 dac dac (
-	.CLK(clk_48),
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio),
 	.DACout(AUDIO_L)
@@ -86,17 +87,20 @@ assign AUDIO_R = AUDIO_L;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
-	.clk_sys(clk_48),
-	.ce_pix(clk_12),
-	.ce_pix_actual(clk_12),
+	.clk_sys(clk_24),
+	.ce_pix(clk_6),
+	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {video,video,video} : "000"),
-	.G(blankn ? {video,video,video} : "000"),
-	.B(blankn ? {video,video,video} : "000"),
+	.R({video,video,video}),
+	.G({video,video,video}),
+	.B({video,video,video}),
+//	.R(blankn ? {video,video,video} : "000000"),
+//	.G(blankn ? {video,video,video} : "000000"),
+//	.B(blankn ? {video,video,video} : "000000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -114,7 +118,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_48   	     ),
+	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -133,7 +137,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_48),
+	.clk(clk_24),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),

@@ -1,9 +1,0 @@
-{ "" "" "" "Verilog HDL or VHDL warning at vdp18_ctrl.vhd(156): conditional expression evaluates to a constant" {  } {  } 0 10037 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Verilog HDL information at scandoubler.v(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Output pins are stuck at VCC or GND" {  } {  } 0 13024 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Tri-state node(s) do not directly drive top-level pin(s)" {  } {  } 0 13046 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "5 hierarchies have connectivity warnings - see the Connectivity Checks report folder" {  } {  } 0 12241 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details" {  } {  } 0 15714 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "*" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "*" {  } {  } 0 13049 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "*" {  } {  } 0 13410 "" 0 0 "Quartus II" 0 -1 0 ""}

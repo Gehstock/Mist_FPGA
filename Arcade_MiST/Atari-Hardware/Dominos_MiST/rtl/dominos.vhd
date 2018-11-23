@@ -35,7 +35,7 @@ port(
 			Vs				: out std_logic;
 			Vb				: out std_logic;			
 			Hb				: out std_logic;	
-			Video			: out std_logic;
+			Video			: out std_logic_vector(1 downto 0);
 			Audio		   : out std_logic_vector(6 downto 0);  -- Ideally this should have a simple low pass filter
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
@@ -238,6 +238,7 @@ Vb <= VBLANK;
 Hb <= HBLANK;
 Hs <= Hsync;
 Vs <= Vsync;
-Video <= (not (BlackPF_n and WhitePF_n)) nor CompBlank_s;
+Video(0) <= (not BlackPF_n) nor CompBlank_s;
+Video(1) <= (not WhitePF_n); 
 
 end rtl;

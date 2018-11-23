@@ -36,23 +36,23 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio1, audio2;
-wire			video1, video2;
+wire	[1:0] video;
 
 wire clk_48, clk_12;
 wire locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.c0(clk_48),//48.384
+	.c0(clk_24),//24.192
 	.c1(clk_12),//12.096
+	.c2(clk_6),//6.048
 	.locked(locked)
 );
 
 ultra_tank ultra_tank (
 	.clk_12(clk_12),
 	.Reset_n(~(status[0] | status[6] | buttons[1])),
-	.Video1_O(video1),// White video output (680 Ohm)
-	.Video2_O(video2),// Black video output (1.2k)
+	.Video(video),
 	.Sync_O(),
 	.Blank_O(),
 	.HS(hs),
@@ -91,14 +91,14 @@ ultra_tank ultra_tank (
 );
 
 dac dac1 (
-	.CLK(clk_48),
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio1),
 	.DACout(AUDIO_L)
 	);
 	
 dac dac2 (
-	.CLK(clk_48),
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio2),
 	.DACout(AUDIO_R)
@@ -107,17 +107,17 @@ dac dac2 (
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
-	.clk_sys(clk_48),
-	.ce_pix(clk_12),
-	.ce_pix_actual(clk_12),
+	.clk_sys(clk_24),
+	.ce_pix(clk_6),
+	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {video1&video2,video1&video2,video1&video2} : "000"),
-	.G(blankn ? {video1&video2,video1&video2,video1&video2} : "000"),
-	.B(blankn ? {video1&video2,video1&video2,video1&video2} : "000"),
+	.R({video&video,video}),
+	.G({video&video,video}),
+	.B({video&video,video}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -135,7 +135,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_48   	     ),
+	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -154,7 +154,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_48),
+	.clk(clk_24),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),

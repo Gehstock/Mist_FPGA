@@ -26,8 +26,7 @@ entity ultra_tank is
 port(		
 			clk_12		: in	std_logic;	-- 50MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
-			Video1_O		: out std_logic;  -- White video output (680 Ohm)
-			Video2_O		: out std_logic;	-- Black video output (1.2k)
+			Video			: out std_logic_vector(1 downto 0);
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
 			Blank_O		: out std_logic;  -- Composite blank output
 			HS				: out std_logic;
@@ -159,8 +158,8 @@ port map(
 		CC1 => CC1_O,
 		CC0 => CC0_O,
 		White => White_O,
-		PF_Vid1 => Video1_O,
-		PF_Vid2 => Video2_O
+		PF_Vid1 => Video(0),
+		PF_Vid2 => Video(1)
 		);
 			
 		

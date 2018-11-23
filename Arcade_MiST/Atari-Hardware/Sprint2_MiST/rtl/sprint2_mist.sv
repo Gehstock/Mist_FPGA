@@ -21,7 +21,7 @@ module sprint2_mist(
 localparam CONF_STR = {
 	"Sprint2;;",
 	"O1,Test Mode,Off,On;",
-	"T2,Next Track;",
+//	"T2,Next Track;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
@@ -37,15 +37,16 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio1, audio2;
-wire			video;
+wire	[1:0] video;
 
-wire clk_48, clk_12;
+wire clk_24, clk_12, clk_6;
 wire locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.c0(clk_48),
+	.c0(clk_24),
 	.c1(clk_12),
+	.c2(clk_6),
 	.locked(locked)
 );
 
@@ -69,7 +70,7 @@ sprint2 sprint2 (
 	.Coin2_I(~kbjoy[7]),
 	.Start1_I(~kbjoy[5]),
 	.Start2_I(~kbjoy[6]),
-	.Trak_Sel_I(~status[2]),
+	.Trak_Sel_I(),//~status[2]),
 	.Gas1_I(~kbjoy[4]),
 	.Gas2_I(),
 //	.Gear1_1_I(),//                                                                                                                                                                                                                                                                                                           Gear shifters, 4th gear = no other gear selected
@@ -88,33 +89,36 @@ sprint2 sprint2 (
 );
 
 dac dac1 (
-	.CLK(clk_48),
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio1),
 	.DACout(AUDIO_L)
 	);
 	
-dac dac2 (
-	.CLK(clk_48),
+dac dacr (
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio2),
 	.DACout(AUDIO_R)
-	);
+	);	
 
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 (
-	.clk_sys(clk_48),
-	.ce_pix(clk_12),
-	.ce_pix_actual(clk_12),
+	.clk_sys(clk_24),
+	.ce_pix(clk_6),
+	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {video,video,video} : "000"),
-	.G(blankn ? {video,video,video} : "000"),
-	.B(blankn ? {video,video,video} : "000"),
+	.R({video,video,video}),
+	.G({video,video,video}),
+	.B({video,video,video}),
+//	.R(blankn ? {video,video,video} : "000"),
+//	.G(blankn ? {video,video,video} : "000"),
+//	.B(blankn ? {video,video,video} : "000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -132,7 +136,7 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
-	.clk_sys        (clk_48   	     ),
+	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -151,7 +155,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 );
 
 keyboard keyboard(
-	.clk(clk_48),
+	.clk(clk_24),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
