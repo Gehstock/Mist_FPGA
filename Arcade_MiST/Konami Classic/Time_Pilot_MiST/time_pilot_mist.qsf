@@ -117,6 +117,7 @@ set_location_assignment PIN_80 -to AUDIO_R
 set_location_assignment PIN_105 -to SPI_DO
 set_location_assignment PIN_88 -to SPI_DI
 set_location_assignment PIN_126 -to SPI_SCK
+set_location_assignment PIN_127 -to SPI_SS2
 set_location_assignment PIN_91 -to SPI_SS3
 set_location_assignment PIN_13 -to CONF_DATA0
 

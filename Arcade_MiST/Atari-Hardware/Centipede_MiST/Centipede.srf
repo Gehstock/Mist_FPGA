@@ -1,0 +1,4 @@
+{ "" "" "" "Verilog HDL assignment warning at bc6502.v(600): truncated value with size 32 to match size of target (16)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at bc6502.v(338): object \"styy\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at bc6502.v(678): truncated value with size 32 to match size of target (16)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Always Construct warning at bc6502.v(1113): inferring latch(es) for variable \"sc\", which holds its previous value in one or more paths through the always construct" {  } {  } 0 10240 "" 0 0 "Quartus II" 0 -1 0 ""}
