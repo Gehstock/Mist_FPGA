@@ -8,7 +8,10 @@ Arcade Cores
 	Super Breakout
 	Ultra Tank
 
-#Atari Hardware
+#Atari Centipede Hardware
+	Centipede
+
+#Atari Discrete Logic Hardware
 	Computer Space	
 
 #Custom Hardware
