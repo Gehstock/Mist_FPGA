@@ -20,7 +20,7 @@ module DottoriKun_MiST(
 
 localparam CONF_STR = {
 	"DottoriKun;;",
-	"O12,ROM ,Old,Old,New,Mod;",
+	"O12,ROM ,ORIG,ORIG,MINE,PACM;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE

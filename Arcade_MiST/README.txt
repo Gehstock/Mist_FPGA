@@ -29,7 +29,7 @@ Arcade Cores
 		Burger Time
 
 #Dottori-Kun Hardware
-	Dottori Kun / Dottori-Man Jr
+	Dottori Kun / Dottori-Man Jr / Mine Sweeper   (3in1Game)
 
 #Galaxian Hardware
 	Azurian Attack
