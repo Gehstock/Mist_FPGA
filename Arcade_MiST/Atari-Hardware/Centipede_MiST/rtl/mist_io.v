@@ -5,7 +5,6 @@
 // http://code.google.com/p/mist-board/
 //
 // Copyright (c) 2014 Till Harbaum <till@harbaum.org>
-// Copyright (c) 2015-2017 Sorgelig
 //
 // This source file is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published
@@ -62,13 +61,13 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	// SD config
 	input             sd_conf,
 	input             sd_sdhc,
-	output      [1:0] img_mounted, // signaling that new image has been mounted
+	output            img_mounted, // signaling that new image has been mounted
 	output reg [31:0] img_size,    // size of image in bytes
 
 	// SD block level access
 	input      [31:0] sd_lba,
-	input       [1:0] sd_rd,
-	input       [1:0] sd_wr,
+	input             sd_rd,
+	input             sd_wr,
 	output reg        sd_ack,
 	output reg        sd_ack_conf,
 
@@ -83,28 +82,25 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	output reg        ps2_kbd_data,
 	output            ps2_mouse_clk,
 	output reg        ps2_mouse_data,
-
-	// ps2 alternative interface. 
-
-	// [8] - extended, [9] - pressed, [10] - toggles with every press/release
-	output reg [10:0] ps2_key = 0,
-
-	// [24] - toggles with every event
-	output reg [24:0] ps2_mouse = 0,
+	input             ps2_caps_led,
 
 	// ARM -> FPGA download
-	input             ioctl_ce,
 	output reg        ioctl_download = 0, // signal indicating an active download
 	output reg  [7:0] ioctl_index,        // menu index used to upload the file
-	output reg        ioctl_wr = 0,
+	output            ioctl_wr,
 	output reg [24:0] ioctl_addr,
 	output reg  [7:0] ioctl_dout
 );
 
+reg [7:0] b_data;
+reg [6:0] sbuf;
+reg [7:0] cmd;
+reg [2:0] bit_cnt;    // counts bits 0-7 0-7 ...
+reg [9:0] byte_cnt;   // counts bytes
 reg [7:0] but_sw;
 reg [2:0] stick_idx;
 
-reg [1:0] mount_strobe = 0;
+reg    mount_strobe = 0;
 assign img_mounted  = mount_strobe;
 
 assign buttons = but_sw[1:0];
@@ -112,187 +108,164 @@ assign switches = but_sw[3:2];
 assign scandoubler_disable = but_sw[4];
 assign ypbpr = but_sw[5];
 
+wire [7:0] spi_dout = { sbuf, SPI_DI};
+
 // this variant of user_io is for 8 bit cores (type == a4) only
 wire [7:0] core_type = 8'ha4;
 
 // command byte read by the io controller
-wire       drive_sel = sd_rd[1] | sd_wr[1];
-wire [7:0] sd_cmd = { 4'h6, sd_conf, sd_sdhc, sd_wr[drive_sel], sd_rd[drive_sel] };
-
-reg [7:0] cmd;
-reg [2:0] bit_cnt;    // counts bits 0-7 0-7 ...
-reg [9:0] byte_cnt;   // counts bytes
+wire [7:0] sd_cmd = { 4'h5, sd_conf, sd_sdhc, sd_wr, sd_rd };
 
 reg spi_do;
 assign SPI_DO = CONF_DATA0 ? 1'bZ : spi_do;
 
-reg [7:0] spi_data_out;
+wire [7:0] kbd_led = { 2'b01, 4'b0000, ps2_caps_led, 1'b1};
 
-// SPI transmitter
-always@(negedge SPI_SCK) spi_do <= spi_data_out[~bit_cnt];
+// drive MISO only when transmitting core id
+always@(negedge SPI_SCK) begin
+	if(!CONF_DATA0) begin
+		// first byte returned is always core type, further bytes are 
+		// command dependent
+      if(byte_cnt == 0) begin
+		  spi_do <= core_type[~bit_cnt];
 
-reg [7:0] spi_data_in;
-reg       spi_data_ready = 0;
+		end else begin
+			case(cmd)
+				// reading config string
+				8'h14: begin
+					// returning a byte from string
+						if(byte_cnt < STRLEN + 1) spi_do <= conf_str[{STRLEN - byte_cnt,~bit_cnt}];
+							else spi_do <= 0;
+					end
+
+				// reading sd card status
+				8'h16: begin
+						if(byte_cnt == 1) spi_do <= sd_cmd[~bit_cnt];
+						else if((byte_cnt >= 2) && (byte_cnt < 6)) spi_do <= sd_lba[{5-byte_cnt, ~bit_cnt}];
+						else spi_do <= 0;
+					end
+
+				// reading sd card write data
+				8'h18:
+						spi_do <= b_data[~bit_cnt];
+
+				// reading keyboard LED status
+				8'h1f:
+						spi_do <= kbd_led[~bit_cnt];
+
+				default:
+						spi_do <= 0;
+			endcase
+		end
+   end
+end
+
+reg b_wr2,b_wr3;
+always @(negedge clk_sys) begin
+	b_wr3      <= b_wr2;
+	sd_buff_wr <= b_wr3;
+end
 
 // SPI receiver
 always@(posedge SPI_SCK or posedge CONF_DATA0) begin
-	reg [6:0]  sbuf;
-	reg [31:0] sd_lba_r;
-	reg        drive_sel_r;
 
 	if(CONF_DATA0) begin
+		b_wr2 <= 0;
 	   bit_cnt <= 0;
 	   byte_cnt <= 0;
-		spi_data_out <= core_type;
-	end
-	else
-	begin
+		sd_ack <= 0;
+		sd_ack_conf <= 0;
+	end else begin
+		b_wr2 <= 0;
+
+		sbuf <= spi_dout[6:0];
 		bit_cnt <= bit_cnt + 1'd1;
-		sbuf <= {sbuf[5:0], SPI_DI};
+		if(bit_cnt == 5) begin
+			if (byte_cnt == 0) sd_buff_addr <= 0;
+			if((byte_cnt != 0) & (sd_buff_addr != 511)) sd_buff_addr <= sd_buff_addr + 1'b1;
+			if((byte_cnt == 1) & ((cmd == 8'h17) | (cmd == 8'h19))) sd_buff_addr <= 0;
+		end
 
 		// finished reading command byte
       if(bit_cnt == 7) begin
-			if(!byte_cnt) cmd <= {sbuf, SPI_DI};
-
-			spi_data_in <= {sbuf, SPI_DI};
-			spi_data_ready <= ~spi_data_ready;
 			if(~&byte_cnt) byte_cnt <= byte_cnt + 8'd1;
+			if(byte_cnt == 0) begin
+				cmd <= spi_dout;
+
+				if(spi_dout == 8'h19) begin
+					sd_ack_conf  <= 1;
+					sd_buff_addr <= 0;
+				end
+				if((spi_dout == 8'h17) || (spi_dout == 8'h18)) begin
+					sd_ack       <= 1;
+					sd_buff_addr <= 0;
+				end
+				if(spi_dout == 8'h18) b_data <= sd_buff_din;
+
+				mount_strobe <= 0;
+
+			end else begin
 			
-			spi_data_out <= 0;
-			case({(!byte_cnt) ? {sbuf, SPI_DI} : cmd})
-				// reading config string
-				8'h14: if(byte_cnt < STRLEN) spi_data_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
+				case(cmd)
+					// buttons and switches
+					8'h01: but_sw <= spi_dout; 
+					8'h02: joystick_0 <= spi_dout;
+					8'h03: joystick_1 <= spi_dout;
 
-				// reading sd card status
-				8'h16: if(byte_cnt == 0) begin
-							spi_data_out <= sd_cmd;
-							sd_lba_r <= sd_lba;
-							drive_sel_r <= drive_sel;
-						 end else if (byte_cnt == 1) begin
-							spi_data_out <= drive_sel_r;
-						 end else if(byte_cnt < 6) spi_data_out <= sd_lba_r[(5-byte_cnt)<<3 +:8];
-
-				// reading sd card write data
-				8'h18: spi_data_out <= sd_buff_din;
-			endcase
-		end
-	end
-end
-
-reg [31:0] ps2_key_raw = 0;
-wire       pressed  = (ps2_key_raw[15:8] != 8'hf0);
-wire       extended = (~pressed ? (ps2_key_raw[23:16] == 8'he0) : (ps2_key_raw[15:8] == 8'he0));
-
-// transfer to clk_sys domain
-always@(posedge clk_sys) begin
-	reg old_ss1, old_ss2;
-	reg old_ready1, old_ready2;
-	reg [2:0] b_wr;
-	reg       got_ps2 = 0;
-
-	old_ss1 <= CONF_DATA0;
-	old_ss2 <= old_ss1;
-	old_ready1 <= spi_data_ready;
-	old_ready2 <= old_ready1;
-	
-	sd_buff_wr <= b_wr[0];
-	if(b_wr[2] && (~&sd_buff_addr)) sd_buff_addr <= sd_buff_addr + 1'b1;
-	b_wr <= (b_wr<<1);
-
-	if(old_ss2) begin
-		got_ps2      <= 0;
-		sd_ack       <= 0;
-		sd_ack_conf  <= 0;
-		sd_buff_addr <= 0;
-		if(got_ps2) begin
-			if(cmd == 4) ps2_mouse[24] <= ~ps2_mouse[24]; 
-			if(cmd == 5) begin
-				ps2_key <= {~ps2_key[10], pressed, extended, ps2_key_raw[7:0]};
-				if(ps2_key_raw == 'hE012E07C) ps2_key[9:0] <= 'h37C; // prnscr pressed
-				if(ps2_key_raw == 'h7CE0F012) ps2_key[9:0] <= 'h17C; // prnscr released
-				if(ps2_key_raw == 'hF014F077) ps2_key[9:0] <= 'h377; // pause  pressed
-			end
-		end
-	end
-	else
-	if(old_ready2 ^ old_ready1) begin
-
-		if(cmd == 8'h18 && ~&sd_buff_addr) sd_buff_addr <= sd_buff_addr + 1'b1;
-
-		if(byte_cnt < 2) begin
-
-			if (cmd == 8'h19) sd_ack_conf  <= 1;
-			if((cmd == 8'h17) || (cmd == 8'h18)) sd_ack <= 1;
-			mount_strobe <= 0;
-
-			if(cmd == 5) ps2_key_raw <= 0;
-		end else begin
-		
-			case(cmd)
-				// buttons and switches
-				8'h01: but_sw <= spi_data_in; 
-				8'h02: joystick_0 <= spi_data_in;
-				8'h03: joystick_1 <= spi_data_in;
-
-				// store incoming ps2 mouse bytes 
-				8'h04: begin
-						got_ps2 <= 1;
-						case(byte_cnt)
-							2: ps2_mouse[7:0]   <= spi_data_in;
-							3: ps2_mouse[15:8]  <= spi_data_in;
-							4: ps2_mouse[23:16] <= spi_data_in;
-						endcase 
-						ps2_mouse_fifo[ps2_mouse_wptr] <= spi_data_in; 
-						ps2_mouse_wptr <= ps2_mouse_wptr + 1'd1;
-					end
-
-				// store incoming ps2 keyboard bytes 
-				8'h05: begin
-						got_ps2 <= 1;
-						ps2_key_raw[31:0] <= {ps2_key_raw[23:0], spi_data_in}; 						
-						ps2_kbd_fifo[ps2_kbd_wptr] <= spi_data_in; 
-						ps2_kbd_wptr <= ps2_kbd_wptr + 1'd1;
-					end
-			
-				8'h15: status[7:0] <= spi_data_in;
-			
-				// send SD config IO -> FPGA
-				// flag that download begins
-				// sd card knows data is config if sd_dout_strobe is asserted
-				// with sd_ack still being inactive (low)
-				8'h19,
-				// send sector IO -> FPGA
-				// flag that download begins
-				8'h17: begin
-						sd_buff_dout <= spi_data_in;
-						b_wr <= 1;
-					end
-
-				// joystick analog
-				8'h1a: begin
-						// first byte is joystick index
-						if(byte_cnt == 2) stick_idx <= spi_data_in[2:0];
-						else if(byte_cnt == 3) begin
-							// second byte is x axis
-							if(stick_idx == 0) joystick_analog_0[15:8] <= spi_data_in;
-								else if(stick_idx == 1) joystick_analog_1[15:8] <= spi_data_in;
-						end else if(byte_cnt == 4) begin
-							// third byte is y axis
-							if(stick_idx == 0) joystick_analog_0[7:0] <= spi_data_in;
-								else if(stick_idx == 1) joystick_analog_1[7:0] <= spi_data_in;
+					// store incoming ps2 mouse bytes 
+					8'h04: begin
+							ps2_mouse_fifo[ps2_mouse_wptr] <= spi_dout; 
+							ps2_mouse_wptr <= ps2_mouse_wptr + 1'd1;
 						end
-					end
 
-				// notify image selection
-				8'h1c: mount_strobe[spi_data_in[0]] <= 1;
+					// store incoming ps2 keyboard bytes 
+					8'h05: begin
+							ps2_kbd_fifo[ps2_kbd_wptr] <= spi_dout; 
+							ps2_kbd_wptr <= ps2_kbd_wptr + 1'd1;
+						end
+				
+					8'h15: status[7:0] <= spi_dout;
+				
+					// send SD config IO -> FPGA
+					// flag that download begins
+					// sd card knows data is config if sd_dout_strobe is asserted
+					// with sd_ack still being inactive (low)
+					8'h19,
+					// send sector IO -> FPGA
+					// flag that download begins
+					8'h17: begin
+							sd_buff_dout <= spi_dout;
+							b_wr2 <= 1;
+						end
 
-				// send image info
-				8'h1d: if(byte_cnt<6) img_size[(byte_cnt-2)<<3 +:8] <= spi_data_in;
+					8'h18: b_data <= sd_buff_din;
 
-				// status, 32bit version
-				8'h1e: if(byte_cnt<6) status[(byte_cnt-2)<<3 +:8] <= spi_data_in;
-				default: ;
-			endcase
+					// joystick analog
+					8'h1a: begin
+							// first byte is joystick index
+							if(byte_cnt == 1) stick_idx <= spi_dout[2:0];
+							else if(byte_cnt == 2) begin
+								// second byte is x axis
+								if(stick_idx == 0) joystick_analog_0[15:8] <= spi_dout;
+									else if(stick_idx == 1) joystick_analog_1[15:8] <= spi_dout;
+							end else if(byte_cnt == 3) begin
+								// third byte is y axis
+								if(stick_idx == 0) joystick_analog_0[7:0] <= spi_dout;
+									else if(stick_idx == 1) joystick_analog_1[7:0] <= spi_dout;
+							end
+						end
+
+					// notify image selection
+					8'h1c: mount_strobe <= 1;
+
+					// send image info
+					8'h1d: if(byte_cnt<5) img_size[(byte_cnt-1)<<3 +:8] <= spi_dout;
+
+					// status, 32bit version
+					8'h1e: if(byte_cnt<5) status[(byte_cnt-1)<<3 +:8] <= spi_dout;
+					default: ;
+				endcase
+			end
 		end
 	end
 end
@@ -449,8 +422,6 @@ localparam UIO_FILE_TX      = 8'h53;
 localparam UIO_FILE_TX_DAT  = 8'h54;
 localparam UIO_FILE_INDEX   = 8'h55;
 
-reg        rdownload = 0;
-
 // data_io has its own SPI interface to the io controller
 always@(posedge SPI_SCK, posedge SPI_SS2) begin
 	reg  [6:0] sbuf;
@@ -460,9 +431,14 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 
 	if(SPI_SS2) cnt <= 0;
 	else begin
+		rclk <= 0;
+
 		// don't shift in last bit. It is evaluated directly
 		// when writing to ram
 		if(cnt != 15) sbuf <= { sbuf[5:0], SPI_DI};
+
+		// increase target address after write
+		if(rclk) addr <= addr + 1'd1;
 
 		// count 0-7 8-15 8-15 ... 
 		if(cnt < 15) cnt <= cnt + 1'd1;
@@ -475,11 +451,11 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 		if((cmd == UIO_FILE_TX) && (cnt == 15)) begin
 			// prepare 
 			if(SPI_DI) begin
-				addr <= 25'h080000;
-				rdownload <= 1; 
+				addr <= 0;
+				ioctl_download <= 1; 
 			end else begin
 				addr_w <= addr;
-				rdownload <= 0;
+				ioctl_download <= 0;
 			end
 		end
 
@@ -487,8 +463,7 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 		if((cmd == UIO_FILE_TX_DAT) && (cnt == 15)) begin
 			addr_w <= addr;
 			data_w <= {sbuf, SPI_DI};
-			addr <= addr + 1'd1;
-			rclk <= ~rclk;
+			rclk <= 1;
 		end
 
       // expose file (menu) index
@@ -496,23 +471,20 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 	end
 end
 
-// transfer to ioctl_clk domain.
-// ioctl_index is set before ioctl_download, so it's stable already
-always@(posedge clk_sys) begin
+assign ioctl_wr = |ioctl_wrd;
+reg [1:0] ioctl_wrd;
+
+always@(negedge clk_sys) begin
 	reg        rclkD, rclkD2;
 
-	if(ioctl_ce) begin
-		ioctl_download <= rdownload;
+	rclkD    <= rclk;
+	rclkD2   <= rclkD;
+	ioctl_wrd<= {ioctl_wrd[0],1'b0};
 
-		rclkD    <= rclk;
-		rclkD2   <= rclkD;
-		ioctl_wr <= 0;
-
-		if(rclkD != rclkD2) begin
-			ioctl_dout <= data_w;
-			ioctl_addr <= addr_w;
-			ioctl_wr   <= 1;
-		end
+	if(rclkD & ~rclkD2) begin
+		ioctl_dout <= data_w;
+		ioctl_addr <= addr_w;
+		ioctl_wrd  <= 2'b11;
 	end
 end
 

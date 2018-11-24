@@ -24,15 +24,14 @@ module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
 	// system interface
 	input             clk_sys,
 	input             ce_pix,
-	output            ce_pix_out,
+	input             ce_pix_actual,
 
 	input             hq2x,
 
 	// shifter video interface
 	input             hs_in,
 	input             vs_in,
-	input             hb_in,
-	input             vb_in,
+	input             line_start,
 
 	input  [DWIDTH:0] r_in,
 	input  [DWIDTH:0] g_in,
@@ -42,28 +41,35 @@ module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
 	// output interface
 	output reg        hs_out,
 	output            vs_out,
-	output            hb_out,
-	output            vb_out,
 	output [DWIDTH:0] r_out,
 	output [DWIDTH:0] g_out,
 	output [DWIDTH:0] b_out
 );
 
+`define BITS_TO_FIT(N) ( \
+     N <=   2 ? 0 : \
+     N <=   4 ? 1 : \
+     N <=   8 ? 2 : \
+     N <=  16 ? 3 : \
+     N <=  32 ? 4 : \
+     N <=  64 ? 5 : \
+     N <= 128 ? 6 : \
+     N <= 256 ? 7 : \
+     N <= 512 ? 8 : \
+     N <=1024 ? 9 : 10 )
 
-localparam DWIDTH = HALF_DEPTH ? 3 : 7;
+localparam DWIDTH = HALF_DEPTH ? 2 : 5;
 
-assign vs_out = vso[3];
-assign ce_pix_out = hq2x ? ce_x4 : ce_x2;
+assign vs_out = vs_in;
 
-//Compensate picture shift after HQ2x
-assign vb_out = vbo[2];
-assign hb_out = hq2x ? hbo[4] : hbo[2];
-
+reg  [2:0] phase;
+reg  [2:0] ce_div;
 reg  [7:0] pix_len = 0;
 wire [7:0] pl = pix_len + 1'b1;
 
-reg ce_x1, ce_x4, ce_x2;
+reg ce_x1, ce_x4;
 reg req_line_reset;
+wire ls_in = hs_in | line_start;
 always @(negedge clk_sys) begin
 	reg old_ce;
 	reg [2:0] ce_cnt;
@@ -74,83 +80,88 @@ always @(negedge clk_sys) begin
 	if(~&pix_len) pix_len <= pix_len + 1'd1;
 
 	ce_x4 <= 0;
-	ce_x2 <= 0;
 	ce_x1 <= 0;
 
-	// use such odd comparison to place ce_x4 evenly if master clock isn't multiple 4.
+	// use such odd comparison to place c_x4 evenly if master clock isn't multiple 4.
 	if((pl == pixsz4) || (pl == pixsz2) || (pl == (pixsz2+pixsz4))) begin
+		phase <= phase + 1'd1;
 		ce_x4 <= 1;
-	end
-
-	if(pl == pixsz2) begin
-		ce_x2 <= 1;
 	end
 
 	if(~old_ce & ce_pix) begin
 		pixsz2 <= {1'b0,  pl[7:1]};
 		pixsz4 <= {2'b00, pl[7:2]};
 		ce_x1 <= 1;
-		ce_x2 <= 1;
 		ce_x4 <= 1;
 		pix_len <= 0;
-		req_line_reset <= 0;
+		phase <= phase + 1'd1;
 
-		if(hb_in) req_line_reset <= 1;
+		ce_cnt <= ce_cnt + 1'd1;
+		if(ce_pix_actual) begin
+			phase <= 0;
+			ce_div <= ce_cnt + 1'd1;
+			ce_cnt <= 0;
+			req_line_reset <= 0;
+		end
+
+		if(ls_in) req_line_reset <= 1;
 	end
 end
 
+reg ce_sd;
+always @(*) begin
+	case(ce_div)
+		2: ce_sd = !phase[0];
+		4: ce_sd = !phase[1:0];
+		default: ce_sd <= 1;
+	endcase
+end
+
+localparam AWIDTH = `BITS_TO_FIT(LENGTH);
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
 	.clk(clk_sys),
-	.ce_x4(ce_x4),
-	.inputpixel({b_d,g_d,r_d}),
+	.ce_x4(ce_x4 & ce_sd),
+	.inputpixel({b_in,g_in,r_in}),
 	.mono(mono),
 	.disable_hq2x(~hq2x),
 	.reset_frame(vs_in),
 	.reset_line(req_line_reset),
 	.read_y(sd_line),
-	.hblank(hbo[0]),
+	.read_x(sd_h_actual),
 	.outpixel({b_out,g_out,r_out})
 );
 
+reg [10:0] sd_h_actual;
+always @(*) begin
+	case(ce_div)
+		2: sd_h_actual = sd_h[10:1];
+		4: sd_h_actual = sd_h[10:2];
+		default: sd_h_actual = sd_h;
+	endcase
+end
+
+reg [10:0] sd_h;
 reg  [1:0] sd_line;
-reg  [2:0] vbo;
-reg  [4:0] hbo;
-
-reg [DWIDTH:0] r_d;
-reg [DWIDTH:0] g_d;
-reg [DWIDTH:0] b_d;
-
-reg [3:0] vso;
-
 always @(posedge clk_sys) begin
 
-	reg [11:0] hs_max,hs_rise;
+	reg [11:0] hs_max,hs_rise,hs_ls;
 	reg [10:0] hcnt;
 	reg [11:0] sd_hcnt;
-	reg [11:0] hde_start, hde_end;
 
-	reg hs, hs2, vs, hb;
+	reg hs, hs2, vs, ls;
 
 	if(ce_x1) begin
 		hs <= hs_in;
-		hb <= hb_in;
-		
-		r_d <= r_in;
-		g_d <= g_in;
-		b_d <= b_in;
+		ls <= ls_in;
 
-		if(hb && !hb_in) begin
-			hde_start <= {hcnt,1'b0};
-			vbo <= {vbo[1:0], vb_in};
-		end
-		if(!hb && hb_in) hde_end <= {hcnt,1'b0};
+		if(ls && !ls_in) hs_ls <= {hcnt,1'b1};
 
 		// falling edge of hsync indicates start of line
 		if(hs && !hs_in) begin
-			vso <= (vso<<1) | vs_in;
 			hs_max <= {hcnt,1'b1};
 			hcnt <= 0;
+			if(ls && !ls_in) hs_ls <= {10'd0,1'b1};
 		end else begin
 			hcnt <= hcnt + 1'd1;
 		end
@@ -164,26 +175,19 @@ always @(posedge clk_sys) begin
 
 	if(ce_x4) begin
 		hs2 <= hs_in;
-		hbo[4:1] <= hbo[3:0];
 
 		// output counter synchronous to input and at twice the rate
 		sd_hcnt <= sd_hcnt + 1'd1;
-
+		sd_h    <= sd_h    + 1'd1;
 		if(hs2 && !hs_in)     sd_hcnt <= hs_max;
 		if(sd_hcnt == hs_max) sd_hcnt <= 0;
-
-
-		//prepare to read in advance
-		if(sd_hcnt == (hde_start-2)) begin
-			sd_line <= sd_line + 1'd1;
-		end
-
-		if(sd_hcnt == hde_start) hbo[0] <= 0;
-		if(sd_hcnt == hde_end)   hbo[0] <= 1;
 
 		// replicate horizontal sync at twice the speed
 		if(sd_hcnt == hs_max)  hs_out <= 0;
 		if(sd_hcnt == hs_rise) hs_out <= 1;
+
+		if(sd_hcnt == hs_ls)   sd_h    <= 0;
+		if(sd_hcnt == hs_ls)   sd_line <= sd_line + 1'd1;
 	end
 end
 

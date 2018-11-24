@@ -961,7 +961,7 @@ hs_ram(
    
 
    // Audio output circuitry
-/*
+
    pokey_atosm pokey(
 		.rst_i(mpu_reset),
 		.clk_i(phi2),
@@ -984,8 +984,8 @@ hs_ram(
 		.serin(8'b0), 
 		.serin_rdy_i(1'b0), 
 		.serin_ack_o()
-		);*/
-
+		);
+/*
 ASTEROIDS_POKEY ASTEROIDS_POKEY (
 	.ADDR(ab[3:0]),
   	.DIN(db_out[7:0]),
@@ -998,7 +998,7 @@ ASTEROIDS_POKEY ASTEROIDS_POKEY (
   	.PIN(8'b0),
   	.ENA(1'b1),//1.5m
   	.CLK(phi2)//6m
-  );
+  );*/
 
    //
    reg [7:0]  last_pokey_rd;

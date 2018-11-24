@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Full Version
-# Date created = 18:42:48  November 23, 2018
+# Date created = 14:04:08  November 24, 2018
 #
 # -------------------------------------------------------------------------- #
 #
@@ -44,25 +44,27 @@ set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
+set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/cent_top_mist.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Centipede.sv
 set_global_assignment -name VERILOG_FILE rtl/centipede.v
+set_global_assignment -name VHDL_FILE rtl/asteroids_pokey.vhd
 set_global_assignment -name VERILOG_FILE rtl/pokey_atosm.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VERILOG_FILE rtl/sigma_delta_dac.v
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/sprom.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VERILOG_FILE rtl/addsub.v
+set_global_assignment -name VERILOG_FILE rtl/pf_ram.v
 set_global_assignment -name VERILOG_FILE rtl/p6502.v
 set_global_assignment -name VERILOG_FILE rtl/bc6502.v
-set_global_assignment -name VERILOG_FILE rtl/pf_ram.v
+set_global_assignment -name VERILOG_FILE rtl/addsub.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name VERILOG_FILE rtl/keyboard.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -102,21 +104,26 @@ set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
 
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
+set_global_assignment -name TOP_LEVEL_ENTITY Centipede
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name TOP_LEVEL_ENTITY cent_top_mist
+set_global_assignment -name SAVE_DISK_SPACE OFF
 
 # Fitter Assignments
 # ==================
+set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
+set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name DEVICE EP3C25E144C8
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
@@ -140,61 +147,21 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# ---------------------------
-# start ENTITY(cent_top_mist)
+# -----------------------
+# start ENTITY(Centipede)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE POST_FIT -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(cent_top_mist)
-# -------------------------
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to CLOCK_27
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to CONF_DATA0
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to LED
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DI
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SCK
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SS2
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SS3
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_HS
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_VS
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to altera_reserved_tck
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to altera_reserved_tdi
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to altera_reserved_tdo
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to altera_reserved_tms
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to auto_stp_external_clock_0
-set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
-set_global_assignment -name SLD_FILE "C:/Users/Harry Pothead/Desktop/Centipede_MiST/stp1_auto_stripped.stp"
-set_global_assignment -name VHDL_FILE rtl/asteroids_pokey.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_space.sv
+# end ENTITY(Centipede)
+# ---------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

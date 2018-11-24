@@ -1,27 +1,17 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Centipede
--- Port to MiST by Gehstock
--- 23 November 2018
+-- Arcade: Centipede port to MiST by Gehstock
+-- 24 November 2018
 -- 
----------------------------------------------------------------------------------
 -- 
--- Brad Parker <brad@heeltoe.com> 10/2015
--- 
----------------------------------------------------------------------------------
+-- Only controls are rotated on VGA output.
 -- 
 -- 
 -- Keyboard inputs :
 --
---   1          : Start
---   SPACE      : Fire
---   Arrow keys : Controls
 --   ESC        : Coin
---
--- 
--- 
+--   1 or 2     : Start Player
+--   SPACE 	: Fire
+--   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
-
-ToDo: 	Fix OSD
-	Fix Joystick
-	Fix Sound
+Todo: Sound and Joystick
