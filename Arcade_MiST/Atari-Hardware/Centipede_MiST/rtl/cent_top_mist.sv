@@ -33,13 +33,14 @@ localparam CONF_STR = {
 
 
 
-   wire 			clk24, clk12, clk6;
+wire 	clk24, clk12, clk6, clk1p5;
 	
 	pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk24),
 	.c1(clk12),
-	.c2(clk6)
+	.c2(clk6),
+	.c3(clk1p5)
 	);
 	
 	reg 	[3:0]	reset_reg;	
@@ -144,7 +145,8 @@ sigma_delta_dac(
 	 //Note Cennected Joysticks breaks Controls
 centipede centipede(
 	.clk_12mhz(clk12),
- 	.reset(reset_reg[3] | status[0] | buttons[1] | status[6]),
+	.clk_1p5mhz(clk1p5),
+ 	.reset(/*reset_reg[3] |*/ status[0] | buttons[1] | status[6]),
 	.playerinput_i(playerinput_i),
 	.trakball_i(),
 //	.joystick_i({joystick_0[1],joystick_0[0],joystick_0[3],joystick_0[2], joystick_1[1],joystick_1[0],joystick_1[3],joystick_1[2]}),

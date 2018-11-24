@@ -16,10 +16,11 @@
 //
 
 //`define async_lr
-//`define orig_phi0
+`define orig_phi0
 	
 module centipede(
 		 input 	      clk_12mhz,
+		 input 	      clk_1p5mhz,
  		 input 	      reset,
 		 input [9:0]  playerinput_i,
 		 input [7:0]  trakball_i,
@@ -170,14 +171,14 @@ module centipede(
    wire [3:0]  coloram_out;
    wire [3:0]  coloram_rgbi;
    wire        coloram_w_n;
-   reg 	       coloren;
+   reg 	      coloren;
 
    wire [1:0]  rama_sel;
    wire [1:0]  rama_hi;
    wire [1:0]  rama_lo;
    wire [3:0]  rama;
 
-   wire [5:0]  audio;
+   wire [7:0]  audio;
 
    //
    wire        mob_n;
@@ -960,7 +961,7 @@ hs_ram(
    
 
    // Audio output circuitry
-
+/*
    pokey_atosm pokey(
 		.rst_i(mpu_reset),
 		.clk_i(phi2),
@@ -968,7 +969,7 @@ hs_ram(
 		.dat_i(db_out[7:0]),
 		.dat_o(pokey_out),
 		.we_i(~rw_n),
-		.stb_i(~pokey_n),
+		.stb_i(1'b1 & ~pokey_n),
 		.ack_o(),
 		.irq(),
 		.audout(audio),
@@ -983,8 +984,22 @@ hs_ram(
 		.serin(8'b0), 
 		.serin_rdy_i(1'b0), 
 		.serin_ack_o()
-		);			 
-   
+		);*/
+
+ASTEROIDS_POKEY ASTEROIDS_POKEY (
+	.ADDR(ab[3:0]),
+  	.DIN(db_out[7:0]),
+  	.DOUT(pokey_out),
+  	.DOUT_OE_L(),
+  	.RW_L(rw_n),
+	.CS(~pokey_n),
+  	.CS_L(1'b0),
+  	.AUDIO_OUT(audio),
+  	.PIN(8'b0),
+  	.ENA(1'b1),//1.5m
+  	.CLK(phi2)//6m
+  );
+
    //
    reg [7:0]  last_pokey_rd;
    always @(posedge s_6mhz)
@@ -1014,29 +1029,19 @@ hs_ram(
    wire gry0_or_1;
    assign gry0_or_1 = gry[1] | gry[0];
      
-//   assign rama_sel = { coloram_n, gry0_or_1 };
-//   
-//   assign rama = 
-//		 (rama_sel == 2'b00) ? { ab[3:0] } :
-//		 (rama_sel == 2'b01) ? { ab[3:0] } :
-//		 (rama_sel == 2'b10) ? { {gry0_or_1, 1'b1}, area[1:0] } :
-//		 (rama_sel == 2'b11) ? { {gry0_or_1, 1'b1}, gry[1:0] } :
-//		 4'b0;
+   assign rama_sel = { coloram_n, gry0_or_1 };
+   
+   assign rama = 
+		 (rama_sel == 2'b00) ? { ab[3:0] } :
+		 (rama_sel == 2'b01) ? { ab[3:0] } :
+		 (rama_sel == 2'b10) ? { {gry0_or_1, 1'b1}, area[1:0] } :
+		 (rama_sel == 2'b11) ? { {gry0_or_1, 1'b1}, gry[1:0] } :
+		 4'b0;
 
-   assign rama =  gry0_or_1 ?
-		  { {gry0_or_1, 1'b1}, gry[1:0] } :
-		  { {gry0_or_1, 1'b1}, area[1:0] };
-/*   
-color_ram color_ram(
-	.clk_a(s_6mhz),
-	.clk_b(s_6mhz_n),
-	.reset(reset),
-	.addr_a(ab[3:0]),
-	.dout_a(coloram_out),
-	.din_a(db_out[3:0]),
-	.we_n_a(coloram_w_n),
-	.addr_b(rama),
-	.dout_b(coloram_rgbi));*/
+ //  assign rama =  gry0_or_1 ?
+	//	  { {gry0_or_1, 1'b1}, gry[1:0] } :
+	//	  { {gry0_or_1, 1'b1}, area[1:0] };
+
 	
 dpram #(
 	.addr_width_g(4),
@@ -1067,7 +1072,8 @@ color_ram(
    assign sync_o = comp_sync;
    assign hsync_o = hsync;
    assign vsync_o = vsync;
-   assign audio_o = { 2'b0, audio };
+ //  assign audio_o = { 2'b0, audio };//original pokey
+	assign audio_o = { audio };//asteroids pokey
    assign hblank_o = hblank;
    assign vblank_o = vblank;
 

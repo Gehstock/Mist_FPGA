@@ -181,11 +181,22 @@ osd osd
 	.R_in(VGA_DE ? R_in[7:2] : 6'd0),
 	.G_in(VGA_DE ? G_in[7:2] : 6'd0),
 	.B_in(VGA_DE ? B_in[7:2] : 6'd0),
-	.R_out(VGA_R),
-	.G_out(VGA_G),
-	.B_out(VGA_B),	
+//	.R_out(VGA_R),
+//	.G_out(VGA_G),
+//	.B_out(VGA_B),	
 	.HSync(hsync),
 	.VSync(vsync)
 );
+
+vga_space vga_space
+(
+	.*,
+	.ypbpr_full(1),
+	.ypbpr_en(ypbpr),
+	.red(R_out),
+	.green(G_out),
+	.blue(B_out)
+);
+
 
 endmodule
