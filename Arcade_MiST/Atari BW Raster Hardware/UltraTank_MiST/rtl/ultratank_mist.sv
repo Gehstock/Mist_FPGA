@@ -107,8 +107,10 @@ dac dac2 (
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
-(
+video_mixer #(
+	.LINE_LENGTH(480), 
+	.HALF_DEPTH(1)) // to dark if set to 0
+video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),

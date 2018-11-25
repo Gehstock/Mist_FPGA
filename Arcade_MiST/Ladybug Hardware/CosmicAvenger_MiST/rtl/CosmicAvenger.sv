@@ -76,20 +76,21 @@ assign LED = 1;
 wire hblank, vblank;
 wire ce_vid;
 wire hs, vs;
-wire [2:0] r,g;
-wire [1:0] b;
+wire [1:0] r,g,b;
 
-video_mixer #(.LINE_LENGTH(440), .HALF_DEPTH(1)) video_mixer
-(
+video_mixer #(
+	.LINE_LENGTH(440), 
+	.HALF_DEPTH(1)) //to Dark if 0
+video_mixer(
 	.clk_sys(clk_sys),
 	.ce_pix(ce_vid),
 	.ce_pix_actual(ce_vid),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r} : "000"),
-	.G(blankn ? {g} : "00"),
-	.B(blankn ? {b} : "000"),
+	.R(blankn ? {r,r,r} : "000000"),
+	.G(blankn ? {g,g,g} : "000000"),
+	.B(blankn ? {b,b,b} : "000000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),

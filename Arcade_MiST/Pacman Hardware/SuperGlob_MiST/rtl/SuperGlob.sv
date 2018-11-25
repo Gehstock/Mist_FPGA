@@ -45,7 +45,7 @@ localparam CONF_STR = {
 	"O2,Joystick Control,Upright,Normal;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.20.",`BUILD_DATE
 };
 
 
@@ -84,7 +84,8 @@ wire [7:0] audio;
 wire hsync,vsync;
 assign LED = 1;
 
-wire hblank, vblank;
+wire hb, vb;
+wire blankn = ~(hb | vb);
 wire ce_vid = ce_6m;
 wire hs, vs;
 wire [2:0] r,g;
@@ -98,9 +99,9 @@ video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(r),
-	.G(g),
-	.B(b),
+	.R(blankn ? r : "000"),
+	.G(blankn ? g : "000"),
+	.B(blankn ? {b,b[0]} : "000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -180,7 +181,7 @@ dac dac
 (
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({~audio[7], audio[6:0], 8'b00000000}),
 	.dac_o(AUDIO_L)
 	);
 

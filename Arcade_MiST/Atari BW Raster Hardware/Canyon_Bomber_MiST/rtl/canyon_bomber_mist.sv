@@ -21,7 +21,7 @@ module canyon_bomber_mist(
 `include "rtl\build_id.sv" 
 
 localparam CONF_STR = {
-	"Dominos;;",
+	"Canyon Bomb;;",
 	"O1,Self_Test,Off,On;",
 	"O2,Slam,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
