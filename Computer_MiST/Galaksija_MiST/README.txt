@@ -1,8 +1,7 @@
-﻿Galaksija on MiST FPGA by Gehstock
+WIP 
 
-48kb Ram
-VGA only	(will be changed)
-Rom1+Rom2  	(Rom3 WIP)
-Keyboard has no lowercase
+VGA Only, No Keyboard
 
-
+32k Ram
+Rom 1+2
+AY8910

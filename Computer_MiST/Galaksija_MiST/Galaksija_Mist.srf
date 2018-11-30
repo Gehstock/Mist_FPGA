@@ -1,0 +1,18 @@
+{ "" "" "" "Verilog HDL macro warning at hq2x.sv(26): overriding existing definition for macro \"BITS_TO_FIT\", which was defined in \"rtl/scandoubler.v\", line 109" {  } {  } 0 10274 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(111): object ram01_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(112): object ram10_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(113): object ram11_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(104): object ram01_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(105): object ram10_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at galaksija_top.v(106): object ram11_out used but never assigned" {  } {  } 0 10858 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at galaksija_top.v(201): object \"we_1\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at galaksija_top.v(202): object \"we_2\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at galaksija_top.v(203): object \"we_3\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Compiler Directive warning at scandoubler.v(109): text macro \"BITS_TO_FIT\" is undefined" {  } {  } 0 10191 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL information at scandoubler.v(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Case Statement warning at galaksija_top.sv(218): incomplete case statement has no default case item" {  } {  } 0 10270 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10235 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
