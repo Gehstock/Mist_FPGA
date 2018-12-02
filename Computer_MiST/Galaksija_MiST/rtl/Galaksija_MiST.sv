@@ -21,9 +21,7 @@ module Galaksija_MiST(
 `include "build_id.v"
 localparam CONF_STR = {
 	"Galaksija;;",
-//	"F,GAL,Load Program;",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
-	"O4,Sound,Off,On;",
 	"T9,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -38,6 +36,8 @@ wire        forced_scandoubler;
 wire [31:0] status;
 wire [7:0] audio;
 wire [10:0] ps2_key;
+wire        ps2_clk;
+wire        ps2_data;
 assign LED = 1'b1;
 
 pll pll (
@@ -63,7 +63,9 @@ user_io (
 	.scandoubler_disable(forced_scandoubler),
 	.buttons(buttons),
 	.switches(switches),
-	.ps2_key(ps2_key)
+	.ps2_key(ps2_key),
+	.ps2_kbd_clk(ps2_clk), 
+	.ps2_kbd_data(ps2_data)
 	);
 
 video_mixer #(
@@ -87,19 +89,23 @@ video_mixer (
 	.VGA_VS			( VGA_VS			),
 	.VGA_HS			( VGA_HS			),
 	.scanlines		(forced_scandoubler ? 2'b00 : {status[3:2] == 3, status[3:2] == 2}),
-	.scandoubler_disable(1'b1),//forced_scandoubler),
+	.scandoubler_disable(1'b1),
 	.hq2x				(status[3:2]==1),
 	.ypbpr			( ypbpr			),
 	.ypbpr_full		( 1				),
 	.line_start		( 0				),
 	.mono				( 1				)
 	);
-	wire [7:0] video;
+	
+wire [7:0] video;
 galaksija_top galaksija_top (
-   .sysclk(clk_25),
+   .vidclk(clk_25),
+	.cpuclk(clk_6p25),
 	.audclk(clk_1p7),
    .reset_in(~(status[0] | status[9] | buttons[1])),
    .ps2_key(ps2_key),
+	.ps2_clk(ps2_clk), 
+	.ps2_data(ps2_data),
 	.audio(audio),
 	.cass_in(UART_RXD),
 	.cass_out(UART_TXD),
@@ -113,7 +119,7 @@ dac #(
    .msbi_g(7))
 dac (
    .clk_i(clk_25),
-   .res_n_i(status[4] ? 1'b1 : 1'b0),
+   .res_n_i(1'b1),
    .dac_i(audio),
    .dac_o(AUDIO_L)
   );
