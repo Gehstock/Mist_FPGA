@@ -9,7 +9,7 @@ module galaksija_top(
     output [7:0] video_dat,
     output video_hs,
     output video_vs,
-	 output video_blankn 
+	 output video_blank 
 );
 
 reg  [6:0] 	reset_cnt = 0;
@@ -97,7 +97,7 @@ rom2(
 	.q(rom2_out)
 	);
 	
-/*//todo CS Signal
+
 wire [7:0] 	rom3_out;
 reg 			rd_rom3;
 	
@@ -109,18 +109,18 @@ rom3(
 	.address(addr[11:0]),
 	.clock(sysclk & rd_rom3),
 	.q(rom3_out)
-	);*/
+	);
 
 reg 			rd_mram, wr_mram;	
 wire 			cs_mram0 = ~addr[15] & ~addr[14];
 wire 			we_mram0 = wr_mram & cs_mram0;
 wire [7:0] 	mram0_out;
 
-spram #(
-	.widthad_a(14),
+spram #(//2k
+	.widthad_a(11),
 	.width_a(8))
 ram00(
-	.address(addr[13:0]),
+	.address(addr[10:0]),
 	.clock(sysclk),
 	.wren(we_mram0),
 	.data(odata),
@@ -131,11 +131,11 @@ wire 			cs_mram1 = ~addr[15] &  addr[14];
 wire 			we_mram1 = wr_mram & cs_mram1;
 wire [7:0] 	mram1_out;
 	
-spram #(
-	.widthad_a(14),
+spram #(//2k
+	.widthad_a(11),
 	.width_a(8))
 ram01(
-	.address(addr[13:0]),
+	.address(addr[10:0]),
 	.clock(sysclk),
 	.wren(we_mram1),
 	.data(odata),
@@ -146,7 +146,7 @@ wire 			cs_mram2 =  addr[15] & ~addr[14];
 wire 			we_mram2 = wr_mram & cs_mram2;
 wire [7:0] 	mram2_out;	
 	
-spram #(
+spram #(//16k
 	.widthad_a(14),
 	.width_a(8))
 ram02(
@@ -156,12 +156,12 @@ ram02(
 	.data(odata),
 	.q(mram2_out)
 	);
-	/*
+
 wire 			cs_mram3 =  addr[15] &  addr[14];
 wire 			we_mram3 = wr_mram & cs_mram3;
 wire [7:0] 	mram3_out;
 
-spram #(
+spram #(//16k
 	.widthad_a(14),
 	.width_a(8))
 ram03(
@@ -170,14 +170,13 @@ ram03(
 	.wren(we_mram3),
 	.data(odata),
 	.q(mram3_out)
-	);*/	
+	);	
 
 reg rd_vram;
 reg wr_vram;
 wire [7:0] vram_out;
 
-galaksija_video
- #(
+galaksija_video#(
   .h_visible(10'd640),
   .h_front(10'd16),
   .h_sync(10'd96),
@@ -185,16 +184,14 @@ galaksija_video
   .v_visible(10'd480),
   .v_front(10'd10),
   .v_sync(10'd2),
-  .v_back(10'd33)
- )
-galaksija_video
- (
+  .v_back(10'd33))
+galaksija_video(
   .clk(sysclk),
   .resetn(reset_in),
   .vga_dat(video_dat),
   .vga_hsync(video_hs),
   .vga_vsync(video_vs),
-  .vga_blankn(video_blankn),
+  .vga_blank(video_blank),
   .rd_ram1(rd_vram),
   .wr_ram1(wr_vram),
   .ram1_out(vram_out),
@@ -208,6 +205,7 @@ galaksija_video
 	begin
 		rd_rom1 = 1'b0;		
 		rd_rom2 = 1'b0;
+		rd_rom3 = 1'b0;
 		rd_vram = 1'b0;
 		rd_mram = 1'b0;
 		wr_vram = 1'b0;
@@ -216,29 +214,32 @@ galaksija_video
 		wr_latch = 1'b0;
 
 		casex ({~wr_n,~rd_n,mreq_n,addr[15:0]})
-			// CS & RD Signals
-			{3'b010,16'b0000xxxxxxxxxxxx}: begin idata = rom1_out; rd_rom1 = 1'b1; end         // 0x0000-0x0fff
-			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = rom2_out; rd_rom2 = 1'b1; end         // 0x1000-0x1fff			
-//			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = rom3_out; rd_rom3 = 1'b1; end         // todo ROM3 CS
-
-			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out;  rd_key = 1'b1; end         // 0x2000-0x27ff
-
-			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = vram_out; rd_vram = 1'b1; end         // 0x2800-0x2fff
-			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = mram0_out; rd_mram = 1'b1; end         // 0x3000-0x37ff
-			{3'b010,16'b00111xxxxxxxxxxx}: begin idata = mram0_out; rd_mram = 1'b1; end         // 0x3800-0x3fff
-			{3'b010,16'b01xxxxxxxxxxxxxx}: begin idata = mram1_out; rd_mram = 1'b1; end         // 0x4000-0xffff
-			{3'b010,16'b10xxxxxxxxxxxxxx}: begin idata = mram2_out; rd_mram = 1'b1; end         // 0x4000-0xffff
-//			{3'b010,16'b11xxxxxxxxxxxxxx}: begin idata = mram3_out; rd_mram = 1'b1; end         // 0x4000-0xffff //not enough BRAM for this
-
-			// WE Signals
-			{3'b100,16'b00100xxxxxxxxxxx}: wr_latch= 1'b1; // 0x2000-0x27ff
-			{3'b100,16'b00101xxxxxxxxxxx}: wr_vram= 1'b1; // 0x2800-0x2fff
-			{3'b100,16'b00110xxxxxxxxxxx}: wr_mram= 1'b1; // 0x3000-0x37ff
-			{3'b100,16'b00111xxxxxxxxxxx}: wr_mram= 1'b1; // 0x3000-0x37ff
+			//$0000...$0FFF — ROM "A" or "1" – 4 KB contains bootstrap, core control and Galaksija BASIC interpreter code
+			{3'b010,16'b0000xxxxxxxxxxxx}: begin idata = rom1_out; rd_rom1 = 1'b1; end
+			//$1000...$1FFF — ROM "B" or "2" – 4 KB (optional) – additional Galaksija BASIC commands, assembler, machine code monitor, etc.
+			{3'b010,16'b0001xxxxxxxxxxxx}: begin idata = rom2_out; rd_rom2 = 1'b1; end		
+			//$2000...$27FF — keyboard and latch
+			{3'b010,16'b00100xxxxxxxxxxx}: begin idata = key_out;  rd_key = 1'b1; end
+			{3'b100,16'b00100xxxxxxxxxxx}: wr_latch= 1'b1;
+			//$2800...$2FFF — RAM "C": 2 KB ($2800...$2BFF – Video RAM)
+			{3'b010,16'b00101xxxxxxxxxxx}: begin idata = vram_out; rd_vram = 1'b1; end
+			{3'b100,16'b00101xxxxxxxxxxx}: wr_vram= 1'b1;
+			//$3000...$37FF — RAM "D": 2 KB
+			{3'b010,16'b00110xxxxxxxxxxx}: begin idata = mram0_out; rd_mram = 1'b1; end
+			{3'b100,16'b00110xxxxxxxxxxx}: wr_mram= 1'b1;
+			//$3800...$3FFF — RAM "E": 2 KB
+			{3'b010,16'b00111xxxxxxxxxxx}: begin idata = mram1_out; rd_mram = 1'b1; end
+			{3'b100,16'b00111xxxxxxxxxxx}: wr_mram= 1'b1;
+			//$4000...$7FFF — RAM IC9, IC10: 16 KB
+			{3'b010,16'b01xxxxxxxxxxxxxx}: begin idata = mram2_out; rd_mram = 1'b1; end
 			{3'b100,16'b01xxxxxxxxxxxxxx}: wr_mram= 1'b1;
+			//$8000...$BFFF — RAM IC11, IC12: 16 KB
+			{3'b010,16'b10xxxxxxxxxxxxxx}: begin idata = mram3_out; rd_mram = 1'b1; end
 			{3'b100,16'b10xxxxxxxxxxxxxx}: wr_mram= 1'b1;
-			{3'b100,16'b11xxxxxxxxxxxxxx}: wr_mram= 1'b1;
-		endcase
+			//$E000...$FFFF — ROM "3" + "4" IC13: 8 KB – Graphic primitives in BASIC language, Full Screen Source Editor and soft scrolling
+			{3'b010,16'b1110000000000000}: begin idata = rom3_out; rd_rom3 = 1'b1; end
+			//default :
+			endcase
 	end
 	
 
@@ -249,21 +250,17 @@ integer num;
 
 initial 
 	begin
-		for(num=0;num<63;num=num+1)
+		for(num=0;num<64;num=num+1)
 		begin
 			keys[num] <= 0;
 		end
 	end
 
 always @(posedge sysclk) begin	
-	if (rd_key)
-		begin
-			key_out <= (keys[addr[5:0]]==1) ? 8'hfe : 8'hff;
-			for (num=0;num<63;num=num+1) keys[num] = 1'b0;
-		end			
+	if (rd_key) key_out <= (keys[addr[5:0]]==1) ? 8'hfe : 8'hff;			
 		if(sysclk)
 		begin
-			for(num=0;num<63;num=num+1)
+			for(num=0;num<64;num=num+1)
 			begin
 				keys[num] = 1'b0;
 			end
@@ -307,8 +304,8 @@ always @(posedge sysclk) begin
 					8'h36 : keys[8'd38] = 1'b1; // 6
 					8'h3D : keys[8'd39] = 1'b1; // 7
 					8'h3E : keys[8'd40] = 1'b1; // 8
-					8'h46 : keys[8'd41] = 1'b1; // 9			
-					//NUM Block
+					8'h46 : keys[8'd41] = 1'b1; // 9
+					// NUM Block
 					8'h70 : keys[8'd32] = 1'b1; // 0
 					8'h69 : keys[8'd33] = 1'b1; // 1
 					8'h72 : keys[8'd34] = 1'b1; // 2
@@ -318,9 +315,8 @@ always @(posedge sysclk) begin
 					8'h74 : keys[8'd38] = 1'b1; // 6
 					8'h6C : keys[8'd39] = 1'b1; // 7
 					8'h75 : keys[8'd40] = 1'b1; // 8
-					8'h7D : keys[8'd41] = 1'b1; // 9	
+					8'h7D : keys[8'd41] = 1'b1; // 9				
 					
-				
 					8'h4C : keys[8'd42] = 1'b1; // ; //todo "Ö" on german keyboard
 					8'h7C : keys[8'd43] = 1'b1; // : //todo NUM block for now
 					8'h41 : keys[8'd44] = 1'b1; // ,
@@ -331,12 +327,10 @@ always @(posedge sysclk) begin
 					8'h76 : keys[8'd49] = 1'b1; // ESC
 					
 					8'h52 : begin keys[8'd33] = 1'b1; keys[8'd53] = 1'b1; end // ! ////todo "Ä" on german keyboard
-					8'h52 : begin keys[8'd34] = 1'b1; keys[8'd53] = 1'b1; end // "	////todo shift GALAKSIJA
+					//8'h52 : begin keys[8'd34] = 1'b1; keys[8'd53] = 1'b1; end // "	////todo shift GALAKSIJA
 					8'h12 : keys[8'd53] = 1'b1; // SHIFT L
 					8'h59 : keys[8'd53] = 1'b1; // SHIFT R
-
-					
-					
+				
 					/*				
 					8'h1C : keys[8'd01] = 1'b1; // a
 					8'h32 : keys[8'd02] = 1'b1; // b
@@ -363,11 +357,34 @@ always @(posedge sysclk) begin
 					8'h1D : keys[8'd23] = 1'b1; // w
 					8'h22 : keys[8'd24] = 1'b1; // x
 					8'h35 : keys[8'd25] = 1'b1; // y
-					8'h1A : keys[8'd26] = 1'b1; // z
-*/	
+					8'h1A : keys[8'd26] = 1'b1; // z*/	
 				endcase
 		end
-	end	
+end	
 
+
+wire PIN_A = (1'b1 & 1'b1 & wr_n);
+wire [7:0]chan_A, chan_B, chan_C;
+wire A02 = ~(C00 | PIN_A);//nor
+wire B02 = ~(C00 | addr[0]);//nor
+wire D02 = ~(addr[6] | iorq_n);//nor
+wire C00 = ~(D02 | m1_n);//nand
+assign audio = chan_A & chan_B & chan_C;
+
+AY8912 AY8912(
+   .CLK(sysclk),
+	.CE(audclk),
+   .RESET(~reset_in),
+   .BDIR(A02),
+   .BC(B02),
+   .DI(odata),
+   .DO(),//not used
+   .CHANNEL_A(chan_A),
+   .CHANNEL_B(chan_B),
+   .CHANNEL_C(chan_C),
+   .SEL(1'b1),//divider?
+	.IO_in(),//not used
+	.IO_out()//not used
+);
 
 endmodule

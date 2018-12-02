@@ -33,16 +33,6 @@ wire [7:0] volTableAy[16] =
 		   8'h90, 8'hb5, 8'hd7, 8'hff
 		 };
 
-wire [7:0] volTableYm[32] = 
-		'{8'h00, 8'h01, 8'h01, 8'h02, 
-		  8'h02, 8'h03, 8'h03, 8'h04, 
-		  8'h06, 8'h07, 8'h09, 8'h0a, 
-		  8'h0c, 8'h0e, 8'h11, 8'h13, 
-		  8'h17, 8'h1b, 8'h20, 8'h25, 
-		  8'h2c, 8'h35, 8'h3e, 8'h47, 
-		  8'h54, 8'h66, 8'h77, 8'h88, 
-		  8'ha1, 8'hc0, 8'he0, 8'hff
-		};
 
 // Read from AY
 assign DO = dout;
@@ -280,9 +270,9 @@ wire [4:0] A = ~((ymreg[7][0] | tone_gen_op[1]) & (ymreg[7][3] | poly17[0])) ? 5
 wire [4:0] B = ~((ymreg[7][1] | tone_gen_op[2]) & (ymreg[7][4] | poly17[0])) ? 5'd0 : ymreg[9][4]  ? env_vol[4:0] : { ymreg[9][3:0],  ymreg[9][3]};
 wire [4:0] C = ~((ymreg[7][2] | tone_gen_op[3]) & (ymreg[7][5] | poly17[0])) ? 5'd0 : ymreg[10][4] ? env_vol[4:0] : {ymreg[10][3:0], ymreg[10][3]};
 
-assign CHANNEL_A = volTableYm[A];
-assign CHANNEL_B = volTableYm[B];
-assign CHANNEL_C = volTableYm[C];
+assign CHANNEL_A = volTableAy[A[4:1]];
+assign CHANNEL_B = volTableAy[B[4:1]];
+assign CHANNEL_C = volTableAy[C[4:1]];
 
 
 endmodule

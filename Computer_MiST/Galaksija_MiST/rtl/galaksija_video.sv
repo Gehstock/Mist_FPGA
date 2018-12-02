@@ -5,7 +5,7 @@ module galaksija_video
   output reg [7:0] vga_dat,
   output reg vga_hsync,
   output reg vga_vsync,
-  output reg vga_blankn,
+  output reg vga_blank,
   input rd_ram1,
   input wr_ram1,
   input [10:0] addr,
@@ -65,7 +65,7 @@ begin
         h_pos <= h_pos + 1;
         rgb_data <= (h_pos > 5 && h_pos < 32*8*2+4 && v_pos < 200*2) ? data_out_rotated[h_pos[3:1]] ? 24'h000000 : 24'hffffff : 24'h000000;
       end
-      vga_blankn <= !visible;
+      vga_blank <= !visible;
       vga_hsync <= !((h_pos >= (h_visible + h_front)) && (h_pos < (h_visible + h_front + h_sync)));
       vga_vsync <= !((v_pos >= (v_visible + v_front)) && (v_pos < (v_visible + v_front + v_sync)));
       vga_dat <= rgb_data[7:0];

@@ -23,6 +23,7 @@ localparam CONF_STR = {
 	"Galaksija;;",
 //	"F,GAL,Load Program;",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O4,Sound,Off,On;",
 	"T9,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -75,9 +76,9 @@ video_mixer (
 	.SPI_SCK			( SPI_SCK		),
 	.SPI_SS3			( SPI_SS3		),
 	.SPI_DI			( SPI_DI			),
-	.R					( video[5:0]	),
-	.G					( video[5:0]	),
-	.B					( video[5:0]	),
+	.R					( video[5:0] 	),
+	.G					( video[5:0] 	),
+	.B					( video[5:0] 	),
 	.HSync			( hs				),
 	.VSync			( vs	   		),
 	.VGA_R			( VGA_R			),
@@ -105,14 +106,14 @@ galaksija_top galaksija_top (
    .video_dat(video),
    .video_hs(hs),
    .video_vs(vs),
-	.video_blankn()//todo
+	.video_blank()
 );	
 
 dac #(
    .msbi_g(7))
 dac (
    .clk_i(clk_25),
-   .res_n_i(1'b1),
+   .res_n_i(status[4] ? 1'b1 : 1'b0),
    .dac_i(audio),
    .dac_o(AUDIO_L)
   );
