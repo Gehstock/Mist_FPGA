@@ -11,7 +11,7 @@ Arcade Cores
 #Atari Centipede Hardware
 	Centipede
 
-#Atari Discrete Logic Hardware
+#Atari Discrete Logic
 	Computer Space	
 
 #Custom Hardware
@@ -67,6 +67,7 @@ Arcade Cores
 
 #Non Arcade
 	2048
+	Arkanoid
 	FlappyBird
 	River Raid(Clone)
 

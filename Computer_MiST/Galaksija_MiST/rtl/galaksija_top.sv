@@ -249,7 +249,7 @@ galaksija_video(
 			{3'b010,16'b10xxxxxxxxxxxxxx}: begin idata = mram3_out; rd_mram3 = 1'b1; end
 			{3'b100,16'b10xxxxxxxxxxxxxx}: wr_mram3= 1'b1;
 			//$E000...$FFFF — ROM "3" + "4" IC13: 8 KB – Graphic primitives in BASIC language, Full Screen Source Editor and soft scrolling
-			{3'b010,16'b1110000000000000}: begin idata = rom3_out; rd_rom3 = 1'b1; end
+			{3'b010,16'b111xxxxxxxxxxxxx}: begin idata = rom3_out; rd_rom3 = 1'b1; end
 			default : begin end
 			endcase
 	end
