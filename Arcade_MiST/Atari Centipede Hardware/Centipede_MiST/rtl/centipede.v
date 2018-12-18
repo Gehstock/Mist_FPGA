@@ -19,6 +19,7 @@
 `define orig_phi0
 	
 module centipede(
+		 input 	      clk_100mhz,
 		 input 	      clk_12mhz,
 		 input 	      clk_1p5mhz,
  		 input 	      reset,
@@ -34,7 +35,7 @@ module centipede(
 		 output       vsync_o,
 		 output       hblank_o,
 		 output       vblank_o,
-		 output [7:0] audio_o
+		 output [3:0] audio_o
 		 );
 
    //
@@ -379,8 +380,8 @@ ram(
        end
      else
        begin
-	  if (mpu_reset_cntr != 8'hff)
-//	  if (mpu_reset_cntr != 8'h10)
+//	  if (mpu_reset_cntr != 8'hff)
+	  if (mpu_reset_cntr != 8'h10)
 	    mpu_reset_cntr <= mpu_reset_cntr + 8'd1;
 	  else
 	    mpu_reset <= 0;
@@ -962,53 +963,19 @@ hs_ram(
 
    // Audio output circuitry
 
-   pokey_atosm pokey(
-		.rst_i(mpu_reset),
-		.clk_i(phi2),
-		.adr_i(ab[3:0]),
-		.dat_i(db_out[7:0]),
-		.dat_o(pokey_out),
-		.we_i(~rw_n),
-		.stb_i(1'b1 & ~pokey_n),
-		.ack_o(),
-		.irq(),
-		.audout(audio),
-		.p_i(8'b0),
-		.key_code(8'b0), 
-		.key_pressed(1'b0), 
-		.key_shift(1'b0), 
-		.key_break(1'b0),
-		.serout(), 
-		.serout_rdy_o(), 
-		.serout_ack_i(),
-		.serin(8'b0), 
-		.serin_rdy_i(1'b0), 
-		.serin_ack_o()
-		);
-/*
-ASTEROIDS_POKEY ASTEROIDS_POKEY (
-	.ADDR(ab[3:0]),
-  	.DIN(db_out[7:0]),
-  	.DOUT(pokey_out),
-  	.DOUT_OE_L(),
-  	.RW_L(rw_n),
-	.CS(~pokey_n),
-  	.CS_L(1'b0),
-  	.AUDIO_OUT(audio),
-  	.PIN(8'b0),
-  	.ENA(1'b1),//1.5m
-  	.CLK(phi2)//6m
-  );*/
 
-   //
-   reg [7:0]  last_pokey_rd;
-   always @(posedge s_6mhz)
-     if (reset)
-       last_pokey_rd <= 0;
-     else
-       if (~pokey_n)
-	 last_pokey_rd <= pokey_out;
- 
+POKEY POKEY(
+   .Din(db_out[7:0]),
+   .Dout(pokey_out),
+   .A(ab[3:0]),
+   .P(8'b0),
+   .phi2(phi2),
+   .readHighWriteLow(rw_n),
+   .cs0Bar(pokey_n),
+	.audio(audio),
+   .clk(clk_100mhz)
+   );
+
    // Video output circuitry
 
    // The video output circuit receives motion object, playfield, address and data inputs 

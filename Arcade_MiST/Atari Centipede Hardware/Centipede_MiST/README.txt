@@ -14,4 +14,4 @@
 --   SPACE 	: Fire
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
-Todo: Sound and Joystick
+Todo: Joystick(Fire)

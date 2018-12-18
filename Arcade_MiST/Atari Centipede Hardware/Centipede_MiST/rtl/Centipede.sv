@@ -42,8 +42,7 @@ module Centipede
 
 localparam CONF_STR = {
 	"Centipede;;",
-	"O1,Test,off,on;",
-	"O2,Cocktail,off,on;",
+	"O1,Test,off,on;", 
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"O5,Joystick Control,Upright,Normal;",	
 	"T7,Reset;",
@@ -62,7 +61,7 @@ wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clk_24, clk_12, clk_6;
+wire clk_24, clk_12, clk_6, clk_100mhz;
 wire pll_locked;
 
 pll pll
@@ -71,30 +70,27 @@ pll pll
 	.areset(0),
 	.c0(clk_24),
 	.c2(clk_12),
-	.c3(clk_6)
+	.c3(clk_6),
+	.c4(clk_100mhz)
 );
 
 //ToDo Joystick breaks Controls
 
-//wire m_up     = status[5] ? ~kbjoy[6] | ~joystick_0[1] | ~joystick_1[1] : ~kbjoy[4] | ~joystick_0[3] | ~joystick_1[3];
-//wire m_down   = status[5] ? ~kbjoy[7] | ~joystick_0[0] | ~joystick_1[0] : ~kbjoy[5] | ~joystick_0[2] | ~joystick_1[2];
-//wire m_left   = status[5] ? ~kbjoy[5] | ~joystick_0[2] | ~joystick_1[2] : ~kbjoy[6] | ~joystick_0[1] | ~joystick_1[1];
-//wire m_right  = status[5] ? ~kbjoy[4] | ~joystick_0[3] | ~joystick_1[3] : ~kbjoy[7] | ~joystick_0[0] | ~joystick_1[0];
-wire m_up     = status[5] ? ~kbjoy[7] : ~kbjoy[4];
-wire m_down   = status[5] ? ~kbjoy[6] : ~kbjoy[5];
-wire m_left   = status[5] ? ~kbjoy[4] : ~kbjoy[6];
-wire m_right  = status[5] ? ~kbjoy[5] : ~kbjoy[7];
+wire m_up     = status[5] ? ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1] : ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3];
+wire m_down   = status[5] ? ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0] : ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2];
+wire m_left   = status[5] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1];
+wire m_right  = status[5] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0];
 
-wire m_fire   = ~kbjoy[0];// | ~joystick_0[4] | ~joystick_1[4] | ~joystick_0[5] | ~joystick_1[5];
-wire m_start1 = ~kbjoy[1];
-wire m_start2 = ~kbjoy[1];//ok
-wire m_coin   = ~kbjoy[3];
+wire m_fire   = ~kbjoy[0] | joystick_0[4] | joystick_1[4] | joystick_0[5] | joystick_1[5];
+wire m_start = ~kbjoy[1];
+wire m_coin   = kbjoy[3];
 wire m_test = ~status[1];
 wire m_slam = 1'b1;
 wire m_cocktail = 1'b1;
-wire 	[9:0] playerinput_i = { m_coin, m_coin, m_coin, m_test, m_cocktail, m_slam, m_start1, m_start2, m_fire, m_fire };
+wire 	[9:0] playerinput_i = { m_coin, m_coin, m_coin, m_test, m_cocktail, m_slam, m_start, m_start, m_fire, m_fire };
 
 centipede centipede(
+	.clk_100mhz(clk_100mhz),
 	.clk_12mhz(clk_12),
  	.reset(status[0] | status[7] | buttons[1]),
 	.playerinput_i(playerinput_i),
@@ -111,12 +107,12 @@ centipede centipede(
 	);
 
 
-wire [7:0] audio;
+wire [3:0] audio;
 
 dac dac (
 	.clk_i(clk_24),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({audio,audio,audio,audio}),
 	.dac_o(AUDIO_L)
 	);
 
