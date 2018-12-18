@@ -14,4 +14,5 @@
 --   SPACE 	: Fire
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
-Todo: Joystick(Fire)
+Todo: 	Joystick(Fire)
+	some moinor Graphic problems  (Color, Player)
