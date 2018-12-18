@@ -85,7 +85,7 @@ module POKEY
    audioChannelDigital channel3(.clk(clk), .clr(clr), .baseClkWave(baseClks[2]), .audf(audf3), .audc(audc3), .rand4(rand4), .rand5(rand5), .rand17(rand17), .hpfClk(hpfClks[2]), .bypassMask(bypassMask3), .rawWave(rawWave[2]), .divOut(divOut[2]));
    audioChannelDigital channel4(.clk(clk), .clr(clr), .baseClkWave(baseClks[3]), .audf(audf4), .audc(audc4), .rand4(rand4), .rand5(rand5), .rand17(rand17), .hpfClk(hpfClks[3]), .bypassMask(bypassMask4), .rawWave(rawWave[3]), .divOut(divOut[3]));
 
-	assign audio = {aud,aud,aud,aud};
+	assign audio = {4{aud}};
    volumeMixer finalMix(.clk(clk), .clr(clr), .audc1(audc1), .audc2(audc2), .audc3(audc3), .audc4(audc4), .digitalWave(rawWave), .pwmWave(aud));
    
 

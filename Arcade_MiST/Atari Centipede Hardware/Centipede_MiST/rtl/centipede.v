@@ -21,7 +21,6 @@
 module centipede(
 		 input 	      clk_100mhz,
 		 input 	      clk_12mhz,
-		 input 	      clk_1p5mhz,
  		 input 	      reset,
 		 input [9:0]  playerinput_i,
 		 input [7:0]  trakball_i,
@@ -1032,15 +1031,13 @@ color_ram(
 							gry == 2'b10 ? 9'b000_111_000 :
 							gry == 2'b11 ? 9'b111_000_000 : 0;
 
-
 							
 
 
    assign sync_o = comp_sync;
    assign hsync_o = hsync;
    assign vsync_o = vsync;
- //  assign audio_o = { 2'b0, audio };//original pokey
-	assign audio_o = { audio };//asteroids pokey
+	assign audio_o = audio ;
    assign hblank_o = hblank;
    assign vblank_o = vblank;
 

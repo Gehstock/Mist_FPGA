@@ -11,8 +11,7 @@
 --
 --   ESC        : Coin
 --   1 or 2     : Start Player
---   SPACE 	: Fire
+--   SPACE 	: Fire or Fire Button
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
-Todo: 	Joystick(Fire)
-	some moinor Graphic problems  (Color, Player)
+Todo: Colors
