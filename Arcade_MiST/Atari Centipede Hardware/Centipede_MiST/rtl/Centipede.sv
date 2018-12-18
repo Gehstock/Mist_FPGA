@@ -82,17 +82,15 @@ wire m_right  = status[5] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjoy
 
 wire m_fire1  = ~kbjoy[0] & ~joystick_0[4] & ~joystick_1[4];// & ~joystick_0[4] & ~joystick_1[4];
 wire m_fire2  = ~kbjoy[0] & ~joystick_0[5] & ~joystick_1[5];// & ~joystick_0[4] & ~joystick_1[4];
-wire m_start1 = kbjoy[1];
-wire m_start2 = kbjoy[2];
-wire l_coin   = kbjoy[3];
-wire c_coin   = kbjoy[3];
-wire r_coin   = kbjoy[3];
-wire coin_c, coin_l, start2 = 1'b0;
+wire m_start2 = 1'b1;
+wire m_start1 = ~kbjoy[3];//ESC
+//wire l_coin   = ~kbjoy[3];
+wire l_coin, c_coin, r_coin = 1'b1;
 wire m_test = ~status[1];
 wire m_slam = 1'b1;//generate Noise
 wire m_cocktail = 1'b1;
 
-wire 	[9:0] playerinput_i = { r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start1, m_start2, m_fire1, m_fire2 };
+wire 	[9:0] playerinput_i = { r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire1, m_fire2 };
 //wire 	[9:0] playerinput_i = { m_coin, coin_c, coin_l, m_test, m_cocktail, m_slam, m_start, start2, fire2, m_fire };
 centipede centipede(
 	.clk_100mhz(clk_100mhz),

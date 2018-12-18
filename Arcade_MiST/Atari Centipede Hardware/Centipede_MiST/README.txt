@@ -9,8 +9,7 @@
 -- 
 -- Keyboard inputs :
 --
---   ESC        : Coin
---   1 or 2     : Start Player
+--   ESC        : Coin/Start Player
 --   SPACE 	: Fire or Fire Button
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
