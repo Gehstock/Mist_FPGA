@@ -42,7 +42,7 @@ module ZigZag_MiST
 
 localparam CONF_STR = {
 	"ZigZag;;",
-	"O2,Joystick Control,Upright,Normal;",
+	"O2,Joystick Control,Normal,Upright;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
 	"V,v1.10.",`BUILD_DATE
@@ -73,15 +73,18 @@ pll pll
 	.c3(clk_6)
 );
 
-wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
-wire m_down   = status[2] ? kbjoy[7] | joystick_0[0] | joystick_1[0] : kbjoy[5] | joystick_0[2] | joystick_1[2];
-wire m_left   = status[2] ? kbjoy[5] | joystick_0[2] | joystick_1[2] : kbjoy[6] | joystick_0[1] | joystick_1[1];
-wire m_right  = status[2] ? kbjoy[4] | joystick_0[3] | joystick_1[3] : kbjoy[7] | joystick_0[0] | joystick_1[0];
+wire m_up     = ~status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? kbjoy[7] | joystick_0[0] | joystick_1[0] : kbjoy[5] | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? kbjoy[5] | joystick_0[2] | joystick_1[2] : kbjoy[6] | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? kbjoy[4] | joystick_0[3] | joystick_1[3] : kbjoy[7] | joystick_0[0] | joystick_1[0];
 
 wire m_fire   = kbjoy[0] | joystick_0[4] | joystick_1[4];
 wire m_start1 = kbjoy[1];
 wire m_start2 = kbjoy[2];
 wire m_coin   = kbjoy[3];
+wire m_skip   = kbjoy[9];
+
+
 
 ZigZag ZigZag
 (

@@ -34,11 +34,16 @@ architecture RTL of MC_COL_PAL is
 	signal W_COL_ROM_DO : std_logic_vector(7 downto 0);
 
 begin
-	clut : entity work.mc_clut
+	
+clut : entity work.sprom
+	generic map (
+		init_file	=>  "./Rom/col.hex",
+		widthad_a	=> 5,
+		width_a		=> 8)
 	port map (
-		CLK  => I_CLK_6M,
-		ADDR => I_COL(2 downto 0) & I_VID(1 downto 0),
-		DATA => W_COL_ROM_DO
+		address	=> I_COL(2 downto 0) & I_VID(1 downto 0),
+		clock		=> I_CLK_6M,
+		q			=> W_COL_ROM_DO
 	);
 
 	---    VID OUT     --------------------------------------------------------

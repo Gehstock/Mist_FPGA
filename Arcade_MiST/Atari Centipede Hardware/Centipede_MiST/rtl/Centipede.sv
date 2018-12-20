@@ -44,7 +44,7 @@ localparam CONF_STR = {
 	"Centipede;;",
 	"O1,Test,off,on;", 
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
-	"O5,Joystick Control,Upright,Normal;",	
+	"O5,Joystick Control,Normal,Upright;",	
 	"T7,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -75,15 +75,16 @@ pll pll
 	.c4(clk_100mhz)
 );
 
-wire m_up     = status[5] ? ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1] : ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3];
-wire m_down   = status[5] ? ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0] : ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2];
-wire m_left   = status[5] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1];
-wire m_right  = status[5] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0];
+wire m_up     = ~status[5] ? ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0] : ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3];
+wire m_down   = ~status[5] ? ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1] : ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2];
+wire m_left   = ~status[5] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1];
+wire m_right  = ~status[5] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0];
 
+wire m_start1 = ~kbjoy[1];
+wire m_start2 = ~kbjoy[2];
+wire m_coin   = ~kbjoy[3];
 wire m_fire1  = ~kbjoy[0] & ~joystick_0[4] & ~joystick_1[4];// & ~joystick_0[4] & ~joystick_1[4];
 wire m_fire2  = ~kbjoy[0] & ~joystick_0[5] & ~joystick_1[5];// & ~joystick_0[4] & ~joystick_1[4];
-wire m_start2 = 1'b1;
-wire m_start1 = ~kbjoy[3];//ESC
 //wire l_coin   = ~kbjoy[3];
 wire l_coin, c_coin, r_coin = 1'b1;
 wire m_test = ~status[1];

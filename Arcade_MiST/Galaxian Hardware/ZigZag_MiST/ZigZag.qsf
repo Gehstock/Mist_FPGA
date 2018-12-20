@@ -49,14 +49,12 @@ set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ZigZag_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/ZigZag.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_video.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_stars.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_sprite.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_logic.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_ld_pls.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_inport.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_hv_count.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_col_pal.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_clut.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_bram.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_adec.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80as.vhd
