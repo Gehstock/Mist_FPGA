@@ -46,7 +46,7 @@ localparam CONF_STR = {
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"O5,Joystick Control,Normal,Upright;",	
 	"T7,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.20.",`BUILD_DATE
 };
 
 wire [31:0] status;
@@ -55,7 +55,6 @@ wire  [1:0] switches;
 wire  [9:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
-//wire  [7:0] joystick;
 wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
@@ -82,43 +81,41 @@ wire m_right  = ~status[5] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjo
 
 wire m_start1 = ~kbjoy[1];
 wire m_start2 = ~kbjoy[2];
-wire m_coin   = ~kbjoy[3];
 wire m_fire1  = ~kbjoy[0] & ~joystick_0[4] & ~joystick_1[4];// & ~joystick_0[4] & ~joystick_1[4];
 wire m_fire2  = ~kbjoy[0] & ~joystick_0[5] & ~joystick_1[5];// & ~joystick_0[4] & ~joystick_1[4];
-//wire l_coin   = ~kbjoy[3];
-wire l_coin, c_coin, r_coin = 1'b1;
+wire c_coin   = ~kbjoy[3];
+wire l_coin, r_coin = 1'b1;
 wire m_test = ~status[1];
 wire m_slam = 1'b1;//generate Noise
 wire m_cocktail = 1'b1;
 
-wire 	[9:0] playerinput_i = { r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire1, m_fire2 };
-//wire 	[9:0] playerinput_i = { m_coin, coin_c, coin_l, m_test, m_cocktail, m_slam, m_start, start2, fire2, m_fire };
 centipede centipede(
 	.clk_100mhz(clk_100mhz),
 	.clk_12mhz(clk_12),
  	.reset(status[0] | status[7] | buttons[1]),
-	.playerinput_i(playerinput_i),
+	.playerinput_i({ r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire1, m_fire2 }),
 	.trakball_i(),
 	.joystick_i({m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
 	.sw1_i(8'h54),
 	.sw2_i(8'b0),
-	.rgb_o({b,g,r}),
+	.rgb_o({ b,g,r}),
 	.hsync_o(hs),
 	.vsync_o(vs),
 	.hblank_o(hblank),
 	.vblank_o(vblank),
-	.audio_o(audio)
+	.audio_o(audio),
+	.audio2_o(audio2)
 	);
 
 
 wire [3:0] audio;
-
+wire [3:0] audio2;
 dac #(
 	.msbi_g(15))
 dac (
 	.clk_i(clk_24),
 	.res_n_i(1),
-	.dac_i({4{audio}}),
+	.dac_i({2{audio,audio2}}),
 	.dac_o(AUDIO_L)
 	);
 

@@ -15,9 +15,9 @@
 // do some debugging of the pokey code I was using.
 //
 
-//`define async_lr
-`define orig_phi0
-	
+`define T65
+`define no_colormap     
+`define MILL
 module centipede(
 		 input 	      clk_100mhz,
 		 input 	      clk_12mhz,
@@ -34,7 +34,8 @@ module centipede(
 		 output       vsync_o,
 		 output       hblank_o,
 		 output       vblank_o,
-		 output [3:0] audio_o
+		 output [7:0] audio_o,
+		 output [7:0] audio2_o
 		 );
 
    //
@@ -48,7 +49,7 @@ module centipede(
    wire rom_n;
    wire ram0_n;
    wire steerclr_n, watchdog_n, out0_n, irqres_n;
-   wire pokey_n, swrd_n, pf_n;
+   wire pokey_n, pokey2_n, swrd_n, pf_n;
    wire coloram_n, ea_read_n, ea_ctrl_n, ea_addr_n;
    wire in0_n, in1_n;
 
@@ -66,7 +67,7 @@ module centipede(
    reg 	      irq;
    wire       rw_n;
 
-   wire [15:0] ab;
+   wire [23:0] ab;
    
    wire [7:0] db_in;
    wire [7:0] db_out;
@@ -128,11 +129,7 @@ module centipede(
 
    reg [1:0]   gry;
    wire [1:0]  y;
-`ifdef async_lr
-   wire [1:0]  mr;
-`else
    reg [1:0]  mr;
-`endif
    
    wire [7:0]  line_ram_addr;
    reg [1:0]   line_ram[0:255];
@@ -179,7 +176,7 @@ module centipede(
    wire [3:0]  rama;
 
    wire [7:0]  audio;
-
+	wire [7:0]  audio2;
    //
    wire        mob_n;
    wire        blank_clk;
@@ -265,52 +262,48 @@ vprom(
 	.q(vprom_out)
 	);					 
 
-   always @(posedge s_256h_n or posedge reset)
-     if (reset)
-       vprom_reg <= 0;
-     else
-       vprom_reg <= vprom_out;
-
-   assign vsync = vprom_reg[0];
-   assign vreset = vprom_reg[2];
-
-
-
-   assign hs_set = reset | ~s_256h_n;
+always @(posedge s_256h_n or posedge reset)
+	if (reset)
+		vprom_reg <= 0;
+   else
+      vprom_reg <= vprom_out;
+		
+assign vsync = vprom_reg[0];
+assign vreset = vprom_reg[2];
+assign hs_set = reset | ~s_256h_n;
    
-   always @(posedge s_32h or posedge hs_set)
-     if (hs_set)
-       hs <= 1;
-     else
-       hs <= s_64h;
+always @(posedge s_32h or posedge hs_set)
+	if (hs_set)
+		hs <= 1;
+   else
+      hs <= s_64h;
 
-   assign hsync_reset = reset | hs;
+assign hsync_reset = reset | hs;
    
-   always @(posedge s_8h or posedge hsync_reset)
-     if (hsync_reset)
-       hsync <= 0;
-     else
-       hsync <= s_32h;
+always @(posedge s_8h or posedge hsync_reset)
+	if (hsync_reset)
+      hsync <= 0;
+   else
+      hsync <= s_32h;
 
-   //
-   always @(posedge s_6mhz)
-     if (reset)
-       coloren <= 0;
-     else
-       coloren <= s_256hd;
+always @(posedge s_6mhz)
+	if (reset)
+      coloren <= 0;
+   else
+      coloren <= s_256hd;
 
-   assign s_6_12 = ~(s_6mhz & s_12mhz);
-
-   reg xxx1;
+assign s_6_12 = ~(s_6mhz & s_12mhz);
+reg xxx1;
    
-   always @(posedge s_6_12)
-     if (reset)
-       xxx1 <= 0;
-     else
-       xxx1 <= coloren;
+always @(posedge s_6_12)
+	if (reset)
+      xxx1 <= 0;
+   else
+      xxx1 <= coloren;
 
-	assign vblank = vprom_reg[3];
-   assign hblank = (~xxx1 & ~coloren);
+assign vblank = vprom_reg[3];
+assign hblank = (~xxx1 & ~coloren);
+
 sprom #(
 	.init_file("./roms/136001-prog.hex"),
 	.widthad_a(13),
@@ -344,22 +337,7 @@ ram(
 //   assign irq_n = ~irq;
    assign irq_n = irq;
 
-   
-`ifdef orig_phi0
-   always @(posedge s_1h)
-     if (reset)
-       phi0a <= 1'b0;
-     else
-       case ({(pf_n | s_4h), s_2h})
-	 2'b00: phi0a <= phi0a;
-	 2'b01: phi0a <= 1'b0;
-	 2'b10: phi0a <= 1'b1;
-	 2'b11: phi0a <= ~phi0a;
-       endcase
-   
-   assign phi0 = ~phi0a;
-   assign pac_n = ~phi0a;
-`else
+
    always @(posedge s_1h or posedge reset)
      if (reset)
        phi0a <= 1'b0;
@@ -368,7 +346,7 @@ ram(
 
    assign phi0 = ~phi0a;
    assign pac_n = ~phi0a;
-`endif
+
 
    // watchdog?
    always @(posedge s_12mhz)
@@ -388,21 +366,43 @@ ram(
 
    assign mpu_clk = s_6mhz;
       assign mpu_reset_n = ~mpu_reset;
+		
+`ifdef T65
+assign phi2 = ~phi0;
+T65 T65(
+	.Mode("00"),
+	.Res_n(mpu_reset_n),
+	.Enable(1'b1),
+	.Clk(phi0),
+	.Rdy(1'b1),
+	.Abort_n(1'b1),
+	.IRQ_n(irq_n),
+	.NMI_n(1'b1),
+	.SO_n(1'b1),
+	.R_W_n(rw_n),
+	.A(ab),
+	.DI(db_in[7:0]),
+	.DO(db_out[7:0])
+	);
+	
+`else
 
-   p6502 p6502(
-	       .clk(mpu_clk),
-	       .reset_n(mpu_reset_n),
-	       .nmi(1'b1),
-	       .irq(irq_n),
-	       .so(1'b0),
-	       .rdy(1'b1),
-	       .phi0(phi0),
-	       .phi2(phi2),
-	       .rw_n(rw_n),
-	       .a(ab),
-	       .din(db_in[7:0]),
-	       .dout(db_out[7:0])
-	       );
+p6502 p6502(
+	.clk(mpu_clk),
+	.reset_n(mpu_reset_n),
+	.nmi(1'b1),
+	.irq(irq_n),
+	.so(1'b0),
+	.rdy(1'b1),
+	.phi0(phi0),
+	.phi2(phi2),
+	.rw_n(rw_n),
+	.a(ab[15:0]),
+	.din(db_in[7:0]),
+	.dout(db_out[7:0])
+	);
+	
+`endif
 
    // Address Decoder
    assign write_n = ~(phi2 & ~rw_n);
@@ -440,6 +440,7 @@ ram(
    assign coloram_n = (adecode[5] | ab[9])/* | pac_n*/;
    
    assign pokey_n = adecode[4];
+	assign pokey2_n = adecode[3];
 
    assign in0_n =   adecode[3] | ab[1];
    assign in1_n =   adecode[3] | ~ab[1];
@@ -622,15 +623,13 @@ ram(
    always @(posedge s_6mhz)
      line_ram[line_ram_addr] <= y;
 
-`ifdef async_lr
-   assign mr = line_ram[line_ram_addr];
-`else
+
    always @(posedge s_12mhz)
      if (reset)
        mr <= 0;
      else
        mr <= line_ram[line_ram_addr];
-`endif
+
    
    always @(posedge s_6mhz_n)
      if (reset)
@@ -731,7 +730,7 @@ sprom #(
    assign db_in =
 		 ~rom_n ? rom_out :
 		 ~ram0_n ? ram_out :
-		 ~coloram_n ? { 4'b0, coloram_out } :
+		 ~coloram_n ? { 4'b0, coloram_rgbi } :
        ~pframrd_n ? pf_out[7:0] :
 		 ~ea_read_n ? hs_out :
 		 ~in0_n ? playerin_out :
@@ -974,7 +973,21 @@ POKEY POKEY(
 	.audio(audio),
    .clk(clk_100mhz)
    );
-
+	
+`ifdef MILL	
+POKEY POKEY2(
+   .Din(db_out[7:0]),
+   .Dout(),
+   .A(ab[3:0]),
+   .P(8'b0),
+   .phi2(phi2),
+   .readHighWriteLow(rw_n),
+   .cs0Bar(pokey2_n),
+	.audio(audio2),
+   .clk(clk_100mhz)
+   );
+`endif	
+ 
    // Video output circuitry
 
    // The video output circuit receives motion object, playfield, address and data inputs 
@@ -997,16 +1010,16 @@ POKEY POKEY(
      
    assign rama_sel = { coloram_n, gry0_or_1 };
    
-   assign rama = 
-		 (rama_sel == 2'b00) ? { ab[3:0] } :
-		 (rama_sel == 2'b01) ? { ab[3:0] } :
-		 (rama_sel == 2'b10) ? { {gry0_or_1, 1'b1}, area[1:0] } :
-		 (rama_sel == 2'b11) ? { {gry0_or_1, 1'b1}, gry[1:0] } :
-		 4'b0;
+ //  assign rama = 
+//		 (rama_sel == 2'b00) ? { ab[3:0] } :
+//		 (rama_sel == 2'b01) ? { ab[3:0] } :
+//		 (rama_sel == 2'b10) ? { {gry0_or_1, 1'b1}, area[1:0] } :
+//		 (rama_sel == 2'b11) ? { {gry0_or_1, 1'b1}, gry[1:0] } :
+//		 4'b0;
 
- //  assign rama =  gry0_or_1 ?
-	//	  { {gry0_or_1, 1'b1}, gry[1:0] } :
-	//	  { {gry0_or_1, 1'b1}, area[1:0] };
+  assign rama =  gry0_or_1 ?
+		  { {gry0_or_1, 1'b1}, gry[1:0] } :
+		  { {gry0_or_1, 1'b1}, area[1:0] };
 
 	
 dpram #(
@@ -1023,21 +1036,63 @@ color_ram(
 	.data_b_o(coloram_rgbi)
 	);
 
-		assign rgb_o =	gry == 2'b00 & area[1:0] == 2'b00 ? 9'b000_000_000 :
-							gry == 2'b00 & area[1:0] == 2'b01 ? 9'b000_000_111 :
-							gry == 2'b00 & area[1:0] == 2'b10 ? 9'b000_111_000 :
-							gry == 2'b00 & area[1:0] == 2'b11 ? 9'b111_000_000 :
-							gry == 2'b01 ? 9'b000_000_111 :
-							gry == 2'b10 ? 9'b000_111_000 :
-							gry == 2'b11 ? 9'b111_000_000 : 0;
-
-							
-
-
+   // output to the top level
+`ifdef no_colormap
+   // bbb_ggg_rrr
+   assign rgb_o =
+//hack
+//`define pf_only
+//`define mo_only
+`define pf_and_mo
+ `ifdef pf_only
+		 area[1:0] == 2'b00 ? 9'b000_000_000 :
+		 area[1:0] == 2'b01 ? 9'b000_000_111 :
+		 area[1:0] == 2'b10 ? 9'b000_111_000 :
+		 area[1:0] == 2'b11 ? 9'b111_000_000 :
+ `endif
+ `ifdef mo_only
+		 gry == 2'b00 ? 9'b000_000_111 :
+		 gry == 2'b01 ? 9'b000_111_000 :
+		 gry == 2'b10 ? 9'b111_000_000 :
+		 gry == 2'b11 ? 9'b111_111_111 :
+ `endif
+ `ifdef pf_and_mo
+		 gry == 2'b00 & area[1:0] == 2'b00 ? 9'b000_000_000 :
+		 gry == 2'b00 & area[1:0] == 2'b01 ? 9'b000_000_111 :
+		 gry == 2'b00 & area[1:0] == 2'b10 ? 9'b000_111_000 :
+		 gry == 2'b00 & area[1:0] == 2'b11 ? 9'b111_000_000 :
+		 gry == 2'b01 ? 9'b000_000_111 :
+		 gry == 2'b10 ? 9'b000_111_000 :
+		 gry == 2'b11 ? 9'b111_000_000 :
+ `endif
+		 0;
+`else
+   assign rgb_o = 
+		  rgbi == 4'b0000 ? 9'b000_000_000 ://Player
+		  rgbi == 4'b0001 ? 9'b000_000_100 :
+		  rgbi == 4'b0010 ? 9'b000_100_000 :
+		  rgbi == 4'b0011 ? 9'b000_100_100 :
+		  rgbi == 4'b0100 ? 9'b100_000_000 :
+		  rgbi == 4'b0101 ? 9'b100_000_100 :
+		  rgbi == 4'b0110 ? 9'b100_100_000 :
+		  rgbi == 4'b0111 ? 9'b100_100_100 :
+		  rgbi == 4'b1000 ? 9'b000_000_000 :
+		  rgbi == 4'b1001 ? 9'b000_000_111 :
+		  rgbi == 4'b1010 ? 9'b000_111_000 :
+		  rgbi == 4'b1011 ? 9'b000_111_111 :
+		  rgbi == 4'b1100 ? 9'b111_000_000 :
+		  rgbi == 4'b1101 ? 9'b111_000_111 :
+		  rgbi == 4'b1110 ? 9'b111_111_000 :
+		  rgbi == 4'b1111 ? 9'b111_111_111 :
+		  0;
+`endif
    assign sync_o = comp_sync;
    assign hsync_o = hsync;
    assign vsync_o = vsync;
 	assign audio_o = audio ;
+`ifdef MILL	
+	assign audio2_o = audio2 ;
+`endif	
    assign hblank_o = hblank;
    assign vblank_o = vblank;
 
