@@ -13,11 +13,10 @@
 //
 // The game code also relies on the pokey's random number generation working correctly and caused me to
 // do some debugging of the pokey code I was using.
-//
+// Edit: Changed 2018 Gehstock
 
 `define T65
-`define no_colormap     
-`define MILL
+//`define MILL
 module centipede(
 		 input 	      clk_100mhz,
 		 input 	      clk_12mhz,
@@ -295,7 +294,7 @@ always @(posedge s_6mhz)
 assign s_6_12 = ~(s_6mhz & s_12mhz);
 reg xxx1;
    
-always @(posedge s_6_12)
+always @(posedge s_6mhz)//s_6_12)
 	if (reset)
       xxx1 <= 0;
    else
@@ -730,7 +729,7 @@ sprom #(
    assign db_in =
 		 ~rom_n ? rom_out :
 		 ~ram0_n ? ram_out :
-		 ~coloram_n ? { 4'b0, coloram_rgbi } :
+		 ~coloram_n ? { 4'b0, coloram_out } :
        ~pframrd_n ? pf_out[7:0] :
 		 ~ea_read_n ? hs_out :
 		 ~in0_n ? playerin_out :
@@ -1036,56 +1035,26 @@ color_ram(
 	.data_b_o(coloram_rgbi)
 	);
 
-   // output to the top level
-`ifdef no_colormap
-   // bbb_ggg_rrr
-   assign rgb_o =
-//hack
-//`define pf_only
-//`define mo_only
-`define pf_and_mo
- `ifdef pf_only
-		 area[1:0] == 2'b00 ? 9'b000_000_000 :
-		 area[1:0] == 2'b01 ? 9'b000_000_111 :
-		 area[1:0] == 2'b10 ? 9'b000_111_000 :
-		 area[1:0] == 2'b11 ? 9'b111_000_000 :
- `endif
- `ifdef mo_only
-		 gry == 2'b00 ? 9'b000_000_111 :
-		 gry == 2'b01 ? 9'b000_111_000 :
-		 gry == 2'b10 ? 9'b111_000_000 :
-		 gry == 2'b11 ? 9'b111_111_111 :
- `endif
- `ifdef pf_and_mo
-		 gry == 2'b00 & area[1:0] == 2'b00 ? 9'b000_000_000 :
-		 gry == 2'b00 & area[1:0] == 2'b01 ? 9'b000_000_111 :
-		 gry == 2'b00 & area[1:0] == 2'b10 ? 9'b000_111_000 :
-		 gry == 2'b00 & area[1:0] == 2'b11 ? 9'b111_000_000 :
-		 gry == 2'b01 ? 9'b000_000_111 :
-		 gry == 2'b10 ? 9'b000_111_000 :
-		 gry == 2'b11 ? 9'b111_000_000 :
- `endif
-		 0;
-`else
    assign rgb_o = 
-		  rgbi == 4'b0000 ? 9'b000_000_000 ://Player
-		  rgbi == 4'b0001 ? 9'b000_000_100 :
-		  rgbi == 4'b0010 ? 9'b000_100_000 :
-		  rgbi == 4'b0011 ? 9'b000_100_100 :
-		  rgbi == 4'b0100 ? 9'b100_000_000 :
-		  rgbi == 4'b0101 ? 9'b100_000_100 :
-		  rgbi == 4'b0110 ? 9'b100_100_000 :
-		  rgbi == 4'b0111 ? 9'b100_100_100 :
-		  rgbi == 4'b1000 ? 9'b000_000_000 :
-		  rgbi == 4'b1001 ? 9'b000_000_111 :
-		  rgbi == 4'b1010 ? 9'b000_111_000 :
-		  rgbi == 4'b1011 ? 9'b000_111_111 :
-		  rgbi == 4'b1100 ? 9'b111_000_000 :
-		  rgbi == 4'b1101 ? 9'b111_000_111 :
-		  rgbi == 4'b1110 ? 9'b111_111_000 :
-		  rgbi == 4'b1111 ? 9'b111_111_111 :
+		  rgbi == 4'b0000 ? 9'b111_111_111 :
+		  rgbi == 4'b0001 ? 9'b111_111_011 :
+		  rgbi == 4'b0010 ? 9'b111_011_111 :
+		  rgbi == 4'b0011 ? 9'b111_011_011 :
+		  rgbi == 4'b0100 ? 9'b011_111_111 :
+		  rgbi == 4'b0101 ? 9'b011_111_011 :
+		  rgbi == 4'b0110 ? 9'b011_011_111 :
+		  rgbi == 4'b0111 ? 9'b011_011_011 :
+		  rgbi == 4'b1000 ? 9'b111_111_111 :
+		  rgbi == 4'b1001 ? 9'b111_111_000 :
+		  rgbi == 4'b1010 ? 9'b111_000_111 :
+		  rgbi == 4'b1011 ? 9'b111_000_000 :
+		  rgbi == 4'b1100 ? 9'b000_111_111 :
+		  rgbi == 4'b1101 ? 9'b000_111_000 :
+		  rgbi == 4'b1110 ? 9'b000_000_111 :
+		  rgbi == 4'b1111 ? 9'b000_000_000 :
 		  0;
-`endif
+
+
    assign sync_o = comp_sync;
    assign hsync_o = hsync;
    assign vsync_o = vsync;
