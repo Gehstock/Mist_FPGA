@@ -115,7 +115,7 @@ dac #(
 dac (
 	.clk_i(clk_24),
 	.res_n_i(1),
-	.dac_i({2{audio,audio2}}),
+	.dac_i({2{audio,audio}}),
 	.dac_o(AUDIO_L)
 	);
 
