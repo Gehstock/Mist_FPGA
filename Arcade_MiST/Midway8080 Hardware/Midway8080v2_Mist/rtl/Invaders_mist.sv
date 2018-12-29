@@ -1,3 +1,38 @@
+`define generic
+`define invaders
+`ifdef invaders 
+	`define dip = 8'b00000000 
+`endif
+//`define supearth
+`ifdef supearth 
+	`define dip = 8'b11000000 //4 lifes check this
+`endif
+//`define slaser
+`ifdef slaser 
+	`define dip = 8'b00000000 //untested
+`endif
+
+//`define sflush
+`ifdef sflush 
+	`define dip = 8'b00000000 //untested
+`endif
+//TODO
+//`define lrescue
+
+//`define zzzap280
+//`define gunfight
+//`define sflush
+//`define seawolf
+//`define dogpatch
+//`define jspecter
+//`define invadrev
+
+`ifndef sflush 
+	`define cpu80 //8080
+`else 
+	`define cpu65 //6500
+`endif
+
 module Invaders_mist
 (
 	output        LED,						
@@ -20,7 +55,10 @@ module Invaders_mist
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Space Inv.;;",
+`ifdef invaders "Space Inv.;;", `endif
+`ifdef supearth "SEarthInv.;;", `endif
+`ifdef slaser "Space Laser;;", `endif
+	"Midway 8080.;;",
 	"O2,Joystick Control,Upright,Normal;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
@@ -126,7 +164,7 @@ wire m_start1 = kbjoy[1];
 wire m_start2 = kbjoy[2];
 wire m_coin   = kbjoy[3];
 
-wire [12:0]RAB;
+wire [15:0]RAB;
 wire [15:0]AD;
 wire [7:0]RDB;
 wire [7:0]RWD;
@@ -140,62 +178,61 @@ wire HSync;
 wire VSync;
 
 invaderst invaderst(
-		.Rst_n(~(status[0] | status[6] | buttons[1])),
-		.Clk(clk_sys),
-		.ENA(),
-		.Coin(m_coin),
-		.Sel1Player(~m_start1),
-		.Sel2Player(~m_start2),
-		.Fire(~m_fire),
-		.MoveLeft(~m_left),
-		.MoveRight(~m_right),
-		.DIP(8'b0),
-		.RDB(RDB),
-		.IB(IB),
-		.RWD(RWD),
-		.RAB(RAB),
-		.AD(AD),
-		.SoundCtrl3(SoundCtrl3),
-		.SoundCtrl5(SoundCtrl5),
-		.Rst_n_s(Rst_n_s),
-		.RWE_n(RWE_n),
-		.Video(Video),
-		.HSync(HSync),
-		.VSync(VSync)
-		);
+	.Rst_n(~(status[0] | status[6] | buttons[1])),
+	.Clk(clk_sys),
+	.ENA(),
+	.Coin(m_coin),
+	.Sel1Player(~m_start1),
+	.Sel2Player(~m_start2),
+	.Fire(~m_fire),
+	.MoveLeft(~m_left),
+	.MoveRight(~m_right),
+	.DIP(dip),
+	.RDB(RDB),
+	.IB(IB),
+	.RWD(RWD),
+	.RAB(RAB),
+	.AD(AD),
+	.SoundCtrl3(SoundCtrl3),
+	.SoundCtrl5(SoundCtrl5),
+	.Rst_n_s(Rst_n_s),
+	.RWE_n(RWE_n),
+	.Video(Video),
+	.HSync(HSync),
+	.VSync(VSync)
+	);
 		
-Invaders_memory Invaders_memory (
-		.CLK(clk_sys),
-		.RWE_n(RWE_n),
-		.AD(AD),
-		.RAB(RAB),
-		.RDB(RDB),
-		.RWD(RWD),
-		.IB(IB)
-		);
+invaders_memory invaders_memory (
+	.Clock(clk_sys),
+	.RW_n(RWE_n),
+	.Addr(AD),
+	.Ram_Addr(RAB),
+	.Ram_out(RDB),
+	.Ram_in(RWD),
+	.Rom_out(IB)
+	);
 		
 invaders_audio invaders_audio (
-	   .Clk(clk_sys),
-	   .S1(SoundCtrl3),
-	   .S2(SoundCtrl5),
-	   .Aud(audio)
-	  );		
+	.Clk(clk_sys),
+	.S1(SoundCtrl3),
+	.S2(SoundCtrl5),
+	.Aud(audio)
+	);		
 	  
 invaders_video invaders_video (
-		.Video(Video),
-		.CLK(clk_sys),
-		.Rst_n_s(Rst_n_s),
-		.HSync(HSync),
-		.VSync(VSync),
-		.O_VIDEO_R(r),
-		.O_VIDEO_G(g),
-		.O_VIDEO_B(b),
-		.O_HSYNC(hs),
-		.O_VSYNC(vs)
-		);
+	.Video(Video),
+	.CLK(clk_sys),
+	.Rst_n_s(Rst_n_s),
+	.HSync(HSync),
+	.VSync(VSync),
+	.O_VIDEO_R(r),
+	.O_VIDEO_G(g),
+	.O_VIDEO_B(b),
+	.O_HSYNC(hs),
+	.O_VSYNC(vs)
+	);
 
-dac dac
-(
+dac dac (
 	.clk_i(clk_mist),
 	.res_n_i(1),
 	.dac_i(audio),

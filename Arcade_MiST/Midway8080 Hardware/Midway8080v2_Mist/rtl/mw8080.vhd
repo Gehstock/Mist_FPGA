@@ -115,7 +115,7 @@ architecture struct of mw8080 is
 	signal IntE_i       : std_logic;
 	signal DBin         : std_logic;
 	signal Sync         : std_logic;
-	signal Wr_n         : std_logic;
+	signal Wr_n, Rd_n   : std_logic;
 	signal ClkEnCnt     : unsigned(2 downto 0);
 	signal Status_i     : std_logic_vector(7 downto 0);
 	signal A            : std_logic_vector(15 downto 0);
@@ -188,6 +188,25 @@ begin
 			A => A,
 			DI => DI,
 			DO => DO);
+
+--	Wr_n <= not Rd_n;		
+--	my_cpu : entity work.cpu68
+--	port map (    
+--	 clk	     => Clk,
+--    rst       => not Rst_n,
+--    rw	     => Rd_n,
+--    vma       => open,
+--    address   => A,
+--    data_in   => DI,
+--	 data_out  => DO,
+--	 hold      => Hold,
+--	 halt      => '0',
+--	 irq       => IntE_i,
+--	 nmi       => Int_i,
+--	 test_alu  => open,
+--	 test_cc   => open
+--  );
+
 
 	-- Clock enables
 	process (Rst_n, Clk)
