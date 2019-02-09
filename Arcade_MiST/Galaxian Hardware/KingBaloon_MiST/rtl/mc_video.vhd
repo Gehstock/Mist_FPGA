@@ -219,25 +219,9 @@ begin
 		O_DB    => W_VID_RAM_DOB
 	);
 
-	-- 1K VID-Rom
---	k_rom : entity work.GALAXIAN_1K 
---	port map (
---		CLK  => I_CLK_12M,
---		ADDR => W_O_OBJ_ROM_A,
---		DATA => W_1K_D
---	);
-
-	-- 1H VID-Rom
---	h_rom : entity work.GALAXIAN_1H
---	port map(
---		CLK  => I_CLK_12M,
---		ADDR => W_O_OBJ_ROM_A,
---		DATA => W_1H_D
---	);
-	
 	k_rom : entity work.sprom
 	generic map (
-		init_file  => "./ROM/GALAXIAN_1K.hex",
+		init_file  => "./ROM/k.hex",
 		widthad_a  => 11,
 		width_a  => 8)
 	port map (
@@ -248,7 +232,7 @@ begin
 	
 	h_rom : entity work.sprom
 	generic map (
-		init_file  => "./ROM/GALAXIAN_1H.hex",
+		init_file  => "./ROM/h.hex",
 		widthad_a  => 11,
 		width_a  => 8)
 	port map (

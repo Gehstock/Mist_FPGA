@@ -36,9 +36,9 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio1, audio2;
-wire	[1:0] video;
-
-wire clk_48, clk_12;
+wire	[1:0] Video;
+assign LED = 1'b1;
+wire clk_24, clk_12, clk_6;
 wire locked;
 pll pll
 (
@@ -49,10 +49,31 @@ pll pll
 	.locked(locked)
 );
 
+wire m_up1     = (kbjoy[3] | joystick_1[3]);
+wire m_down1   = (kbjoy[2] | joystick_1[2]);
+wire m_left1   = (kbjoy[1] | joystick_1[1]);
+wire m_right1  = (kbjoy[0] | joystick_1[0]);
+
+wire m_up2     = (joystick_0[3]);
+wire m_down2   = (joystick_0[2]);
+wire m_left2   = (joystick_0[1]);
+wire m_right2  = (joystick_0[0]);
+
+wire m_fire1   = ~(kbjoy[4] | joystick_1[4]);
+wire m_fire2   = ~(joystick_0[4]);
+wire m_start1 = ~(kbjoy[5]);
+wire m_start2 = ~(kbjoy[6]);
+wire m_coin = ~(kbjoy[7]);
+wire m_gearup1 = (kbjoy[8] | joystick_1[5]);
+wire m_geardown1 = (kbjoy[9] | joystick_1[6]);
+wire m_gearup2 = (joystick_0[5]);
+wire m_geardown2 = (joystick_0[6]);
+
+
 ultra_tank ultra_tank (
 	.clk_12(clk_12),
 	.Reset_n(~(status[0] | status[6] | buttons[1])),
-	.Video(video),
+	.Video(Video),
 	.Sync_O(),
 	.Blank_O(),
 	.HS(hs),
@@ -66,10 +87,10 @@ ultra_tank ultra_tank (
 	.White_O(),
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
-	.Coin1_I(~kbjoy[7]),
-	.Coin2_I(~kbjoy[7]),
-	.Start1_I(~kbjoy[5]),
-	.Start2_I(~kbjoy[6]),
+	.Coin1_I(m_coin),
+	.Coin2_I(1'b1),
+	.Start1_I(m_start1),
+	.Start2_I(m_start2),
 	.Invisible_I(),// Invisible tanks switch
 	.Rebound_I(),// Rebounding shells switch
 	.Barrier_I(),// Barriers switch
@@ -77,12 +98,12 @@ ultra_tank ultra_tank (
 	.JoyW_Bk_I(~kbjoy[2]),
 	.JoyY_Fw_I(~kbjoy[1]),
 	.JoyY_Bk_I(~kbjoy[0]),
-	.JoyX_Fw_I(),
-	.JoyX_Bk_I(),
-	.JoyZ_Fw_I(),
-	.JoyZ_Bk_I(),
-	.FireA_I(~kbjoy[4]),
-	.FireB_I(),
+	.JoyX_Fw_I(1'b1),
+	.JoyX_Bk_I(1'b1),
+	.JoyZ_Fw_I(1'b1),
+	.JoyZ_Bk_I(1'b1),
+	.FireA_I(m_fire1),
+	.FireB_I(m_fire2),
 	.Test_I(~status[1]),
 	.Slam_I(),
 	.LED1_O(),
@@ -90,26 +111,20 @@ ultra_tank ultra_tank (
 	.Lockout_O()
 );
 
-dac dac1 (
+dac dac (
 	.CLK(clk_24),
 	.RESET(1'b0),
-	.DACin(audio1),
+	.DACin({audio1,"00",audio2}),
 	.DACout(AUDIO_L)
 	);
 	
-dac dac2 (
-	.CLK(clk_24),
-	.RESET(1'b0),
-	.DACin(audio2),
-	.DACout(AUDIO_R)
-	);
-
+assign AUDIO_R = AUDIO_L;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
 video_mixer #(
 	.LINE_LENGTH(480), 
-	.HALF_DEPTH(1)) // to dark if set to 0
+	.HALF_DEPTH(0))
 video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
@@ -117,9 +132,12 @@ video_mixer(
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({video&video,video}),
-	.G({video&video,video}),
-	.B({video&video,video}),
+	.R({Video,Video,Video,Video,Video,Video}),
+	.G({Video,Video,Video,Video,Video,Video}),
+	.B({Video,Video,Video,Video,Video,Video}),
+//	.R(blankn ? {video,video,video} : "000000"),
+//	.G(blankn ? {video,video,video} : "000000"),
+//	.B(blankn ? {video,video,video} : "000000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),

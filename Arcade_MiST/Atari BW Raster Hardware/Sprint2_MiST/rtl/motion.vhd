@@ -123,19 +123,42 @@ end process;
 
 
 -- Motion object PROMs - These contain the car images for all 32 possible orientations
-J6: entity work.j6_prom
+J6: entity work.sprom
+generic map(
+		init_file => "rtl/roms/6399-01j6.hex",
+		widthad_a => 9,
+		width_a => 4)
 port map(
-	clock => clk6,
-	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
-	q => Vid(7 downto 4)
-	);
+		clock => clk6,
+		address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
+		q => Vid(7 downto 4)
+		);
+		
+--J6: entity work.j6_prom
+--port map(
+--	clock => clk6,
+--	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
+--	q => Vid(7 downto 4)
+--	);
 
-K6: entity work.k6_prom
+K6: entity work.sprom
+generic map(
+		init_file => "rtl/roms/6398-01k6.hex",
+		widthad_a => 9,
+		width_a => 4)
 port map(
-	clock => clk6,
-	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
-	q => Vid(3 downto 0)
-	);
+		clock => clk6,
+		address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
+		q => Vid(3 downto 0)
+		);
+		
+--K6: entity work.k6_prom
+--port map(
+--	clock => clk6,
+--	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
+--	q => Vid(3 downto 0)
+--	);
+
 
 	
 -- Some glue logic

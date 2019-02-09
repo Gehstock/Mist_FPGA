@@ -1,0 +1,10 @@
+{ "" "" "" "Verilog HDL information at scandoubler.sv(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at dpram.vhd(10): ignored assignment of value to null range" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at T65.vhd(185): comparison between unequal length operands always returns TRUE" {  } {  } 0 10620 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at dpram.vhd(94): ignored assignment of value to null range" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL Process Statement warning at audio.vhd(54): inferring latch(es) for signal or variable \"tone_reg\", which holds its previous value in one or more paths through the process" {  } {  } 0 10631 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL Process Statement warning at playfield.vhd(128): signal \"shift_data\" is read inside the Process Statement but isn't in the Process Statement's sensitivity list" {  } {  } 0 10492 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 113007 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 113015 "" 0 0 "Quartus II" 0 -1 0 ""}

@@ -153,6 +153,8 @@ set_global_assignment -name VHDL_FILE rtl/T65/T65_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/T65_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/T65.vhd
 set_global_assignment -name VHDL_FILE rtl/sync.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/joy2quad.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gearshift.sv
 set_global_assignment -name VHDL_FILE rtl/playfield.vhd
 set_global_assignment -name VHDL_FILE rtl/motion.vhd
 set_global_assignment -name VHDL_FILE rtl/collision.vhd
@@ -168,16 +170,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/mist_io.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/osd.sv
-set_global_assignment -name QIP_FILE rtl/roms/addec_prom.qip
-set_global_assignment -name QIP_FILE rtl/roms/Char_LSB.qip
-set_global_assignment -name QIP_FILE rtl/roms/Char_MSB.qip
-set_global_assignment -name QIP_FILE rtl/roms/j6_prom.qip
-set_global_assignment -name QIP_FILE rtl/roms/k6_prom.qip
-set_global_assignment -name QIP_FILE rtl/roms/prog_rom1.qip
-set_global_assignment -name QIP_FILE rtl/roms/prog_rom2.qip
-set_global_assignment -name QIP_FILE rtl/roms/prog_rom3.qip
-set_global_assignment -name QIP_FILE rtl/roms/prog_rom4.qip
-set_global_assignment -name QIP_FILE rtl/roms/sync_prom.qip
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

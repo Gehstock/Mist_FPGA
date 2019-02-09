@@ -1,632 +1,253 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    17:36:45 11/07/2015 
-// Design Name: 
-// Module Name:    keyboard
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
+//============================================================================
+//  Jupiter Ace keyboard
+//  Copyright (C) 2018 Sorgelig
 //
-// Dependencies: 
+//  This program is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by the Free
+//  Software Foundation; either version 2 of the License, or (at your option)
+//  any later version.
 //
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
+//  This program is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//  more details.
 //
-//////////////////////////////////////////////////////////////////////////////////
-module keyboard(
-    input wire clk,
-    input wire clkps2,
-    input wire dataps2,
-    input wire [7:0] rows,
-    output wire [4:0] columns,
-    output reg kbd_reset,
-    output reg kbd_nmi,
-    output reg kbd_mreset
-    );
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//============================================================================
 
-    initial begin
-        kbd_reset = 1'b1;
-        kbd_nmi = 1'b1;
-        kbd_mreset = 1'b1;
-    end
+module keyboard
+(
+	input        reset,
+	input        clk_sys,
 
-   // Teclas no extendidas
-`define KEY_RELEASED 8'hf0
-`define KEY_EXTENDED 8'he0
-`define KEY_ESC 	8'h76
-`define KEY_F1 		8'h05
-`define KEY_F2 		8'h06
-`define KEY_F3 		8'h04
-`define KEY_F4 		8'h0C
-`define KEY_F5 		8'h03
-`define KEY_F6 		8'h0B
-`define KEY_F7 		8'h83
-`define KEY_F8 		8'h0A
-`define KEY_F9 		8'h01
-`define KEY_F10 	8'h09
-`define KEY_F11 	8'h78
-`define KEY_F12 	8'h07
+	input [10:0] ps2_key,
 
-`define KEY_BL 		8'h0E
-`define KEY_1 		8'h16
-`define KEY_2 		8'h1E
-`define KEY_3 		8'h26
-`define KEY_4 		8'h25
-`define KEY_5 		8'h2E
-`define KEY_6 		8'h36
-`define KEY_7 		8'h3D
-`define KEY_8 		8'h3E
-`define KEY_9 		8'h46
-`define KEY_0 		8'h45
-`define KEY_APOS 	8'h4E
-`define KEY_AEXC 	8'h55
-`define KEY_BKSP 	8'h66
+	input  [7:0] kbd_row,
+	output [4:0] kbd_col
+);
 
-`define KEY_TAB 	8'h0D
-`define KEY_Q 		8'h15
-`define KEY_W 		8'h1D
-`define KEY_E 		8'h24
-`define KEY_R 		8'h2D
-`define KEY_T 		8'h2C
-`define KEY_Y 		8'h35
-`define KEY_U 		8'h3C
-`define KEY_I 		8'h43
-`define KEY_O 		8'h44
-`define KEY_P 		8'h4D
-`define KEY_CORCHA 	8'h54
-`define KEY_CORCHC 	8'h5B
-`define KEY_ENTER 	8'h5A
+reg  [4:0] keys[7:0];
+wire       press_n = ~ps2_key[9];
 
-`define KEY_CPSLK 	8'h58
-`define KEY_A 		8'h1C
-`define KEY_S 		8'h1B
-`define KEY_D 		8'h23
-`define KEY_F 		8'h2B
-`define KEY_G 		8'h34
-`define KEY_H 		8'h33
-`define KEY_J 		8'h3B
-`define KEY_K 		8'h42
-`define KEY_L 		8'h4B
-`define KEY_NT 		8'h4C
-`define KEY_LLAVA 	8'h52
-`define KEY_LLAVC 	8'h5D
+// Output addressed row to ULA
+assign kbd_col = ({5{kbd_row[0]}} | keys[0])
+                &({5{kbd_row[1]}} | keys[1])
+                &({5{kbd_row[2]}} | keys[2])
+                &({5{kbd_row[3]}} | keys[3])
+                &({5{kbd_row[4]}} | keys[4])
+                &({5{kbd_row[5]}} | keys[5])
+                &({5{kbd_row[6]}} | keys[6])
+                &({5{kbd_row[7]}} | keys[7]);
 
-`define KEY_LSHIFT	8'h12
-`define KEY_LT 		8'h61
-`define KEY_Z 		8'h1A
-`define KEY_X 		8'h22
-`define KEY_C 		8'h21
-`define KEY_V 		8'h2A
-`define KEY_B 		8'h32
-`define KEY_N 		8'h31
-`define KEY_M 		8'h3A
-`define KEY_COMA 	8'h41
-`define KEY_PUNTO 	8'h49
-`define KEY_MENOS 	8'h4A
-`define KEY_RSHIFT	8'h59
+wire shift = ~keys[0][0];
 
-`define KEY_LCTRL 	8'h14
-`define KEY_LALT 	8'h11
-`define KEY_SPACE 	8'h29
+always @(posedge clk_sys) begin
+	reg old_reset = 0;
+	reg old_state;
 
-`define KEY_KP0 	8'h70
-`define KEY_KP1 	8'h69
-`define KEY_KP2 	8'h72
-`define KEY_KP3 	8'h7A
-`define KEY_KP4 	8'h6B
-`define KEY_KP5 	8'h73
-`define KEY_KP6 	8'h74
-`define KEY_KP7 	8'h6C
-`define KEY_KP8 	8'h75
-`define KEY_KP9 	8'h7D
-`define KEY_KPPUNTO 8'h71
-`define KEY_KPMAS 	8'h79
-`define KEY_KPMENOS 8'h7B
-`define KEY_KPASTER 8'h7C
+	old_state <= ps2_key[10];
 
-`define KEY_BLKNUM	8'h77
-`define KEY_BLKSCR 	8'h7E
+	old_reset <= reset;
+	if(~old_reset & reset)begin
+		keys[0] <= 5'b11111;
+		keys[1] <= 5'b11111;
+		keys[2] <= 5'b11111;
+		keys[3] <= 5'b11111;
+		keys[4] <= 5'b11111;
+		keys[5] <= 5'b11111;
+		keys[6] <= 5'b11111;
+		keys[7] <= 5'b11111;
+	end
 
-// Teclas extendidas (E0 + scancode)
-`define KEY_WAKEUP 	8'h5E
-`define KEY_SLEEP 	8'h3F
-`define KEY_POWER 	8'h37
-`define KEY_INS 	8'h70
-`define KEY_SUP 	8'h71
-`define KEY_HOME 	8'h6C
-`define KEY_END 	8'h69
-`define KEY_PGU 	8'h7D
-`define KEY_PGD 	8'h7A
-`define KEY_UP 		8'h75
-`define KEY_DOWN 	8'h72
-`define KEY_LEFT 	8'h6B
-`define KEY_RIGHT 	8'h74
-`define KEY_RCTRL 	8'h14
-`define KEY_ALTGR 	8'h11
-`define KEY_KPENTER 8'h5A
-`define KEY_KPSLASH 8'h4A
-`define KEY_PRTSCR 	8'h7C
+	if(old_state != ps2_key[10]) begin
+		case(ps2_key[7:0])
+			8'h12 : keys[0][0] <= press_n; // Left shift (CAPS SHIFT)
+			8'h59 : keys[0][0] <= press_n; // Right shift (CAPS SHIFT)
+			8'h14:  keys[0][1] <= press_n; // ctrl
+			8'h1a : keys[0][2] <= press_n; // Z
+			8'h22 : keys[0][3] <= press_n; // X
+			8'h21 : keys[0][4] <= press_n; // C
 
+			8'h1c : keys[1][0] <= press_n; // A
+			8'h1b : keys[1][1] <= press_n; // S
+			8'h23 : keys[1][2] <= press_n; // D
+			8'h2b : keys[1][3] <= press_n; // F
+			8'h34 : keys[1][4] <= press_n; // G
 
-    wire new_key_aval;
-    wire [7:0] scancode;
-    wire is_released;
-    wire is_extended;
+			8'h15 : keys[2][0] <= press_n; // Q
+			8'h1d : keys[2][1] <= press_n; // W
+			8'h24 : keys[2][2] <= press_n; // E
+			8'h2d : keys[2][3] <= press_n; // R
+			8'h2c : keys[2][4] <= press_n; // T
 
-    reg shift_pressed = 1'b0;
-    reg ctrl_pressed = 1'b0;
-    reg alt_pressed = 1'b0;
+			8'h16 : keys[3][0] <= press_n; // 1
+			8'h1e : keys[3][1] <= press_n; // 2
+			8'h26 : keys[3][2] <= press_n; // 3
+			8'h25 : keys[3][3] <= press_n; // 4
+			8'h2e : keys[3][4] <= press_n; // 5
 
-    ps2_port ps2_kbd (
-        .clk(clk),  // se recomienda 1 MHz <= clk <= 600 MHz
-        .enable_rcv(1'b1),  // habilitar la maquina de estados de recepcion
-        .ps2clk_ext(clkps2),
-        .ps2data_ext(dataps2),
-        .kb_interrupt(new_key_aval),  // a 1 durante 1 clk para indicar nueva tecla recibida
-        .scancode(scancode), // make o breakcode de la tecla
-        .released(is_released),  // soltada=1, pulsada=0
-        .extended(is_extended)  // extendida=1, no extendida=0
-    );
+			8'h45 : keys[4][0] <= press_n; // 0
+			8'h46 : keys[4][1] <= press_n; // 9
+			8'h3e : keys[4][2] <= press_n; // 8
+			8'h3d : keys[4][3] <= press_n; // 7
+			8'h36 : keys[4][4] <= press_n; // 6
 
-    reg [4:0] matrix[0:7];  // 40-key matrix keyboard
-    initial begin
-        matrix[0] = 5'b11111;  // C X Z SS CS
-        matrix[1] = 5'b11111;  // G F D S A
-        matrix[2] = 5'b11111;  // T R E W Q
-        matrix[3] = 5'b11111;  // 5 4 3 2 1
-        matrix[4] = 5'b11111;  // 6 7 8 9 0
-        matrix[5] = 5'b11111;  // Y U I O P
-        matrix[6] = 5'b11111;  // H J K L ENT
-        matrix[7] = 5'b11111;  // V B N M SP
-    end
+			8'h4d : keys[5][0] <= press_n; // P
+			8'h44 : keys[5][1] <= press_n; // O
+			8'h43 : keys[5][2] <= press_n; // I
+			8'h3c : keys[5][3] <= press_n; // U
+			8'h35 : keys[5][4] <= press_n; // Y
 
-    assign columns = (matrix[0] | { {8{rows[0]}} }) &
-                     (matrix[1] | { {8{rows[1]}} }) &
-                     (matrix[2] | { {8{rows[2]}} }) &
-                     (matrix[3] | { {8{rows[3]}} }) &
-                     (matrix[4] | { {8{rows[4]}} }) &
-                     (matrix[5] | { {8{rows[5]}} }) &
-                     (matrix[6] | { {8{rows[6]}} }) &
-                     (matrix[7] | { {8{rows[7]}} });
+			8'h5a : keys[6][0] <= press_n; // ENTER
+			8'h4b : keys[6][1] <= press_n; // L
+			8'h42 : keys[6][2] <= press_n; // K
+			8'h3b : keys[6][3] <= press_n; // J
+			8'h33 : keys[6][4] <= press_n; // H
 
-    always @(posedge clk) begin
-        if (new_key_aval == 1'b1) begin
-            case (scancode)
-                // Special and control keys
-                `KEY_LSHIFT,
-                `KEY_RSHIFT:
-                    shift_pressed <= ~is_released;
-                `KEY_LCTRL,
-                `KEY_RCTRL:
-                    begin
-                        ctrl_pressed <= ~is_released;
-                        if (is_extended)
-                            matrix[0][1] <= is_released;  // Right control = Symbol shift
-                        else
-                            matrix[0][0] <= is_released;  // Left control = Caps shift
-                    end
-                `KEY_LALT:
-                    alt_pressed <= ~is_released;
-                `KEY_KPPUNTO:
-                    if (ctrl_pressed && alt_pressed) begin
-                        kbd_reset <= is_released;
-                        if (is_released == 1'b0) begin
-                            matrix[0] <= 5'b11111;  // C X Z SS CS
-                            matrix[1] <= 5'b11111;  // G F D S A
-                            matrix[2] <= 5'b11111;  // T R E W Q
-                            matrix[3] <= 5'b11111;  // 5 4 3 2 1
-                            matrix[4] <= 5'b11111;  // 6 7 8 9 0
-                            matrix[5] <= 5'b11111;  // Y U I O P
-                            matrix[6] <= 5'b11111;  // H J K L ENT
-                            matrix[7] <= 5'b11111;  // V B N M SP
-                        end
-                    end                            
-                `KEY_F5:
-                    if (ctrl_pressed && alt_pressed)
-                        kbd_nmi <= is_released;
-                `KEY_ENTER:
-                    matrix[6][0] <= is_released;
-                `KEY_ESC:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[7][0] <= is_released;
-                    end
-                `KEY_BKSP:
-                    if (ctrl_pressed && alt_pressed) begin
-                        kbd_mreset <= is_released;                        
-                    end
-                    else begin
-                        matrix[0][0] <= is_released;
-                        matrix[4][0] <= is_released;
-                    end
-                `KEY_CPSLK:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[3][1] <= is_released;  // CAPS LOCK
-                    end
-                `KEY_F2:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[3][0] <= is_released;  // EDIT
-                    end
-                        
-                // Digits and puntuaction marks inside digits
-                `KEY_1:
-                    begin
-                        if (alt_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[1][1] <= is_released;  // |
-                        end
-                        else if (shift_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[3][0] <= is_released;  // !
-                        end
-                        else
-                            matrix[3][0] <= is_released;
-                        
-                    end
-                `KEY_2:
-                    begin
-                        if (alt_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[3][1] <= is_released;  // @
-                        end
-                        else if (shift_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[5][0] <= is_released;  // "
-                        end
-                        else
-                            matrix[3][1] <= is_released;
-                    end
-                `KEY_3:
-                    begin
-                        if (!shift_pressed)
-                            matrix[3][2] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[3][2] <= is_released;  // #
-                        end
-                    end
-                `KEY_4:
-                    begin
-                        if (shift_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[3][3] <= is_released;  // $
-                        end
-                        else if (ctrl_pressed) begin
-                            matrix[0][0] <= is_released;
-                            matrix[3][3] <= is_released; // INV VIDEO
-                        end
-                        else
-                            matrix[3][3] <= is_released;                        
-                    end
-                `KEY_5:
-                    begin
-                        if (!shift_pressed)
-                            matrix[3][4] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[3][4] <= is_released;  // %
-                        end
-                    end
-                `KEY_6:
-                    begin
-                        if (!shift_pressed)
-                            matrix[4][4] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[4][4] <= is_released;  // &
-                        end
-                    end
-                `KEY_7:
-                    begin
-                        if (!shift_pressed)
-                            matrix[4][3] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[7][4] <= is_released;  // /
-                        end
-                    end
-                `KEY_8:
-                    begin
-                        if (!shift_pressed)
-                            matrix[4][2] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[4][2] <= is_released;  // (
-                        end
-                    end
-                `KEY_9:
-                    begin
-                        if (shift_pressed) begin
-                            matrix[0][1] <= is_released;
-                            matrix[4][1] <= is_released;  // )
-                        end
-                        else if (ctrl_pressed) begin
-                            matrix[0][0] <= is_released;
-                            matrix[4][1] <= is_released;
-                        end
-                        else
-                            matrix[4][1] <= is_released;
-                    end
-                `KEY_0:
-                    begin
-                        if (!shift_pressed)
-                            matrix[4][0] <= is_released;
-                        else begin
-                            matrix[0][1] <= is_released;
-                            matrix[6][1] <= is_released;  // =
-                        end
-                    end
-                    
-                // Alphabetic characters
-                `KEY_Z:
-                    begin
-                        matrix[0][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_X:
-                    begin
-                        matrix[0][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_C:
-                    begin
-                        matrix[0][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_A:
-                    begin
-                        matrix[1][0] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_S:
-                    begin
-                        matrix[1][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_D:
-                    begin
-                        matrix[1][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_F:
-                    begin
-                        matrix[1][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_G:
-                    begin
-                        matrix[1][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_Q:
-                    begin
-                        matrix[2][0] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_W:
-                    begin
-                        matrix[2][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_E:
-                    begin
-                        matrix[2][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_R:
-                    begin
-                        matrix[2][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_T:
-                    begin
-                        matrix[2][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_P:
-                    begin
-                        matrix[5][0] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_O:
-                    begin
-                        matrix[5][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_I:
-                    begin
-                        matrix[5][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_U:
-                    begin
-                        matrix[5][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_Y:
-                    begin
-                        matrix[5][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_L:
-                    begin
-                        matrix[6][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_K:
-                    begin
-                        matrix[6][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_J:
-                    begin
-                        matrix[6][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_H:
-                    begin
-                        matrix[6][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_M:
-                    begin
-                        matrix[7][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_N:
-                    begin
-                        matrix[7][2] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_B:
-                    begin
-                        matrix[7][3] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                `KEY_V:
-                    begin
-                        matrix[7][4] <= is_released;
-                        if (shift_pressed)
-                            matrix[0][0] <= is_released;
-                    end
-                    
-                // Symbols
-                `KEY_APOS:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (!shift_pressed)
-                            matrix[4][3] <= is_released;
-                        else
-                            matrix[0][4] <= is_released;  // ?
-                    end
-                `KEY_CORCHA:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (alt_pressed || shift_pressed)
-                            matrix[5][4] <= is_released;  // [
-                        else
-                            matrix[6][4] <= is_released;  // ^
-                    end
-                `KEY_CORCHC:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (shift_pressed)
-                            matrix[7][3] <= is_released;  // *
-                        else if (alt_pressed)
-                            matrix[5][3] <= is_released;  // ]
-                        else
-                            matrix[6][2] <= is_released;  // +
-                    end
-                `KEY_LLAVA:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (alt_pressed || shift_pressed)
-                            matrix[1][3] <= is_released;  // {
-                        else
-                            matrix[0][3] <= is_released; // pound
-                    end
-                `KEY_LLAVC:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (alt_pressed || shift_pressed)
-                            matrix[1][4] <= is_released;  // }
-                        else
-                            matrix[5][2] <= is_released;  // copyright
-                    end
-                `KEY_COMA:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (!shift_pressed)
-                            matrix[7][2] <= is_released;
-                        else
-                            matrix[5][1] <= is_released;  // ;
-                    end
-                `KEY_PUNTO:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (!shift_pressed)
-                            matrix[7][1] <= is_released;
-                        else
-                            matrix[0][2] <= is_released;  // :
-                    end
-                `KEY_MENOS:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (!shift_pressed)
-                            matrix[6][3] <= is_released;  //
-                        else
-                            matrix[4][0] <= is_released;  // _
-                    end
-                `KEY_LT:
-                    begin
-                        matrix[0][1] <= is_released;
-                        if (!shift_pressed)
-                            matrix[2][3] <= is_released;  // <
-                        else
-                            matrix[2][4] <= is_released;  // >
-                    end
-                `KEY_BL:
-                    begin
-                        matrix[0][1] <= is_released;
-                        matrix[1][2] <= is_released;  // \
-                    end       
-                `KEY_SPACE:
-                    matrix[7][0] <= is_released;
-                    
-                // Cursor keys
-                `KEY_UP:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[4][4] <= is_released;
-                    end
-                `KEY_DOWN:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[4][3] <= is_released;
-                    end
-                `KEY_LEFT:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[3][4] <= is_released;
-                    end
-                `KEY_RIGHT:
-                    begin
-                        matrix[0][0] <= is_released;
-                        matrix[4][2] <= is_released;
-                    end
-            endcase    
-        end
-    end
+			8'h29 : keys[7][0] <= press_n; // SPACE
+			8'h3a : keys[7][1] <= press_n; // M
+			8'h31 : keys[7][2] <= press_n; // N
+			8'h32 : keys[7][3] <= press_n; // B
+			8'h2a : keys[7][4] <= press_n; // V
+
+			8'h6B : begin // Left (CAPS 5)
+					keys[0][0] <= press_n;
+					keys[3][4] <= press_n;
+				end
+			8'h72 : begin // Up (CAPS 6)
+					keys[0][0] <= press_n;
+					keys[4][3] <= press_n;
+				end
+			8'h75 : begin // Down (CAPS 7)
+					keys[0][0] <= press_n;
+					keys[4][4] <= press_n;
+				end
+			8'h74 : begin // Right (CAPS 8)
+					keys[0][0] <= press_n;
+					keys[4][2] <= press_n;
+				end
+
+			8'h66 : begin // Backspace (CAPS 0)
+					keys[0][0] <= press_n;
+					keys[4][0] <= press_n;
+				end
+			8'h76 : begin // Escape (CAPS SPACE)
+					keys[0][0] <= press_n;
+					keys[7][0] <= press_n;
+				end
+			8'h58 : begin // Caps Lock
+					keys[0][0] <= press_n;
+					keys[3][1] <= press_n;
+				end
+			8'h0D : begin // TAB
+					keys[0][0] <= press_n;
+					keys[3][0] <= press_n;
+				end
+
+			8'h41 : begin // , <
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[7][2] <= 1;
+						keys[2][3] <= 1;
+					end
+					else if(shift) keys[2][3] <= 0;
+					else keys[7][2] <= 0;
+				end
+			8'h49 : begin // . >
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[7][1] <= 1;
+						keys[2][4] <= 1;
+					end
+					else if(shift) keys[2][4] <= 0;
+					else keys[7][1] <= 0;
+				end
+			8'h4C : begin // ; :
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[5][1] <= 1;
+						keys[0][2] <= 1;
+					end
+					else if(shift) keys[0][2] <= 0;
+					else keys[5][1] <= 0;
+				end
+			8'h52 : begin // " '
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[5][0] <= 1;
+						keys[4][3] <= 1;
+					end
+					else if(shift) keys[4][3] <= 0;
+					else keys[5][0] <= 0;
+				end
+			8'h4A : begin // / ?
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[0][4] <= 1;
+						keys[7][4] <= 1;
+					end
+					else if(shift) keys[0][4] <= 0;
+					else keys[7][4] <= 0;
+				end
+			8'h4E : begin // - _
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[6][3] <= 1;
+						keys[4][0] <= 1;
+					end
+					else if(shift) keys[4][0] <= 0;
+					else keys[6][3] <= 0;
+				end
+			8'h55 : begin // = +
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[6][1] <= 1;
+						keys[6][2] <= 1;
+					end
+					else if(shift) keys[6][2] <= 0;
+					else keys[6][1] <= 0;
+				end
+			8'h54 : begin // [ {
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[5][4] <= 1;
+						keys[1][3] <= 1;
+					end
+					else if(shift) keys[1][3] <= 0;
+					else keys[5][4] <= 0;
+				end
+			8'h5B : begin // ] }
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[5][3] <= 1;
+						keys[1][4] <= 1;
+					end
+					else if(shift) keys[1][4] <= 0;
+					else keys[5][3] <= 0;
+				end
+			8'h5D : begin // \ |
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[1][2] <= 1;
+						keys[1][1] <= 1;
+					end
+					else if(shift) keys[1][1] <= 0;
+					else keys[1][2] <= 0;
+				end
+			8'h0E : begin // ~ *
+					keys[0][1] <= press_n;
+					if(press_n) begin
+						keys[1][0] <= 1;
+						keys[7][3] <= 1;
+					end
+					else if(shift) keys[7][3] <= 0;
+					else keys[1][0] <= 0;
+				end
+			default: ;
+		endcase
+	end
+end
+
 endmodule

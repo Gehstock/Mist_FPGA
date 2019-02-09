@@ -1,0 +1,5 @@
+{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL information at scandoubler.sv(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at T65.vhd(185): comparison between unequal length operands always returns TRUE" {  } {  } 0 10620 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}

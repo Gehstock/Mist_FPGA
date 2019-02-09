@@ -30,7 +30,8 @@ sprom #(
 `ifdef seawolf		.init_file("./roms/Seawolf/sw0041_h.hex"), `endif//not working
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_h.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_h.hex"), `endif//not working
-`ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_e.hex"), `endif//not working
+`ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_e.hex"), `endif//not 
+`ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_h.hex"), `endif//
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -54,6 +55,7 @@ sprom #(
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_g.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_g.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_f.hex"), `endif//not working
+`ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_g.hex"), `endif//
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -77,6 +79,7 @@ sprom #(
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_f.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_f.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_g.hex"), `endif//not working
+`ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_f.hex"), `endif//
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -88,6 +91,7 @@ u_rom_f (
 	.q(rom_data_2)
 	);
 	
+`ifndef blueshark
 sprom #(
 `ifdef sflush	.init_file("./roms/Strightflush/fr04_sc3.hex"), `endif//
 `ifdef zzzap280	.init_file("./roms/280zzz/zzzap_f.hex"), `endif//not working
@@ -109,7 +113,7 @@ u_rom_e (
 `ifdef generic	.Address(Addr[10:0]), `endif
 	.q(rom_data_3)
 	);
-	
+	`endif//	
 `ifndef generic
 sprom #(
 `ifdef sflush	.init_file("./roms/Strightflush/fr05_sc2.hex"), `endif//

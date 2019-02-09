@@ -14,7 +14,7 @@ reg [3:0]prom_do;
 sprom #(
 	.init_file("./rom/prom5c.hex"),
 	.widthad_a(7),
-	.width_a(8))
+	.width_a(4))
 c5C(
 	.address(addr[15:9]),
 	.clock(clk),

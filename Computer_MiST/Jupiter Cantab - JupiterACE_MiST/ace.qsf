@@ -44,25 +44,6 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:59:05  MARCH 16, 2017
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY Output
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/glue.v
-set_global_assignment -name VERILOG_FILE rtl/T80/tv80n.v
-set_global_assignment -name VERILOG_FILE rtl/T80/tv80_reg.v
-set_global_assignment -name VERILOG_FILE rtl/T80/tv80_mcode.v
-set_global_assignment -name VERILOG_FILE rtl/T80/tv80_core.v
-set_global_assignment -name VERILOG_FILE rtl/T80/tv80_alu.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ace_mist.sv
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VERILOG_FILE rtl/sigma_delta_dac.v
-set_global_assignment -name VERILOG_FILE rtl/jupiter_ace.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name VERILOG_FILE rtl/rom_ram.v
-set_global_assignment -name VERILOG_FILE rtl/ps2_port.v
-set_global_assignment -name VERILOG_FILE rtl/io_write_to_rom.v
 
 # Pin & Location Assignments
 # ==========================
@@ -202,14 +183,32 @@ set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulati
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(ace_mist)
 # --------------------
-set_global_assignment -name VERILOG_FILE rtl/sram.v
+set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
+set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ace_mist.sv
+set_global_assignment -name VERILOG_FILE rtl/jupiter_ace.v
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80pa.vhd
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name VERILOG_FILE rtl/sigma_delta_dac.v
+set_global_assignment -name VERILOG_FILE rtl/keyboard.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video.sv
+set_global_assignment -name VERILOG_FILE rtl/dpram.v
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

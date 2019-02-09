@@ -79,7 +79,7 @@ c9A(
 	.q(rom5_do)
 	);
 
-`ifndef targ	
+`ifdef targ	
 sprom #(
 	.init_file(""),
 	.widthad_a(10),
@@ -94,7 +94,7 @@ sprom #(
 	.init_file(""),
 	.widthad_a(10),
 	.width_a(8))
-c8A(
+c7A(
 	.address(addr[9:0]),
 	.clock(clk),//pcs[6]
 	.q(rom7_do)
@@ -104,7 +104,7 @@ sprom #(
 	.init_file(""),
 	.widthad_a(10),
 	.width_a(8))
-c8A(
+c6A(
 	.address(addr[9:0]),
 	.clock(clk),//pcs[7]
 	.q(rom8_do)

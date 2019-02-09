@@ -294,11 +294,9 @@ port map(
 Video(0) <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
 Video(1) <= not(WhitePF_n and Car1_n);  
 Sync_O <= CompSync_n_s;
-
 Vb <= VBLANK;
 Hb <= HBLANK;
 Hs <= Hsync;
 Vs <= Vsync;
-
 
 end rtl;

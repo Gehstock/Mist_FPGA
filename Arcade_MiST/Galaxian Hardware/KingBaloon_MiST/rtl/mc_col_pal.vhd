@@ -63,16 +63,9 @@ begin
 	---    COL ROM     --------------------------------------------------------
 --wire   W_COL_ROM_OEn = W_6M_DO[1];
 
---	galaxian_6l : entity work.GALAXIAN_6L
---	port map (
---		CLK  => I_CLK_12M,
---		ADDR => W_6M_DO(6 downto 2),
---		DATA => W_COL_ROM_DO
---	);
-	
 	galaxian_6l : entity work.sprom
 	generic map (
-		init_file  => "./ROM/prom.hex",
+		init_file  => "./ROM/col.hex",
 		widthad_a  => 5,
 		width_a  => 8)
 	port map (

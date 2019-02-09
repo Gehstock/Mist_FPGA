@@ -342,19 +342,9 @@ port map(
 		O_SDAT        => W_SDAT_B
 	);
 
---------- ROM           -------------------------------------------------------
---	mc_roms : entity work.ROM_PGM_0
---	port map (
---		CLK  => W_CLK_12M,
---		ADDR => W_A(13 downto 0),
---		DATA => W_CPU_ROM_DO
---	);
-
-
-
 	mc_roms : entity work.sprom
 	generic map (
-		init_file  => "./ROM/kb_prog.hex",
+		init_file  => "./ROM/prog.hex",
 		widthad_a  => 14,
 		width_a  => 8)
 	port map (

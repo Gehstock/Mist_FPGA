@@ -19,68 +19,44 @@ module ace_mist(
    input         SPI_SS2,
    input         SPI_SS3,
 	input         SPI_SS4,
-   input         CONF_DATA0,
-   output [12:0] SDRAM_A,
-   inout  [15:0] SDRAM_DQ,
-   output        SDRAM_DQML,
-   output        SDRAM_DQMH,
-   output        SDRAM_nWE,
-   output        SDRAM_nCAS,
-   output        SDRAM_nRAS,
-   output        SDRAM_nCS,
-   output  [1:0] SDRAM_BA,
-   output        SDRAM_CLK,
-   output        SDRAM_CKE
+   input         CONF_DATA0
     );
 	 
 `include "rtl\build_id.v" 
 	 
 localparam CONF_STR = {
 		  "Jupiter ACE;;",
+		  "F,ACE;",
 		  "O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+		  "O67,CPU Speed,Normal,x2,x4;",
 		  "T5,Reset;",
-		  "V,v0.2.",`BUILD_DATE
+		  "V,v0.5.",`BUILD_DATE
 		};
 
 wire			clk_sys;
-wire 			clk_65;
-wire 			clk_cpu;
 wire        clk_sdram;
 wire 			locked;
 wire        scandoubler_disable;
 wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
-
+wire [10:0] ps2_key;
+assign LED = ~ioctl_download;
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire 			audio;
-wire 			TapeIn;
-wire 			TapeOut;
-wire 			HSync, VSync;
+wire 			HSync, VSync, HBlank, VBlank;
+wire 			blankn = ~(HBlank | VBlank);
 wire 			video;
-wire 	[7:0] kbd_rows;
-wire 	[4:0] kbd_columns;
+wire        ioctl_download;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
+reg         ioctl_wait = 0;
 	
 pll pll(
-	.areset(),
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),//26.0Mhz
-	.c1(clk_65),//6.5Mhz
-	.c2(clk_cpu),//3.25Mhz
-	.c3(SDRAM_CLK),//100Mhz
-	.locked(locked)
+	.c0(clk_sys)
 	);
 
-reg [7:0] reset_cnt;
-always @(posedge clk_sys) begin
-	if(!locked || buttons[1] || status[0] || status[5])
-		reset_cnt <= 8'h0;
-	else if(reset_cnt != 8'd255)
-		reset_cnt <= reset_cnt + 8'd1;
-end 
-
-wire reset = (reset_cnt != 8'd255);
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 (
@@ -96,15 +72,19 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.scandoubler_disable(scandoubler_disable),
 	.ypbpr(ypbpr),
 	.status(status),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data)
+	.ps2_key(ps2_key),
+	.ioctl_download(ioctl_download),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_dout(ioctl_dout),
+	.ioctl_wait(ioctl_wait)
 );
 
-video_mixer #(.LINE_LENGTH(800), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(280), .HALF_DEPTH(1)) video_mixer
 (
 	.clk_sys(clk_sys),
-	.ce_pix(clk_65),
-	.ce_pix_actual(clk_65),
+	.ce_pix(ce_pix),
+	.ce_pix_actual(ce_pix),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -113,12 +93,12 @@ video_mixer #(.LINE_LENGTH(800), .HALF_DEPTH(1)) video_mixer
 	.hq2x(status[4:3]==1),
 	.ypbpr(ypbpr),
 	.ypbpr_full(1),
-	.R({video,video,1'b0}),
-	.G({video,video,1'b0}),
-	.B({video,video,1'b0}),
-	.mono(1),
-	.HSync(HSync),
-	.VSync(VSync),
+	.R(blankn ? {video,video,video} : "000"),
+	.G(blankn ? {video,video,video} : "000"),
+	.B(blankn ? {video,video,video} : "000"),
+	.mono(0),
+	.HSync(~HSync),
+	.VSync(~VSync),
 	.line_start(0),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
@@ -127,79 +107,118 @@ video_mixer #(.LINE_LENGTH(800), .HALF_DEPTH(1)) video_mixer
 	.VGA_HS(VGA_HS)
 );
 
-wire [14:0]sd_addr;
-wire [7:0]sd_dout;
-wire [7:0]sd_din;
-wire sd_we;
-wire sd_rd;
-wire sd_ready;
+wire [1:0] turbo = status[7:6];
 
-sram sram(
-	.SDRAM_DQ(SDRAM_DQ),
-	.SDRAM_A(SDRAM_A),
-	.SDRAM_DQML(SDRAM_DQML),
-	.SDRAM_DQMH(SDRAM_DQMH),
-	.SDRAM_BA(SDRAM_BA),
-	.SDRAM_nCS(SDRAM_nCS),
-	.SDRAM_nWE(SDRAM_nWE),
-	.SDRAM_nRAS(SDRAM_nRAS),
-	.SDRAM_nCAS(SDRAM_nCAS),
-	.SDRAM_CKE(SDRAM_CKE),
-	.init(~locked),
-	.clk_sdram(SDRAM_CLK),			
-	.addr({10'b0000000000,sd_addr}),   // 25 bit address
-	.dout(sd_dout),	// data output to cpu
-	.din(sd_din),     // data input from cpu
-	.we(sd_we),       // cpu requests write
-	.rd(sd_rd),       // cpu requests read
-	.ready(sd_ready)
-);
+reg ce_pix;
+reg ce_cpu;
+always @(negedge clk_sys) begin
+	reg [2:0] div;
 
-
-jupiter_ace jupiter_ace
-(
-   .clk_65(clk_65),
-   .clk_cpu(clk_cpu),
-   .reset(~reset),
-   .filas(kbd_rows),
-   .columnas(kbd_columns),
-   .video(video),
-   .hsync(HSync),
+	div <= div + 1'd1;
+	ce_pix <= !div[1:0];
+	ce_cpu <= (!div[2:0] && !turbo) | (!div[1:0] && turbo[0]) | turbo[1];
+end
+wire reset = ~(buttons[1] || status[0] || status[5]);
+wire spk, mic;
+jupiter_ace jupiter_ace(
+	.clk(clk_sys),
+	.ce_pix(ce_pix),
+	.ce_cpu(ce_cpu),
+	.no_wait(|turbo),
+	.reset(reset|loader_reset),
+	.kbd_row(kbd_row),
+	.kbd_col(kbd_col),
+	.video_out(video),
+	.hsync(HSync),
 	.vsync(VSync),
-   .ear(UART_RX),//Play
-   .mic(UART_TX),//Record
-   .spk(audio),
-	.sd_addr(sd_addr),
-	.sd_dout(sd_dout),
-	.sd_din(sd_din),
-	.sd_we(sd_we),
-	.sd_rd(sd_rd),
-	.sd_ready(sd_ready)
+	.hblank(HBlank),
+	.vblank(VBlank),
+	.mic(mic),
+	.spk(spk),
+	.loader_en(loader_en),
+	.loader_addr(loader_addr),
+	.loader_data(loader_data),
+	.loader_wr(loader_wr)
 );
 
 sigma_delta_dac sigma_delta_dac
 (	
 	.DACout(AUDIO_L),
-	.DACin({audio}),
-	.CLK(clk_65),
-	.RESET(0)
+	.DACin({1'b0, spk, mic, 13'd0}),
+	.CLK(clk_sys),
+	.RESET(reset)
 );
 
 assign AUDIO_R = AUDIO_L;
-	
-keyboard keyboard
-(
-   .clk(clk_65),
-   .clkps2(ps2_kbd_clk),
-   .dataps2(ps2_kbd_data),
-   .rows(kbd_rows),
-   .columns(kbd_columns),
-   .kbd_reset(),
-   .kbd_nmi(),
-   .kbd_mreset()        
+wire [7:0] kbd_row;
+wire [4:0] kbd_col;
+
+keyboard keyboard(
+	.reset(reset),
+	.clk_sys(clk_sys),
+	.ps2_key(ps2_key),
+	.kbd_row(kbd_row),
+	.kbd_col(kbd_col)
 );
 
+reg [15:0] loader_addr;
+reg  [7:0] loader_data;
+reg        loader_wr;
+reg        loader_en;
+reg        loader_reset = 0;
 
+always @(posedge clk_sys) begin
+	reg [7:0] cnt = 0;
+	reg [1:0] status = 0;
+	reg       old_download;
+	integer   timeout = 0;
+
+	old_download <= ioctl_download;
+	
+	loader_reset <= 0;
+	if(~old_download && ioctl_download) begin
+		loader_addr <= 'h2000;
+		status <= 0;
+		loader_reset <=1;
+		ioctl_wait <= 1;
+		timeout <= 3000000;
+		cnt <= 0;
+	end
+	
+	loader_wr <= 0;
+	if(loader_wr) loader_addr <= loader_addr + 1'd1;
+
+	if(ioctl_wr) begin
+		loader_en <= 1;
+		case(status)
+			0: if(ioctl_dout == 'hED) status <= 1;
+				else begin
+					loader_wr <= 1;
+					loader_data <= ioctl_dout;
+				end
+			1: begin
+					cnt <= ioctl_dout;
+					status <= ioctl_dout ? 2'd2 : 2'd3; // cnt = 0 => stop
+				end
+			2: begin
+					loader_data <= ioctl_dout;
+					ioctl_wait <= 1;
+				end
+		endcase
+	end
+
+	if(ioctl_wait && !loader_wr) begin
+		if(cnt) begin
+			cnt <= cnt - 1'd1;
+			loader_wr <= 1;
+		end
+		else if(timeout) timeout <= timeout - 1;
+		else {status,ioctl_wait} <= 0;
+	end
+
+	if(old_download & ~ioctl_download) loader_en <= 0;
+	if(reset) ioctl_wait <= 0;
+end
 
 
 endmodule

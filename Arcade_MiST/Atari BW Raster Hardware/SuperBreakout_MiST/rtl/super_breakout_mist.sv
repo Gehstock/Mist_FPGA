@@ -37,7 +37,7 @@ wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [7:0] audio;
 wire			video;
-
+assign LED = 1'b1;
 wire clk_24, clk_12, clk_6;
 wire locked;
 pll pll
@@ -48,6 +48,16 @@ pll pll
 	.c2(clk_6),//6.048
 	.locked(locked)
 );
+
+wire m_up     = (kbjoy[3] | joystick_0[3] | joystick_1[3]);
+wire m_down   = (kbjoy[2] | joystick_0[2] | joystick_1[2]);
+wire m_left   = (kbjoy[1] | joystick_0[1] | joystick_1[1]);
+wire m_right  = (kbjoy[0] | joystick_0[0] | joystick_1[0]);
+
+wire m_fire   = ~(kbjoy[4] | joystick_0[4] | joystick_1[4]);
+wire m_start1 = ~(kbjoy[5]);
+wire m_start2 = ~(kbjoy[6]);
+wire m_coin = ~(kbjoy[7]);
 
 
 super_breakout super_breakout (
@@ -60,17 +70,17 @@ super_breakout super_breakout (
 	.HB(hb),
 	.Video_O(video),			
 	.Audio_O(audio),
-	.Coin1_I(~kbjoy[7]),
-	.Coin2_I(~kbjoy[7]),
-	.Start1_I(~kbjoy[5]),
-	.Start2_I(~kbjoy[6]),
+	.Coin1_I(m_coin),
+	.Coin2_I(1'b1),
+	.Start1_I(m_start1),
+	.Start2_I(m_start2),
 	.Select1_I(),
 	.Select2_I(),
 	.Enc_A(),
 	.Enc_B(),
 	.Pot_Comp1_I(),
 	.Slam_I(),
-	.Serve_I(~kbjoy[4]),
+	.Serve_I(m_fire),
 	.Test_I(~status[1]),	
 	.Lamp1_O(),
 	.Lamp2_O(),
@@ -79,7 +89,7 @@ super_breakout super_breakout (
 	);
 
 dac dac (
-	.CLK(clk_48),
+	.CLK(clk_24),
 	.RESET(1'b0),
 	.DACin(audio),
 	.DACout(AUDIO_L)
@@ -90,7 +100,7 @@ assign AUDIO_R = AUDIO_L;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
+video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
@@ -98,9 +108,9 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(1)) video_mixer
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({video,video,video}),
-	.G({video,video,video}),
-	.B({video,video,video}),
+	.R({video,video,video,video,video,video}),
+	.G({video,video,video,video,video,video}),
+	.B({video,video,video,video,video,video}),
 //	.R(blankn ? {video,video,video} : "000"),
 //	.G(blankn ? {video,video,video} : "000"),
 //	.B(blankn ? {video,video,video} : "000"),

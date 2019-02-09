@@ -31,16 +31,14 @@ entity sprint2 is
 port(		
 			clk_12		: in	std_logic;	-- 12MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
-			Video		: out std_logic_vector(1 downto 0);
+			Video			: out std_logic_vector(1 downto 0);
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
 			Audio1_O		: out std_logic_vector(6 downto 0);  -- Ideally this should have a simple low pass filter
-			Audio2_O		: out std_logic_vector(6 downto 0);
-			
+			Audio2_O		: out std_logic_vector(6 downto 0);			
 			Hs				: out std_logic;
 			Vs				: out std_logic;
 			Vb				: out std_logic;			
 			Hb				: out std_logic;	
-
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
 			Start1_I		: in  std_logic;  -- Start buttons
@@ -322,16 +320,12 @@ port map(
 		);
 
 -- Video mixing	
---VideoB_O <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
---VideoW_O <= not(WhitePF_n and Car1_n and Car3_4_n);  
+Video(0) <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
+Video(1) <= not(WhitePF_n and Car1_n and Car3_4_n);  
 Sync_O <= CompSync_n_s;
-
-
 Vb <= VBLANK;
 Hb <= HBLANK;
 Hs <= Hsync;
 Vs <= Vsync;
-Video(0) <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
-Video(1) <= not(WhitePF_n and Car1_n and Car3_4_n);  
 
 end rtl;

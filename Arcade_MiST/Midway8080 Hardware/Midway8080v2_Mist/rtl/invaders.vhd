@@ -210,20 +210,20 @@ begin
 	GDB1(0) <= not Coin;-- Active High !
 	GDB1(1) <= not Sel2Player;
 	GDB1(2) <= not Sel1Player;
-	GDB1(3) <= '1';             -- Unused ?
+	GDB1(3) <= '1';-- Unused ?
 	GDB1(4) <= not Fire;
 	GDB1(5) <= not MoveLeft;
 	GDB1(6) <= not MoveRight;
-	GDB1(7) <= '1';             -- Unused ?
+	GDB1(7) <= '1';-- Unused ?
 
 	GDB2(0) <= DIP(4);  -- LSB Lives 3-6
 	GDB2(1) <= DIP(3);  -- MSB Lives 3-6
-	GDB2(2) <= '0';             -- Tilt ?
-	GDB2(3) <= DIP(2);  -- Bonus life at 1000 or 1500
+	GDB2(2) <= '0';-- Tilt ?
+	GDB2(3) <= '0';--DIP(2);  -- Bonus life at 1000 or 1500
 	GDB2(4) <= not Fire;
 	GDB2(5) <= not MoveLeft;
 	GDB2(6) <= not MoveRight;
-	GDB2(7) <= DIP(1);  -- Coin info
+	GDB2(7) <= '1';--DIP(1);  -- Coin info
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';

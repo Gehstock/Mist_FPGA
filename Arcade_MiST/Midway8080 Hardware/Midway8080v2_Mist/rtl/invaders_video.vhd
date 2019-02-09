@@ -6,7 +6,8 @@ library ieee;
 
 entity invaders_video is
 	port(
-		Video             : in    std_logic;	
+		Video             : in    std_logic;
+		Overlay           : in    std_logic;
 		CLK               : in    std_logic;
 		Rst_n_s           : in    std_logic;
 		HSync             : in    std_logic;
@@ -116,9 +117,9 @@ begin
   end process;
 
 
-  O_VIDEO_R <= VideoRGB(2);
-  O_VIDEO_G <= VideoRGB(1);
-  O_VIDEO_B <= VideoRGB(0);
+  O_VIDEO_R <= VideoRGB(2) when (Overlay = '1') else VideoRGB(0) or VideoRGB(1) or VideoRGB(2);
+  O_VIDEO_G <= VideoRGB(1) when (Overlay = '1') else VideoRGB(0) or VideoRGB(1) or VideoRGB(2);
+  O_VIDEO_B <= VideoRGB(0) when (Overlay = '1') else VideoRGB(0) or VideoRGB(1) or VideoRGB(2);
   O_HSYNC   <= not HSync;
   O_VSYNC   <= not VSync;
 

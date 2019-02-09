@@ -1,21 +1,25 @@
 `define generic
+//`define noDIP
 `define invaders
 `ifdef invaders 
 	`define dip = 8'b00000000 
 `endif
+
 //`define supearth
 `ifdef supearth 
 	`define dip = 8'b11000000 //4 lifes check this
 `endif
+
 //`define slaser
 `ifdef slaser 
 	`define dip = 8'b00000000 //untested
 `endif
 
-//`define sflush
-`ifdef sflush 
-	`define dip = 8'b00000000 //untested
+//`define blueshark  Sync Problems
+`ifdef blueshark 
+	`define dip = "00100100" //todo
 `endif
+
 //TODO
 //`define lrescue
 
@@ -58,9 +62,11 @@ localparam CONF_STR = {
 `ifdef invaders "Space Inv.;;", `endif
 `ifdef supearth "SEarthInv.;;", `endif
 `ifdef slaser "Space Laser;;", `endif
-	"Midway 8080.;;",
+`ifdef blueshark "Blue Shark;;", `endif
+`ifdef noDIP "Midway 8080.;;", `endif
 	"O2,Joystick Control,Upright,Normal;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O5,Overlay, On, Off;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -221,6 +227,7 @@ invaders_audio invaders_audio (
 	  
 invaders_video invaders_video (
 	.Video(Video),
+	.Overlay(~status[5]),
 	.CLK(clk_sys),
 	.Rst_n_s(Rst_n_s),
 	.HSync(HSync),

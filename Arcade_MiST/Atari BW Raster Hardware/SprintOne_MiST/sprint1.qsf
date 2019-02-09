@@ -154,6 +154,8 @@ set_global_assignment -name VHDL_FILE rtl/playfield.vhd
 set_global_assignment -name VHDL_FILE rtl/EngineSound.vhd
 set_global_assignment -name VHDL_FILE rtl/Inputs.vhd
 set_global_assignment -name VHDL_FILE rtl/motion.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gearshift.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/joy2quad.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/scandoubler.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/osd.sv

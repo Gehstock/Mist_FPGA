@@ -93,19 +93,42 @@ P3_6 <= (HBlank or VBlank);
 char_addr <= display(5 downto 0) & V4 & V2 & V1;
 
 -- Background character ROMs
-R4: entity work.Char_MSB
+R4: entity work.sprom
+generic map(
+		init_file => "rtl/roms/6397-01r4.hex",
+		widthad_a => 9,
+		width_a => 4)
 port map(
-	clock => clk6,
-	Address => char_addr,
-	q => char_data(3 downto 0) 
-	);
+		clock => clk6,
+		Address => char_addr,
+		q => char_data(3 downto 0) 
+		);
+		
+--R4: entity work.Char_MSB
+--port map(
+--	clock => clk6,
+--	Address => char_addr,
+--	q => char_data(3 downto 0) 
+--	);
 
-P4: entity work.Char_LSB
+P4: entity work.sprom
+generic map(
+		init_file => "rtl/roms/6396-01p4.hex",
+		widthad_a => 9,
+		width_a => 4)
 port map(
-	clock => clk6,
-	Address => char_addr,
-	q => char_data(7 downto 4) 
-	);
+		clock => clk6,
+		Address => char_addr,
+		q => char_data(7 downto 4) 
+		);
+
+--P4: entity work.Char_LSB
+--port map(
+--	clock => clk6,
+--	Address => char_addr,
+--	q => char_data(7 downto 4) 
+--	);
+
 
 
 -- 74LS166 video shift register	
