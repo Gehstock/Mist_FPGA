@@ -1,4 +1,0 @@
-Info (10281): Verilog HDL Declaration information at mist_io.v(47): object "SPI_DO" differs only in case from object "spi_do" in the same scope
-Warning (10268): Verilog HDL information at scandoubler.v(102): always construct contains both blocking and non-blocking assignments
-Info (10281): Verilog HDL Declaration information at scandoubler.v(29): object "hq2x" differs only in case from object "Hq2x" in the same scope
-Warning (10273): Verilog HDL warning at hq2x.sv(247): extended using "x" or "z"
