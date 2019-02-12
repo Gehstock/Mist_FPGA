@@ -37,7 +37,7 @@ wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [7:0] audio;
 wire			video;
-assign LED = 1'b1;
+//assign LED = 1'b1;
 wire clk_24, clk_12, clk_6;
 wire locked;
 pll pll
@@ -55,9 +55,18 @@ wire m_left   = (kbjoy[1] | joystick_0[1] | joystick_1[1]);
 wire m_right  = (kbjoy[0] | joystick_0[0] | joystick_1[0]);
 
 wire m_fire   = ~(kbjoy[4] | joystick_0[4] | joystick_1[4]);
-wire m_start1 = ~(kbjoy[5]);
-wire m_start2 = ~(kbjoy[6]);
+wire m_start = ~(kbjoy[5] | kbjoy[6]);
 wire m_coin = ~(kbjoy[7]);
+
+wire [1:0] steer;
+joy2quad steer1
+(
+	.CLK(clk_24),
+	.clkdiv('d22500),	
+	.right(m_right),
+	.left(m_left),	
+	.steer(steer)
+);
 
 
 super_breakout super_breakout (
@@ -72,19 +81,19 @@ super_breakout super_breakout (
 	.Audio_O(audio),
 	.Coin1_I(m_coin),
 	.Coin2_I(1'b1),
-	.Start1_I(m_start1),
-	.Start2_I(m_start2),
+	.Start1_I(m_start),
+	.Start2_I(1'b1),
 	.Select1_I(),
 	.Select2_I(),
-	.Enc_A(),
-	.Enc_B(),
+	.Enc_A(steer[1]),
+	.Enc_B(steer[0]),
 	.Pot_Comp1_I(),
-	.Slam_I(),
+	.Slam_I(1'b1),
 	.Serve_I(m_fire),
 	.Test_I(~status[1]),	
 	.Lamp1_O(),
 	.Lamp2_O(),
-	.Serve_LED_O(),
+	.Serve_LED_O(LED),
 	.Counter_O()
 	);
 

@@ -97,11 +97,22 @@ end process;
 
 -- Original circuit used a bipolar PROM to decode sync signals
 -- This has been replaced here by combinatorial logic
-M2: entity work.prom
+M2: entity work.sprom
+generic map(
+		init_file => "rtl/roms/6400-01m2.hex",
+		widthad_a => 8,
+		width_a => 4)
 port map(
+		clock => clk_12, 
 		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
-		data => sync_bus
+		q => sync_bus
 		);
+
+--M2: entity work.prom
+--port map(
+--		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
+--		data => sync_bus
+--		);
 
 -- Register fed by the sync PROM, in the original hardware this also creates the complements of these signals
 sync_register: process(hsync)

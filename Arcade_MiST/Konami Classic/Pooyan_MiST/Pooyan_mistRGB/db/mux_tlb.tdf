@@ -1,0 +1,53 @@
+--lpm_mux CBX_DECLARE_ALL_CONNECTED_PORTS="OFF" DEVICE_FAMILY="Cyclone III" LPM_SIZE=4 LPM_WIDTH=8 LPM_WIDTHS=2 data result sel
+--VERSION_BEGIN 13.0 cbx_lpm_mux 2013:06:12:18:03:43:SJ cbx_mgl 2013:06:12:18:05:10:SJ  VERSION_END
+
+
+-- Copyright (C) 1991-2013 Altera Corporation
+--  Your use of Altera Corporation's design tools, logic functions 
+--  and other software and tools, and its AMPP partner logic 
+--  functions, and any output files from any of the foregoing 
+--  (including device programming or simulation files), and any 
+--  associated documentation or information are expressly subject 
+--  to the terms and conditions of the Altera Program License 
+--  Subscription Agreement, Altera MegaCore Function License 
+--  Agreement, or other applicable license agreement, including, 
+--  without limitation, that your use is for the sole purpose of 
+--  programming logic devices manufactured by Altera and sold by 
+--  Altera or its authorized distributors.  Please refer to the 
+--  applicable agreement for further details.
+
+
+
+--synthesis_resources = lut 16 
+SUBDESIGN mux_tlb
+( 
+	data[31..0]	:	input;
+	result[7..0]	:	output;
+	sel[1..0]	:	input;
+) 
+VARIABLE 
+	result_node[7..0]	: WIRE;
+	sel_node[1..0]	: WIRE;
+	w_data187w[3..0]	: WIRE;
+	w_data217w[3..0]	: WIRE;
+	w_data242w[3..0]	: WIRE;
+	w_data267w[3..0]	: WIRE;
+	w_data292w[3..0]	: WIRE;
+	w_data317w[3..0]	: WIRE;
+	w_data342w[3..0]	: WIRE;
+	w_data367w[3..0]	: WIRE;
+
+BEGIN 
+	result[] = result_node[];
+	result_node[] = ( (((w_data367w[1..1] & sel_node[0..0]) & (! (((w_data367w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data367w[2..2]))))) # ((((w_data367w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data367w[2..2]))) & (w_data367w[3..3] # (! sel_node[0..0])))), (((w_data342w[1..1] & sel_node[0..0]) & (! (((w_data342w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data342w[2..2]))))) # ((((w_data342w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data342w[2..2]))) & (w_data342w[3..3] # (! sel_node[0..0])))), (((w_data317w[1..1] & sel_node[0..0]) & (! (((w_data317w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data317w[2..2]))))) # ((((w_data317w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data317w[2..2]))) & (w_data317w[3..3] # (! sel_node[0..0])))), (((w_data292w[1..1] & sel_node[0..0]) & (! (((w_data292w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data292w[2..2]))))) # ((((w_data292w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data292w[2..2]))) & (w_data292w[3..3] # (! sel_node[0..0])))), (((w_data267w[1..1] & sel_node[0..0]) & (! (((w_data267w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data267w[2..2]))))) # ((((w_data267w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data267w[2..2]))) & (w_data267w[3..3] # (! sel_node[0..0])))), (((w_data242w[1..1] & sel_node[0..0]) & (! (((w_data242w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data242w[2..2]))))) # ((((w_data242w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data242w[2..2]))) & (w_data242w[3..3] # (! sel_node[0..0])))), (((w_data217w[1..1] & sel_node[0..0]) & (! (((w_data217w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data217w[2..2]))))) # ((((w_data217w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data217w[2..2]))) & (w_data217w[3..3] # (! sel_node[0..0])))), (((w_data187w[1..1] & sel_node[0..0]) & (! (((w_data187w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data187w[2..2]))))) # ((((w_data187w[0..0] & (! sel_node[1..1])) & (! sel_node[0..0])) # (sel_node[1..1] & (sel_node[0..0] # w_data187w[2..2]))) & (w_data187w[3..3] # (! sel_node[0..0])))));
+	sel_node[] = ( sel[1..0]);
+	w_data187w[] = ( data[24..24], data[16..16], data[8..8], data[0..0]);
+	w_data217w[] = ( data[25..25], data[17..17], data[9..9], data[1..1]);
+	w_data242w[] = ( data[26..26], data[18..18], data[10..10], data[2..2]);
+	w_data267w[] = ( data[27..27], data[19..19], data[11..11], data[3..3]);
+	w_data292w[] = ( data[28..28], data[20..20], data[12..12], data[4..4]);
+	w_data317w[] = ( data[29..29], data[21..21], data[13..13], data[5..5]);
+	w_data342w[] = ( data[30..30], data[22..22], data[14..14], data[6..6]);
+	w_data367w[] = ( data[31..31], data[23..23], data[15..15], data[7..7]);
+END;
+--VALID FILE

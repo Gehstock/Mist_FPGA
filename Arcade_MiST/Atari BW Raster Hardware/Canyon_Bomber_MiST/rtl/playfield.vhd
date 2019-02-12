@@ -91,14 +91,24 @@ CompBlank_n <= VBlank nor (HBlank);-- or H256_s and V128));
 
 
 char_addr <= display(5 downto 0) & V4 & V2 & V1 & (not H4);
+N8: entity work.sprom
+generic map(
+		init_file => "./roms/9492-01.n8.hex",
+		widthad_a => 10,
+		width_a => 4)
+port map(
+		clock => clk6, 
+		address => char_addr,
+		q => char_data
+		);
 
 -- Background character ROM
-N8: entity work.Char_ROM
-port map(
-	clock => clk6,
-	Address => char_addr,
-	q => char_data
-	);
+--N8: entity work.Char_ROM
+--port map(
+--	clock => clk6,
+--	Address => char_addr,
+--	q => char_data
+--	);
 
 
 -- 74LS195 video shift register	

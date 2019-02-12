@@ -1,0 +1,9 @@
+
+State Machine - |Pooyan_MiST|dpSDRAM256Mb:mram|SdrRoutine_v
+Name SdrRoutine_v.SdrRoutine_WriteOne SdrRoutine_v.SdrRoutine_ReadOne SdrRoutine_v.SdrRoutine_RefreshAll SdrRoutine_v.SdrRoutine_Idle SdrRoutine_v.SdrRoutine_Init SdrRoutine_v.SdrRoutine_Null 
+SdrRoutine_v.SdrRoutine_Null 0 0 0 0 0 0 
+SdrRoutine_v.SdrRoutine_Init 0 0 0 0 1 1 
+SdrRoutine_v.SdrRoutine_Idle 0 0 0 1 0 1 
+SdrRoutine_v.SdrRoutine_RefreshAll 0 0 1 0 0 1 
+SdrRoutine_v.SdrRoutine_ReadOne 0 1 0 0 0 1 
+SdrRoutine_v.SdrRoutine_WriteOne 1 0 0 0 0 1 

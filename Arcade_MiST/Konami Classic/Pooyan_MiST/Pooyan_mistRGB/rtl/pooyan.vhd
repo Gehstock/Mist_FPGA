@@ -84,6 +84,10 @@ port(
  video_hs       : out std_logic;
  video_vs       : out std_logic;
  audio_out      : out std_logic_vector(10 downto 0);
+ wram_addr      : out std_logic_vector(11 downto 0);
+ wram_we       : out std_logic;
+ wram_di      : out std_logic_vector(7 downto 0);
+ wram_do      : in std_logic_vector(7 downto 0);
 
  dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B / Coinage_A
  dip_switch_2   : in std_logic_vector(7 downto 0); -- Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
@@ -141,10 +145,10 @@ architecture struct of pooyan is
 
  signal cpu_rom_do : std_logic_vector( 7 downto 0);
  
- signal wram_addr  : std_logic_vector(11 downto 0);
- signal wram_we    : std_logic;
- signal wram_do    : std_logic_vector( 7 downto 0);
- 
+ --signal wram_addr  : std_logic_vector(11 downto 0);
+ --signal wram_we    : std_logic;
+ --signal wram_di    : std_logic_vector( 7 downto 0);
+ --signal wram_do    : std_logic_vector( 7 downto 0); 
  signal ch_graphx_addr_f: std_logic_vector(11 downto 0);
  signal ch_graphx_addr  : std_logic_vector(11 downto 0);
  signal ch_graphx1_do   : std_logic_vector( 7 downto 0);
@@ -215,6 +219,7 @@ reset_n   <= not reset;
 -- debug 
 process (reset, clock_12)
 begin
+wram_di <= cpu_do;
  if rising_edge(clock_12) and cpu_ena ='1' and cpu_mreq_n ='0' then
    dbg_cpu_addr <= cpu_addr;
  end if;
@@ -692,16 +697,16 @@ port map(
  data => cpu_rom_do
 );
 
--- working/char RAM   0x8000-0x8FFF
-wram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 12)
-port map(
- clk  => clock_6n,
- we   => wram_we,
- addr => wram_addr,
- d    => cpu_do,
- q    => wram_do
-);
+--working/char RAM   0x8000-0x8FFF
+--wram : entity work.gen_ram
+--generic map( dWidth => 8, aWidth => 12)--12
+--port map(
+-- clk  => clock_6n,
+-- we   => wram_we,
+-- addr => wram_addr(11 downto 0),
+-- d    => wram_di,
+-- q    => wram_do
+--);
 
 -- sprite RAM1    0x9000-0x90FF
 spram1 : entity work.gen_ram
@@ -805,17 +810,14 @@ port map(
 
 
 -- sound board
-pooyan_sound_board : entity work.pooyan_sound_board
-port map(
- clock_14     => clock_14,
- reset        => reset,
-
- sound_trig   => sound_trig,
- sound_cmd    => sound_cmd,
- 
- audio_out    => audio_out,
- 
- dbg_cpu_addr => open
- );
+--pooyan_sound_board : entity work.pooyan_sound_board
+--port map(
+-- clock_14     => clock_14,
+-- reset        => reset,
+-- sound_trig   => sound_trig,
+-- sound_cmd    => sound_cmd,
+-- audio_out    => audio_out,
+-- dbg_cpu_addr => open
+-- );
 
 end struct;

@@ -241,26 +241,59 @@ end process;
 		
 
 -- Program ROMs
-J1: entity work.prog_rom3L
+J1: entity work.sprom
+generic map(
+		init_file => "./roms/9499-01.j1.hex",
+		widthad_a => 10,
+		width_a => 4)
 port map(
-		clock => clk6,
+		clock => clk6, 
 		address => Adr(9 downto 0),
 		q => rom3_dout(3 downto 0)
 		);
 
-P1: entity work.prog_rom3H
+--J1: entity work.prog_rom3L
+--port map(
+--		clock => clk6,
+--		address => Adr(9 downto 0),
+--		q => rom3_dout(3 downto 0)
+--		);
+
+P1: entity work.sprom
+generic map(
+		init_file => "./roms/9503-01.p1.hex",
+		widthad_a => 10,
+		width_a => 4)
 port map(
-		clock => clk6,
+		clock => clk6, 
 		address => Adr(9 downto 0),
 		q => rom3_dout(7 downto 4)
 		);
 		
-D1: entity work.progROM4
+--P1: entity work.prog_rom3H
+--port map(
+--		clock => clk6,
+--		address => Adr(9 downto 0),
+--		q => rom3_dout(7 downto 4)
+--		);
+
+D1: entity work.sprom
+generic map(
+		init_file => "./roms/9496-01.d1.hex",
+		widthad_a => 11,
+		width_a => 8)
 port map(
-		clock => clk6,
+		clock => clk6, 
 		address => Adr(10 downto 0),
 		q => rom4_dout
 		);
+		
+--D1: entity work.progROM4
+--port map(
+--		clock => clk6,
+--		address => Adr(10 downto 0),
+--		q => rom4_dout
+--		);
 
 -- ROM data mux
 ROM_dout <= ROM3_dout when ROM3 = '1' and Adr(10) = '1' else

@@ -140,7 +140,6 @@ wire m_right  = (kbjoy[0] | joystick_0[0] | joystick_1[0]);
 
 wire m_fire   = ~(kbjoy[4] | joystick_0[4] | joystick_1[4]);
 wire m_start1 = ~(kbjoy[5]);
-wire m_start2 = ~(kbjoy[6]);
 wire m_coin = ~(kbjoy[7]);
 wire m_gearup = (kbjoy[8] | joystick_0[5] | joystick_1[5]);
 wire m_geardown = (kbjoy[9] | joystick_0[6] | joystick_1[6]);

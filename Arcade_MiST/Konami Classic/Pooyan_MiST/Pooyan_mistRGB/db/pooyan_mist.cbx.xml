@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<LOG_ROOT>
+	<PROJECT NAME="pooyan_mist">
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|gen_ram:spram2|altsyncram:ram_rtl_0" CBX_FILE_NAME="altsyncram_5b81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_sprite_color_lut:sp_palette|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_m191.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_out:hq2x_out|hq2x_buf:buf0|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_ebo1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|gen_ram:splinebuf2|altsyncram:ram_rtl_0" CBX_FILE_NAME="altsyncram_1b81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_char_grphx2:char_graphics_2|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_hh81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_sprite_grphx1:sp_graphics_1|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_2p81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_out:hq2x_out|hq2x_buf:buf1|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_ebo1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pll:pll|altpll:altpll_component" CBX_FILE_NAME="pll_altpll.v"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_in:hq2x_in|hq2x_buf:buf0|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_i8o1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_out:hq2x_out|hq2x_buf:buf2|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_ebo1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|gen_ram:spram1|altsyncram:ram_rtl_0" CBX_FILE_NAME="altsyncram_5b81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_char_color_lut:ch_palette|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_8t81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_char_grphx1:char_graphics_1|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_4g81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_sprite_grphx2:sp_graphics_2|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_3p81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|osd:osd|altsyncram:osd_buffer_rtl_0" CBX_FILE_NAME="altsyncram_dud1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_in:hq2x_in|hq2x_buf:buf1|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_i8o1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|video_mixer:video_mixer|scandoubler:scandoubler|Hq2x:Hq2x|hq2x_out:hq2x_out|hq2x_buf:buf3|altsyncram:altsyncram_component" CBX_FILE_NAME="altsyncram_ebo1.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|gen_ram:splinebuf1|altsyncram:ram_rtl_0" CBX_FILE_NAME="altsyncram_1b81.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|Pooyan_MiST|pooyan:pooyan|pooyan_prog:rom_cpu1|altsyncram:rom_data_rtl_0" CBX_FILE_NAME="altsyncram_is71.tdf"/>
+	</PROJECT>
+</LOG_ROOT>

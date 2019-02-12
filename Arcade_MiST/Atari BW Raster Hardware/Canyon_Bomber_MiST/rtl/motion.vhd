@@ -213,20 +213,42 @@ VidROMAdr <= Display(0)
 				& (Display(7) xor H2);
 
 				
---Motion object ROMs 
-M5: entity work.M5_rom
+--Motion object ROMs
+M5: entity work.sprom
+generic map(
+		init_file => "rtl/roms/9506-01.m5.hex",
+		widthad_a => 10,
+		width_a => 4)
 port map(
-	clock => clk6,
-	address => VidROMAdr,
-	q => VidROMdout(7 downto 4)
-	);
+		clock => clk6, 
+		address => VidROMAdr,
+		q => VidROMdout(7 downto 4)
+		);
+		
+--M5: entity work.M5_rom
+--port map(
+--	clock => clk6,
+--	address => VidROMAdr,
+--	q => VidROMdout(7 downto 4)
+--	);
 
-N5: entity work.N5_rom
+N5: entity work.sprom
+generic map(
+		init_file => "./roms/9505-01.n5.hex",
+		widthad_a => 10,
+		width_a => 4)
 port map(
-	clock => clk6,
-	address => VidROMAdr,
-	q => VidROMdout(3 downto 0)
-	);
+		clock => clk6, 
+		address => VidROMAdr,
+		q => VidROMdout(3 downto 0)
+		);
+		
+--N5: entity work.N5_rom
+--port map(
+--	clock => clk6,
+--	address => VidROMAdr,
+--	q => VidROMdout(3 downto 0)
+--	);
 
 	
 --Flip bit order of motion object ROMs with state of Display(7) to horizontally mirror ships

@@ -33,8 +33,7 @@ wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [11:0] kbjoy;
-wire  [7:0] joy0;
-wire  [7:0] joy1;
+wire  [7:0] joystick_0, joystick_1;
 wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
@@ -52,7 +51,16 @@ pll pll
 	.locked(locked)
 );
 
-assign LED = 1'b0;
+assign LED = 1'b1;
+
+wire m_up     = (kbjoy[3] | joystick_0[3] | joystick_1[3]);
+wire m_down   = (kbjoy[2] | joystick_0[2] | joystick_1[2]);
+wire m_left   = (kbjoy[1] | joystick_0[1] | joystick_1[1]);
+wire m_right  = (kbjoy[0] | joystick_0[0] | joystick_1[0]);
+wire m_fire   = ~(kbjoy[4] | joystick_0[4] | joystick_1[4]);
+wire m_start = ~(kbjoy[5] | kbjoy[6]);
+wire m_coin = ~(kbjoy[7]);
+
 
 canyon_bomber canyon_bomber (		
 	.clk_12(clk_12),
@@ -63,12 +71,12 @@ canyon_bomber canyon_bomber (
 	.VSync_O(vs),
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
-	.Coin1_I(~kbjoy[7]),
-	.Coin2_I(~kbjoy[7]),
-	.Start1_I(~(kbjoy[5])),
-	.Start2_I(~(kbjoy[6])),
-	.Fire1_I(~joy0[4]),
-	.Fire2_I(~joy1[4]),
+	.Coin1_I(m_coin),
+	.Coin2_I(1'b1),
+	.Start1_I(m_start),
+	.Start2_I(1'b1),
+	.Fire1_I(m_fire),
+	.Fire2_I(1'b1),
 	.Slam_I(~status[2]),
 	.Test_I(~status[1]),
 	.Lamp1_O(),
@@ -78,20 +86,14 @@ canyon_bomber canyon_bomber (
 dac dacl (
 	.CLK(clk_24),
 	.RESET(1'b0),
-	.DACin(audio1),
+	.DACin({audio1,audio2,2'b0}),
 	.DACout(AUDIO_L)
 	);
 	
-dac dacr (
-	.CLK(clk_24),
-	.RESET(1'b0),
-	.DACin(audio2),
-	.DACout(AUDIO_R)
-	);
-
+assign AUDIO_R = AUDIO_L;
 wire hs, vs;
-wire hb, vb;
-wire blankn = ~(hb | vb);
+//wire hb, vb;
+//wire blankn = ~(hb | vb);
 video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 (
 	.clk_sys(clk_24),
@@ -100,9 +102,9 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({video,video,video}),
-	.G({video,video,video}),
-	.B({video,video,video}),
+	.R({video,video,video,video,video,video}),
+	.G({video,video,video,video,video,video}),
+	.B({video,video,video,video,video,video}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -133,8 +135,8 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.ypbpr          (ypbpr          ),
 	.ps2_kbd_clk    (ps2_kbd_clk    ),
 	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joy0     		  ),
-	.joystick_1     (joy1     		  ),
+	.joystick_0   	 (joystick_0	  ),
+	.joystick_1     (joystick_1	  ),
 	.status         (status         )
 );
 

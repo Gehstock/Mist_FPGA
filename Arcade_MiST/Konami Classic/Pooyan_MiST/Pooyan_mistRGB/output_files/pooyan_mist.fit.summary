@@ -1,0 +1,16 @@
+Fitter Status : Successful - Sat Feb 09 20:50:19 2019
+Quartus II 64-Bit Version : 13.0.1 Build 232 06/12/2013 SP 1 SJ Full Version
+Revision Name : pooyan_mist
+Top-level Entity Name : Pooyan_MiST
+Family : Cyclone III
+Device : EP3C25E144C8
+Timing Models : Final
+Total logic elements : 4,435 / 24,624 ( 18 % )
+    Total combinational functions : 4,168 / 24,624 ( 17 % )
+    Dedicated logic registers : 1,238 / 24,624 ( 5 % )
+Total registers : 1238
+Total pins : 69 / 83 ( 83 % )
+Total virtual pins : 0
+Total memory bits : 486,912 / 608,256 ( 80 % )
+Embedded Multiplier 9-bit elements : 0 / 132 ( 0 % )
+Total PLLs : 1 / 4 ( 25 % )

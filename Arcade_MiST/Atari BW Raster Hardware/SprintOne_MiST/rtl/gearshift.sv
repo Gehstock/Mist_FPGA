@@ -16,7 +16,7 @@ module gearshift
 	
 	input gearup,
 	input geardown,
-	
+	output [1:0]gear_num,
 	output gear1,
 	output gear2,
 	output gear3
@@ -66,25 +66,28 @@ always @(posedge CLK) begin
 		gear1=0;
 		gear2=1;
 		gear3=1;
+		gear_num=2'b01;
 	end
 	3'b001:
 	begin
 		gear1=1;
 		gear2=0;
 		gear3=1;
-
+		gear_num=2'b10;
 	end
 	3'b010: 
 	begin
 		gear1=1;
 		gear2=1;
 		gear3=0;
+		gear_num=2'b11;
 	end
 	3'b011:
 	begin
 		gear1=1;
 		gear2=1;
 		gear3=1;
+		gear_num=2'b00;
 	end
 		endcase
 
