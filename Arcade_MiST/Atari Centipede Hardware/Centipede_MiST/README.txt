@@ -13,4 +13,3 @@
 --   SPACE 	: Fire or Fire Button
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
-Todo: Graphic Glitches

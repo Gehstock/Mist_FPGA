@@ -668,7 +668,7 @@ p6502 p6502(
 			
 sprom #(
 	.init_file("./roms/136001-212.hj7.hex"),
-	.widthad_a(10),
+	.widthad_a(11),
 	.width_a(8))
  pf_rom1(
 	.address(pf_rom1_addr),
@@ -678,7 +678,7 @@ sprom #(
 
 sprom #(
 	.init_file("./roms/136001-211.f7.hex"),
-	.widthad_a(10),
+	.widthad_a(11),
 	.width_a(8))
  pf_rom0(
 	.address(pf_rom0_addr),

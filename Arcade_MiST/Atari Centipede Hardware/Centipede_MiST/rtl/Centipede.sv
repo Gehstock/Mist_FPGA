@@ -46,7 +46,7 @@ localparam CONF_STR = {
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"O5,Joystick Control,Normal,Upright;",	
 	"T7,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.30.",`BUILD_DATE
 };
 
 wire [31:0] status;
