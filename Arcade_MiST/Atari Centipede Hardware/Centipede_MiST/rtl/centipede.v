@@ -780,8 +780,6 @@ sprom #(
    
 //   assign pf_ce4_n = { pf_ce_d, pf_ce_d, pf_ce_d, pf_ce_d };
    assign pf_ce4_n = 4'b0;
-	
-
 		 
    pf_ram pf_ram(
 		    .clk_a(s_6mhz),

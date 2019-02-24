@@ -80,9 +80,9 @@ wire m_left   = ~status[5] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjo
 wire m_right  = ~status[5] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0];
 
 wire m_start1 = ~kbjoy[1];
-wire m_start2 = ~kbjoy[2];
+wire m_start2 = 1'b1;
 wire m_fire1  = ~kbjoy[0] & ~joystick_0[4] & ~joystick_1[4];// & ~joystick_0[4] & ~joystick_1[4];
-wire m_fire2  = ~kbjoy[0] & ~joystick_0[5] & ~joystick_1[5];// & ~joystick_0[4] & ~joystick_1[4];
+wire m_fire2  = 1'b1;
 wire c_coin   = ~kbjoy[3];
 wire l_coin, r_coin = 1'b1;
 wire m_test = ~status[1];
@@ -93,7 +93,7 @@ centipede centipede(
 	.clk_100mhz(clk_100mhz),
 	.clk_12mhz(clk_12),
  	.reset(status[0] | status[7] | buttons[1]),
-	.playerinput_i({ r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire1, m_fire2 }),
+	.playerinput_i({ r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire2, m_fire1 }),
 	.trakball_i(),
 	.joystick_i({m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
 	.sw1_i(8'h54),
@@ -115,7 +115,7 @@ dac #(
 dac (
 	.clk_i(clk_24),
 	.res_n_i(1),
-	.dac_i({2{audio,audio}}),
+	.dac_i({4{audio,audio}}),
 	.dac_o(AUDIO_L)
 	);
 
