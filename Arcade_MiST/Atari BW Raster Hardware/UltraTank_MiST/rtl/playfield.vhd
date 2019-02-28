@@ -114,13 +114,6 @@ port map(
 		Address => char_addr,
 		q => char_data(3 downto 0) 
 		);
-		
---H6: entity work.Char_MSB
---port map(
---	clock => clk6,
---	Address => char_addr,
---	q => char_data(3 downto 0) 
---	);
 
 J6: entity work.sprom
 generic map(
@@ -132,14 +125,6 @@ port map(
 		Address => char_addr,
 		q => char_data(7 downto 4) 
 		);
-		
---J6: entity work.Char_LSB
---port map(
---	clock => clk6,
---	Address => char_addr,
---	q => char_data(7 downto 4) 
---	);
-	
 	
 -- 74LS166 video shift register	
 R3: process(clk6, R3_3, VBlank_n_s, char_data, shift_data)

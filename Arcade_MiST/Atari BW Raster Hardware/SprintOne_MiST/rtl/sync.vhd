@@ -109,13 +109,6 @@ port map(
 		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
 		q => sync_bus
 		);
-		
---M2: entity work.sync_prom
---port map(
---		clock => clk_12, 
---		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
---		q => sync_bus
---		);
 
 -- Register fed by the sync PROM, in the original hardware this also creates the complements of these signals
 sync_register: process(hsync_int)

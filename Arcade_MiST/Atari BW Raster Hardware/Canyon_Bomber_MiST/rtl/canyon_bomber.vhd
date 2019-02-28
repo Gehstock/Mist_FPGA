@@ -31,7 +31,7 @@ entity canyon_bomber is
 port(		
 			clk_12	: in	std_logic;	-- 50MHz input clock
 			Reset_I		: in	std_logic;	-- Reset button (Active low)
-			Video	: out 	std_logic_vector(1 downto 0);
+			RGB	: out 	std_logic_vector(7 downto 0);
 			Vblank_O		: out 	std_logic;
 			HBlank_O		: out 	std_logic;
 			HSync_O			: out 	std_logic;
@@ -68,9 +68,9 @@ signal HBlank		: std_logic;
 signal VBlank		: std_logic;
 signal HSync		: std_logic;
 signal VSync		: std_logic;
-signal Vblank_s		: std_logic;
+signal Vblank_s	: std_logic;
 signal Vblank_n_s	: std_logic;
-
+signal Video		: std_logic_vector(1 downto 0);
 signal CompBlank_n_s	: std_logic;
 
 signal CompSync_n_s	: std_logic;
@@ -237,4 +237,15 @@ HBlank_O <= HBlank;
 VBlank_O <= VBlank;
 HSync_O <= HSync;
 VSync_O <= VSync;
+
+VID: process(clk_12, Video)
+begin
+	case Video is
+		when "01" => RGB <= ("10000000");
+		when "10" => RGB <= ("01010000");
+		when "11" => RGB <= ("11111111");
+		when others => RGB <= ("00000000");
+	end case;
+end process;
+
 end rtl;

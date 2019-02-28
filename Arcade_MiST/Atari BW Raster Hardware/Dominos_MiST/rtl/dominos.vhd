@@ -35,7 +35,7 @@ port(
 			Vs				: out std_logic;
 			Vb				: out std_logic;			
 			Hb				: out std_logic;	
-			Video			: out std_logic_vector(1 downto 0);
+			RGB			: out std_logic_vector(7 downto 0);
 			Audio		   : out std_logic_vector(6 downto 0);  -- Ideally this should have a simple low pass filter
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
@@ -57,15 +57,15 @@ end dominos;
 
 architecture rtl of dominos is
 
-signal clk_6			: std_logic;
-signal phi1 			: std_logic;
+signal clk_6		: std_logic;
+signal phi1 		: std_logic;
 signal phi2			: std_logic;
-signal reset_n			: std_logic;
+signal reset_n		: std_logic;
 
-signal Hcount		        : std_logic_vector(8 downto 0) := (others => '0');
+signal Hcount		: std_logic_vector(8 downto 0) := (others => '0');
 signal H256			: std_logic;
-signal H256_s			: std_logic;
-signal H256_n			: std_logic;
+signal H256_s		: std_logic;
+signal H256_n		: std_logic;
 signal H128			: std_logic;
 signal H64			: std_logic;
 signal H32			: std_logic;
@@ -77,10 +77,10 @@ signal H4_n			: std_logic;
 signal H2			: std_logic;
 signal H1			: std_logic;
 
-signal Hsync			: std_logic;
-signal Vsync			: std_logic;
-
-signal Vcount  		        : std_logic_vector(7 downto 0) := (others => '0');
+signal Hsync		: std_logic;
+signal Vsync		: std_logic;
+signal Video		: std_logic_vector(1 downto 0);
+signal Vcount  	: std_logic_vector(7 downto 0) := (others => '0');
 signal V128			: std_logic;
 signal V64			: std_logic;
 signal V32			: std_logic;
@@ -240,5 +240,16 @@ Hs <= Hsync;
 Vs <= Vsync;
 Video(0) <= (not BlackPF_n) nor CompBlank_s;
 Video(1) <= (not WhitePF_n); 
+
+VID: process(clk_12, Video)
+begin
+	case Video is
+		when "01" => RGB <= ("10000000");
+		when "10" => RGB <= ("01010000");
+		when "11" => RGB <= ("11111111");
+		when others => RGB <= ("00000000");
+	end case;
+end process;
+
 
 end rtl;

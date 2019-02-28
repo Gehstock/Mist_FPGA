@@ -21,6 +21,9 @@ module ultratank_mist(
 localparam CONF_STR = {
 	"Ultra Tank;;",
 	"O1,Test Mode,Off,On;",
+	"O2,Invisible,Off,On;",
+	"O5,Rebound,Off,On;",
+	"O7,Barrier,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
@@ -36,84 +39,74 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio1, audio2;
-wire	[1:0] Video;
-assign LED = 1'b1;
+wire	[7:0] RGB;
+assign LED = 1;
 wire clk_24, clk_12, clk_6;
 wire locked;
-pll pll
-(
+
+pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_24),//24.192
 	.c1(clk_12),//12.096
 	.c2(clk_6),//6.048
 	.locked(locked)
-);
+	);
 
-wire m_up1     = (kbjoy[3] | joystick_1[3]);
-wire m_down1   = (kbjoy[2] | joystick_1[2]);
-wire m_left1   = (kbjoy[1] | joystick_1[1]);
-wire m_right1  = (kbjoy[0] | joystick_1[0]);
+wire m_up1     = ~(kbjoy[0] | joystick_1[0]);
+wire m_down1   = ~(kbjoy[2] | joystick_1[2]);
+wire m_left1   = ~(kbjoy[1] | joystick_1[1]);
+wire m_right1  = ~(kbjoy[3] | joystick_1[3]);
 
-wire m_up2     = (joystick_0[3]);
+wire m_up2     = (joystick_0[0]);
 wire m_down2   = (joystick_0[2]);
 wire m_left2   = (joystick_0[1]);
-wire m_right2  = (joystick_0[0]);
+wire m_right2  = (joystick_0[3]);
 
 wire m_fire1   = ~(kbjoy[4] | joystick_1[4]);
 wire m_fire2   = ~(joystick_0[4]);
 wire m_start1 = ~(kbjoy[5]);
 wire m_start2 = ~(kbjoy[6]);
 wire m_coin = ~(kbjoy[7]);
-wire m_gearup1 = (kbjoy[8] | joystick_1[5]);
-wire m_geardown1 = (kbjoy[9] | joystick_1[6]);
-wire m_gearup2 = (joystick_0[5]);
-wire m_geardown2 = (joystick_0[6]);
+
 
 
 ultra_tank ultra_tank (
 	.clk_12(clk_12),
 	.Reset_n(~(status[0] | status[6] | buttons[1])),
-	.Video(Video),
-	.Sync_O(),
-	.Blank_O(),
+	.RGB(RGB),
 	.HS(hs),
 	.VS(vs),
 	.HB(vb),	
 	.VB(hb),
-	.CC3_n_O(),// Not sure what these are, color monitor? (not connected in real game)
-	.CC2_O(),
-	.CC1_O(),
-	.CC0_O(),
-	.White_O(),
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
 	.Coin1_I(m_coin),
 	.Coin2_I(1'b1),
 	.Start1_I(m_start1),
-	.Start2_I(m_start2),
-	.Invisible_I(),// Invisible tanks switch
-	.Rebound_I(),// Rebounding shells switch
-	.Barrier_I(),// Barriers switch
-	.JoyW_Fw_I(~kbjoy[3]),
-	.JoyW_Bk_I(~kbjoy[2]),
-	.JoyY_Fw_I(~kbjoy[1]),
-	.JoyY_Bk_I(~kbjoy[0]),
-	.JoyX_Fw_I(1'b1),
+	.Start2_I(1'b1),
+	.Invisible_I(~status[2]),// Invisible tanks switch
+	.Rebound_I(~status[5]),// Rebounding shells switch
+	.Barrier_I(~status[7]),// Barriers switch
+	.JoyW_Fw_I(m_up1),
+	.JoyW_Bk_I(1'b1),
+	.JoyY_Fw_I(m_down1),
+	.JoyY_Bk_I(1'b1),
+	.JoyX_Fw_I(m_left1),
 	.JoyX_Bk_I(1'b1),
-	.JoyZ_Fw_I(1'b1),
+	.JoyZ_Fw_I(m_right1),
 	.JoyZ_Bk_I(1'b1),
 	.FireA_I(m_fire1),
 	.FireB_I(m_fire2),
 	.Test_I(~status[1]),
-	.Slam_I(),
+	.Slam_I(1'b1),
 	.LED1_O(),
 	.LED2_O(),
 	.Lockout_O()
 );
 
-dac dac (
+dac dac(
 	.CLK(clk_24),
-	.RESET(1'b0),
+	.RESET(0),
 	.DACin({audio1,"00",audio2}),
 	.DACout(AUDIO_L)
 	);
@@ -121,7 +114,7 @@ dac dac (
 assign AUDIO_R = AUDIO_L;
 wire hs, vs;
 wire hb, vb;
-wire blankn = ~(hb | vb);
+wire blankn = 1'b1;//~(hb | vb);
 video_mixer #(
 	.LINE_LENGTH(480), 
 	.HALF_DEPTH(0))
@@ -132,12 +125,9 @@ video_mixer(
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({Video,Video,Video,Video,Video,Video}),
-	.G({Video,Video,Video,Video,Video,Video}),
-	.B({Video,Video,Video,Video,Video,Video}),
-//	.R(blankn ? {video,video,video} : "000000"),
-//	.G(blankn ? {video,video,video} : "000000"),
-//	.B(blankn ? {video,video,video} : "000000"),
+	.R(blankn ? RGB[7:2] : "000000"),
+	.G(blankn ? RGB[7:2] : "000000"),
+	.B(blankn ? RGB[7:2] : "000000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -151,10 +141,11 @@ video_mixer(
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
-);
+	);
 
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
-(
+mist_io #(
+	.STRLEN(($size(CONF_STR)>>3))) 
+mist_io(
 	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
@@ -171,11 +162,11 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.joystick_0   	 (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
-);
+	);
 
 keyboard keyboard(
 	.clk(clk_24),
-	.reset(),
+	.reset(0),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
 	.joystick(kbjoy)

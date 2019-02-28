@@ -39,8 +39,8 @@ always @(negedge clk) begin
 			'h06: joystick[6] <= ~release_btn; // F2
 			'h76: joystick[7] <= ~release_btn; // Escape
 			
-			'h69: joystick[8] <= ~release_btn; // 1
-			'h72: joystick[9] <= ~release_btn; // 2
+			'h16: joystick[8] <= ~release_btn; // 1
+			'h1E: joystick[9] <= ~release_btn; // 2
 		endcase
 	end
 end

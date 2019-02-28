@@ -244,7 +244,7 @@ module Blend
 			29: {op, input_ctrl} = {BLEND5, DB};
 			30: {op, input_ctrl} = {BLEND3, BD};
 			31: {op, input_ctrl} = {BLEND3, DB};
-			default: {op, input_ctrl} = 11'bxx;
+			default: {op, input_ctrl} = 11'bx;
 		endcase
 
 		// Setting op[8] effectively disables HQ2X because blend will always return E.

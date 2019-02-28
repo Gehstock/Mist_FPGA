@@ -138,8 +138,13 @@ if rising_edge (game_clk) then
 				if hcount = 159 then hsync <= '1'; end if;
 				if hcount = 191 then hsync <= '0'; end if;
 			else
-				hcount <= 0;
-				hor_scan_q <= "00000000";
+				if vcount = 255 then		     -- DarFPGA 2017
+					hcount <= 1;              -- | fixed counters w.r.t schematics
+					hor_scan_q <= "00000001"; -- | (coherent with motion board explanations)
+				else			                 -- |
+					hcount <= 0;
+					hor_scan_q <= "00000000";
+				end if;				
 				c4_14 <= '1';						-- CE
 				star_enable <= '1';
 				state <= sLINE;

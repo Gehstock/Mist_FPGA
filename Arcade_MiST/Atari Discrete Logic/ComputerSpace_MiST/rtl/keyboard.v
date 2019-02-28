@@ -7,7 +7,7 @@ module keyboard
 	input  ps2_kbd_clk,
 	input  ps2_kbd_data,
 
-	output reg[7:0] joystick
+	output reg[9:0] joystick
 );
 
 reg [11:0] shift_reg = 12'hFFF;
@@ -38,8 +38,8 @@ always @(negedge clk) begin
 			'h74: joystick[7] <= ~release_btn; // arrow right
 
 			'h29: joystick[0] <= ~release_btn; // Space
-			'h11: joystick[1] <= ~release_btn; // Left Alt
-			'h0d: joystick[2] <= ~release_btn; // Tab
+			'h11: joystick[8] <= ~release_btn; // Left Alt
+			'h0d: joystick[9] <= ~release_btn; // Tab
 			'h76: joystick[3] <= ~release_btn; // Escape
 		endcase
 	end

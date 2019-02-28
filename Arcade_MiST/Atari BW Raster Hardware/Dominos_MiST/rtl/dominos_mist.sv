@@ -25,7 +25,7 @@ localparam CONF_STR = {
 	"O1,Self_Test,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.10.",`BUILD_DATE
 };
 
 wire [31:0] status;
@@ -38,7 +38,7 @@ wire        scandoubler_disable;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio;
-wire	[1:0] video;
+wire	[7:0] RGB;
 
 wire clk_24, clk_12, clk_6;
 wire locked;
@@ -51,10 +51,11 @@ pll pll
 	.locked(locked)
 );
 
+assign LED = 1;
+wire m_start1 = ~(kbjoy[5] | joy0[4]);
+wire m_start2 = ~(kbjoy[6] | joy1[4]);
+wire m_coin = ~kbjoy[7];
 
-
-wire LED1, LED2;
-assign LED = ~(LED1 | LED2);
 dominos dominos (
 	.clk_12(clk_12),
 	.Reset_I(~(status[0] | status[6] | buttons[1])),				
@@ -62,12 +63,12 @@ dominos dominos (
 	.Vs(vs),
 	.Vb(vb),		
 	.Hb(hb),
-	.Video(video),			
+	.RGB(RGB),			
 	.Audio(audio),
-	.Coin1_I(~kbjoy[7]),
-	.Coin2_I(~kbjoy[7]),
-	.Start1_I(~(kbjoy[5] | joy0[4])),
-	.Start2_I(~(kbjoy[6] | joy1[4])),
+	.Coin1_I(m_coin),
+	.Coin2_I(m_coin),
+	.Start1_I(m_start1),
+	.Start2_I(m_start2),
 	
 	.Up1(~(kbjoy[3] | joy0[3])),
 	.Down1(~(kbjoy[2] | joy0[2])),
@@ -77,16 +78,15 @@ dominos dominos (
 	.Up2(~(kbjoy[11] | joy1[3])),
 	.Down2(~(kbjoy[10] | joy1[2])),
 	.Left2(~(kbjoy[9] | joy1[1])),
-	.Right2(~(kbjoy[8] | joy1[0])),
-	
+	.Right2(~(kbjoy[8] | joy1[0])),	
 	.Test_I(~status[1]),
-	.Lamp1_O(LED1),
-	.Lamp2_O(LED2)
+	.Lamp1_O(),
+	.Lamp2_O()
 	);
 
 dac dac (
 	.CLK(clk_24),
-	.RESET(1'b0),
+	.RESET(0),
 	.DACin(audio),
 	.DACout(AUDIO_L)
 	);
@@ -96,20 +96,19 @@ assign AUDIO_R = AUDIO_L;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
-video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
-(
+video_mixer #(
+	.LINE_LENGTH(480), 
+	.HALF_DEPTH(0)) 
+video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({video,video,video}),
-	.G({video,video,video}),
-	.B({video,video,video}),
-//	.R(blankn ? {video,video,video} : "000000"),
-//	.G(blankn ? {video,video,video} : "000000"),
-//	.B(blankn ? {video,video,video} : "000000"),
+	.R({RGB[7:2]}),
+	.G({RGB[7:2]}),
+	.B({RGB[7:2]}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -125,8 +124,9 @@ video_mixer #(.LINE_LENGTH(480), .HALF_DEPTH(0)) video_mixer
 	.mono(0)
 );
 
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
-(
+mist_io #(
+	.STRLEN(($size(CONF_STR)>>3))) 
+mist_io(
 	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
@@ -147,7 +147,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 
 keyboard keyboard(
 	.clk(clk_24),
-	.reset(),
+	.reset(0),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
 	.joystick(kbjoy)

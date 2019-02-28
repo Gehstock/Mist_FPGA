@@ -206,9 +206,11 @@ entity memory_board is
 					-- velocity level bit 0 
 	MemBrd_X,  	-- rocket vertical
 					-- velocity level bit 2 
-	MemBrd_Y 	-- rocket vertical velocity:
+	MemBrd_Y, 	-- rocket vertical velocity:
 					-- rocket going up or down
 					-- 0 up / 1 down
+					
+	turn_sound
 															: out std_logic
 	);
 	
@@ -341,7 +343,7 @@ signal j4_4_old, j4_5_old, h4_4_old,
 		 h4_5_old 										: std_logic;
 
 -- signals for audio
-signal e6_4, e6_1 									: std_logic;
+signal e6_4, e6_1, e6_13      					: std_logic;
 
 -- signals for 74193 circuit statemachine
 signal state : STATE_TYPE := UNSIGNED_UP_DOWN;
@@ -961,6 +963,10 @@ e6_4 <= not (MemBrd_N nor MemBrd_M);
 -- get sound frequency input via e6_13.
 e6_1 <= e6_4; 
 MemBrd_K1 <= e6_1;
+
+-- DarFPGA 2017 : original freq input
+e6_13 <= thrust_and_rotate_clk nor MemBrd_2;
+turn_sound <= e6_13 nor (not e6_4);
 
 -----------------------------------------------------------------------------
 -- Rocket orientation register: Keep & update rocket orientation 				--

@@ -224,13 +224,6 @@ port map(
 		address => A(10) & ADR(9 downto 0),
 		q => rom1_dout
 		);
-		
---A1: entity work.prog_rom1
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom1_dout
---		);
 
 C1: entity work.sprom
 generic map(
@@ -242,13 +235,6 @@ port map(
 		address => A(10) & ADR(9 downto 0),
 		q => rom2_dout
 		);
-		
---C1: entity work.prog_rom2
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom2_dout
---		);
 
 D1: entity work.sprom
 generic map(
@@ -261,13 +247,6 @@ port map(
 		q => rom3_dout
 		);
 
---D1: entity work.prog_rom3
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom3_dout
---		);
-
 E1: entity work.sprom
 generic map(
 		init_file => "rtl/roms/6443-01e1.hex",
@@ -278,13 +257,6 @@ port map(
 		address => A(10) & ADR(9 downto 0),
 		q => rom4_dout
 		);
-		
---E1: entity work.prog_rom4
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom4_dout
---		);
 
 -- ROM data mux
 ROM_mux_in <= (ROM1 & ROM2 & ROM3 & ROM4);
@@ -322,22 +294,6 @@ port map(
 	data_b => x"FF",
 	q_b => Vram_dout
 	);
-	
---RAM: entity work.ram1k_dp
---port map(
---	clock => clk6,
--- CPU side	
---	address_a => adr(9 downto 0),
---	wren_a => ram_we,
---	data_a => DBUS_n,
---	q_a=> CPUram_dout,
-
--- Video side
---	address_b => Vram_addr,
---	wren_b => '0',
---	data_b => x"FF",
---	q_b => Vram_dout
---	);
 
 Vram_addr <= (V128 or H256_n) & (V64 or H256_n) & (V32 or H256_n) & (V16 and H256) & 	(V8 and H256) & H128 & H64 & H32 & H16 & H8;
 
@@ -369,13 +325,6 @@ port map(
 	address => A(13 downto 9),
 	q => addec_bus
 	);
-		
---E2: entity work.addec_prom
---port map(
---	clock => clk12,
---	address => A(13 downto 9),
---	q => addec_bus
---	);
 
 F2_in <= addec_bus(0) & addec_bus(1) & addec_bus(2) & addec_bus(3);	
 WRAM <= addec_bus(4);

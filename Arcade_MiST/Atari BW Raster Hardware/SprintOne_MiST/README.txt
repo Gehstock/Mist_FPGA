@@ -5,13 +5,12 @@
 -- 23 November 2018
 -- 
 
--- 
 -- Keyboard inputs :
---   ESC		: Coin	
---   F1 or F2    	: Start
---   
---
--- Joystick support.
--- 
+--   ESC				: Coin
+--   F1    				: Start
+--   Space or Fire Button1		: Gas
+--   Left ALT or Fire Button2		: Gear Up
+--   Left Control or Fire Button3	: Gear Down
+--   Arrow Keys or Joy 1/2		: Controls Player
 -- 
 ----------------------------------------------------------------

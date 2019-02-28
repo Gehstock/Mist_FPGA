@@ -252,13 +252,6 @@ port map(
 		q => rom3_dout(3 downto 0)
 		);
 
---J1: entity work.prog_rom3L
---port map(
---		clock => clk6,
---		address => Adr(9 downto 0),
---		q => rom3_dout(3 downto 0)
---		);
-
 P1: entity work.sprom
 generic map(
 		init_file => "./roms/9503-01.p1.hex",
@@ -269,13 +262,6 @@ port map(
 		address => Adr(9 downto 0),
 		q => rom3_dout(7 downto 4)
 		);
-		
---P1: entity work.prog_rom3H
---port map(
---		clock => clk6,
---		address => Adr(9 downto 0),
---		q => rom3_dout(7 downto 4)
---		);
 
 D1: entity work.sprom
 generic map(
@@ -287,42 +273,37 @@ port map(
 		address => Adr(10 downto 0),
 		q => rom4_dout
 		);
-		
---D1: entity work.progROM4
---port map(
---		clock => clk6,
---		address => Adr(10 downto 0),
---		q => rom4_dout
---		);
 
 -- ROM data mux
 ROM_dout <= ROM3_dout when ROM3 = '1' and Adr(10) = '1' else
 			ROM4_dout when ROM4 = '1' else
-			x"FF";
-			
-	
--- CPU RAM
--- 256x4 RAM chips at E7 and D7 form zero-page memory
-ED7: entity work.ram256
+			x"FF";		
+
+ED7: entity work.spram
+generic map(
+		addr_width_g => 8,
+		data_width_g => 8)
 port map(
 		clock => Clk6,
 		address => Adr(7 downto 0),
 		wren => (not write_n) and (not WRAM_n),
 		data => CPUDout,
 		q => addRAM_dout
-		);			
-
+		);
 		
 -- Video RAM
--- Access is multiplexed between the CPU and video hardware depending on the state of Phi2
-Video_RAM: entity work.ram1k
+-- Access is multiplexed between the CPU and video hardware depending on the state of Phi2	
+Video_RAM: entity work.spram
+generic map(
+		addr_width_g => 10,
+		data_width_g => 8)
 port map(
-	clock => Clk12,
-	address => Vram_addr,
-	wren => ram_we,
-	data => CPUDout,
-	q => VRAM_Dout
-	);
+		clock => Clk12,
+		address => Vram_addr,
+		wren => ram_we,
+		data => CPUDout,
+		q => VRAM_Dout
+		);	
 
 --Video RAM is addressed by video circuitry when Phi2 is low and by CPU when Phi2 is high
 Vram_addr <= (V128 or H256_n) & (V64 or H256_n) & (V32 or H256_n) & (V16 or H256_n) & (V8 and H256) & H128 & H64 & H32 & H16 & H8

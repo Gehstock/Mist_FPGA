@@ -26,7 +26,7 @@ entity ultra_tank is
 port(		
 			clk_12		: in	std_logic;	-- 50MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
-			Video			: out std_logic_vector(1 downto 0);
+			RGB			: out std_logic_vector(7 downto 0);
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
 			Blank_O		: out std_logic;  -- Composite blank output
 			HS				: out std_logic;
@@ -37,7 +37,6 @@ port(
 			CC2_O			: out std_logic;
 			CC1_O			: out std_logic;
 			CC0_O			: out std_logic;
-			White_O		: out std_logic; 
 			Audio1_O		: out std_logic_vector(6 downto 0);  -- Ideally these should have a simple low pass filter
 			Audio2_O		: out std_logic_vector(6 downto 0);
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
@@ -70,7 +69,7 @@ architecture rtl of ultra_tank is
 signal Clk_6				: std_logic;
 signal Phi1 				: std_logic;
 signal Phi2					: std_logic;
-
+signal Video		   	: std_logic_vector(1 downto 0);
 signal Hcount		   	: std_logic_vector(8 downto 0);
 signal Vcount  			: std_logic_vector(7 downto 0) := (others => '0');
 signal H256_s				: std_logic;
@@ -79,9 +78,7 @@ signal Vsync				: std_logic;
 signal Vblank				: std_logic;
 signal Vblank_n_s			: std_logic;
 signal HBlank				: std_logic;
-signal CompBlank_s		: std_logic;
-signal CompSync_n_s		: std_logic;
-
+signal White				: std_logic; 
 signal DMA					: std_logic_vector(7 downto 0);
 signal DMA_n				: std_logic_vector(7 downto 0);
 signal PRAM					: std_logic_vector(7 downto 0);
@@ -89,12 +86,13 @@ signal Load_n				: std_logic_vector(8 downto 1);
 signal Object				: std_logic_vector(4 downto 1);
 signal Object_n			: std_logic_vector(4 downto 1);
 signal Playfield_n		: std_logic;
-
+signal BlackPF_n			: std_logic;
+signal WhitePF_n			: std_logic;
 signal CPU_Din				: std_logic_vector(7 downto 0);
 signal CPU_Dout			: std_logic_vector(7 downto 0);
 signal DBus_n				: std_logic_vector(7 downto 0);
 signal BA					: std_logic_vector(15 downto 0);
-
+signal CC3_n				: std_logic;
 signal Barrier_Read_n	: std_logic;
 signal Throttle_Read_n	: std_logic;
 signal Coin_Read_n		: std_logic;
@@ -153,13 +151,13 @@ port map(
 		VSync => VSync,
 		H256_s => H256_s,
 		Playfield_n => Playfield_n,
-		CC3_n => CC3_n_O,
+		CC3_n => CC3_n,
 		CC2 => CC2_O,
 		CC1 => CC1_O,
 		CC0 => CC0_O,
-		White => White_O,
-		PF_Vid1 => Video(0),
-		PF_Vid2 => Video(1)
+		White => White,
+		PF_Vid1 => BlackPF_n,
+		PF_Vid2 => WhitePF_n
 		);
 			
 		
@@ -278,10 +276,23 @@ port map(
 
 Sync_O <= HSync nor VSync;
 Blank_O <= HBlank nor VBlank;
+CC3_n_O <= CC3_n;
+Video(0) <= (not BlackPF_n) nor CC3_n;	
+Video(1) <= (not WhitePF_n);	  
 
 HS <= HSync;
 VS <= VSync;
 HB <= HBlank;
 VB <= VBlank;
+
+COL: process(clk_12, Video)
+begin
+	case Video is
+		when "01" => RGB <= ("10000000");
+		when "10" => RGB <= ("01010000");
+		when "11" => RGB <= ("11111111");
+		when others => RGB <= ("00000000");
+	end case;
+end process;
 
 end rtl;

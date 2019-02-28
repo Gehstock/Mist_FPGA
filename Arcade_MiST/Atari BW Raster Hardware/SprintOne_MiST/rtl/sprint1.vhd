@@ -36,7 +36,7 @@ port(
 			Vs				: out std_logic;
 			Vb				: out std_logic;			
 			Hb				: out std_logic;	
-			Video			: out std_logic_vector(1 downto 0);
+			RGB			: out std_logic_vector(7 downto 0);
 			Audio			: out std_logic_vector(6 downto 0);
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
@@ -93,7 +93,7 @@ signal Vblank			: std_logic;
 signal Hblank			: std_logic;
 signal Hsync			: std_logic;
 signal Vsync			: std_logic;
-
+signal Video			: std_logic_vector(1 downto 0);
 signal CompBlank_s	: std_logic;
 signal CompSync_n_s	: std_logic;
 
@@ -298,5 +298,16 @@ Vb <= VBLANK;
 Hb <= HBLANK;
 Hs <= Hsync;
 Vs <= Vsync;
+
+VID: process(clk_12, Video)
+begin
+	case Video is
+		when "01" => RGB <= ("10000000");
+		when "10" => RGB <= ("01010000");
+		when "11" => RGB <= ("11111111");
+		when others => RGB <= ("00000000");
+	end case;
+end process;
+
 
 end rtl;

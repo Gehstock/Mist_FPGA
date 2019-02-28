@@ -41,6 +41,42 @@
 -- by Mattias G, 2015																		--
 -- Enjoy!																						-- 
 -----------------------------------------------------------------------------
+-- v1.1 by DarFPGA - 22/11/2017
+--
+--  Found changes between original web release and MiST/MiSTer release. 
+--  Modification are around syncs signal and seems not to change game
+--  behaviour. Start working from MiST/MiSTer release.
+--
+--
+--  * Add simulation of sound to replace sample sound with the goal to
+--    reduce used memory.
+--
+--  Turn and both missiles sounds are produced exactly in the same way as in
+--  the original desing (based on schematics analysis) : gated frequency from
+--  saucer and missile counters on motion board. So, unlike sound sample 
+--  these sounds depend on objects motion and thus should sound more like 
+--  the original design.
+--   
+--  Ambiance, thurst and explosion sounds simulation is based on the shape
+--  and spectrum of samples found in 8_11.hex sample files. From schematics
+--  one gets that these sounds come from a single noise generator. For vhdl
+--  simulation I also creates these sounds from a single noise source and 
+--  then apply filtering to adapt spectrum response for each voice.
+--
+--  * Add different signal levels for video. Now output separate bits for
+--    stars/objects/scores/video_inversion. Final video level has to be
+--    adapted at upper level depending on final hardware.
+--
+--  * Fixed what appears to me as a bug : rocket always moving on the left.
+--    It was impossible to move on the right and even impossible to stop 
+--    rocket moving. 
+--
+--  Original video found on the internet seems to confirm that rocket may
+--  not move. I modify scan_counter.vhdl to respect motion board schematics.
+--  Amazingly motion board explanations were very accurate and correct but
+--  scan counter implementation was wrong. 
+--
+-----------------------------------------------------------------------------
 
 library 	ieee;
 use 		ieee.std_logic_1164.all; 
@@ -66,9 +102,9 @@ entity computer_space_top is
 		hsync				: out std_logic;
 		vsync				: out std_logic;
 		blank				: out std_logic;
-		video 			: out std_logic;
-
-		wav_out			: out signed (15 downto 0)
+		video 			: out std_logic_vector(3 downto 0);
+		
+		audio          : out integer range -32768 to 32767
 	);
 end computer_space_top;
 
@@ -105,12 +141,15 @@ component computer_space_logic is
 	signal_start, signal_coin, 
 	signal_thrust, signal_fire,
 	signal_cw, signal_ccw  						: in std_logic;
-	composite_video_signal					 	: out std_logic;
+	composite_video_signal					 	: out std_logic_vector(3 downto 0);
 	blank												: out std_logic;
 	hsync												: out std_logic;
 	vsync												: out std_logic;
 	audio_gate										: out std_logic;
-	sound_switch									: out std_logic_vector (7 downto 0)	
+	sound_switch									: out std_logic_vector (7 downto 0);
+	saucer_missile_sound                   : out std_logic;
+	rocket_missile_sound                   : out std_logic;
+	turn_sound                             : out std_logic
 	);
 end component computer_space_logic;	
 
@@ -163,7 +202,9 @@ signal sound_switch 								: std_logic_vector (7 downto 0)
 
 signal audio_gate 								: std_logic;
 	
-	 
+signal saucer_missile_sound : std_logic;	 
+signal rocket_missile_sound : std_logic;	 
+signal turn_sound           : std_logic;	 
 
 ------------------------------------------------------------------------//
 begin 
@@ -190,10 +231,26 @@ thrust_and_rotate_clk, explosion_rotate_clk,
 signal_start, signal_start, signal_thrust, signal_fire,
 signal_cw,signal_ccw, video, blank,
 hsync, vsync,
-audio_gate, sound_switch 
+audio_gate, sound_switch, saucer_missile_sound,rocket_missile_sound,
+turn_sound
 );		
 
-audio_playback : sound
-	port map (clock_50, audio_gate, sound_switch, wav_out);
+--------------------------------------------------------------------------
+-- AUDIO SIMULATOR
+--------------------------------------------------------------------------
+sound_simulation : entity work.computer_space_sound
+port map(
+	clock_50 => clock_50,
+	reset => reset,
+		
+	sound_switch         => sound_switch,
+	saucer_missile_sound => saucer_missile_sound,
+	rocket_missile_sound => rocket_missile_sound,
+	turn_sound           => turn_sound,
+	
+	audio_gate => audio_gate,
+	audio      => audio
+);
 
+			
 end computer_space_architecture;	

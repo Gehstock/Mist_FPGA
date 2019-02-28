@@ -161,7 +161,7 @@ entity motion_board is
 	MB_F, 	-- saucer 16x8 image's 
 				-- horizontal position bit 1
 	MB_K, 	-- saucer 16x8 image's 
-				-- vertical position bit 1
+				-- vertical position bit 1  and rocket_turn_sound
 	MB_L, 	-- saucer 16x8 image's 
 				-- vertical position bit 3
 				
@@ -200,8 +200,11 @@ entity motion_board is
 				
 	MB_2_rocket,  	-- rocket missile
 						-- sound trigger
-	MB_2_saucer		-- saucer missile
+	MB_2_saucer,	-- saucer missile
 						-- sound trigger
+						
+	saucer_missile_sound,
+	rocket_missile_sound
 															: out std_logic 
 	);
 end motion_board;
@@ -284,6 +287,8 @@ signal c1_1_old, c1_6_old,
 		 f1_13_old, a1_13_old  						: std_logic;
 
 signal d1_1_old, d1_6_old  						: std_logic;
+
+signal rocket_missile_freq, saucer_missile_freq : std_logic;
 	
 component v74161_16bit 
 	port(
@@ -461,7 +466,8 @@ missile_motion: v74161_16bit
 			D(2)  => '0',
 			D(1)  => b5_4,  -- Right (0) or Left (1) 
 			D(0)  => b5_3,  -- Horizontal movement (0) or not (1) 
-			rco 	=> e5_15
+			rco 	=> e5_15,
+			Q(11) => rocket_missile_freq
 			);
 
 d5_3 <= MB_19;			-- MB_19 sets the vertical speed
@@ -549,6 +555,9 @@ elsif (rising_edge(timer_base_clk) and
 	MB_2_rocket <= '0';	-- rocket missile sound sample trigger off
 end if;
 end process;
+
+
+rocket_missile_sound <= not (rocket_missile_freq and not d6_1);
 
 -----------------------------------------------------------------------------
 -- ROCKET MISSILE LIFE CYCLE: ROCKET MISSILE LAUNCH & VIDEO ENABLE			--
@@ -1436,7 +1445,8 @@ saucer_missile: v74161_16bit
 			D(2)  => '0',
 			D(1)  => b2_4,  -- Right (0) or Left (1)  
 			D(0)  => b2_3,  -- Horizontal movement (0) or not (1)  
-			rco => e2_15
+			rco => e2_15,
+			Q(9) => saucer_missile_freq
 			);
 
 b2_4 <= b1_1;			-- Right (0) or Left (1) 
@@ -1471,6 +1481,7 @@ b1_4 <= not c6_1; 			-- instead, to trigger sample
 
 MB_2_saucer <= b1_4;			-- saucer missile sound sample trigger
 									-- instead of MB_2
-
+									
+saucer_missile_sound <= not saucer_missile_freq and not c6_1;
 				
 end motion_board_architecture;

@@ -18,14 +18,15 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus Prime
-# Version 17.0.1 Build 598 06/07/2017 SJ Standard Edition
-# Date created = 04:04:47  October 16, 2017
+# Version 17.0.2 Build 602 07/19/2017 SJ Standard Edition
+# Date created = 14:24:18  February 27, 2019
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "17.0"
-DATE = "04:04:47  October 16, 2017"
+DATE = "14:24:18  February 27, 2019"
 
 # Revisions
 
-PROJECT_REVISION = "ComputerSpace"
+PROJECT_REVISION = "ComputerSpace_MiST"
+PROJECT_REVISION = "Pacman"

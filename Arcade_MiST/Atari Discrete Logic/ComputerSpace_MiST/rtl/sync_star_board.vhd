@@ -121,7 +121,7 @@ entity sync_star_board is
 	-- composite video / instead of SB_20
 	hsync								: out std_logic;
 	vsync								: out std_logic;
-	composite_video_signal  	: out std_logic;
+	composite_video_signal  	: out std_logic_vector(3 downto 0);
 	blank								: out std_logic
 	);
 
@@ -363,10 +363,13 @@ f1_14  <= vertical_position (4);
 -- e5_2 is score & time dislay video signal NORMAL									--	
 -- c4_14 is count enable																	--
 -- SB_N is rocket/saucer video signal													--
+-- j5_3 is rocket/saucer missile video signal													--
 -----------------------------------------------------------------------------
-composite_video_signal <= c4_14 and  -- count enable
-								 (j1_6 xor (SB_N or e5_2 or a1_15 or j5_3));
-										
+--composite_video_signal <= c4_14 and  -- count enable
+--								 (j1_6 xor (SB_N or e5_2 or a1_15 or j5_3));
+
+composite_video_signal <= j1_6 & (SB_N or j5_3 ) & e5_2 & a1_15;  -- DarFPGA 2017
+								 
 -----------------------------------------------------------------------------
 -- DISPLAY SCORE & TIME: Seven Segment Display Video								--
 -- Outputs the right seven-segment "pixels" depending on where the   	 	--

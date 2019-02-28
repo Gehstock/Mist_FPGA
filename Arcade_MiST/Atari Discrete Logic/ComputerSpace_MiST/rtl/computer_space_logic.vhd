@@ -55,7 +55,7 @@ entity computer_space_logic is
 	-- composite video
 	-- signals; to send via gpio
 	-- to TV (via resistor circuitry)
-	composite_video_signal						: out std_logic;
+	composite_video_signal						: out std_logic_vector(3 downto 0);
 	blank												: out std_logic;
 
 	hsync												: out std_logic;
@@ -64,7 +64,12 @@ entity computer_space_logic is
 	-- signals for sound
 	audio_gate										: out std_logic;
 	sound_switch									: out std_logic_vector (7 downto 0)
-														:= "00000000"
+														:= "00000000";
+														
+	saucer_missile_sound							: out std_logic;
+	rocket_missile_sound							: out std_logic;
+	turn_sound										: out std_logic
+	
 	);
 	
 end computer_space_logic;
@@ -88,7 +93,7 @@ component sync_star_board
 		
 	hsync												: out std_logic;
 	vsync												: out std_logic;
-	composite_video_signal 					 	: out std_logic;
+	composite_video_signal 					 	: out std_logic_vector(3 downto 0);
 	blank												: out std_logic  
 	);																		
 end component;
@@ -112,7 +117,9 @@ component motion_board
 	MB_B, MB_E, MB_F,
 	MB_K, MB_L, MB_N, MB_M,						
 	MB_P, MB_R, MB_W,  
-	MB_2_rocket, MB_2_saucer					: out std_logic 
+	MB_2_rocket, MB_2_saucer,
+	saucer_missile_sound,
+	rocket_missile_sound                  : out std_logic 
 	);
 end component;
 
@@ -134,7 +141,8 @@ component memory_board
 	MemBrd_15, MemBrd_16, MemBrd_17,
 	MemBrd_K1, MemBrd_K2, MemBrd_P,
 	MemBrd_T, MemBrd_U, MemBrd_V, 
-	MemBrd_W, MemBrd_X, MemBrd_Y 				: out std_logic
+	MemBrd_W, MemBrd_X, MemBrd_Y,
+	turn_sound										: out std_logic
 	);
 end component;
 
@@ -198,7 +206,7 @@ saucer_missile_life_time_duration, saucer_missile_hold_duration,
 signal_delay_duration, MB_3, MB_4, MB_16, MB_17, MB_18, MB_19, MB_20, MB_C,
 MB_D, MB_H, MB_J,	MB_T, MB_U, MB_V,	MB_Y, MB_5, MB_6, MB_8, MB_9, MB_10,
 MB_11, MB_12, MB_13, MB_14, MB_15,MB_21, MB_B, MB_E, MB_F, MB_K, MB_L, MB_N,
-MB_M,	MB_P, MB_R, MB_W, MB_2_rocket, MB_2_saucer); 
+MB_M,	MB_P, MB_R, MB_W, MB_2_rocket, MB_2_saucer,saucer_missile_sound,rocket_missile_sound); 
 
 -----------------------------------------------------------------------------
 -- MEMORY BOARD  											            					--
@@ -210,7 +218,7 @@ MemBrd_10, MemBrd_11, MemBrd_A, MemBrd_B, MemBrd_C, MemBrd_D, MemBrd_E,
 MemBrd_F, MemBrd_H, MemBrd_J, MemBrd_K, MemBrd_M, MemBrd_N, MemBrd_R,
 MemBrd_S, MemBrd_12, MemBrd_13, MemBrd_14, MemBrd_15, MemBrd_16, MemBrd_17,
 MemBrd_K1, MemBrd_K2, MemBrd_P, MemBrd_T, MemBrd_U, MemBrd_V, MemBrd_W,
-MemBrd_X, MemBrd_Y); 								
+MemBrd_X, MemBrd_Y, turn_sound); 								
 		
 -----------------------------------------------------------------------------
 -- COMPUTER SPACE BOARD INTRA CONNECTION MAPPING                 				--
