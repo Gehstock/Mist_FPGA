@@ -1,18 +1,12 @@
 Games that should work on this hardware
 
+4 Fun in 1
 Anteater
+Bagman (bootleg)
 Calipso
-Crazy Kong (bootleg)
+Eagle
 Dambusters
 Dark Planet
-Donkey Kong Jr. (bootleg) - Audio : I8035
-Eagle
-Guttang Gottong (bootleg)
-Lady Bug (bootleg)
 Lost Tomb
-Ozon I
-Scramble (bootleg)
-Space Warp? (Cosmos conversion on Galaxian hardware)
-Tazz-Mania (bootleg)
+Tazmania
 Turtles
-Video Pool (bootleg on Moon Cresta hardware)
