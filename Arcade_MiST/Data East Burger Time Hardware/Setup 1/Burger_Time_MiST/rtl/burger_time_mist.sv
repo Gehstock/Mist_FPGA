@@ -21,11 +21,11 @@ module burger_time_mist
 
 localparam CONF_STR = {
 	"BurgerTime;;",
-	"O2,Joystick Control,Upright,Normal;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
-};
+	"V,v1.10.",`BUILD_DATE
+	};
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -42,19 +42,18 @@ assign LED = 1;
 wire clk_12, clk_6, clk_24;
 wire pll_locked;
 
-pll pll
-(
+pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_24),
 	.c1(clk_12),
 	.c2(clk_6)
-);
+	);
 
-wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
-wire m_down   = status[2] ? kbjoy[7] | joystick_0[0] | joystick_1[0] : kbjoy[5] | joystick_0[2] | joystick_1[2];
-wire m_left   = status[2] ? kbjoy[5] | joystick_0[2] | joystick_1[2] : kbjoy[6] | joystick_0[1] | joystick_1[1];
-wire m_right  = status[2] ? kbjoy[4] | joystick_0[3] | joystick_1[3] : kbjoy[7] | joystick_0[0] | joystick_1[0];
+wire m_up     = ~status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? kbjoy[7] | joystick_0[0] | joystick_1[0] : kbjoy[5] | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? kbjoy[5] | joystick_0[2] | joystick_1[2] : kbjoy[6] | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? kbjoy[4] | joystick_0[3] | joystick_1[3] : kbjoy[7] | joystick_0[0] | joystick_1[0];
 
 wire m_fire   = kbjoy[0] | joystick_0[4] | joystick_1[4];
 wire m_start1 = kbjoy[1];
@@ -86,11 +85,11 @@ burger_time burger_time(
 	.down2(m_down),
 	.up2(m_up),
 	.dbg_cpu_addr()
-);
+	);
 
 wire [10:0] audio;
 
-dac dac (
+dac dac(
 	.clk_i(clk_24),
 	.res_n_i(1),
 	.dac_i(audio),
@@ -104,8 +103,10 @@ wire [2:0] r, g;
 wire [1:0] b;
 wire       blankn;
 
-video_mixer #(.LINE_LENGTH(320), .HALF_DEPTH(1)) video_mixer
-(
+video_mixer #(
+	.LINE_LENGTH(320), 
+	.HALF_DEPTH(1)) 
+video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),
@@ -125,13 +126,16 @@ video_mixer #(.LINE_LENGTH(320), .HALF_DEPTH(1)) video_mixer
 	.scandoubler_disable(scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
+	.rotate({1'b1,status[2]}),
+	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
-);
+	);
 
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
-(
+mist_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+mist_io(
 	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
@@ -148,7 +152,7 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
 	.joystick_0   	 (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
-);
+	);
 
 keyboard keyboard(
 	.clk(clk_24),

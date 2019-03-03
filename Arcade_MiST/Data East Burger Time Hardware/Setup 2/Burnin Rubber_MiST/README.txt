@@ -8,7 +8,7 @@
 -- https://sourceforge.net/projects/darfpga/files/Software%20VHDL/burnin_rubber/
 ---------------------------------------------------------------------------------
 -- 
--- Only controls are rotated on VGA output.
+-- Only controls and OSD are rotated on VGA output.
 -- 
 -- 
 -- Keyboard inputs :
