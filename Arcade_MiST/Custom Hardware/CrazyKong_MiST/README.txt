@@ -1,11 +1,6 @@
 Crazy Kong Port to Mist FPGA by Gehstock
 
 
-Need Feedback
-
-
-
-
 
 -------------------------------------------------
 Crazy Kong (Falcon) FPGA - (darfpga@aol.fr)

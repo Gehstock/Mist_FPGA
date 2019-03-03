@@ -72,7 +72,7 @@ begin
 	end if;
 end process;
 
-process(clock_12mhz)
+process(clock_12mhz, video)
 begin
 	if rising_edge(clock_12mhz) then
 		if flip_flop = '0' then

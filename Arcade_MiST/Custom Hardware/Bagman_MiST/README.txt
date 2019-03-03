@@ -1,11 +1,6 @@
 Bagman Port to Mist FPGA by Gehstock
 
 
-ToDo: Fix Video
-
-
-
-
 
 -------------------------------------------------
 Bagman (STERN) FPGA - (darfpga@aol.fr)

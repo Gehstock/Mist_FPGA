@@ -292,7 +292,7 @@ begin
  -- END LATCHED
  --
   
-  p_rdata                : process(busctrl_re, addr, reg)
+  p_rdata                : process(busctrl_re, addr, reg, ioa_inreg, iob_inreg)
   begin
     O_DA <= (others => '0'); -- 'X'
     if (busctrl_re = '1') then -- not necessary, but useful for putting 'X's in the simulator
@@ -437,7 +437,7 @@ begin
     end if;
   end process;
 
-  p_envelope_shape       : process(env_reset, CLK)
+  p_envelope_shape       : process(env_reset, CLK, reg)
     variable is_bot    : boolean;
     variable is_bot_p1 : boolean;
     variable is_top_m1 : boolean;

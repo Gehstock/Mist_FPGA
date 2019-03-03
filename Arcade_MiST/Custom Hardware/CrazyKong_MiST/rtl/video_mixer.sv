@@ -60,7 +60,7 @@ module video_mixer
 
 	// 0 = 16-240 range. 1 = 0-255 range. (only for YPbPr color space)
 	input        ypbpr_full,
-
+	input  [1:0] rotate, //[0] - rotate [1] - left or right
 	// color
 	input [DWIDTH:0] R,
 	input [DWIDTH:0] G,
@@ -81,7 +81,6 @@ module video_mixer
 	// Thus, if blank signal is used to reduce the line, make sure to feed at least one black (or paper) pixel 
 	// before first informative pixel.
 	input        line_start,
-
 
 	// MiST video output signals
 	output [5:0] VGA_R,
@@ -183,6 +182,7 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR) osd
 	.B_in(b_out),
 	.HSync(hs),
 	.VSync(vs),
+	.rotate(rotate),
 
 	.R_out(red),
 	.G_out(green),
