@@ -4,7 +4,7 @@
 -- 24 November 2018
 -- 
 -- 
--- Only controls are rotated on VGA output.
+-- Only controls adn OSD are rotated on VGA output.
 -- 
 -- 
 -- Keyboard inputs :
@@ -13,3 +13,6 @@
 --   SPACE 	: Fire or Fire Button
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
+
+
+			WIP

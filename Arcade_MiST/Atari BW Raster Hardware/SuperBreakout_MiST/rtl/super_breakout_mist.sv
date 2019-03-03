@@ -99,6 +99,7 @@ video_mixer(
 	.scandoubler_disable(scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
+	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(1)

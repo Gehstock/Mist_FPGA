@@ -60,7 +60,7 @@ module video_mixer
 
 	// 0 = 16-240 range. 1 = 0-255 range. (only for YPbPr color space)
 	input        ypbpr_full,
-
+	input  [1:0] rotate, //[0] - rotate [1] - left or right
 	// color
 	input [DWIDTH:0] R,
 	input [DWIDTH:0] G,
@@ -96,19 +96,15 @@ wire [DWIDTH:0] R_sd;
 wire [DWIDTH:0] G_sd;
 wire [DWIDTH:0] B_sd;
 wire hs_sd, vs_sd;
-// Scanline FIX
-reg [DWIDTH:0] Rd,Gd,Bd;
-always @(posedge clk_sys) {Rd,Gd,Bd} <= {R,G,B};
-// Scanline FIX
 
 scandoubler #(.LENGTH(LINE_LENGTH), .HALF_DEPTH(HALF_DEPTH)) scandoubler
 (
 	.*,
 	.hs_in(HSync),
 	.vs_in(VSync),
-	.r_in(Rd),
-	.g_in(Gd),
-	.b_in(Bd),
+	.r_in(R),
+	.g_in(G),
+	.b_in(B),
 
 	.hs_out(hs_sd),
 	.vs_out(vs_sd),
@@ -186,6 +182,7 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR) osd
 	.B_in(b_out),
 	.HSync(hs),
 	.VSync(vs),
+	.rotate(rotate),
 
 	.R_out(red),
 	.G_out(green),
