@@ -11,6 +11,5 @@
 --   F1 or F2    	: Start
 --
 -- Joystick support.
--- 
--- 
+-- OSD And Controls can be Rotated
 ----------------------------------------------------------------
