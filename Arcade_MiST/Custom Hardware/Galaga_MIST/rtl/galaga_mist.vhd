@@ -100,7 +100,7 @@ architecture struct of galaga_mist is
 			SPI_SCK, SPI_SS3, SPI_DI : in std_logic;
 			scanlines : in std_logic_vector(1 downto 0);
 			scandoubler_disable, hq2x, ypbpr, ypbpr_full : in std_logic;
-
+			rotate : in std_logic_vector(1 downto 0);
 			R, G, B : in std_logic_vector(2 downto 0);
 			HSync, VSync, line_start, mono : in std_logic;
 
@@ -150,7 +150,7 @@ vmixer : video_mixer
 		hq2x => hq2x,
 		ypbpr => ypbpr,
 		ypbpr_full => '1',
-
+		rotate => '1' & not status(4),
 		R => VGA_R_O,
 		G => VGA_G_O,
 		B => VGA_B_O,

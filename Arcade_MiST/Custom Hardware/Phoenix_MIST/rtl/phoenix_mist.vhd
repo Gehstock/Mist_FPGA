@@ -86,7 +86,7 @@ architecture struct of phoenix_mist is
   signal upjoyR      : std_logic;
   signal upjoyB      : std_logic;
 -- config string used by the io controller to fill the OSD
-  constant CONF_STR : string := "PHOENIX;;O4,Screen Direction,Upright,Normal;O67,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;T5,Reset;V,v1.0;";
+  constant CONF_STR : string := "PHOENIX;;O4,Screen Direction,Upright,Normal;O67,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;T5,Reset;V,v1.1;";
 
 	function to_slv(s: string) return std_logic_vector is
 		constant ss: string(1 to s'length) := s;
@@ -126,7 +126,7 @@ architecture struct of phoenix_mist is
 			SPI_SCK, SPI_SS3, SPI_DI : in std_logic;
 			scanlines : in std_logic_vector(1 downto 0);
 			scandoubler_disable, hq2x, ypbpr, ypbpr_full : in std_logic;
-
+			rotate : in std_logic_vector(1 downto 0);
 			R, G, B : in std_logic_vector(2 downto 0);
 			HSync, VSync, line_start, mono : in std_logic;
 
@@ -282,7 +282,7 @@ begin
 		SPI_SCK => SPI_SCK,
 		SPI_SS3 => SPI_SS3,
 		SPI_DI => SPI_DI,
-
+		rotate => '1' & not status(4),
 		scanlines => scanlines,
 		scandoubler_disable => scandoubler_disable,
 		hq2x => hq2x,
