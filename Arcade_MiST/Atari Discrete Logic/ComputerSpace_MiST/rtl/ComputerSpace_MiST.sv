@@ -41,19 +41,15 @@ wire clk_sys, clk_25, clk_6p25, clk_5;
 
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),//50
-	.c1(clk_25),
-	.c2(clk_6p25),
-	.c3(clk_5)
+	.c0(clk_sys),//50 for game/sound generator?
+	.c1(clk_25), //4x pixel clock
+	.c3(clk_5) //5,842 MHz pixel/game clock
 	);
 
-video_mixer #(
-	.LINE_LENGTH(254), 
-	.HALF_DEPTH(0)) 
-video_mixer(
+video_mixer video_mixer(
 	.clk_sys(clk_25),
-	.ce_pix(clk_6p25),
-	.ce_pix_actual(clk_6p25),
+	.ce_pix(clk_5),
+	.ce_pix_actual(clk_5),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -79,7 +75,7 @@ video_mixer(
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3))) 
 mist_io(
-	.clk_sys        (clk_25   	  	  ),
+	.clk_sys        (clk_sys   	  ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -157,9 +153,9 @@ assign rm = rs + ro + rc;
 assign gm = gs + go + gc;
 assign bm = bs + bo + bc;
 
-assign r = (rm[5:4] ? 4'b1111 : rm[3:0]) ^ {4{inv}};
-assign g = (gm[5:4] ? 4'b1111 : gm[3:0]) ^ {4{inv}};
-assign b = (bm[5:4] ? 4'b1111 : bm[3:0]) ^ {4{inv}};
+assign r = blank ? 0 : (rm[5:4] ? 4'b1111 : rm[3:0]) ^ {4{inv}};
+assign g = blank ? 0 : (gm[5:4] ? 4'b1111 : gm[3:0]) ^ {4{inv}};
+assign b = blank ? 0 : (bm[5:4] ? 4'b1111 : bm[3:0]) ^ {4{inv}};
 
 reg inv;
 always @(posedge clk_5) begin
