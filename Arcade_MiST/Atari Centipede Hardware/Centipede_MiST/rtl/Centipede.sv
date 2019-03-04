@@ -122,22 +122,16 @@ wire hs, vs;
 wire [2:0] r, g, b;
 wire hblank, vblank;
 wire blankn = ~(hblank | vblank);
-video_mixer #(
-	.LINE_LENGTH(256), 
-	.HALF_DEPTH(1))
-video_mixer(
+video_mixer video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({r,r}),
-	.G({g,g}),
-	.B({b,b}),
-//	.R(blankn?{r,r}:"000000"),
-//	.G(blankn?{g,g}:"000000"),
-//	.B(blankn?{b,b}:"000000"),
+	.R(blankn?{r,r}:0),
+	.G(blankn?{g,g}:0),
+	.B(blankn?{b,b}:0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
