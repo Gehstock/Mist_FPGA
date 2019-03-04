@@ -25,7 +25,7 @@ localparam CONF_STR = {
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
-};
+	};
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -38,28 +38,28 @@ wire	[3:0] video;
 wire hs, vs, blank;
 assign LED = 1;
 wire clk_sys, clk_25, clk_6p25, clk_5;
-pll pll
-(
+
+pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_sys),//50
 	.c1(clk_25),
 	.c2(clk_6p25),
 	.c3(clk_5)
-);
+	);
 
 video_mixer #(
-	.LINE_LENGTH(480), 
+	.LINE_LENGTH(254), 
 	.HALF_DEPTH(0)) 
 video_mixer(
 	.clk_sys(clk_25),
-	.ce_pix(clk_5),
-	.ce_pix_actual(clk_5),
+	.ce_pix(clk_6p25),
+	.ce_pix_actual(clk_6p25),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(r),
-	.G(g),
-	.B(b),
+	.R({r,r[1:0]}),
+	.G({g,g[1:0]}),
+	.B({b,b[1:0]}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -70,15 +70,16 @@ video_mixer(
 	.scandoubler_disable(scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
+	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
-);
+	);
 
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3))) 
 mist_io(
-	.clk_sys        (clk_25   	  ),
+	.clk_sys        (clk_25   	  	  ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -93,13 +94,14 @@ mist_io(
 	.joystick_0   	 (joystick_0	  ),
 	.joystick_1     (joystick_1	  ),
 	.status         (status         )
-);
+	);
 
 wire [64:0] ps2_key;
 wire [15:0] joystick_0, joystick_1;
 wire [15:0] joy = joystick_0 | joystick_1;
 wire       pressed = ps2_key[9];
 wire [8:0] code    = ps2_key[8:0];
+
 always @(posedge clk_sys) begin
 	reg old_state;
 	old_state <= ps2_key[10];
@@ -110,7 +112,6 @@ always @(posedge clk_sys) begin
 			'hX74: btn_right  <= pressed; // right
 			'h029: btn_thrust <= pressed; // space
 			'h014: btn_fire   <= pressed; // ctrl
-
 			'h005: btn_start  <= pressed; // F1
 		endcase
 	end
@@ -142,7 +143,7 @@ computer_space_top computerspace(
 	.blank(blank),
 	.video(video),
 	.audio(AUDIO_L)
-);
+	);
 
 assign AUDIO_R = AUDIO_L;
 wire [5:0] rs,gs,bs, ro,go,bo, rc,gc,bc, rm,gm,bm;
