@@ -21,11 +21,11 @@ module canyon_bomber_mist(
 `include "rtl\build_id.sv" 
 
 localparam CONF_STR = {
-	"Canyon_B.;;",
+	"Cany.Bomb.;;",
 	"O1,Self_Test,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
-	"V,v1.10.",`BUILD_DATE
+	"V,v1.20.",`BUILD_DATE
 };
 
 wire [31:0] status;
@@ -38,6 +38,8 @@ wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [6:0] audio1, audio2;
 wire	[7:0] RGB;
+wire 			vb, hb;
+wire 			blankn = ~(hb | vb);
 
 wire clk_24, clk_12, clk_6;
 wire locked;
@@ -47,7 +49,7 @@ pll pll(
 	.c1(clk_12),//12.096
 	.c2(clk_6),//6.048
 	.locked(locked)
-);
+	);
 
 assign LED = 1;
 
@@ -60,7 +62,8 @@ canyon_bomber canyon_bomber(
 	.clk_12(clk_12),
 	.Reset_I(~(status[0] | status[6] | buttons[1])),		
 	.RGB(RGB),
-	.Sync_O(),
+	.Vblank_O(vb),
+	.HBlank_O(hb),
 	.HSync_O(hs),
 	.VSync_O(vs),
 	.Audio1_O(audio1),
@@ -75,14 +78,14 @@ canyon_bomber canyon_bomber(
 	.Test_I(~status[1]),
 	.Lamp1_O(),
 	.Lamp2_O()
-);
+	);
 
 dac dacl(
 	.CLK(clk_24),
 	.RESET(0),
 	.DACin({audio1,audio2,2'b0}),
 	.DACout(AUDIO_L)
-);
+	);
 	
 assign AUDIO_R = AUDIO_L;
 wire hs, vs;
@@ -109,10 +112,11 @@ video_mixer(
 	.scandoubler_disable(scandoubler_disable),
 	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
 	.hq2x(status[4:3]==1),
+	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
-);
+	);
 
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3))) 
@@ -133,7 +137,7 @@ mist_io(
 	.joystick_0   	 (joystick_0	  ),
 	.joystick_1     (joystick_1	  ),
 	.status         (status         )
-);
+	);
 
 keyboard keyboard(
 	.clk(clk_24),
