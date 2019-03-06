@@ -165,6 +165,7 @@ if rising_edge (game_clk) then
 				
 				hblank <= '1';
 				if vcount = 239 then vblank <= '1'; end if;
+				if vcount = 252 then vsync <= '1'; end if;
 
 				if vcount < 254 then				-- Increase vertical count
 					vcount <= vcount + 1;
@@ -178,6 +179,7 @@ if rising_edge (game_clk) then
 				else
 					vcount <= 1;
 					vblank <= '0';
+					vsync <= '0';
 					ver_scan_q <= "00000001";
 					f1_15 <= '0';
 					star_enable <= '0';
@@ -204,10 +206,6 @@ f1_12 <= ver_scan_q(6);
 -----------------------------------------------------------------------------
 b2_6 <= not f1_15;			
 			
------------------------------------------------------------------------------	
--- CREATING THE SYNC SIGNAL								 								--
------------------------------------------------------------------------------			
-vsync <= vblank;
 
 -----------------------------------------------------------------------------	
 -- COUNT ENABLE & BLANK									 									--

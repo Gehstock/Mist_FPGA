@@ -67,7 +67,7 @@ set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 # ==================
 set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
 set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
-set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name FITTER_EFFORT "AUTO FIT"
 set_global_assignment -name DEVICE EP3C25E144C8
 set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
 set_global_assignment -name ENABLE_NCE_PIN OFF
@@ -158,6 +158,16 @@ set_location_assignment PIN_13 -to CONF_DATA0
 
 # end ENTITY(computer_space_top)
 # ------------------------------
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp3.stp
+set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_ASYNCHRONOUS_SIGNAL_PIPELINING ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC_FOR_AREA ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_MAP_LOGIC_TO_MEMORY_FOR_AREA ON
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ComputerSpace_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/computer_space_top.vhd
 set_global_assignment -name VHDL_FILE rtl/computer_space_logic.vhd
@@ -178,4 +188,5 @@ set_global_assignment -name VERILOG_FILE rtl/osd.v
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name VERILOG_FILE rtl/mist_io.v
 set_global_assignment -name VERILOG_FILE rtl/keyboard.v
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
