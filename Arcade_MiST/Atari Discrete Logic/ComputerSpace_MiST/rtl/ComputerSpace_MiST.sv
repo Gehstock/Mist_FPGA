@@ -26,6 +26,9 @@ localparam CONF_STR = {
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 	};
+	
+assign AUDIO_R = AUDIO_L;
+assign LED = 1;
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -34,14 +37,13 @@ wire        scandoublerD;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire [15:0] audio;
-wire	[3:0] video;
+wire  [3:0] video;
 wire hs, vs, blank;
-assign LED = 1;
-wire clk_sys, clk_25, clk_6p25, clk_5;
 
+wire clk_sys, clk_25, clk_6p25, clk_5;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),//50 for game/sound generator?
+	.c0(clk_sys),//50 MHz for game/sound generator? 
 	.c1(clk_25), //4x pixel clock
 	.c3(clk_5) //5,842 MHz pixel/game clock
 	);
@@ -95,7 +97,7 @@ dac #(
 	.MSBI(15))
 dac(
    .DACout(AUDIO_L),
-   .DACin(audio),
+   .DACin({~audio[15], audio[14:0]}),
    .CLK(clk_sys),
    .RESET(0)
 	);
@@ -149,7 +151,6 @@ computer_space_top computerspace(
 	.audio(audio)
 	);
 
-assign AUDIO_R = AUDIO_L;
 wire [5:0] rs,gs,bs, ro,go,bo, rc,gc,bc, rm,gm,bm;
 wire [3:0] r, g, b;
 assign r = blank ? 0 : (rm[5:4] ? 4'b1111 : rm[3:0]) ^ {4{inv}};
