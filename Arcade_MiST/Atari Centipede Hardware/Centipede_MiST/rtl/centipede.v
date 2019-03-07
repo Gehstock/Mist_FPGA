@@ -807,7 +807,7 @@ sprom #(
 
    always @(posedge ea_ctrl_clk)
      hs_ctrl <= db_out[3:0];
-		 
+/*		 
 spram #(
 	.addr_width_g(6),
 	.data_width_g(8))
@@ -817,8 +817,8 @@ hs_ram(
 	.wren(~hs_ctrl[1] & hs_ctrl[2]),
 	.data(hs_data),
 	.q(hs_out)
-	);			 
-
+	);			*/ 
+assign hs_out = 8'b0;
    always @(posedge hs_addr_clk)
      hs_data <= db_out[7:0];
 

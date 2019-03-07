@@ -138,7 +138,6 @@ port map(
 		vreset => vreset
 		);
 
-
 Background: entity work.playfield
 port map( 
 		clk6	=> clk_6,
@@ -156,7 +155,6 @@ port map(
 		WhitePF_n => WhitePF_n,
 		BlackPF_n => BlackPF_n 
 		);
-
 		
 Motion_Objects: entity work.motion
 port map(
@@ -173,7 +171,6 @@ port map(
 		Ship1_n => Ship1_n,
 		Ship2_n => Ship2_n
 		);
-		
 		
 CPU: entity work.cpu_mem
 port map(
@@ -208,7 +205,6 @@ port map(
 		DBus => DBus,
 		Display => Display
 		);
-
 	
 Sound: entity work.audio
 port map( 
@@ -227,7 +223,6 @@ port map(
 		P1_audio => Audio1_O,
 		P2_audio => Audio2_O
 		);
-
 
 -- Video mixing	
 Video(0) <= ( BlackPF_n and Ship1_n and Shell1_n and CompBlank_n_s);	

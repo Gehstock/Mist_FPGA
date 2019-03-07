@@ -22,18 +22,18 @@ localparam CONF_STR = {
 	"C.SPACE;;",
 //	"O1,Self_Test,Off,On;",
 	"O2,Color,No,Yes;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.20.",`BUILD_DATE
 	};
 
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire        scandoubler_disable;
+wire        scandoublerD;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
-wire  [6:0] audio;
+wire [15:0] audio;
 wire	[3:0] video;
 wire hs, vs, blank;
 assign LED = 1;
@@ -41,25 +41,21 @@ wire clk_sys, clk_25, clk_6p25, clk_5;
 
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),//50
-	.c1(clk_25),
-	.c2(clk_6p25),
-	.c3(clk_5)
+	.c0(clk_sys),//50 for game/sound generator?
+	.c1(clk_25), //4x pixel clock
+	.c3(clk_5) //5,842 MHz pixel/game clock
 	);
 
-video_mixer #(
-	.LINE_LENGTH(254), 
-	.HALF_DEPTH(0)) 
-video_mixer(
+video_mixer video_mixer(
 	.clk_sys(clk_25),
-	.ce_pix(clk_6p25),
-	.ce_pix_actual(clk_6p25),
+	.ce_pix(clk_5),
+	.ce_pix_actual(clk_5),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({r,r[1:0]}),
-	.G({g,g[1:0]}),
-	.B({b,b[1:0]}),
+	.R(blank ? 0 : {r,r[1:0]}),
+	.G(blank ? 0 : {g,g[1:0]}),
+	.B(blank ? 0 : {b,b[1:0]}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -67,9 +63,8 @@ video_mixer(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.hq2x(status[4:3]==1),
+	.scandoublerD(scandoublerD),
+	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
 	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
@@ -79,7 +74,7 @@ video_mixer(
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3))) 
 mist_io(
-	.clk_sys        (clk_25   	  	  ),
+	.clk_sys        (clk_sys  	  	  ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),
@@ -88,12 +83,21 @@ mist_io(
 	.SPI_DI         (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches   	 (switches       ),
-	.scandoubler_disable(scandoubler_disable),
+	.scandoublerD	 (scandoublerD   ),
 	.ypbpr          (ypbpr          ),
 	.ps2_key    	 (ps2_key    	  ),
 	.joystick_0   	 (joystick_0	  ),
 	.joystick_1     (joystick_1	  ),
 	.status         (status         )
+	);
+	
+dac #(
+	.MSBI(15))
+dac(
+   .DACout(AUDIO_L),
+   .DACin(audio),
+   .CLK(clk_sys),
+   .RESET(0)
 	);
 
 wire [64:0] ps2_key;
@@ -142,13 +146,15 @@ computer_space_top computerspace(
 	.vsync(vs),
 	.blank(blank),
 	.video(video),
-	.audio(AUDIO_L)
+	.audio(audio)
 	);
 
 assign AUDIO_R = AUDIO_L;
 wire [5:0] rs,gs,bs, ro,go,bo, rc,gc,bc, rm,gm,bm;
-wire [3:0] r,g,b;
-
+wire [3:0] r, g, b;
+assign r = blank ? 0 : (rm[5:4] ? 4'b1111 : rm[3:0]) ^ {4{inv}};
+assign g = blank ? 0 : (gm[5:4] ? 4'b1111 : gm[3:0]) ^ {4{inv}};
+assign b = blank ? 0 : (bm[5:4] ? 4'b1111 : bm[3:0]) ^ {4{inv}};
 assign {rs,gs,bs} = ~video[0] ? 18'd0 : status[2] ? {6'b0111,6'b0111,6'b0111} : {6'b0111,6'b0111,6'b0111};
 assign {rc,gc,bc} = ~video[1] ? 18'd0 : status[2] ? {6'b0000,6'b1111,6'b1111} : {6'b0111,6'b0111,6'b0111};
 assign {ro,go,bo} = ~video[2] ? 18'd0 : status[2] ? {6'b1111,6'b1111,6'b0000} : {6'b1111,6'b1111,6'b1111};
@@ -156,10 +162,6 @@ assign {ro,go,bo} = ~video[2] ? 18'd0 : status[2] ? {6'b1111,6'b1111,6'b0000} : 
 assign rm = rs + ro + rc;
 assign gm = gs + go + gc;
 assign bm = bs + bo + bc;
-
-assign r = (rm[5:4] ? 4'b1111 : rm[3:0]) ^ {4{inv}};
-assign g = (gm[5:4] ? 4'b1111 : gm[3:0]) ^ {4{inv}};
-assign b = (bm[5:4] ? 4'b1111 : bm[3:0]) ^ {4{inv}};
 
 reg inv;
 always @(posedge clk_5) begin

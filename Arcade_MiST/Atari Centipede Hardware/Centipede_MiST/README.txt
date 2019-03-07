@@ -4,7 +4,7 @@
 -- 24 November 2018
 -- 
 -- 
--- Only controls adn OSD are rotated on VGA output.
+-- Only controls and OSD are rotated on Video output.
 -- 
 -- 
 -- Keyboard inputs :
@@ -14,5 +14,3 @@
 --   ARROW KEYS : Movements
 ---------------------------------------------------------------------------------
 
-
-			WIP

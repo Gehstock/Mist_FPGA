@@ -41,7 +41,7 @@ port(
 			Serve_LED_O	: out std_logic;	-- Serve button LED (Active low)
 			Counter_O	: out std_logic;	-- Coin counter output (Active high)
 			Audio_O		: out std_logic_vector(7 downto 0);	-- PWM audio, low pass filter is desirable but not really necessary for the simple SFX in this game
-			Video_O		: out std_logic;	-- Video output, sum this through a 470R resistor to composite video
+			Video_O		: out std_logic;
 			HS				: out std_logic;
 			VS				: out std_logic;
 			HB				: out std_logic;
@@ -124,14 +124,6 @@ begin
 --							6	7	8	Bonus play			(011 - 600 Progressive, 400 Cavity, 600 Double)
 		
 SW2 <= "00101011";
-
--- Video mixer
-Video_O <= not(Playfield_n and Ball1_n and Ball2_n and Ball3_n);
-CompSync_O <= CompSync_n_s;
-HS <= Hsync; 
-VS <= Vsync; 
-HB <= Hblank;
-VB <= Vblank; 
 
 Reset_h <= (not Reset_n); -- Some components need an active-high reset
 Vblank_O <= Vblank; -- Resets ramp in analog paddle circuit (if used)
@@ -249,6 +241,14 @@ port map(
 		Counter => Counter_O,
 		Adr => Adr,
 		Inputs => Inputs
-	);	
+	);
+	
+	-- Video mixer
+Video_O <= not(Playfield_n and Ball1_n and Ball2_n and Ball3_n);
+CompSync_O <= CompSync_n_s;
+HS <= Hsync; 
+VS <= Vsync; 
+HB <= Hblank;
+VB <= Vblank;
 	
 end rtl;

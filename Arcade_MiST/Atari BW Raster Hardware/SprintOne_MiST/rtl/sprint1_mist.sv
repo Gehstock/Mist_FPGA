@@ -21,26 +21,16 @@ module sprint1_mist(
 localparam CONF_STR = {
 	"Sprint1;;",
 	"O1,Test Mode,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
 	"V,v1.10.",`BUILD_DATE
 };
 
-wire [31:0] status;
-wire  [1:0] buttons;
-wire  [1:0] switches;
-wire  [11:0] kbjoy;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
-wire        scandoubler_disable;
-wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
-wire  [6:0] audio;
-wire	[7:0] RGB;
 assign LED = 1;
+assign AUDIO_R = AUDIO_L;
+
 wire clk_24, clk_12, clk_6;
 wire locked;
-
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_24),//24.192
@@ -49,24 +39,18 @@ pll pll(
 	.locked(locked)
 	);
 
-wire [1:0] steer;
-joy2quad steer1(
-	.CLK(clk_24),
-	.clkdiv('d22500),	
-	.right(m_right),
-	.left(m_left),	
-	.steer(steer)
-	);
-
-wire gear1,gear2,gear3;
-gearshift gearshift1(
-	.CLK(clk_12),	
-	.gearup(m_gearup),
-	.geardown(m_geardown),	
-	.gear1(gear1),
-	.gear2(gear2),
-	.gear3(gear3)
-	);
+wire [31:0] status;
+wire  [1:0] buttons;
+wire  [1:0] switches;
+wire  [7:0] joystick_0, joystick_1;
+wire        scandoublerD;
+wire        ypbpr;
+wire [10:0] ps2_key;
+wire  [6:0] audio;
+wire	[7:0] RGB;
+wire 			vb, hb;
+wire 			blankn = ~(hb | vb);
+wire 			hs, vs;
 
 sprint1 sprint1(
 	.clk_12(clk_12),
@@ -77,10 +61,10 @@ sprint1 sprint1(
 	.Vb(vb),		
 	.Hb(hb),	
 	.Audio(audio),
-	.Coin1_I(m_coin),
+	.Coin1_I(~btn_coin),
 	.Coin2_I(1'b1),
-	.Start_I(m_start1),
-	.Gas_I(m_fire),
+	.Start_I(~btn_one_player),
+	.Gas_I(~(btn_fire1 | joystick_0[4] | joystick_1[4])),
 	.Gear1_I(gear1),
 	.Gear2_I(gear2),
 	.Gear3_I(gear3),
@@ -96,25 +80,17 @@ dac dac (
 	.DACin(audio),
 	.DACout(AUDIO_L)
 	);
-
-assign AUDIO_R = AUDIO_L;
-
-wire hs, vs;
-wire hb, vb;
-//wire blankn = ~(hb | vb);
-video_mixer #(
-	.LINE_LENGTH(480), 
-	.HALF_DEPTH(0)) 
-video_mixer(
+	
+video_mixer video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
 	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(RGB[7:2]),
-	.G(RGB[7:2]),
-	.B(RGB[7:2]),
+	.R(blankn ? {RGB[7:2]} : 0),
+	.G(blankn ? {RGB[7:2]} : 0),
+	.B(blankn ? {RGB[7:2]} : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -122,23 +98,14 @@ video_mixer(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.hq2x(status[4:3]==1),
+	.scandoublerD(scandoublerD),
+	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
+	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
 	.mono(0)
 	);
 
-
-wire m_left   = (kbjoy[1] | joystick_0[1] | joystick_1[1]);
-wire m_right  = (kbjoy[0] | joystick_0[0] | joystick_1[0]);
-
-wire m_fire   = ~(kbjoy[4] | joystick_0[4] | joystick_1[4]);
-wire m_start1 = ~(kbjoy[5]);
-wire m_coin = ~(kbjoy[7]);
-wire m_gearup = (kbjoy[10] | joystick_0[5] | joystick_1[5]);
-wire m_geardown = (kbjoy[11] | joystick_0[6] | joystick_1[6]);
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3))) 
 mist_io(
@@ -151,21 +118,63 @@ mist_io(
 	.SPI_DI         (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches   	 (switches       ),
-	.scandoubler_disable(scandoubler_disable),
+	.scandoublerD	 (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_kbd_clk    (ps2_kbd_clk    ),
-	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joystick_0     ),
-	.joystick_1     (joystick_1     ),
+	.ps2_key			 (ps2_key        ),
+	.joystick_0   	 (joystick_0	  ),
+	.joystick_1     (joystick_1	  ),
 	.status         (status         )
 	);
+	
+reg btn_one_player = 0;
+reg btn_two_players = 0;
+reg btn_left = 0;
+reg btn_right = 0;
+reg btn_down = 0;
+reg btn_up = 0;
+reg btn_fire1 = 0;
+reg btn_fire2 = 0;
+reg btn_fire3 = 0;
+reg btn_coin  = 0;
+wire       pressed = ps2_key[9];
+wire [7:0] code    = ps2_key[7:0];	
 
-keyboard keyboard(
-	.clk(clk_24),
-	.reset(0),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data),
-	.joystick(kbjoy)
+always @(posedge clk_24) begin
+	reg old_state;
+	old_state <= ps2_key[10];
+	if(old_state != ps2_key[10]) begin
+		case(code)
+			'h75: btn_up         	<= pressed; // up
+			'h72: btn_down        	<= pressed; // down
+			'h6B: btn_left      		<= pressed; // left
+			'h74: btn_right       	<= pressed; // right
+			'h76: btn_coin				<= pressed; // ESC
+			'h05: btn_one_player   	<= pressed; // F1
+			'h06: btn_two_players  	<= pressed; // F2
+			'h14: btn_fire3 			<= pressed; // ctrl
+			'h11: btn_fire2 			<= pressed; // alt
+			'h29: btn_fire1   		<= pressed; // Space
+		endcase
+	end
+end
+
+wire [1:0] steer;
+joy2quad steer1(
+	.CLK(clk_24),
+	.clkdiv('d22500),	
+	.right(btn_right | joystick_0[0] | joystick_1[0]),
+	.left(btn_left | joystick_0[1] | joystick_1[1]),	
+	.steer(steer)
+	);
+
+wire gear1,gear2,gear3;
+gearshift gearshift1(
+	.CLK(clk_12),	
+	.gearup(btn_fire3 | joystick_0[5] | joystick_1[5]),
+	.geardown(btn_fire2 | joystick_0[6] | joystick_1[6]),	
+	.gear1(gear1),
+	.gear2(gear2),
+	.gear3(gear3)
 	);
 
 

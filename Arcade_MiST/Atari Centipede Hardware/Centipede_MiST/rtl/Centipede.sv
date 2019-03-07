@@ -44,26 +44,16 @@ localparam CONF_STR = {
 	"Centipede;;",
 	"O1,Test,off,on;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scanlines,Off,25%,50%,75%;",
 	"T7,Reset;",
 	"V,v1.40.",`BUILD_DATE
 };
 
-wire [31:0] status;
-wire  [1:0] buttons;
-wire  [1:0] switches;
-wire  [9:0] kbjoy;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
-wire        scandoubler_disable;
-wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
-
 assign LED = 1;
+assign AUDIO_R = AUDIO_L;
 
 wire clk_24, clk_12, clk_6, clk_100mhz;
 wire pll_locked;
-
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
@@ -72,21 +62,20 @@ pll pll(
 	.c3(clk_6),
 	.c4(clk_100mhz)
 	);
-
-wire m_up     = ~status[2] ? ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0] : ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3];
-wire m_down   = ~status[2] ? ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1] : ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2];
-wire m_left   = ~status[2] ? ~kbjoy[4] & ~joystick_0[3] & ~joystick_1[3] : ~kbjoy[6] & ~joystick_0[1] & ~joystick_1[1];
-wire m_right  = ~status[2] ? ~kbjoy[5] & ~joystick_0[2] & ~joystick_1[2] : ~kbjoy[7] & ~joystick_0[0] & ~joystick_1[0];
-
-wire m_start1 = ~kbjoy[1];
-wire m_start2 = 1'b1;
-wire m_fire1  = ~kbjoy[0] & ~joystick_0[4] & ~joystick_1[4];// & ~joystick_0[4] & ~joystick_1[4];
-wire m_fire2  = 1'b1;
-wire c_coin   = ~kbjoy[3];
-wire l_coin, r_coin = 1'b1;
-wire m_test = ~status[1];
-wire m_slam = 1'b1;//generate Noise
-wire m_cocktail = 1'b1;
+	
+wire [31:0] status;
+wire  [1:0] buttons;
+wire  [1:0] switches;
+wire  [7:0] joystick_0, joystick_1;
+wire        scandoublerD;
+wire        ypbpr;
+wire [10:0] ps2_key;
+wire  [6:0] audio1, audio2;
+wire	[7:0] RGB;
+wire 			vb, hb;
+wire 			blankn = ~(hb | vb);
+wire 			hs, vs;
+wire  [3:0] audio;
 
 centipede centipede(
 	.clk_100mhz(clk_100mhz),
@@ -97,15 +86,13 @@ centipede centipede(
 	.joystick_i({m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
 	.sw1_i(8'h54),
 	.sw2_i(8'b0),
-	.rgb_o({ b,g,r}),
+	.rgb_o(RGB),
 	.hsync_o(hs),
 	.vsync_o(vs),
-	.hblank_o(hblank),
-	.vblank_o(vblank),
+	.hblank_o(hb),
+	.vblank_o(vb),
 	.audio_o(audio)
 	);
-
-wire [3:0] audio;
 
 dac #(
 	.msbi_g(15))
@@ -116,12 +103,7 @@ dac (
 	.dac_o(AUDIO_L)
 	);
 
-assign AUDIO_R = AUDIO_L;
 
-wire hs, vs;
-wire [2:0] r, g, b;
-wire hblank, vblank;
-wire blankn = ~(hblank | vblank);
 video_mixer video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
@@ -129,9 +111,9 @@ video_mixer video_mixer(
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn?{r,r}:0),
-	.G(blankn?{g,g}:0),
-	.B(blankn?{b,b}:0),
+	.R(blankn ? {RGB[2:0],RGB[2:0]} : 0),
+	.G(blankn ? {RGB[5:3],RGB[2:0]} : 0),
+	.B(blankn ? {RGB[7:6],RGB[7:6],RGB[7:6]} : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -140,9 +122,8 @@ video_mixer video_mixer(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b0,status[2]}),//(left/right,on/off)
-	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 2'b11, status[4:3] == 2'b10, status[4:3] == 2'b01}),
-//	.hq2x(status[4:3]==1),
+	.scandoublerD(scandoublerD),
+	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
 	.ypbpr(ypbpr),
 	.ypbpr_full(1),
 	.line_start(0),
@@ -150,7 +131,7 @@ video_mixer video_mixer(
 	);
 
 mist_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
+	.STRLEN(($size(CONF_STR)>>3))) 
 mist_io(
 	.clk_sys        (clk_24   	     ),
 	.conf_str       (CONF_STR       ),
@@ -161,21 +142,60 @@ mist_io(
 	.SPI_DI         (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches   	 (switches       ),
-	.scandoubler_disable(scandoubler_disable),
+	.scandoublerD	 (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_kbd_clk    (ps2_kbd_clk    ),
-	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joystick_0     ),
-	.joystick_1     (joystick_1     ),
+	.ps2_key			 (ps2_key        ),
+	.joystick_0   	 (joystick_0	  ),
+	.joystick_1     (joystick_1	  ),
 	.status         (status         )
 	);
 
-keyboard keyboard(
-	.clk(clk_24),
-	.reset(),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data),
-	.joystick(kbjoy)
-	);
+
+wire m_up     = status[2] ? ~btn_up & ~joystick_0[3] & ~joystick_1[3] : ~btn_right & ~joystick_0[0] & ~joystick_1[0];
+wire m_down   = status[2] ? ~btn_down & ~joystick_0[2] & ~joystick_1[2] : ~btn_left & ~joystick_0[1] & ~joystick_1[1];
+wire m_left   = status[2] ? ~btn_left & ~joystick_0[1] & ~joystick_1[1] : ~btn_up & ~joystick_0[3] & ~joystick_1[3];
+wire m_right  = status[2] ? ~btn_right & ~joystick_0[0] & ~joystick_1[0] : ~btn_down & ~joystick_0[2] & ~joystick_1[2];
+
+wire m_start1 = ~btn_one_player;
+wire m_start2 = 1'b1;
+wire m_fire1  = ~btn_fire1 & ~joystick_0[4] & ~joystick_1[4];
+wire m_fire2  = 1'b1;
+wire c_coin   = ~btn_coin;
+wire l_coin, r_coin = 1'b1;
+wire m_test = ~status[1];
+wire m_slam = 1'b1;//generate Noise
+wire m_cocktail = 1'b1;
+
+reg btn_one_player = 0;
+reg btn_two_players = 0;
+reg btn_left = 0;
+reg btn_right = 0;
+reg btn_down = 0;
+reg btn_up = 0;
+reg btn_fire1 = 0;
+reg btn_fire2 = 0;
+reg btn_fire3 = 0;
+reg btn_coin  = 0;
+wire       pressed = ps2_key[9];
+wire [7:0] code    = ps2_key[7:0];	
+
+always @(posedge clk_24) begin
+	reg old_state;
+	old_state <= ps2_key[10];
+	if(old_state != ps2_key[10]) begin
+		case(code)
+			'h75: btn_up         	<= pressed; // up
+			'h72: btn_down        	<= pressed; // down
+			'h6B: btn_left      		<= pressed; // left
+			'h74: btn_right       	<= pressed; // right
+			'h76: btn_coin				<= pressed; // ESC
+			'h05: btn_one_player   	<= pressed; // F1
+			'h06: btn_two_players  	<= pressed; // F2
+			'h14: btn_fire3 			<= pressed; // ctrl
+			'h11: btn_fire2 			<= pressed; // alt
+			'h29: btn_fire1   		<= pressed; // Space
+		endcase
+	end
+end
 
 endmodule
