@@ -69,7 +69,7 @@ snd_ram_1_we <= ram_1_we;
 
 sum <= ('0' & snd_ram_0_do) + ('0' & snd_ram_1_do) + ("0000" & sum_r(4));
 
-process (clock_18)
+process (clock_18, ena)
 begin
  if rising_edge(clock_18) and ena = '1' then
 	if snd_seq_do(3) = '0' then

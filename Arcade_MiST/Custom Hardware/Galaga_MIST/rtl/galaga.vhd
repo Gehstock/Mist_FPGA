@@ -106,14 +106,15 @@ entity galaga is
 port(
  clock_18     : in std_logic;
  reset        : in std_logic;
--- tv15Khz_mode : in std_logic;
  video_r        : out std_logic_vector(2 downto 0);
  video_g        : out std_logic_vector(2 downto 0);
  video_b        : out std_logic_vector(1 downto 0);
- video_blankn   : out std_logic;
+ video_clk      : out std_logic;
+ video_csync    : out std_logic;
+ video_hb     : out std_logic;
+ video_vb     : out std_logic;
  video_hs     : out std_logic;
  video_vs     : out std_logic;
- pix_ce         : out std_logic;
  audio          : out std_logic_vector(9 downto 0);
 
  b_test         : in std_logic;
@@ -131,6 +132,7 @@ port(
 end galaga;
 
 architecture struct of galaga is
+
  signal reset_n: std_logic;
  signal clock_18n : std_logic;
 
@@ -315,7 +317,7 @@ architecture struct of galaga is
  
 
 begin
-pix_ce <= ena_vidgen;
+
 clock_18n <= not clock_18;
 reset_n   <= not reset;
 
@@ -911,7 +913,7 @@ cs06XX_di <= cs51XX_do when "0001",
 
 cs06XX_do <= cs06XX_di when mux_addr(8)= '0' else cs06XX_control;
 
-process (clock_18, nmion_n)
+process (clock_18, nmion_n, ena_vidgen)
 begin
  if nmion_n = '1' then
  elsif rising_edge(clock_18) and ena_vidgen = '1' then
@@ -970,7 +972,9 @@ hcnt    => hcnt,
 vcnt    => vcnt,
 hsync   => video_hs,
 vsync   => video_vs,
-blankn  => video_blankn
+csync   => video_csync,
+hblank  => video_hb,
+vblank  => video_vb
 );
 
 -- microprocessor Z80 - 1
@@ -1086,7 +1090,7 @@ port map(
  clk  => clock_18n,
  addr => cs54xx_rom_addr(9 downto 0),
  data => cs54xx_rom_do
-);
+    );
 
 -- cpu1 program ROM
 rom_cpu1 : entity work.galaga_cpu1
