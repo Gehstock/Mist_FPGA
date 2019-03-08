@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------- #
 #
-# Copyright (C) 1991-2013 Altera Corporation
+# Copyright (C) 1991-2014 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 01:12:07  December 01, 2017
+# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
+# Date created = 18:02:27  March 08, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -45,12 +45,14 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
+set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
+set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
@@ -64,17 +66,13 @@ set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_1.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_0.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/ROM_LUT.vhd
 set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
-set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VERILOG_FILE rtl/build_id.v
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
 set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
 
 # Pin & Location Assignments
 # ==========================
@@ -158,62 +156,98 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # --------------------
 # start ENTITY(TheEnd)
 
+	# start LOGICLOCK_REGION(Region_0)
+	# --------------------------------
+
+		# LogicLock Region Assignments
+		# ============================
+		set_global_assignment -name LL_ENABLED ON -section_id Region_0
+		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_0
+		set_global_assignment -name LL_STATE LOCKED -section_id Region_0
+		set_global_assignment -name LL_RESERVED OFF -section_id Region_0
+		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_0
+		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_0
+		set_global_assignment -name LL_PR_REGION OFF -section_id Region_0
+		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_0
+		set_global_assignment -name LL_WIDTH 4 -section_id Region_0
+		set_global_assignment -name LL_HEIGHT 1 -section_id Region_0
+		set_global_assignment -name LL_ORIGIN X28_Y23 -section_id Region_0
+
+	# end LOGICLOCK_REGION(Region_0)
+	# ------------------------------
+
+	# start LOGICLOCK_REGION(Region_1)
+	# --------------------------------
+
+		# LogicLock Region Assignments
+		# ============================
+		set_global_assignment -name LL_ENABLED ON -section_id Region_1
+		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_1
+		set_global_assignment -name LL_STATE LOCKED -section_id Region_1
+		set_global_assignment -name LL_RESERVED OFF -section_id Region_1
+		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_1
+		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_1
+		set_global_assignment -name LL_PR_REGION OFF -section_id Region_1
+		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_1
+		set_global_assignment -name LL_WIDTH 5 -section_id Region_1
+		set_global_assignment -name LL_HEIGHT 7 -section_id Region_1
+		set_global_assignment -name LL_ORIGIN X7_Y23 -section_id Region_1
+
+	# end LOGICLOCK_REGION(Region_1)
+	# ------------------------------
+
+	# start LOGICLOCK_REGION(Region_2)
+	# --------------------------------
+
+		# LogicLock Region Assignments
+		# ============================
+		set_global_assignment -name LL_ENABLED ON -section_id Region_2
+		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_2
+		set_global_assignment -name LL_STATE LOCKED -section_id Region_2
+		set_global_assignment -name LL_RESERVED OFF -section_id Region_2
+		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_2
+		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_2
+		set_global_assignment -name LL_PR_REGION OFF -section_id Region_2
+		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_2
+		set_global_assignment -name LL_WIDTH 2 -section_id Region_2
+		set_global_assignment -name LL_HEIGHT 3 -section_id Region_2
+		set_global_assignment -name LL_ORIGIN X6_Y30 -section_id Region_2
+
+	# end LOGICLOCK_REGION(Region_2)
+	# ------------------------------
+
+	# start LOGICLOCK_REGION(Region_3)
+	# --------------------------------
+
+		# LogicLock Region Assignments
+		# ============================
+		set_global_assignment -name LL_ENABLED ON -section_id Region_3
+		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_3
+		set_global_assignment -name LL_STATE LOCKED -section_id Region_3
+		set_global_assignment -name LL_RESERVED OFF -section_id Region_3
+		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_3
+		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_3
+		set_global_assignment -name LL_PR_REGION OFF -section_id Region_3
+		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_3
+		set_global_assignment -name LL_WIDTH 3 -section_id Region_3
+		set_global_assignment -name LL_HEIGHT 8 -section_id Region_3
+		set_global_assignment -name LL_ORIGIN X3_Y23 -section_id Region_3
+
+	# end LOGICLOCK_REGION(Region_3)
+	# ------------------------------
+
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(TheEnd)
 # ------------------
-set_global_assignment -name LL_ENABLED ON -section_id Region_0
-set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_0
-set_global_assignment -name LL_STATE LOCKED -section_id Region_0
-set_global_assignment -name LL_RESERVED OFF -section_id Region_0
-set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_0
-set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_0
-set_global_assignment -name LL_PR_REGION OFF -section_id Region_0
-set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_0
-set_global_assignment -name LL_WIDTH 4 -section_id Region_0
-set_global_assignment -name LL_HEIGHT 1 -section_id Region_0
-set_global_assignment -name LL_ORIGIN X28_Y23 -section_id Region_0
-set_global_assignment -name LL_ENABLED ON -section_id Region_1
-set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_1
-set_global_assignment -name LL_STATE LOCKED -section_id Region_1
-set_global_assignment -name LL_RESERVED OFF -section_id Region_1
-set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_1
-set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_1
-set_global_assignment -name LL_PR_REGION OFF -section_id Region_1
-set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_1
-set_global_assignment -name LL_WIDTH 5 -section_id Region_1
-set_global_assignment -name LL_HEIGHT 7 -section_id Region_1
-set_global_assignment -name LL_ORIGIN X7_Y23 -section_id Region_1
-set_global_assignment -name LL_ENABLED ON -section_id Region_2
-set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_2
-set_global_assignment -name LL_STATE LOCKED -section_id Region_2
-set_global_assignment -name LL_RESERVED OFF -section_id Region_2
-set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_2
-set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_2
-set_global_assignment -name LL_PR_REGION OFF -section_id Region_2
-set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_2
-set_global_assignment -name LL_WIDTH 2 -section_id Region_2
-set_global_assignment -name LL_HEIGHT 3 -section_id Region_2
-set_global_assignment -name LL_ORIGIN X6_Y30 -section_id Region_2
-set_global_assignment -name LL_ENABLED ON -section_id Region_3
-set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_3
-set_global_assignment -name LL_STATE LOCKED -section_id Region_3
-set_global_assignment -name LL_RESERVED OFF -section_id Region_3
-set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_3
-set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_3
-set_global_assignment -name LL_PR_REGION OFF -section_id Region_3
-set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_3
-set_global_assignment -name LL_WIDTH 3 -section_id Region_3
-set_global_assignment -name LL_HEIGHT 8 -section_id Region_3
-set_global_assignment -name LL_ORIGIN X3_Y23 -section_id Region_3
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
