@@ -13,7 +13,6 @@ port(
   clock_12  : in std_logic;
   reset        : in std_logic;
   tv15Khz_mode : in std_logic;
-
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
   video_b      : out std_logic_vector(1 downto 0);
@@ -21,6 +20,7 @@ port(
   video_csync  : out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
+  blankn       : out std_logic;
   audio_out    : out std_logic_vector(15 downto 0);
   
   start2       : in std_logic;
@@ -181,7 +181,7 @@ begin
 
 clock_12n <= not clock_12;
 reset_n   <= not reset;
-
+blankn   <= not blank;
 -----------------------
 -- Enable pixel counter
 -----------------------
