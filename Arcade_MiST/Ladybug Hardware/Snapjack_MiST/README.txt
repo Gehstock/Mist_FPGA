@@ -9,7 +9,6 @@
 ---------------------------------------------------------------------------------
 -- 
 -- 
--- Only controls are rotated on VGA output.
 -- 
 -- Keyboard inputs :
 --

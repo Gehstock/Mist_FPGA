@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------- #
 #
-# Copyright (C) 1991-2013 Altera Corporation
+# Copyright (C) 1991-2014 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 10:02:22  November 16, 2017
+# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
+# Date created = 01:23:39  March 09, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -40,12 +40,66 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
-set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/CosmicAvenger.sv
+set_global_assignment -name VHDL_FILE rtl/ladybug.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_video_unit.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_video_timing.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_sprite_ctrl.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_sprite.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_rgb.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_res.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_rams.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_machine.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_gpio.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_dip_pack.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_cpu_unit.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_counter.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_clk.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_chutes.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_chute.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_char.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_addr_dec.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_top.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_tone.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_noise.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_latch_ctrl.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_clock_div.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_attenuator.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/ladybug_sound_unit.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_u.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_l.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu3.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu2.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_char_u.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/rom_char_l.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_decrypt.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_3.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_2.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_1.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80a.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/ttl_393.vhd
+set_global_assignment -name VHDL_FILE rtl/ttl_175.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name QIP_FILE rtl/pll.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -84,6 +138,8 @@ set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 # Classic Timing Assignments
 # ==========================
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 
 # Analysis & Synthesis Assignments
 # ================================
@@ -91,6 +147,7 @@ set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name SAVE_DISK_SPACE OFF
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 set_global_assignment -name TOP_LEVEL_ENTITY CosmicAvenger
 
 # Fitter Assignments
@@ -109,6 +166,10 @@ set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS R
 set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
+# EDA Netlist Writer Assignments
+# ==============================
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+
 # Assembler Assignments
 # =====================
 set_global_assignment -name GENERATE_RBF_FILE ON
@@ -126,7 +187,17 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# ---------------------
+# start EDA_TOOL_SETTINGS(eda_simulation)
+# ---------------------------------------
+
+	# EDA Netlist Writer Assignments
+	# ==============================
+	set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+
+# end EDA_TOOL_SETTINGS(eda_simulation)
+# -------------------------------------
+
+# ---------------------------
 # start ENTITY(CosmicAvenger)
 
 	# start DESIGN_PARTITION(Top)
@@ -137,69 +208,10 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(CosmicAvenger)
-# -------------------
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
-set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/CosmicAvenger.sv
-set_global_assignment -name VHDL_FILE rtl/ladybug.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_top.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_tone.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_noise.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_latch_ctrl.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_clock_div.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_attenuator.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/ladybug_sound_unit.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_u.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_l.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu3.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu2.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_char_u.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/rom_char_l.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_decrypt.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_3.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_2.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_1.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80a.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/ttl_393.vhd
-set_global_assignment -name VHDL_FILE rtl/ttl_175.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_video_unit.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_video_timing.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_sprite_ctrl.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_sprite.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_rgb.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_res.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_rams.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_machine.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_gpio.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_dip_pack.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_cpu_unit.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_counter.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_clk.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_chutes.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_chute.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_char.vhd
-set_global_assignment -name VHDL_FILE rtl/ladybug_addr_dec.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+# -------------------------

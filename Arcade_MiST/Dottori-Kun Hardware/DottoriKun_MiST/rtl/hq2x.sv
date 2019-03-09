@@ -219,7 +219,7 @@ module Blend
 	DiffCheck diff_checker(rule[1] ? B : H, rule[0] ? D : F, is_diff);
 
 	always @* begin
-		case({!is_diff, rule[5:2]})
+		casex({!is_diff, rule[5:2]})
 			1,17:  {op, input_ctrl} = {BLEND1, AB};
 			2,18:  {op, input_ctrl} = {BLEND1, DB};
 			3,19:  {op, input_ctrl} = {BLEND1, BD};

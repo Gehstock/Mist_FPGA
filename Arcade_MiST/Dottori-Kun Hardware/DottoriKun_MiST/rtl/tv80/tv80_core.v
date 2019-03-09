@@ -291,7 +291,7 @@ module tv80_core (/*AUTOARG*/
   function [6:0] number_to_bitvec;
     input [2:0] num;
     begin
-      case (num)
+      casex (num)
         1 : number_to_bitvec = 7'b0000001;
         2 : number_to_bitvec = 7'b0000010;
         3 : number_to_bitvec = 7'b0000100;
