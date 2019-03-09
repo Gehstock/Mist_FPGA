@@ -84,8 +84,6 @@ port(
 	clock_12     : in std_logic;
 	clock_14     : in std_logic;
 	reset        : in std_logic;
-
-	-- tv15Khz_mode : in std_logic;
 	video_r        : out std_logic_vector(4 downto 0);
 	video_g        : out std_logic_vector(4 downto 0);
 	video_b        : out std_logic_vector(4 downto 0);

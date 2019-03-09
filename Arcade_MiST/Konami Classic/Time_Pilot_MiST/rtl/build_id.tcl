@@ -17,12 +17,12 @@ proc generateBuildID_Verilog {} {
 	set buildTime [ clock format [ clock seconds ] -format %H%M%S ]
 
 	# Create a Verilog file for output
-	set outputFileName "build_id.vhd"
+	set outputFileName "rtl/build_id.v"
 	set outputFile [open $outputFileName "w"]
 
 	# Output the Verilog source
-	puts $outputFile "constant BUILD_DATE : String(1 to 6) := \"$buildDate\""
-	puts $outputFile "constant BUILD_TIME : String(1 to 6) := \"$buildTime\""
+	puts $outputFile "`define BUILD_DATE \"$buildDate\""
+	puts $outputFile "`define BUILD_TIME \"$buildTime\""
 	close $outputFile
 
 	# Send confirmation message to the Messages window

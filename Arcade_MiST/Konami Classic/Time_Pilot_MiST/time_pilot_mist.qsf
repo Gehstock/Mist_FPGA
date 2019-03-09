@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------- #
 #
-# Copyright (C) 1991-2013 Altera Corporation
+# Copyright (C) 1991-2014 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 14:18:08  November 05, 2017
+# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
+# Date created = 17:50:10  March 09, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -43,53 +43,39 @@ set_global_assignment -name ORIGINAL_QUARTUS_VERSION 15.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:45:13 JUNE 17,2016"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name TOP_LEVEL_ENTITY time_pilot_mist
-
-# Classic Timing Assignments
-# ==========================
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-# Analysis & Synthesis Assignments
-# ================================
-set_global_assignment -name FAMILY "Cyclone III"
+set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/time_pilot.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_sprite_grphx.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_sprite_color_lut.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_prog.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_prog.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_palette_green_red.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_palette_blue_green.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_char_grphx.vhd
+set_global_assignment -name VHDL_FILE rtl/time_pilot_char_color_lut.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_video.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
-# Fitter Assignments
-# ==================
-set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
-set_global_assignment -name DEVICE EP3C25E144C8
-set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
-set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
-set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
-set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
-
-# EDA Netlist Writer Assignments
-# ==============================
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
-
-# Assembler Assignments
-# =====================
-set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
-set_global_assignment -name GENERATE_RBF_FILE ON
-
-# SignalTap II Assignments
-# ========================
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp1.stp
-
-# Power Estimation Assignments
-# ============================
-set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
-set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-
-
-
+# Pin & Location Assignments
+# ==========================
 set_location_assignment PIN_7 -to LED
 set_location_assignment PIN_54 -to CLOCK_27
 set_location_assignment PIN_144 -to VGA_R[5]
@@ -121,47 +107,77 @@ set_location_assignment PIN_127 -to SPI_SS2
 set_location_assignment PIN_91 -to SPI_SS3
 set_location_assignment PIN_13 -to CONF_DATA0
 
+# Classic Timing Assignments
+# ==========================
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
 
+# Analysis & Synthesis Assignments
+# ================================
+set_global_assignment -name TOP_LEVEL_ENTITY TimePilot_MiST
+set_global_assignment -name FAMILY "Cyclone III"
 
+# Fitter Assignments
+# ==================
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name DEVICE EP3C25E144C8
+set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
+set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
 set_global_assignment -name ENABLE_NCE_PIN OFF
+
+# EDA Netlist Writer Assignments
+# ==============================
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+
+# Assembler Assignments
+# =====================
+set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name GENERATE_RBF_FILE ON
+
+# SignalTap II Assignments
+# ========================
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp1.stp
+
+# Power Estimation Assignments
+# ============================
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+
+# Advanced I/O Timing Assignments
+# ===============================
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name VHDL_FILE rtl/time_pilot_mist.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VHDL_FILE rtl/time_pilot_sprite_grphx.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_sprite_color_lut.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_prog.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_prog.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_palette_green_red.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_palette_blue_green.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_char_grphx.vhd
-set_global_assignment -name VHDL_FILE rtl/time_pilot_char_color_lut.vhd
-set_global_assignment -name VHDL_FILE rtl/T8080se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80.vhd
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name QIP_FILE rtl/mist_pll_12M_14M.qip
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/gen_video.vhd
-set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
-set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+# ----------------------------
+# start ENTITY(TimePilot_MiST)
 
+	# start DESIGN_PARTITION(Top)
+	# ---------------------------
+
+		# Incremental Compilation Assignments
+		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+	# end DESIGN_PARTITION(Top)
+	# -------------------------
+
+# end ENTITY(TimePilot_MiST)
+# --------------------------
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
