@@ -8,7 +8,7 @@
 -- Copyright (c) MikeJ - Feb 2007
 ---------------------------------------------------------------------------------
 -- 
--- Only controls are rotated on VGA output.
+-- Only controls AND OSD are rotated on VIDEO output.
 -- 
 -- 
 -- Keyboard inputs :

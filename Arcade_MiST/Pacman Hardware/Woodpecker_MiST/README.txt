@@ -8,7 +8,7 @@
 -- Copyright (c) MikeJ - Feb 2007
 ---------------------------------------------------------------------------------
 -- 
--- Only controls are rotated on VGA output.
+-- Only controls and OSD are rotated on Video output.
 -- 
 -- 
 -- Keyboard inputs :
@@ -16,8 +16,8 @@
 --   ESC         : Coin
 --   F1          : Start 1 player
 --   F2          : Start 2 players
---   TAB         : Skip the level
---   SPACE,CTRL  : Fire
+--   CTRL        : Skip the level
+--   SPACE  	 : Fire
 --   UP,DOWN,LEFT,RIGHT arrows : Movements
 --
 -- Joystick support.

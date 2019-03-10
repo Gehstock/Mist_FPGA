@@ -148,12 +148,11 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # ------------------
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Birdiy.sv
+set_global_assignment -name VHDL_FILE rtl/pacman.vhd
 set_global_assignment -name VHDL_FILE rtl/pacman_vram_addr.vhd
 set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
 set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
@@ -161,9 +160,9 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
 set_global_assignment -name VERILOG_FILE rtl/osd.v
 set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
 set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name QIP_FILE rtl/pll.qip

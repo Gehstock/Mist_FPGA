@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------- #
 #
-# Copyright (C) 1991-2013 Altera Corporation
+# Copyright (C) 1991-2014 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 23:14:41  November 10, 2017
+# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
+# Date created = 13:19:51  March 10, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -41,7 +41,34 @@
 # ========================
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SuperGlob.sv
+set_global_assignment -name VHDL_FILE rtl/pacman.vhd
+set_global_assignment -name VHDL_FILE rtl/pacman_vram_addr.vhd
+set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
+set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM3_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
+set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name VERILOG_FILE rtl/osd.v
+set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
 
 # Pin & Location Assignments
 # ==========================
@@ -77,12 +104,17 @@ set_location_assignment PIN_91 -to SPI_SS3
 set_location_assignment PIN_13 -to CONF_DATA0
 set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 
+# Classic Timing Assignments
+# ==========================
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY SuperGlob
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY SuperGlob
 
 # Fitter Assignments
 # ==================
@@ -105,6 +137,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 # Power Estimation Assignments
 # ============================
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 
 # Advanced I/O Timing Assignments
 # ===============================
@@ -113,8 +146,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------
-# start ENTITY(MrTNT)
+# -----------------------
+# start ENTITY(SuperGlob)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -128,38 +161,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(MrTNT)
-# -----------------
-
-set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SuperGlob.sv
-set_global_assignment -name VHDL_FILE rtl/pacman.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_vram_addr.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM3_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+# end ENTITY(SuperGlob)
+# ---------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
