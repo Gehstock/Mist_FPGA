@@ -8,7 +8,7 @@
 -- Copyright(c) 2004 Katsumi Degawa
 ---------------------------------------------------------------------------------
 -- 
--- Only controls are rotated on VGA output.
+-- Only controls and OSD are rotated on Video output.
 -- 
 -- 
 -- Keyboard inputs :
