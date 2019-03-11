@@ -1,0 +1,23 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: TripleDrawPoker port to MiST by Gehstock
+-- 11 Mar 2019
+-- 
+---------------------------------------------------------------------------------
+-- A simulation model of Galaxian hardware
+-- Copyright(c) 2004 Katsumi Degawa
+---------------------------------------------------------------------------------
+-- 
+-- Only controls and OSD are rotated on Video output.
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   F2         : Coin + Start 2 players
+--   F1         : Coin + Start 1 player
+--   SPACE 	: Select
+--   ARROW KEYS : Movements
+--
+-- Joystick support.
+-- 
+---------------------------------------------------------------------------------
