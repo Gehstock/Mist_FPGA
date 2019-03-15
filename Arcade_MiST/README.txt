@@ -20,7 +20,6 @@ Aviable Arcade Cores
 	Crazy Climber
 	Crazy Kong
 	Galaga
-	Phoenix
 
 #Data East Burger Time Hardware
 	#Setup 1
@@ -36,12 +35,15 @@ Aviable Arcade Cores
 	Black Hole
 	Catacomb
 	Galaxian
+	King & Balloon
 	Moon Cresta
 	Mr. Do´s Nightmare
 	Omega
 	Orbitron
 	Pisces
+	Triple Draw Poker
 	War of Bugs
+	Zig Zag
 
 #Irem M52 Hardware
 	Moon Patrol
@@ -90,6 +92,10 @@ Aviable Arcade Cores
 	Super Glob
 	Van Van Car
 	Woodpecker
+
+#Phoenix Hardware
+	Capitol
+	Phoenix
 
 #Scramble Hardware
 	Amidar
