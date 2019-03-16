@@ -1,0 +1,24 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: ChewingGum port to MiST by Gehstock
+-- 16 Mar 2019
+-- 
+---------------------------------------------------------------------------------
+-- A simulation model of Galaxian hardware
+-- Copyright(c) 2004 Katsumi Degawa
+---------------------------------------------------------------------------------
+-- 
+-- Only controls and OSD are rotated on Video output.
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   ESC        	: add 1 Coin
+--   Up        		: add 10 Coin
+--   Left		: increase Bet
+--   Right		: decrease Bet
+--   SPACE/Fire 	: Start
+--
+-- Joystick support.
+-- 
+---------------------------------------------------------------------------------
