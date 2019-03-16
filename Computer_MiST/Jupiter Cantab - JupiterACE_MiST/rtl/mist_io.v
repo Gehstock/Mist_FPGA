@@ -48,13 +48,16 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	output            SPI_DO,
 	input             SPI_DI,
 
-	output reg  [7:0] joystick_0,
-	output reg  [7:0] joystick_1,
+	output reg [7:0] joystick_0,
+	output reg [7:0] joystick_1,
+//	output reg [31:0] joystick_2,
+//	output reg [31:0] joystick_3,
+//	output reg [31:0] joystick_4,
 	output reg [15:0] joystick_analog_0,
 	output reg [15:0] joystick_analog_1,
 	output      [1:0] buttons,
 	output      [1:0] switches,
-	output            scandoubler_disable,
+	output            scandoublerD,
 	output            ypbpr,
 
 	output reg [31:0] status,
@@ -98,18 +101,18 @@ module mist_io #(parameter STRLEN=0, parameter PS2DIV=100)
 	output reg  [7:0] ioctl_index,        // menu index used to upload the file
 	output reg        ioctl_wr = 0,
 	output reg [24:0] ioctl_addr,
-	output reg  [7:0] ioctl_dout,
-	input             ioctl_wait
+	output reg  [7:0] ioctl_dout
 );
 
 reg [7:0] but_sw;
 reg [2:0] stick_idx;
+
 reg [1:0] mount_strobe = 0;
 assign img_mounted  = mount_strobe;
 
 assign buttons = but_sw[1:0];
 assign switches = but_sw[3:2];
-assign scandoubler_disable = but_sw[4];
+assign scandoublerD = but_sw[4];
 assign ypbpr = but_sw[5];
 
 // this variant of user_io is for 8 bit cores (type == a4) only
@@ -168,9 +171,9 @@ always@(posedge SPI_SCK or posedge CONF_DATA0) begin
 							spi_data_out <= sd_cmd;
 							sd_lba_r <= sd_lba;
 							drive_sel_r <= drive_sel;
-						 end else if (byte_cnt == 1) begin
+						end else if (byte_cnt == 1) begin
 							spi_data_out <= drive_sel_r;
-						 end else if(byte_cnt < 6) spi_data_out <= sd_lba_r[(5-byte_cnt)<<3 +:8];
+						end else if(byte_cnt < 6) spi_data_out <= sd_lba_r[(5-byte_cnt)<<3 +:8];
 
 				// reading sd card write data
 				8'h18: spi_data_out <= sd_buff_din;
@@ -233,7 +236,11 @@ always@(posedge clk_sys) begin
 				8'h01: but_sw <= spi_data_in; 
 				8'h02: joystick_0 <= spi_data_in;
 				8'h03: joystick_1 <= spi_data_in;
-
+//				8'h60: if (byte_cnt < 5) joystick_0[(byte_cnt-1)<<3 +:8] <= spi_data_in;
+//				8'h61: if (byte_cnt < 5) joystick_1[(byte_cnt-1)<<3 +:8] <= spi_data_in;
+//				8'h62: if (byte_cnt < 5) joystick_2[(byte_cnt-1)<<3 +:8] <= spi_data_in;
+//				8'h63: if (byte_cnt < 5) joystick_3[(byte_cnt-1)<<3 +:8] <= spi_data_in;
+//				8'h64: if (byte_cnt < 5) joystick_4[(byte_cnt-1)<<3 +:8] <= spi_data_in;
 				// store incoming ps2 mouse bytes 
 				8'h04: begin
 						got_ps2 <= 1;
@@ -475,7 +482,11 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 		if((cmd == UIO_FILE_TX) && (cnt == 15)) begin
 			// prepare 
 			if(SPI_DI) begin
-				addr <= 25'h080000;
+				case(ioctl_index[4:0]) 
+							1: addr <= 25'h200000; // TRD buffer  at 2MB
+							2: addr <= 25'h400000; // tape buffer at 4MB 
+					default: addr <= 25'h150000; // boot rom
+				endcase
 				rdownload <= 1; 
 			end else begin
 				addr_w <= addr;
@@ -501,7 +512,7 @@ end
 always@(posedge clk_sys) begin
 	reg        rclkD, rclkD2;
 
-	if(ioctl_ce& ~ioctl_wait) begin
+	if(ioctl_ce) begin
 		ioctl_download <= rdownload;
 
 		rclkD    <= rclk;
@@ -516,4 +527,4 @@ always@(posedge clk_sys) begin
 	end
 end
 
-endmodule
+endmodule 
