@@ -20,8 +20,8 @@
 
 module video_mixer
 #(
-	parameter LINE_LENGTH  = 768,
-	parameter HALF_DEPTH   = 0,
+	parameter LINE_LENGTH  = 480,
+	parameter HALF_DEPTH   = 1,
 
 	parameter OSD_COLOR    = 3'd4,
 	parameter OSD_X_OFFSET = 10'd0,
@@ -50,7 +50,7 @@ module video_mixer
 	input  [1:0] scanlines,
 
 	// 0 = HVSync 31KHz, 1 = CSync 15KHz
-	input        scandoubler_disable,
+	input        scandoublerD,
 
 	// High quality 2x scaling
 	input        hq2x,
@@ -113,9 +113,9 @@ scandoubler #(.LENGTH(LINE_LENGTH), .HALF_DEPTH(HALF_DEPTH)) scandoubler
 	.b_out(B_sd)
 );
 
-wire [DWIDTH:0] rt  = (scandoubler_disable ? R : R_sd);
-wire [DWIDTH:0] gt  = (scandoubler_disable ? G : G_sd);
-wire [DWIDTH:0] bt  = (scandoubler_disable ? B : B_sd);
+wire [DWIDTH:0] rt  = (scandoublerD ? R : R_sd);
+wire [DWIDTH:0] gt  = (scandoublerD ? G : G_sd);
+wire [DWIDTH:0] bt  = (scandoublerD ? B : B_sd);
 
 generate
 	if(HALF_DEPTH) begin
@@ -129,8 +129,8 @@ generate
 	end
 endgenerate
 
-wire       hs = (scandoubler_disable ? HSync : hs_sd);
-wire       vs = (scandoubler_disable ? VSync : vs_sd);
+wire       hs = (scandoublerD ? HSync : hs_sd);
+wire       vs = (scandoublerD ? VSync : vs_sd);
 
 reg scanline = 0;
 always @(posedge clk_sys) begin
@@ -237,7 +237,7 @@ wire [7:0] pr = (pr_8[17:8] < 16) ? 8'd16 : (pr_8[17:8] > 240) ? 8'd240 : pr_8[1
 assign VGA_R  = ypbpr ? (ypbpr_full ? yuv_full[pr-8'd16] : pr[7:2]) :   red;
 assign VGA_G  = ypbpr ? (ypbpr_full ? yuv_full[y -8'd16] :  y[7:2]) : green;
 assign VGA_B  = ypbpr ? (ypbpr_full ? yuv_full[pb-8'd16] : pb[7:2]) :  blue;
-assign VGA_VS = (scandoubler_disable | ypbpr) ? 1'b1 : ~vs_sd;
-assign VGA_HS = scandoubler_disable ? ~(HSync ^ VSync) : ypbpr ? ~(hs_sd ^ vs_sd) : ~hs_sd;
+assign VGA_VS = (scandoublerD | ypbpr) ? 1'b1 : ~vs_sd;
+assign VGA_HS = scandoublerD ? ~(HSync ^ VSync) : ypbpr ? ~(hs_sd ^ vs_sd) : ~hs_sd;
 
 endmodule

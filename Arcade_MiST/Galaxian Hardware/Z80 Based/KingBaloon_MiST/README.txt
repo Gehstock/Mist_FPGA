@@ -12,11 +12,15 @@
 -- 
 -- Keyboard inputs :
 --
---   F2         : Coin + Start 2 players
---   F1         : Coin + Start 1 player
+--   ESC        : Coin
+--   F1         : Start 1 player
+--   F2         : Start 2 player
 --   SPACE 	: Fire
 --   ARROW KEYS : Movements
 --
 -- Joystick support.
 -- 
 ---------------------------------------------------------------------------------
+
+
+ToDo:  Change Sound and add Speech

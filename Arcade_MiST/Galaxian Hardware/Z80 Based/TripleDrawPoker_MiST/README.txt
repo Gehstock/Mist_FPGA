@@ -13,8 +13,9 @@
 -- 
 -- Keyboard inputs :
 --
---   F2         : Coin + Start 2 players
---   F1         : Coin + Start 1 player
+--   ESC        : Coin
+--   F1         : Start 1 player
+--   F1         : Start 2 player
 --   SPACE 	: Select
 --   ARROW KEYS : Movements
 --

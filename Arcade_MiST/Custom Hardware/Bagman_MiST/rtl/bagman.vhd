@@ -211,22 +211,9 @@ video_b  <= video_s(7 downto 6);
 video_hblank <= hblank;
 video_vblank <= vblank;
 
-video_hs    <= hsync_o when tv15Khz_mode = '0' else hsync;
-video_vs    <= vsync_o when tv15Khz_mode = '0' else vsync;
-video_s  <= video_o when tv15Khz_mode = '0' else video_i;
-
-
--- line doubler 
-line_doubler : entity work.line_doubler
-port map(
-	clock_12mhz  => clock_12,
-	video_i  => video_i,
-	hsync_i  => hsync,
-	vsync_i  => vsync,
-	video_o  => video_o,
-	hsync_o  => hsync_o,
-	vsync_o  => vsync_o
-);
+video_hs    <= hsync;
+video_vs    <= vsync;
+video_s  <= video_i;
 
 ------------------
 -- player controls
