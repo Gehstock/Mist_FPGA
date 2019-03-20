@@ -19,18 +19,6 @@
 
 // TODO: Delay vsync one line
 
-`define BITS_TO_FIT(N) ( \
-     N <=   2 ? 0 : \
-     N <=   4 ? 1 : \
-     N <=   8 ? 2 : \
-     N <=  16 ? 3 : \
-     N <=  32 ? 4 : \
-     N <=  64 ? 5 : \
-     N <= 128 ? 6 : \
-     N <= 256 ? 7 : \
-     N <= 512 ? 8 : \
-     N <=1024 ? 9 : 10 )
-
 module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
 (
 	// system interface
@@ -117,6 +105,18 @@ always @(*) begin
 		default: ce_sd <= 1;
 	endcase
 end
+
+`define BITS_TO_FIT(N) ( \
+     N <=   2 ? 0 : \
+     N <=   4 ? 1 : \
+     N <=   8 ? 2 : \
+     N <=  16 ? 3 : \
+     N <=  32 ? 4 : \
+     N <=  64 ? 5 : \
+     N <= 128 ? 6 : \
+     N <= 256 ? 7 : \
+     N <= 512 ? 8 : \
+     N <=1024 ? 9 : 10 )
 
 localparam AWIDTH = `BITS_TO_FIT(LENGTH);
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x

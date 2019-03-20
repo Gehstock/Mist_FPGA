@@ -73,7 +73,6 @@ entity berzerk is
 port(
   clock_10     : in std_logic;
   reset        : in std_logic;
-  tv15Khz_mode : in std_logic;
 
   video_r      : out std_logic;
   video_g      : out std_logic;
@@ -83,6 +82,8 @@ port(
   video_csync  : out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
+  video_hb     : out std_logic;
+  video_vb     : out std_logic;  
   audio_out    : out std_logic_vector(15 downto 0);
   
   start2       : in std_logic;
@@ -252,19 +253,6 @@ color <= colors(7 downto 4) when hcnt(2) = '0' else colors(3 downto 0);
 -- serialize video byte
 video <= color when graphx(to_integer(unsigned(not hcnt(2 downto 0)))) = '1' else "0000";
 
--- apply blanking
-process(clock_10)
-begin
-	if rising_edge(clock_10) then
-		if ena_pixel = '1' then
-			if blank = '0' then
-				video_i <= video;			
-			else
-				video_i <= (others => '0');
-			end if;
-		end if;
-	end if;
-end process;
 
 
 
@@ -315,7 +303,7 @@ begin
 	end if;
 end process;
 
-process (clock_10, cpu_iorq_n, cpu_addr)
+process (clock_10, cpu_iorq_n, cpu_addr, reset)
 begin
 	if reset = '1' then
 		cpu_int_n <= '1';
@@ -501,39 +489,22 @@ port map (
   hsync     => hsync,
   vsync     => vsync,
   csync     => csync,
-  blank     => blank,
-
+  hblank     => video_hb,
+  vblank     => video_vb,
   hcnt_o    => hcnt,
   vcnt_o    => vcnt
 );
 
--- line doubler 
-line_doubler : entity work.line_doubler
-port map(
-	clock    => clock_10,
-	video_i  => video_i,
-	hsync_i  => hsync,
-	vsync_i  => vsync,
-	video_o  => video_o,
-	hsync_o  => hsync_o,
-	vsync_o  => vsync_o
-);
-
-
---video_s <= video_i;
---video_hs <= hsync;
---video_vs <= vsync;
+video_s <= video;
+video_hs <= hsync;
+video_vs <= vsync;
 video_r  <= video_s(0);				
 video_g  <= video_s(1);				
 video_b  <= video_s(2);
 video_hi <= video_s(3);
-
--- output
-video_s  <= video_o when tv15Khz_mode = '0' else video_i;
 video_clk   <= clock_10;
 video_csync <= csync;
-video_hs    <= hsync_o when tv15Khz_mode = '0' else hsync;
-video_vs    <= vsync_o when tv15Khz_mode = '0' else vsync;
+
 -- Z80
 Z80 : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)

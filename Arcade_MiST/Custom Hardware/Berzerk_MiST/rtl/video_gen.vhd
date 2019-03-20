@@ -14,17 +14,15 @@ port(
 	hsync      : out std_logic;
 	vsync      : out std_logic;
 	csync      : out std_logic;
-	blank      : out std_logic;
-
+	hblank      : out std_logic;
+	vblank      : out std_logic;
 	hcnt_o      : out std_logic_vector(8 downto 0);
 	vcnt_o      : out std_logic_vector(8 downto 0)
 );
 end video_gen;
 
 architecture struct of video_gen is
-signal hblank  : std_logic; 
-signal vblank  : std_logic; 
-signal vblank_r: std_logic; 
+
 signal hcnt    : std_logic_vector(8 downto 0);
 signal vcnt    : std_logic_vector(8 downto 0);
 
@@ -38,7 +36,7 @@ hcnt_o  <= hcnt;
 vcnt_o  <= vcnt;
 
 hsync <= hsync0;
-blank <= hblank or vblank_r;
+
 
 -- Compteur horizontal 
 -- 1C0..1FF-000..0FF : 64+256 = 320 pixels
@@ -86,7 +84,7 @@ begin
 				end if;
 				
 				if hcnt = std_logic_vector(to_unsigned(448+16,9)) then
-					vblank_r <= vblank;
+				--	vblank_r <= vblank;
 				end if;
 				
 				
