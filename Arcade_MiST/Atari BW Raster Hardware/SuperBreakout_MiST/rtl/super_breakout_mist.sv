@@ -23,8 +23,9 @@ localparam CONF_STR = {
 	"O1,Test Mode,Off,On;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Color,On,Off;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.25.",`BUILD_DATE
 	};
     
 assign AUDIO_R = AUDIO_L;
@@ -48,9 +49,9 @@ wire        scandoublerD;
 wire        ypbpr;
 wire [10:0] ps2_key;
 wire  [7:0] audio;
-wire			Video_O;
-wire 			vb, hb;
-wire 			blankn = ~(hb | vb);
+wire			video;
+wire  [2:0] r,g;
+wire  [1:0] b;
 wire 			hs, vs;
 
 super_breakout super_breakout(
@@ -58,9 +59,8 @@ super_breakout super_breakout(
 	.Reset_n(~(status[0] | status[6] | buttons[1])),			
 	.HS(hs),
 	.VS(vs),
-	.VB(vb),		
-	.HB(hb),
-	.Video_O(Video_O),			
+	.Video_O(video),
+	.Video_RGB({r,g,b}),
 	.Audio_O(audio),
 	.Coin1_I(~btn_coin),
 	.Coin2_I(1'b1),
@@ -96,9 +96,9 @@ video_mixer video_mixer(
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {6{Video_O}} : 0),
-	.G(blankn ? {6{Video_O}} : 0),
-	.B(blankn ? {6{Video_O}} : 0),
+	.R(~status[5] ? r : {video,video,video}),
+	.G(~status[5] ? g : {video,video,video}),
+	.B(~status[5] ? {b,1'b0} : {video,video,video}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),

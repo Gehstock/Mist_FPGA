@@ -25,6 +25,7 @@ port(
 			clk_6			: out	std_logic;
 			hcount		: out	std_logic_vector(8 downto 0);
 			vcount		: out	std_logic_vector(7 downto 0);
+			hcolor		: out std_logic_vector(7 downto 0);
 		   hsync			: out	std_logic;
 			hblank		: out std_logic;
 			vblank_s		: out std_logic;
@@ -159,6 +160,7 @@ begin
 end process;
 
 -- Assign various signals
+hcolor <= 255 - h_counter(8 downto 1);
 clk_6 <= h_counter(0);
 H1 <= h_counter(1);
 H2 <= h_counter(2);
