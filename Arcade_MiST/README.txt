@@ -17,9 +17,12 @@ Aviable Arcade Cores
 #Custom Hardware
 	Bagman
 	Berzerk
-	Crazy Climber
 	Crazy Kong
 	Galaga
+
+#Crazy Climber Hardware
+	Crazy Climber
+	River Patrol
 
 #Data East Burger Time Hardware
 	#Setup 1
