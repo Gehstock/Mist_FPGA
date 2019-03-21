@@ -1,6 +1,12 @@
 
 Crazy Climber Port to Mist FPGA by Gehstock
 
+ESC: Coin
+F1: Start 1 Player
+F2: Start 2 Player
+Controls with 2 Joystick
+or WASD + Arrow Keys
+
 
 -------------------------------------------------
 Crazy climber FPGA by Dar - (darfpga@aol.fr)

@@ -108,7 +108,7 @@ sample_rom_addr <= sample_start1(7 downto 6) & sample_cnt(11 downto 1);
 
 sample_data <= sound_data(3 downto 0) when sample_cnt(0) = '0' else sound_data(7 downto 4);
 
-sound_sample <= std_logic_vector(( "0000" & unsigned(ym_2149_audio) & "0000") + unsigned("000" & sample_data & "000000000"));
+sound_sample <= std_logic_vector(( unsigned(ym_2149_audio) & unsigned(ym_2149_audio)) + unsigned("000" & sample_data & sample_data & "00000"));
 ------
 
 sample_rom : entity work.cclimber_samples
