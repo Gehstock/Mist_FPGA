@@ -37,6 +37,7 @@ Aviable Arcade Cores
 	Azurian Attack
 	Black Hole
 	Catacomb
+	Chewing Gum
 	Galaxian
 	King & Balloon
 	Moon Cresta
