@@ -84,8 +84,8 @@ centipede centipede(
 	.playerinput_i({ r_coin, c_coin, l_coin, m_test, m_cocktail, m_slam, m_start2, m_start1, m_fire2, m_fire1 }),
 	.trakball_i(),
 	.joystick_i({m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
-	.sw1_i(8'h54),
-	.sw2_i(8'b0),
+	.sw1_i("01010100"),
+	.sw2_i("00000000"),
 	.rgb_o(RGB),
 	.hsync_o(hs),
 	.vsync_o(vs),
@@ -94,16 +94,6 @@ centipede centipede(
 	.audio_o(audio)
 	);
 
-dac #(
-	.msbi_g(15))
-dac (
-	.clk_i(clk_24),
-	.res_n_i(1),
-	.dac_i({2{audio,audio}}),
-	.dac_o(AUDIO_L)
-	);
-
-
 video_mixer video_mixer(
 	.clk_sys(clk_24),
 	.ce_pix(clk_6),
@@ -111,9 +101,9 @@ video_mixer video_mixer(
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {RGB[2:0],RGB[2:0]} : 0),
-	.G(blankn ? {RGB[5:3],RGB[2:0]} : 0),
-	.B(blankn ? {RGB[7:6],RGB[7:6],RGB[7:6]} : 0),
+	.R(blankn ? RGB[2:0] : 0),
+	.G(blankn ? RGB[5:3] : 0),
+	.B(blankn ? RGB[7:6] : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -150,6 +140,14 @@ mist_io(
 	.status         (status         )
 	);
 
+dac #(
+	.msbi_g(15))
+dac (
+	.clk_i(clk_24),
+	.res_n_i(1),
+	.dac_i({2{audio,audio,2'b0}}),
+	.dac_o(AUDIO_L)
+	);
 
 wire m_up     = status[2] ? ~btn_up & ~joystick_0[3] & ~joystick_1[3] : ~btn_right & ~joystick_0[0] & ~joystick_1[0];
 wire m_down   = status[2] ? ~btn_down & ~joystick_0[2] & ~joystick_1[2] : ~btn_left & ~joystick_0[1] & ~joystick_1[1];

@@ -243,7 +243,7 @@ end process;
 -- Program ROMs
 J1: entity work.sprom
 generic map(
-		init_file => "./roms/9499-01.j1.hex",
+		init_file => "./roms/9499-01.j1.mif",
 		widthad_a => 10,
 		width_a => 4)
 port map(
@@ -254,7 +254,7 @@ port map(
 
 P1: entity work.sprom
 generic map(
-		init_file => "./roms/9503-01.p1.hex",
+		init_file => "./roms/9503-01.p1.mif",
 		widthad_a => 10,
 		width_a => 4)
 port map(
@@ -265,7 +265,7 @@ port map(
 
 D1: entity work.sprom
 generic map(
-		init_file => "./roms/9496-01.d1.hex",
+		init_file => "./roms/9496-01.d1.mif",
 		widthad_a => 11,
 		width_a => 8)
 port map(

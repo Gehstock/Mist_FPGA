@@ -35,7 +35,6 @@ end audio;
 
 architecture rtl of audio is
 
-signal reset				: std_logic;
 
 signal H4				: std_logic;
 signal H8 				: std_logic;	
@@ -43,7 +42,6 @@ signal H16 				: std_logic;
 signal H32 				: std_logic;	
 signal H64 				: std_logic;	
 signal H256 				: std_logic;	
-signal V2				: std_logic;
 signal V4			       : std_logic;
 
 signal Amp_n				: std_logic;
@@ -77,7 +75,6 @@ begin
 -- (7) 128H 23 kHz
 -- (8) 256H 12 kHz
 
-reset <= (not reset_n);
 
 H4 <= HCount(2);
 H8 <= HCount(3);
@@ -85,8 +82,6 @@ H16 <= HCount(4);
 H32 <= HCount(5);
 H64 <= HCount(6);
 H256 <= HCount(8);
-
-V2 <= VCount(1);
 V4 <= VCount(2);
 
 -- These signals latch the frequency and amplitude data from the Display bus 

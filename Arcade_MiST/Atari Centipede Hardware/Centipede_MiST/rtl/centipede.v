@@ -33,8 +33,8 @@ module centipede(
 		 output       vsync_o,
 		 output       hblank_o,
 		 output       vblank_o,
-		 output [7:0] audio_o,
-		 output [7:0] audio2_o
+		 output [7:0] audio_o//,
+//		 output [7:0] audio2_o
 		 );
 
    //
@@ -149,7 +149,7 @@ module centipede(
 
 
    //
-   wire        ea_addr_clk, ea_ctrl_clk;
+   wire        ea_addr_clk;
    reg [5:0]   hs_addr;
    wire [7:0]  hs_out;
    reg [7:0]   hs_data;
@@ -252,7 +252,7 @@ module centipede(
    assign vprom_addr = {vblank, s_128v, s_64v, s_32v, s_8v, s_4v, s_2v, s_1v};
 
 sprom #(
-	.init_file("./roms/136001-213.p4.hex"),
+	.init_file("./roms/136001-213.p4.mif"),
 	.widthad_a(8),
 	.width_a(4))
 vprom(
@@ -304,7 +304,7 @@ assign vblank = vprom_reg[3];
 assign hblank = (~xxx1 & ~coloren);
 
 sprom #(
-	.init_file("./roms/136001-prog.hex"),
+	.init_file("./roms/136001-prog.mif"),
 	.widthad_a(13),
 	.width_a(8))
 rom(
@@ -667,7 +667,7 @@ p6502 p6502(
 	 pic <= pf[7:0];
 			
 sprom #(
-	.init_file("./roms/136001-212.hj7.hex"),
+	.init_file("./roms/136001-212.hj7.mif"),
 	.widthad_a(11),
 	.width_a(8))
  pf_rom1(
@@ -677,7 +677,7 @@ sprom #(
 	);
 
 sprom #(
-	.init_file("./roms/136001-211.f7.hex"),
+	.init_file("./roms/136001-211.f7.mif"),
 	.widthad_a(11),
 	.width_a(8))
  pf_rom0(
@@ -801,11 +801,10 @@ sprom #(
 
    assign hs_addr_clk = ~(~ea_addr_n & ~write2_n);
    assign hs_ctrl_clk = ~(~ea_ctrl_n & ~write2_n);
-
    always @(posedge hs_addr_clk)
      hs_addr <= ab[5:0];
 
-   always @(posedge ea_ctrl_clk)
+   always @(posedge hs_ctrl_clk)
      hs_ctrl <= db_out[3:0];
 /*		 
 spram #(

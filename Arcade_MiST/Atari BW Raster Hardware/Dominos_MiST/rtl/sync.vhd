@@ -39,21 +39,16 @@ architecture rtl of synchronizer is
 signal h_counter		: std_logic_vector(9 downto 0) := (others => '0');
 signal H256				: std_logic;
 signal H256_n			: std_logic;
-signal H128				: std_logic;
+
 signal H64				: std_logic;
 signal H32				: std_logic;
-signal H16				: std_logic;
 signal H8				: std_logic;
-signal H8_n				: std_logic;
-signal H4				: std_logic;
-signal H4_n				: std_logic;
-signal H2				: std_logic;
-signal H1				: std_logic;
+
+
 
 signal v_counter		: std_logic_vector(7 downto 0) := (others => '0');
 signal V128				: std_logic;
 signal V64				: std_logic;
-signal V32				: std_logic;
 signal V16				: std_logic;
 signal V8				: std_logic;
 signal V4				: std_logic;
@@ -101,7 +96,7 @@ M2: entity work.sprom
 generic map(
 	widthad_a => 8,
 	width_a => 4,
-   init_file =>"roms/6400-01.m2.hex"
+   init_file =>"roms/6400-01.m2.mif"
 	)
 port map(
 	address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
@@ -150,25 +145,17 @@ end process;
 
 -- Assign various signals
 clk_6 <= h_counter(0);
-H1 <= h_counter(1);
-H2 <= h_counter(2);
-H4 <= h_counter(3);
 H8 <= h_counter(4);
-H16 <=  h_counter(5);
 H32 <= h_counter(6);
 H64 <= h_counter(7);
-H128 <= h_counter(8);
 H256 <= h_counter(9);
-H4_n <= not H4;
-H8_n <= not H8;
 H256_n <= not H256;
-
 V1 <= v_counter(0);
 V2 <= v_counter(1);
 V4 <= v_counter(2);
 V8 <= v_counter(3);
 V16 <= v_counter(4);
-V32 <= v_counter(5);
+
 V64 <= v_counter(6);
 V128 <= v_counter(7);
 

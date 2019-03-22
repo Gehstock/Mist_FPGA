@@ -94,7 +94,7 @@ R4: entity work.sprom
 generic map(
 	widthad_a => 9,
 	width_a => 4,
-   init_file =>"roms/7440-01.r4.hex"
+   init_file =>"roms/7440-01.r4.mif"
 	)
 port map(
 	address => char_addr,
@@ -106,7 +106,7 @@ P4: entity work.sprom
 generic map(
 	widthad_a => 9,
 	width_a => 4,
-   init_file =>"roms/7439-01.p4.hex"
+   init_file =>"roms/7439-01.p4.mif"
 	)
 port map(
 	address => char_addr,

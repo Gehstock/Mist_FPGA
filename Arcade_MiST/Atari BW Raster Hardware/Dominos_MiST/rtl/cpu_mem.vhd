@@ -102,7 +102,6 @@ signal RAM_dout		        : std_logic_vector(7 downto 0);
 signal RAM_we			: std_logic := '0';
 signal RAM_RW_n 		: std_logic := '1';
 signal RAM_ce_n		        : std_logic := '1';
-signal RAM_n			: std_logic := '1'; 
 signal WRAM			: std_logic := '0';
 signal WRITE_n			: std_logic := '1';
 
@@ -114,7 +113,6 @@ signal E8_in			: std_logic_vector(3 downto 0) := "0000";
 signal E8_out			: std_logic_vector(9 downto 0) := "1111111111";
 signal P3_8		        : std_logic := '0';
 
-signal Sync			: std_logic := '0';
 signal Sync_n			: std_logic := '1';
 signal Switch_n		        : std_logic := '1';
 signal Display_n		: std_logic := '1';
@@ -223,7 +221,7 @@ D1: entity work.sprom
 generic map(
 	widthad_a => 11,
 	width_a => 8,
-   init_file =>"roms/7352-02.d1.hex"
+   init_file =>"roms/7352-02.d1.mif"
 	)
 port map(
 	address => A(10) & ADR(9 downto 0),
@@ -235,7 +233,7 @@ E1: entity work.sprom
 generic map(
 	widthad_a => 11,
 	width_a => 8,
-   init_file =>"roms/7438-02.e1.hex"
+   init_file =>"roms/7438-02.e1.mif"
 	)
 port map(
 	address => A(10) & ADR(9 downto 0),
@@ -297,7 +295,7 @@ E2: entity work.sprom
 generic map(
 	widthad_a => 5,
 	width_a => 8,
-   init_file =>"roms/6401-01.e2.hex"
+   init_file =>"roms/6401-01.e2.mif"
 	)
 port map(
 	address => A(13 downto 9),
@@ -362,9 +360,8 @@ begin
       end case;
 end process;	
 
-RAM_n <= D2_out(0);
+
 SYNC_n <= D2_out(1);
-SYNC <= (not SYNC_n);
 SWITCH_n <= D2_out(2);
 DISPLAY_n <= (D2_out(0) and D2_out(8));
 P3_8 <= (D2_out(9) or WRITE_n);

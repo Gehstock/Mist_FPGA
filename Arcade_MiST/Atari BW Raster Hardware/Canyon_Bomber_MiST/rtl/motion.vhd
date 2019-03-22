@@ -216,39 +216,25 @@ VidROMAdr <= Display(0)
 --Motion object ROMs
 M5: entity work.sprom
 generic map(
-		init_file => "rtl/roms/9506-01.m5.hex",
-		widthad_a => 10,
+		init_file => "rtl/roms/9506-01.m5.mif",
+		widthad_a => 8,
 		width_a => 4)
 port map(
 		clock => clk6, 
-		address => VidROMAdr,
+		address => VidROMAdr(7 downto 0),
 		q => VidROMdout(7 downto 4)
 		);
-		
---M5: entity work.M5_rom
---port map(
---	clock => clk6,
---	address => VidROMAdr,
---	q => VidROMdout(7 downto 4)
---	);
 
 N5: entity work.sprom
 generic map(
-		init_file => "./roms/9505-01.n5.hex",
-		widthad_a => 10,
+		init_file => "./roms/9505-01.n5.mif",
+		widthad_a => 8,
 		width_a => 4)
 port map(
 		clock => clk6, 
-		address => VidROMAdr,
+		address => VidROMAdr(7 downto 0),
 		q => VidROMdout(3 downto 0)
 		);
-		
---N5: entity work.N5_rom
---port map(
---	clock => clk6,
---	address => VidROMAdr,
---	q => VidROMdout(3 downto 0)
---	);
 
 	
 --Flip bit order of motion object ROMs with state of Display(7) to horizontally mirror ships
@@ -256,7 +242,6 @@ Vid <= VidROMDout(4) & VidROMDout(5) & VidROMDout(6) & VidROMDout(7) & VidROMDou
 		 when Display(7) = '0' else 
 		 VidROMDout(3) & VidROMDout(2) & VidROMDout(1) & VidROMDout(0) & VidROMDout(7) & VidROMDout(6) & VidROMDout(5) & VidROMDout(4);
 	
-
 
 -- Decoders P8 and F8 generate the LDVxx signals
 LDV_Decoder: process(clk6, clk12, VSP1_n, VSP2_n, HCount)

@@ -58,13 +58,10 @@ end dominos;
 architecture rtl of dominos is
 
 signal clk_6		: std_logic;
-signal phi1 		: std_logic;
-signal phi2			: std_logic;
 signal reset_n		: std_logic;
 
 signal Hcount		: std_logic_vector(8 downto 0) := (others => '0');
 signal H256			: std_logic;
-signal H256_s		: std_logic;
 signal H256_n		: std_logic;
 signal H128			: std_logic;
 signal H64			: std_logic;
@@ -95,10 +92,7 @@ signal Vreset			: std_logic;
 signal Vblank_s		        : std_logic;
 signal Vblank_n_s		: std_logic;
 signal HBlank			: std_logic;
-
 signal CompBlank_s	        : std_logic;
-signal CompSync_n_s	        : std_logic;
-
 signal WhitePF_n		: std_logic;
 signal BlackPF_n		: std_logic;
 
@@ -165,12 +159,12 @@ port map(
 		HCount => HCount,
 		VCount => VCount,
 		HBlank => HBlank,		
-		H256_s => H256_s,
+		H256_s => open,
 		VBlank => VBlank,
 		VBlank_n_s => Vblank_n_s,
 		HSync => Hsync,
 		VSync => VSync,
-		CompSync_n_s => CompSync_n_s,
+		CompSync_n_s => open,
 		CompBlank_s => CompBlank_s,
 		WhitePF_n => WhitePF_n,
 		BlackPF_n => BlackPF_n 
@@ -193,8 +187,8 @@ port map(
 		Tumble => Tumble,
 		Lamp1 => Lamp1_O,
 		Lamp2 => Lamp2_O,
-		Phi1_o => Phi1,
-		Phi2_o => Phi2,
+		Phi1_o => open,
+		Phi2_o => open,
 		Display => Display,
 		IO_Adr => Adr,
 		Inputs => Inputs
