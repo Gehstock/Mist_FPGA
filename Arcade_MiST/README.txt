@@ -82,6 +82,7 @@ Aviable Arcade Cores
 	Crush Roller
 	Dream Shopper
 	Eeekk
+	Eggor
 	Eyes
 	Gorkans
 	Lizard Wizard

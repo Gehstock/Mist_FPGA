@@ -5,7 +5,6 @@ Fantasy
 Pioneer Balloon
 Vanguard
 Zarzon
-Eggor
 Piranha
 Titan
 The Glob/Beastie
