@@ -12,11 +12,18 @@ Aviable Arcade Cores
 	Centipede
 
 #Atari Discrete Logic
-	Computer Space	
+	Computer Space
+
+#Bagman Hardware
+	Bagman
+	Botanic
+	Pickin
+
+#Berzerk Hardware
+	Berzerk
+	Frenzy
 
 #Custom Hardware
-	Bagman
-	Berzerk
 	Crazy Kong
 	Galaga
 

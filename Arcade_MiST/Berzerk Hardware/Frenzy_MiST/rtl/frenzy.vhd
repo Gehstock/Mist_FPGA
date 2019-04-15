@@ -1,5 +1,6 @@
 ----------------------------------------------------------------------------------
--- berzerk by Dar (darfpga@aol.fr) (June 2018)
+-- Frenzy on MiST by Gehstock
+-- Based on the Berzerk Hardware by Dar (darfpga@aol.fr) (June 2018)
 -- http://darfpga.blogspot.fr
 ----------------------------------------------------------------------------------
 -- Educational use only
@@ -69,7 +70,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity berzerk is
+entity frenzy is
 port(
   clock_10     : in std_logic;
   reset        : in std_logic;
@@ -110,9 +111,9 @@ port(
   dbg_cpu_addr_latch : out std_logic_vector(15 downto 0)
     
 );
-end berzerk;
+end frenzy;
 
-architecture struct of berzerk is
+architecture struct of frenzy is
 
 -- clocks 
 signal clock_10n : std_logic;
@@ -266,8 +267,8 @@ system  <= not(coin1 & "00000" & start2 & start1 );
 -----------------------
 -- cpu write addressing
 -- cpu I/O chips select
------------------------																																	111110 0000000000
-mosram_we <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 10) = "111110" else '0'; -- 0800-0bff  000010 0000000000
+-----------------------																												
+mosram_we <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 10) = "111110" else '0';
 vram_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 14) = "01"    and cpu_clock = '0' else '0'; -- 4000-5fff mirror 6000-7fff 
 cram_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "10000" and cpu_clock = '0' else '0'; -- 8000-87ff 
 
@@ -342,15 +343,16 @@ end process;
 ------------------------------------
 -- memory mux
 with cpu_addr(15 downto 11) select 
-	cpu_di_mem <=
-		prog1_do  when "00000", -- 0000-0fff  16k  00
-		prog1_do  when "00001", -- 0000-0fff  16k  00
-		prog1_do  when "00010", -- 1000-1fff  16k  01
-		prog1_do  when "00011", -- 1000-1fff  16k  01
-		prog1_do  when "00100", -- 1000-1fff  16k  01
-		prog1_do  when "00101", -- 2000-2fff  16k  10
-		prog1_do  when "00110", -- 3000-3fff  16k  11
-		prog1_do  when "00111", -- 3000-3fff  16k  11
+	cpu_di_mem <=	
+		prog1_do  when "00000", -- 0000-07ff
+		prog1_do  when "00001", -- 0800-0fff
+		prog1_do  when "00010", -- 1000-17ff
+		prog1_do  when "00011", -- 1800-1fff
+		prog1_do  when "00100", -- 2000-27ff
+		prog1_do  when "00101", -- 2800-2fff
+		prog1_do  when "00110", -- 3000-37ff
+		prog1_do  when "00111", -- 3800-3fff
+
 
 		vram_do   when "01000", -- 4000-47ff
 		vram_do   when "01001", -- 4800-4fff
@@ -361,11 +363,11 @@ with cpu_addr(15 downto 11) select
 		vram_do   when "01110", -- 7000-77ff 
 		vram_do   when "01111", -- 7800-7fff	
 		
-		cram_do   when "10000", -- 8000-87ff      10000 00000000000
+		cram_do   when "10000", -- 8000-87ff
 		
-		prog2_do  when "11000", -- c000-c7ff  4k  11000 00000000000
-		prog2_do  when "11001", -- c800-cfff  4k  11001 00000000000
-		mosram_do when "11111", -- f800-fbff      11111 00000000000
+		prog2_do  when "11000", -- c000-c7ff
+		prog2_do  when "11001", -- c800-cfff
+		mosram_do when "11111", -- f800-fbff
 		x"FF"        when others;
 
 -- I/O-2 mux
