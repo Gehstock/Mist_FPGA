@@ -1,4 +1,7 @@
-Botanic Port to Mist FPGA by Gehstock
+Squash Port to Mist FPGA by Gehstock
+
+Work in Progress
+--Joystick to Wheel Encoder
 
 
 
