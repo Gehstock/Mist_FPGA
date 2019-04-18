@@ -18,6 +18,7 @@ Aviable Arcade Cores
 	Bagman
 	Botanic
 	Pickin
+	Squash
 
 #Berzerk Hardware
 	Berzerk
@@ -30,12 +31,11 @@ Aviable Arcade Cores
 #Crazy Climber Hardware
 	Crazy Climber
 	River Patrol
+	Silver Land
 
 #Data East Burger Time Hardware
-	#Setup 1
-		Burnin Rubber
-	#Setup 2
-		Burger Time
+	Burnin Rubber
+	Burger Time
 
 #Dottori-Kun Hardware
 	Dottori Kun / Dottori-Man Jr / Mine Sweeper   (3in1Game)
