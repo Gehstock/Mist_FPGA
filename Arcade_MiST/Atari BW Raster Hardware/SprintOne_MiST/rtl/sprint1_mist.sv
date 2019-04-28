@@ -23,7 +23,7 @@ localparam CONF_STR = {
 	"O1,Test Mode,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.10.",`BUILD_DATE
+	"V,v1.20.",`BUILD_DATE
 };
 
 assign LED = 1;
@@ -65,12 +65,11 @@ sprint1 sprint1(
 	.Coin2_I(1'b1),
 	.Start_I(~btn_one_player),
 	.Gas_I(~(btn_fire1 | joystick_0[4] | joystick_1[4])),
-	.Gear1_I(gear1),
-	.Gear2_I(gear2),
-	.Gear3_I(gear3),
+	.c_gearup(gearup),
+	.c_geardown(geardown),
+	.c_left(left),
+	.c_right(right),
 	.Test_I(~status[1]),
-	.SteerA_I(steer[1]),
-	.SteerB_I(steer[0]),
 	.StartLamp_O()
 	);
 
@@ -137,7 +136,11 @@ reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire [7:0] code    = ps2_key[7:0];
+wire gearup = btn_fire3 | joystick_0[5] | joystick_1[5];
+wire geardown = btn_fire2 | joystick_0[6] | joystick_1[6];
+wire right = btn_left | joystick_0[1] | joystick_1[1];
+wire left = btn_right | joystick_0[0] | joystick_1[0];
 
 always @(posedge clk_24) begin
 	reg old_state;
@@ -157,25 +160,5 @@ always @(posedge clk_24) begin
 		endcase
 	end
 end
-
-wire [1:0] steer;
-joy2quad steer1(
-	.CLK(clk_24),
-	.clkdiv('d22500),	
-	.right(btn_right | joystick_0[0] | joystick_1[0]),
-	.left(btn_left | joystick_0[1] | joystick_1[1]),	
-	.steer(steer)
-	);
-
-wire gear1,gear2,gear3;
-gearshift gearshift1(
-	.CLK(clk_12),	
-	.gearup(btn_fire3 | joystick_0[5] | joystick_1[5]),
-	.geardown(btn_fire2 | joystick_0[6] | joystick_1[6]),	
-	.gear1(gear1),
-	.gear2(gear2),
-	.gear3(gear3)
-	);
-
 
 endmodule

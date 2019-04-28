@@ -64,24 +64,22 @@ sprint2 sprint2(
 	.RGB(RGB),			
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
-	.Coin1_I(m_coin),
+	.Coin1_I(~btn_coin),
 	.Coin2_I(1'b1),
-	.Start1_I(m_start1),
-	.Start2_I(m_start2),
+	.Start1_I(~btn_one_player),
+	.Start2_I(~btn_two_players),
 	.Trak_Sel_I(~status[2]),
-	.Gas1_I(m_fire1),
-	.Gas2_I(m_fire2),
-	.Gear1_1_I(~gear11),
-	.Gear1_2_I(~gear21),	
-	.Gear2_1_I(~gear12),
-	.Gear2_2_I(~gear22),	
-	.Gear3_1_I(~gear13),
-	.Gear3_2_I(~gear23),
+	.Gas1_I(~gas),
+	.Gas2_I(~gas2),
+	.c_gearup(gearup),
+	.c_geardown(geardown),
+	.c_left(left),
+	.c_right(right),
+	.c_gearup2(gearup2),
+	.c_geardown2(geardown2),
+	.c_left2(left2),
+	.c_right2(right2),
 	.Test_I(~status[1]),
-	.Steer_1A_I(steer1[1]),
-	.Steer_1B_I(steer1[0]),
-	.Steer_2A_I(steer2[1]),
-	.Steer_2B_I(steer2[0]),
 	.Lamp1_O(),
 	.Lamp2_O()
 	);
@@ -150,7 +148,17 @@ reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire [7:0] code    = ps2_key[7:0];
+wire gearup = btn_fire3 | joystick_0[5];
+wire geardown = btn_fire2 | joystick_0[6];
+wire right = btn_left | joystick_0[1];
+wire left = btn_right | joystick_0[0];
+wire gearup2 = joystick_1[5];
+wire geardown2 = joystick_1[6];
+wire right2 = joystick_1[1];
+wire left2 = joystick_1[0];
+wire gas = btn_fire1 | joystick_0[4];
+wire gas2 = joystick_1[4];
 
 always @(posedge clk_24) begin
 	reg old_state;
@@ -170,57 +178,5 @@ always @(posedge clk_24) begin
 		endcase
 	end
 end
-
-wire m_left1   = (btn_left | joystick_1[1]);
-wire m_right1  = (btn_right | joystick_1[0]);
-wire m_left2   = (joystick_0[1]);
-wire m_right2  = (joystick_0[0]);
-wire m_fire1 = ~(btn_fire1 | joystick_1[4]);
-wire m_fire2 = ~(joystick_0[4]);
-wire m_start1 = ~(btn_one_player);
-wire m_start2 = ~(btn_two_players);
-wire m_coin = ~(btn_coin);
-wire m_gearup1 = (btn_fire2 | joystick_1[5]);
-wire m_geardown1 = (btn_fire3 | joystick_1[6]);
-wire m_gearup2 = (joystick_0[5]);
-wire m_geardown2 = (joystick_0[6]);
-
-wire [1:0] steer1;
-joy2quad steerp1(
-	.CLK(clk_24),
-	.clkdiv('d22500),	
-	.right(m_right1),
-	.left(m_left1),	
-	.steer(steer1)
-	);
-
-wire [1:0] steer2;
-joy2quad steerp2(
-	.CLK(clk_24),
-	.clkdiv('d22500),	
-	.right(m_right2),
-	.left(m_left2),	
-	.steer(steer2)
-	);
-
-wire gear11,gear12,gear13;
-gearshift gearshiftp1(
-	.CLK(clk_12),	
-	.gearup(m_gearup1),
-	.geardown(m_geardown1),	
-	.gear1(gear11),
-	.gear2(gear12),
-	.gear3(gear13)
-	);
-
-wire gear21,gear22,gear23;
-gearshift gearshiftp2(
-	.CLK(clk_12),	
-	.gearup(m_gearup2),
-	.geardown(m_geardown2),	
-	.gear1(gear21),
-	.gear2(gear22),
-	.gear3(gear23)
-	);
 
 endmodule 

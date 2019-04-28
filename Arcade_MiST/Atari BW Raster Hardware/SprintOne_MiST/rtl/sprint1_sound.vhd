@@ -139,7 +139,7 @@ begin
 end process;
 		
 	
-Crash_sound: process(crash_n, display, noise)		
+Crash_sound: process(crash_n, display, noise, crash)		
 begin
 	if crash_n = '0' then
 		crash <= display(3 downto 0);

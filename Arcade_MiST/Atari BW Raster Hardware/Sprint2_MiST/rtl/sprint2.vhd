@@ -46,17 +46,15 @@ port(
 			Trak_Sel_I	: in  std_logic;  -- Track select button 
 			Gas1_I		: in  std_logic;	-- Gas pedals 
 			Gas2_I		: in  std_logic;
-			Gear1_1_I	: in  std_logic;  -- Gear shifters, 4th gear = no other gear selected
-			Gear1_2_I	: in  std_logic;
-			Gear2_1_I	: in  std_logic;
-			Gear2_2_I	: in  std_logic;
-			Gear3_1_I	: in  std_logic;
-			Gear3_2_I	: in  std_logic;
+			c_gearup		: in  std_logic;
+			c_geardown	: in  std_logic;
+			c_left		: in  std_logic;
+			c_right		: in  std_logic;
+			c_gearup2	: in  std_logic;
+			c_geardown2	: in  std_logic;
+			c_left2		: in  std_logic;
+			c_right2		: in  std_logic;
 			Test_I		: in  std_logic;  -- Self-test switch
-			Steer_1A_I	: in  std_logic;	-- Steering wheel inputs, these are quadrature encoders
-			Steer_1B_I	: in	std_logic;
-			Steer_2A_I	: in	std_logic;
-			Steer_2B_I	: in 	std_logic;
 			Lamp1_O		: out std_logic;	-- Player 1 and 2 start button LEDs
 			Lamp2_O		: out std_logic
 			);
@@ -155,7 +153,30 @@ signal SW1				: std_logic_vector(7 downto 0);
 signal Inputs			: std_logic_vector(1 downto 0);
 signal Collisions1	: std_logic_vector(1 downto 0);
 signal Collisions2	: std_logic_vector(1 downto 0);
+signal Gearnum	  	: std_logic_vector(2 downto 0);
+signal Gear1			: std_logic; 
+signal Gear2			: std_logic; 
+signal Gear3			: std_logic;
+signal SteerA			: std_logic;
+signal SteerB			: std_logic;
+signal Gearnum2	  	: std_logic_vector(2 downto 0);
+signal Gear21			: std_logic; 
+signal Gear22			: std_logic; 
+signal Gear23			: std_logic;
+signal Steer2A			: std_logic;
+signal Steer2B			: std_logic;
 
+COMPONENT joy2quad
+	PORT
+	(
+		CLK			:	 IN STD_LOGIC;
+		clkdiv		:	 IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		c_right		:	 IN STD_LOGIC;
+		c_left		:	 IN STD_LOGIC;
+		SteerA		:	 OUT STD_LOGIC;
+		SteerB		:	 OUT STD_LOGIC
+	);
+END COMPONENT;
 
 begin
 -- Configuration DIP switches, these can be brought out to external switches if desired
@@ -188,7 +209,9 @@ port map(
 Background: entity work.playfield
 port map( 
 		clk6 => clk_6,
-		display => display,
+		Gear_Shift_1 => Gearnum,
+		Gear_Shift_2 => Gearnum2,
+		Display => display,
 		HCount => HCount,
 		VCount => VCount,
 		HBlank => HBlank,		
@@ -283,24 +306,72 @@ port map(
 		Trak_Sel => not Trak_Sel_I,
 		Gas1 => not Gas1_I,
 		Gas2 => not Gas2_I,
-		Gear1_1 => not Gear1_1_I,
-		Gear1_2 => not Gear1_2_I,
-		Gear2_1 => not Gear2_1_I,
-		Gear2_2 => not Gear2_2_I,
-		Gear3_1 => not Gear3_1_I,
-		Gear3_2 => not Gear3_2_I,
+		Gear1_1 => not Gear1,
+		Gear1_2 => not Gear21,
+		Gear2_1 => not Gear2,
+		Gear2_2 => not Gear22,
+		Gear3_1 => not Gear3,
+		Gear3_2 => not Gear23,
 		Self_Test => not Test_I,
-		Steering1A_n => Steer_1A_I,
-		Steering1B_n => Steer_1B_I,
-		Steering2A_n => Steer_2A_I,
-		Steering2B_n => Steer_2B_I,
+		Steering1A_n => SteerA,
+		Steering1B_n => SteerB,
+		Steering2A_n => Steer2A,
+		Steering2B_n => Steer2B,
 		SteerRst1_n => SteerRst1_n,
 		SteerRst2_n => SteerRst2_n,
 		Adr => Adr,
 		Inputs => Inputs
 	);	
 
+
+RotaryEncoder: joy2quad
+port map(
+		CLK => clk_6,
+		clkdiv => x"000057E4",
+		c_right => c_right,
+		c_left => c_left,
+		SteerA=> SteerA,
+		SteerB=> SteerB
+	);
 	
+			  
+Gears: entity work.gearshift
+port map(
+		CLK => clk_6,
+		reset => not Reset_n,
+		gearout => Gearnum,
+		gearup => c_gearup,
+		geardown => c_geardown,
+		gear1 => Gear1,
+		gear2 => Gear2,
+		gear3 => Gear3
+	);
+
+
+RotaryEncoder2: joy2quad
+port map(
+		CLK => clk_6,
+		clkdiv => x"000057E4",
+		c_right => c_right2,
+		c_left => c_left2,
+		SteerA=> Steer2A,
+		SteerB=> Steer2B
+	);
+	
+			  
+Gears2: entity work.gearshift
+port map(
+		CLK => clk_6,
+		reset => not Reset_n,
+		gearout => Gearnum2,
+		gearup => c_gearup2,
+		geardown => c_geardown2,
+		gear1 => Gear21,
+		gear2 => Gear22,
+		gear3 => Gear23
+	);
+	
+
 Sound: entity work.audio
 port map( 
 		Clk_6 => Clk_6,

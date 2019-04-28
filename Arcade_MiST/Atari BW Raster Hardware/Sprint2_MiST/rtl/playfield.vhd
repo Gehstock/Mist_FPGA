@@ -21,7 +21,9 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 entity playfield is 
 port(   
 			clk6				: in	std_logic;
-			display			: in	std_logic_vector(7 downto 0);
+			Gear_Shift_1	: in std_logic_vector(2 downto 0);
+			Gear_Shift_2	: in std_logic_vector(2 downto 0);
+			Display			: in	std_logic_vector(7 downto 0);
 			HCount			: in  std_logic_vector(8 downto 0);
 			VCount			: in  std_logic_vector(7 downto 0);
 			H256_s			: out std_logic;
@@ -65,7 +67,7 @@ signal P2_13			: std_logic;
 signal P3_6				: std_logic;
 signal A6_6				: std_logic;
 signal A6_3				: std_logic;
-
+signal Display_7     : std_logic;
 begin
 
 -- Video synchronization signals
@@ -89,8 +91,36 @@ P2_13 <= (HSync nor VSync);
 P3_6 <= (HBlank or VBlank);
 
 
-
-char_addr <= display(5 downto 0) & V4 & V2 & V1;
+process(Hcount,Vcount,V4,V2,V1,Gear_Shift_1,Gear_Shift_2,Display)
+begin
+ -- this is the right side of the screen for the gear shift
+ if (HCount(7 downto 3) = "11111"  and Vcount(7 downto 3)="11011") then
+   Display_7 <= '0'; -- 1 is white, 0 is black
+   case Gear_Shift_2 is
+        when "000" => char_addr <=  "110001" & V4 & V2 & V1;
+        when "001" => char_addr <=  "110010" & V4 & V2 & V1;
+        when "010" => char_addr <=  "110011" & V4 & V2 & V1;
+        when "011" => char_addr <=  "110100" & V4 & V2 & V1;
+        when others => char_addr <= "001110" & V4 & V2 & V1;
+    end case;
+ -- this is the left side of the screen for the gear shift
+ elsif (HCount(7 downto 3) = "00000"  and Vcount(7 downto 3)="11011") then
+   Display_7 <= '1'; -- 1 is white, 0 is black
+   case Gear_Shift_1 is
+        when "000" => char_addr <=  "110001" & V4 & V2 & V1;
+        when "001" => char_addr <=  "110010" & V4 & V2 & V1;
+        when "010" => char_addr <=  "110011" & V4 & V2 & V1;
+        when "011" => char_addr <=  "110100" & V4 & V2 & V1;
+        when others => char_addr <= "001110" & V4 & V2 & V1;
+    end case;
+        -- debug all chars
+        -- char_addr <=  num & V4 & V2 & V1;
+ else 
+   -- default behaviour
+   char_addr <= Display(5 downto 0) & V4 & V2 & V1;
+   Display_7 <= Display(7);
+ end if;
+end process;
 
 -- Background character ROMs
 R4: entity work.sprom
@@ -103,13 +133,6 @@ port map(
 		Address => char_addr,
 		q => char_data(3 downto 0) 
 		);
-		
---R4: entity work.Char_MSB
---port map(
---	clock => clk6,
---	Address => char_addr,
---	q => char_data(3 downto 0) 
---	);
 
 P4: entity work.sprom
 generic map(
@@ -121,15 +144,6 @@ port map(
 		Address => char_addr,
 		q => char_data(7 downto 4) 
 		);
-
---P4: entity work.Char_LSB
---port map(
---	clock => clk6,
---	Address => char_addr,
---	q => char_data(7 downto 4) 
---	);
-
-
 
 -- 74LS166 video shift register	
 R3: process(clk6, P3_3, VBlank_n_s, char_data, shift_data)
