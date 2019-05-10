@@ -44,7 +44,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.21.",`BUILD_DATE
 };
 
 assign LED = 1;
@@ -159,7 +159,6 @@ wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_dow
 wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
 wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
@@ -168,8 +167,6 @@ reg btn_right = 0;
 reg btn_down = 0;
 reg btn_up = 0;
 reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       pressed = ps2_key[9];
 wire [7:0] code    = ps2_key[7:0];	
@@ -186,8 +183,6 @@ always @(posedge clk_24) begin
 			'h76: btn_coin				<= pressed; // ESC
 			'h05: btn_one_player   	<= pressed; // F1
 			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
 			'h29: btn_fire1   		<= pressed; // Space
 		endcase
 	end

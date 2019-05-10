@@ -88,7 +88,7 @@ video_mixer video_mixer(
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : "000"),
 	.G(blankn ? g : "000"),
-	.B(blankn ? {b,b[0]} : "000"),
+	.B(blankn ? {b,1'b0} : "000"),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),

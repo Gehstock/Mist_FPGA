@@ -299,16 +299,11 @@ mc_adec : entity work.MC_ADEC
 		O_B           => W_B
 	);
 
-	
-mc_roms1 : entity work.sprom
-	generic map (
-		init_file	=>  "./Rom/prog.hex",
-		widthad_a	=> 14,
-		width_a		=> 8)
+mc_roms1 : entity work.prog
 	port map (
-		address	=>  W_A(13) & (W_A(12) xor (W_ROM_SWP and W_A(13))) & W_A(11 downto 0),
-		clock		=> W_CLK_12M, 
-		q			=> W_CPU_ROM_DO
+		clk		=> W_CLK_12M, 
+		addr	=>  W_A(13) & (W_A(12) xor (W_ROM_SWP and W_A(13))) & W_A(11 downto 0),
+		data			=> W_CPU_ROM_DO
 	);
 
 -------- VIDEO  -----------------------------

@@ -15,26 +15,23 @@
 // do some debugging of the pokey code I was using.
 // Edit: Changed 2018 Gehstock
 
-`define T65
-//`define MILL
 module centipede(
-		 input 	      clk_100mhz,
+		 input 	   	clk_100mhz,
 		 input 	      clk_12mhz,
  		 input 	      reset,
-		 input [9:0]  playerinput_i,
-		 input [7:0]  trakball_i,
-		 input [7:0]  joystick_i,
-		 input [7:0]  sw1_i,
-		 input [7:0]  sw2_i,
-		 output [4:1] led_o,
-		 output [8:0] rgb_o,
-		 output       sync_o,
-		 output       hsync_o,
-		 output       vsync_o,
-		 output       hblank_o,
-		 output       vblank_o,
-		 output [7:0] audio_o//,
-//		 output [7:0] audio2_o
+		 input  [9:0]  playerinput_i,
+		 input  [7:0]  trakball_i,
+		 input  [7:0]  joystick_i,
+		 input  [7:0]  sw1_i,
+		 input  [7:0]  sw2_i,
+		 output [4:1]  led_o,
+		 output [8:0]  rgb_o,
+		 output        sync_o,
+		 output        hsync_o,
+		 output        vsync_o,
+		 output        hblank_o,
+		 output        vblank_o,
+		 output [3:0]  audio_o
 		 );
 
    //
@@ -174,8 +171,7 @@ module centipede(
    wire [1:0]  rama_lo;
    wire [3:0]  rama;
 
-   wire [7:0]  audio;
-	wire [7:0]  audio2;
+   wire [3:0]  audio;
    //
    wire        mob_n;
    wire        blank_clk;
@@ -251,15 +247,11 @@ module centipede(
 
    assign vprom_addr = {vblank, s_128v, s_64v, s_32v, s_8v, s_4v, s_2v, s_1v};
 
-sprom #(
-	.init_file("./roms/136001-213.p4.mif"),
-	.widthad_a(8),
-	.width_a(4))
-vprom(
-	.address(vprom_addr),
-	.clock(s_6mhz),
-	.q(vprom_out)
-	);					 
+P4 P4(
+	.clk(s_6mhz),
+	.addr(vprom_addr),
+	.data(vprom_out)
+	);
 
 always @(posedge s_256h_n or posedge reset)
 	if (reset)
@@ -303,15 +295,11 @@ always @(posedge s_6mhz)//s_6_12)
 assign vblank = vprom_reg[3];
 assign hblank = (~xxx1 & ~coloren);
 
-sprom #(
-	.init_file("./roms/136001-prog.mif"),
-	.widthad_a(13),
-	.width_a(8))
-rom(
-	.address(ab[12:0]),
-	.clock(s_6mhz & ~rom_n),
-	.q(rom_out[7:0])
-	);			
+PROG PROG (
+	.clk(s_6mhz & ~rom_n),
+	.addr(ab[12:0]),
+	.data(rom_out[7:0])
+	);	
 	
 spram #(
 	.addr_width_g(10),
@@ -366,7 +354,6 @@ ram(
    assign mpu_clk = s_6mhz;
       assign mpu_reset_n = ~mpu_reset;
 		
-`ifdef T65
 assign phi2 = ~phi0;
 T65 T65(
 	.Mode("00"),
@@ -383,25 +370,7 @@ T65 T65(
 	.DI(db_in[7:0]),
 	.DO(db_out[7:0])
 	);
-	
-`else
 
-p6502 p6502(
-	.clk(mpu_clk),
-	.reset_n(mpu_reset_n),
-	.nmi(1'b1),
-	.irq(irq_n),
-	.so(1'b0),
-	.rdy(1'b1),
-	.phi0(phi0),
-	.phi2(phi2),
-	.rw_n(rw_n),
-	.a(ab[15:0]),
-	.din(db_in[7:0]),
-	.dout(db_out[7:0])
-	);
-	
-`endif
 
    // Address Decoder
    assign write_n = ~(phi2 & ~rw_n);
@@ -665,27 +634,18 @@ p6502 p6502(
      else
        if (~s_4h)
 	 pic <= pf[7:0];
+	 
+F7 F7(
+	.clk(s_6mhz_n),
+	.addr(pf_rom0_addr),
+	.data(pf_rom0_out)
+	);		 
 			
-sprom #(
-	.init_file("./roms/136001-212.hj7.mif"),
-	.widthad_a(11),
-	.width_a(8))
- pf_rom1(
-	.address(pf_rom1_addr),
-	.clock(s_6mhz_n),
-	.q(pf_rom1_out)
+HJ7 HJ7(
+	.clk(s_6mhz_n),
+	.addr(pf_rom1_addr),
+	.data(pf_rom1_out)
 	);
-
-sprom #(
-	.init_file("./roms/136001-211.f7.mif"),
-	.widthad_a(11),
-	.width_a(8))
- pf_rom0(
-	.address(pf_rom0_addr),
-	.clock(s_6mhz_n),
-	.q(pf_rom0_out)
-	);			
-
 
    // a guess, based on millipede schematics
    wire pf_romx_haddr;
@@ -969,20 +929,7 @@ POKEY POKEY(
 	.audio(audio),
    .clk(clk_100mhz)
    );
-	
-`ifdef MILL	
-POKEY POKEY2(
-   .Din(db_out[7:0]),
-   .Dout(),
-   .A(ab[3:0]),
-   .P(8'b0),
-   .phi2(phi2),
-   .readHighWriteLow(rw_n),
-   .cs0Bar(pokey2_n),
-	.audio(audio2),
-   .clk(clk_100mhz)
-   );
-`endif	
+
  
    // Video output circuitry
 
@@ -1056,9 +1003,6 @@ color_ram(
    assign hsync_o = hsync;
    assign vsync_o = vsync;
 	assign audio_o = audio ;
-`ifdef MILL	
-	assign audio2_o = audio2 ;
-`endif	
    assign hblank_o = hblank;
    assign vblank_o = vblank;
 

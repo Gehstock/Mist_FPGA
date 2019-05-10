@@ -3,6 +3,7 @@ Pickin Port to Mist FPGA by Gehstock
 Work in Progress
 
 -minor GFX Problems
+-Sound
 
 
 

@@ -35,17 +35,12 @@ architecture RTL of MC_COL_PAL is
 
 begin
 	
-clut : entity work.sprom
-	generic map (
-		init_file	=>  "./Rom/col.hex",
-		widthad_a	=> 5,
-		width_a		=> 8)
+clut : entity work.col
 	port map (
-		address	=> I_COL(2 downto 0) & I_VID(1 downto 0),
-		clock		=> I_CLK_6M,
-		q			=> W_COL_ROM_DO
+		clk		=> I_CLK_6M,
+		addr	=> I_COL(2 downto 0) & I_VID(1 downto 0),
+		data			=> W_COL_ROM_DO
 	);
-
 	---    VID OUT     --------------------------------------------------------
 	O_R <= W_COL_ROM_DO(2 downto 0);
 	O_G <= W_COL_ROM_DO(5 downto 3);

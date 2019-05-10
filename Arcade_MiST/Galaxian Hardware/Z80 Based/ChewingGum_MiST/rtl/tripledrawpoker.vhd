@@ -333,15 +333,11 @@ begin
 	);
 
 --------- ROM           -------------------------------------------------------
-	mc_roms : entity work.sprom
-	generic map (
-		init_file  => "./ROM/prog2.hex",
-		widthad_a  => 14,
-		width_a  => 8)
+	mc_roms : entity work.prog
 	port map (
-		address => W_A(13 downto 0),
-		clock  => W_CLK_12M,
-		q => W_CPU_ROM_DO
+		clk  => W_CLK_12M,
+		addr => W_A(13 downto 0),
+		data => W_CPU_ROM_DO
 	);
 
 -------- VIDEO  -----------------------------

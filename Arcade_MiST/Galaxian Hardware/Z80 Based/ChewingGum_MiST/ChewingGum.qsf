@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 18:15:04  March 11, 2019
+# Date created = 09:12:33  May 10, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -132,23 +132,23 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# ----------------------------------
-# start ENTITY(TripleDrawPoker_MiST)
+# -----------------------------
+# start ENTITY(ChewingGum_MiST)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(TripleDrawPoker_MiST)
-# --------------------------------
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+# end ENTITY(ChewingGum_MiST)
+# ---------------------------
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ChewingGum_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/tripledrawpoker.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_stars.vhd
@@ -163,6 +163,10 @@ set_global_assignment -name VHDL_FILE rtl/mc_col_pal.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_bram.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_adec.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_video.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prog.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/k.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/h.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/col.vhd
 set_global_assignment -name VHDL_FILE rtl/sine_package.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80as.vhd
@@ -172,7 +176,6 @@ set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv

@@ -61,20 +61,12 @@ begin
 	end process;
 
 	---    COL ROM     --------------------------------------------------------
---wire   W_COL_ROM_OEn = W_6M_DO[1];
-	
-		crom : entity work.sprom
-	generic map (
-		init_file  => "./ROM/col.hex",
-		widthad_a  => 5,
-		width_a  => 8)
+	crom : entity work.col
 	port map (
-		address => W_6M_DO(6 downto 2),
-		clock  => I_CLK_12M,
-		q => W_COL_ROM_DO
-	);	
-
-
+		clk  => I_CLK_12M,
+		addr => W_6M_DO(6 downto 2),
+		data => W_COL_ROM_DO
+);
 	---    VID OUT     --------------------------------------------------------
 	O_R <= W_COL_ROM_DO(2 downto 0);
 	O_G <= W_COL_ROM_DO(5 downto 3);

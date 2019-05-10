@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Botanic based on Bagman (stern) - Dar - Feb 2014
+-- Pickin based on Bagman (stern) - Dar - Feb 2014
 --
 -- Remove sram multiplexing - Dar -June 2018
 ---------------------------------------------------------------------------------
@@ -134,7 +134,8 @@ signal color_ram_cs  : std_logic;
 
 -- data bus from AY-3-8910
 signal ym_8910_data : std_logic_vector(7 downto 0);
-
+signal ym_8910_data2 : std_logic_vector(7 downto 0);
+signal ym2_we_n  : std_logic;
 -- audio
 signal ym_8910_audio : std_logic_vector(7 downto 0);
 signal ym_8910_audio2 : std_logic_vector(7 downto 0);
@@ -228,7 +229,7 @@ wram2_we    <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 down
 tile_ram_cs       <= '1' when cpu_addr(15 downto 10) = "100010"   else '0'; -- 8800-8bff
 color_ram_cs      <= '1' when cpu_addr(15 downto 11) = "10011"    else '0'; -- 9800-9fff
 
-
+ym2_we_n      <= '0' when cpu_addr(15 downto 11) = "10111"    else '1'; -- 1011100000000000
 ---------------------------
 -- enable/disable interrupt
 ---------------------------
@@ -306,7 +307,9 @@ with cpu_addr(15 downto 11) select
 --   cabinet      0 = upright, 1 = cocktail (NA)
   
 		
-cpu_di <= ym_8910_data when cpu_iorq_n = '0' else cpu_di_mem;
+cpu_di <= 	ym_8910_data  when 	cpu_iorq_n 	= '0' else
+				ym_8910_data2 when 	ym2_we_n 	= '0' else--1011100000000000
+				cpu_di_mem;
 
 -----------------------
 -- mux sound and music
@@ -587,7 +590,7 @@ ym2149_2 : entity work.ym2149
 port map (
 -- data bus
 	I_DA        => cpu_do,
-	O_DA        => open,--ym_8910_data2,
+	O_DA        => ym_8910_data2,
 	O_DA_OE_L   => open,
 -- control
 	I_A9_L      => sound2_cs_n,
