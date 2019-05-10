@@ -53,6 +53,7 @@ Aviable Arcade Cores
 	Orbitron
 	Pisces
 	Triple Draw Poker
+	Victory
 	War of Bugs
 	Zig Zag
 
