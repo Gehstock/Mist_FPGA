@@ -87,6 +87,7 @@ Aviable Arcade Cores
 
 #Pacman Hardware
 	Ali Baba and 40 Thieves
+	Birdiy
 	Crush Roller
 	Dream Shopper
 	Eeekk
