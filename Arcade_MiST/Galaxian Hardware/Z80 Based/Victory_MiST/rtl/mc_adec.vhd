@@ -15,39 +15,7 @@
 -- 2004- 5- 6  first release.
 -- 2004- 8-23  Improvement with T80-IP.
 ---------------------------------------------------------------------
---
---GALAXIAN Address Map
---
--- Address      Item(R..read-mode W..wight-mode)        Parts
---0000 - 1FFF   CPU-ROM..R                            ( 7H or 7K )
---2000 - 3FFF   CPU-ROM..R                            ( 7L )
---4000 - 47FF   CPU-RAM..RW                           ( 7N  & 7P )
---5000 - 57FF   VID-RAM..RW
---5800 - 5FFF   OBJ-RAM..RW
---6000 -        SW0..R   LAMP......W
---6800 -        SW1..R   SOUND.....W
---7000 -        DIP..R
---7001                   NMI_ON....W
---7004                   STARS_ON..W
---7006                   H_FLIP....W
---7007                   V-FLIP....W
---7800          WDR..R   PITCH.....W
---8000 - 87FF   CPU-RAM..RW
---W MODE
---6000                  1P START
---6001                  2P START
---6002                  COIN LOCKOUT
---6003                  COIN COUNTER
---6004 - 6007           SOUND CONTROL(OSC)
---
---6800                  SOUND CONTROL(FS1)
---6801                  SOUND CONTROL(FS2)
---6802                  SOUND CONTROL(FS3)
---6803                  SOUND CONTROL(HIT)
---6805                  SOUND CONTROL(SHOT)
---6806                  SOUND CONTROL(VOL1)
---6807                  SOUND CONTROL(VOL2)
---
+
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
@@ -89,8 +57,7 @@ entity MC_ADEC is
 		O_PITCH       : out std_logic;
 		O_H_FLIP      : out std_logic;
 		O_V_FLIP      : out std_logic;
-		O_BD_G        : out std_logic;
-		O_STARS_ON    : out std_logic
+		O_BD_G        : out std_logic
 	);
 end;
 
@@ -212,7 +179,6 @@ begin
 	O_CPU_RAM_RD  <= not W_8N_Q(0);--4000
 
 	O_PITCH       <= not W_8M_Q(7);
---	STARS_ON_ENA  <= not W_8M_Q(6);
 	O_SOUND_WE    <= not W_8M_Q(5);
 	O_DRIVER_WE   <= not W_8M_Q(4);
 	O_OBJ_RAM_WR  <= not W_8M_Q(3);
@@ -243,7 +209,6 @@ begin
 		end if;
 	end process;
 
-	O_STARS_ON <= W_9N_Q(4);
 	O_H_FLIP   <= W_9N_Q(6);
 	O_V_FLIP   <= W_9N_Q(7);
 

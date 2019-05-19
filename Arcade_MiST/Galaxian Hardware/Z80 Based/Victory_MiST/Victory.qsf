@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 15:41:07  May 10, 2019
+# Date created = 23:19:48  May 18, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -53,7 +53,6 @@ set_global_assignment -name VHDL_FILE rtl/ROM/prog.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/k_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/h_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/col.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_stars.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_sound_vco.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_sound_b.vhd
 set_global_assignment -name VHDL_FILE rtl/mc_sound_a.vhd

@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Galaxian
+//  Arcade: Victory
 //
 //  Port to MiSTer
 //  Copyright (C) 2017 Sorgelig
@@ -44,7 +44,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.21.",`BUILD_DATE
 };
 
 assign LED = 1;

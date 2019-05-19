@@ -380,7 +380,7 @@ begin
       V4      => vcnt(2),
       V2      => vcnt(1),
       V1      => vcnt(0),
-      FLIP    => '0'--control_reg(3)
+      FLIP    => control_reg(5)
       );
 
   p_ab_mux_comb : process(hcnt, cpu_addr, vram_addr_ab)
@@ -463,7 +463,7 @@ begin
     end if;
     wr0_l <= decb(0);--101000 00 100000  1010000 10 000000
     wr1_l <= decb(1);
-    wr2_l <= decb(2);
+    wr2_l <= decb(2);--spriteram2
   end process;
 
   p_control_reg : process
@@ -579,7 +579,7 @@ begin
       --
       I_HBLANK      => hblank,
       I_VBLANK      => vblank,
-      I_FLIP        => '0',--control_reg(3),
+      I_FLIP        => control_reg(5),
       I_WR2_L       => wr2_l,
       --
       O_RED         => O_VIDEO_R,
@@ -609,7 +609,7 @@ begin
       --
       I_WR1_L       => wr1_l,
       I_WR0_L       => wr0_l,
-      I_SOUND_ON    => '1',--control_reg(1),
+      I_SOUND_ON    => control_reg(3),
       --
       O_AUDIO       => O_AUDIO,
       ENA_6         => ena_6,

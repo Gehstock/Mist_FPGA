@@ -26,7 +26,6 @@ port (
 	I_C_BLnX     : in  std_logic;
 
 	O_C_BLXn     : out std_logic;
-	O_STARS_OFFn : out std_logic;
 	O_R          : out std_logic_vector(2 downto 0);
 	O_G          : out std_logic_vector(2 downto 0);
 	O_B          : out std_logic_vector(2 downto 0)
@@ -44,7 +43,6 @@ begin
 	W_6M_DI      <= I_COL(2 downto 0) & I_VID(1 downto 0) & not (I_VID(0) or I_VID(1)) & I_C_BLnX;
 	W_6M_CLR     <= W_6M_DI(0) or W_6M_DO(0);
 	O_C_BLXn     <= W_6M_DI(0) or W_6M_DO(0);
-	O_STARS_OFFn <= W_6M_DO(1);
 
 --always@(posedge I_CLK_6M or negedge W_6M_CLR)
 	process(I_CLK_6M, W_6M_CLR)

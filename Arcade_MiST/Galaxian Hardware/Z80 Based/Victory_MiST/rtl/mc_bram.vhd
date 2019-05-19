@@ -27,39 +27,6 @@ library ieee;
 entity MC_CPU_RAM is
 	port (
 		I_CLK  : in  std_logic;
-		I_ADDR : in  std_logic_vector(9 downto 0);
-		I_D    : in  std_logic_vector(7 downto 0);
-		I_WE   : in  std_logic;
-		I_OE   : in  std_logic;
-		O_D    : out std_logic_vector(7 downto 0)
-	);
-end;
-architecture RTL of MC_CPU_RAM is
-
-	signal W_D : std_logic_vector(7 downto 0) := (others => '0');
-begin
-	O_D <= W_D when I_OE ='1' else (others=>'0');
-
-	ram_inst : work.spram generic map(10,8)
-	port map
-	(
-		address  => I_ADDR,
-		clock    => I_CLK,
-		data     => I_D,
-		wren		=> I_WE,
-		q			=> W_D
-	);
-end RTL;
-
-library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.std_logic_unsigned.all;
-  use ieee.numeric_std.all;
-
---  mc_top.v use
-entity MC_CPU_RAM2 is
-	port (
-		I_CLK  : in  std_logic;
 		I_ADDR : in  std_logic_vector(10 downto 0);
 		I_D    : in  std_logic_vector(7 downto 0);
 		I_WE   : in  std_logic;
@@ -67,7 +34,7 @@ entity MC_CPU_RAM2 is
 		O_D    : out std_logic_vector(7 downto 0)
 	);
 end;
-architecture RTL of MC_CPU_RAM2 is
+architecture RTL of MC_CPU_RAM is
 
 	signal W_D : std_logic_vector(7 downto 0) := (others => '0');
 begin

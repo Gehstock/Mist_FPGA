@@ -73,10 +73,8 @@ architecture RTL of galaxian is
 	-------- CPU RAM  ----------------------------
 	signal W_CPU_RAM_DO       : std_logic_vector(7 downto 0) := (others => '0');
 	-------- ADDRESS DECDER ----------------------
-	signal W_BD_G             : std_logic := '0';
 	signal W_CPU_RAM_CS       : std_logic := '0';
 	signal W_CPU_RAM_RD       : std_logic := '0';
---	signal W_CPU_RAM_WR       : std_logic := '0';
 	signal W_CPU_ROM_CS       : std_logic := '0';
 	signal W_DIP_OE           : std_logic := '0';
 	signal W_H_FLIP           : std_logic := '0';
@@ -86,14 +84,11 @@ architecture RTL of galaxian is
 	signal W_OBJ_RAM_WR       : std_logic := '0';
 	signal W_PITCH            : std_logic := '0';
 	signal W_SOUND_WE         : std_logic := '0';
-	signal W_STARS_ON         : std_logic := '0';
-	signal W_STARS_OFFn       : std_logic := '0';
 	signal W_SW0_OE           : std_logic := '0';
 	signal W_SW1_OE           : std_logic := '0';
 	signal W_V_FLIP           : std_logic := '0';
 	signal W_VID_RAM_RD       : std_logic := '0';
 	signal W_VID_RAM_WR       : std_logic := '0';
-	signal W_WDR_OE           : std_logic := '0';
 	--------- INPORT -----------------------------
 	signal W_SW_DO            : std_logic_vector( 7 downto 0) := (others => '0');
 	--------- VIDEO  -----------------------------
@@ -111,11 +106,6 @@ architecture RTL of galaxian is
 	signal W_FS               : std_logic_vector( 2 downto 0) := (others => '0');
 
 	signal blx_comb           : std_logic := '0';
-	signal W_1VF              : std_logic := '0';
-	signal W_256HnX           : std_logic := '0';
-	signal W_8HF              : std_logic := '0';
-	signal W_DAC_A            : std_logic := '0';
-	signal W_DAC_B            : std_logic := '0';
 	signal W_MISSILEn         : std_logic := '0';
 	signal W_SHELLn           : std_logic := '0';
 	signal W_MS_D             : std_logic := '0';
@@ -128,9 +118,6 @@ architecture RTL of galaxian is
 	signal ROM_D              : std_logic_vector( 7 downto 0) := (others => '0');
 	signal rst_count          : std_logic_vector( 3 downto 0) := (others => '0');
 	signal W_COL              : std_logic_vector( 2 downto 0) := (others => '0');
-	signal W_STARS_B          : std_logic_vector( 1 downto 0) := (others => '0');
-	signal W_STARS_G          : std_logic_vector( 1 downto 0) := (others => '0');
-	signal W_STARS_R          : std_logic_vector( 1 downto 0) := (others => '0');
 	signal W_VID              : std_logic_vector( 1 downto 0) := (others => '0');
 	signal W_VIDEO_B          : std_logic_vector( 2 downto 0) := (others => '0');
 	signal W_VIDEO_G          : std_logic_vector( 2 downto 0) := (others => '0');
@@ -165,9 +152,6 @@ begin
 		I_VID_RAM_WR  => W_VID_RAM_WR,
 		I_DRIVER_WR   => W_DRIVER_WE,
 		O_C_BLnX      => W_C_BLnX,
-		O_8HF         => W_8HF,
-		O_256HnX      => W_256HnX,
-		O_1VF         => W_1VF,
 		O_MISSILEn    => W_MISSILEn,
 		O_SHELLn      => W_SHELLn,
 		O_BD          => W_VID_DO,
@@ -196,18 +180,8 @@ begin
 		BUSAK_n       => open,
 		DOE           => open
 	);
-
---	mc_cpu_ram : entity work.MC_CPU_RAM
---	port map (
---		I_CLK         => W_CPU_RAM_CLK,
---		I_ADDR        => W_A(9 downto 0),
---		I_D           => W_BDI,
---		I_WE          => W_CPU_WR,
---		I_OE          => W_CPU_RAM_RD,
---		O_D           => W_CPU_RAM_DO
---	);
 	
-	mc_cpu_ram2 : entity work.MC_CPU_RAM2
+	mc_cpu_ram : entity work.MC_CPU_RAM
 	port map (
 		I_CLK         => W_CPU_RAM_CLK,
 		I_ADDR        => W_A(10 downto 0),
@@ -216,6 +190,7 @@ begin
 		I_OE          => W_CPU_RAM_RD,
 		O_D           => W_CPU_RAM_DO
 	);
+	
 	mc_adec : entity work.MC_ADEC
 	port map(
 		I_CLK_12M     => W_CLK_12M,
@@ -246,14 +221,11 @@ begin
 		O_SW0_OE      => W_SW0_OE,
 		O_SW1_OE      => W_SW1_OE,
 		O_DIP_OE      => W_DIP_OE,
-		O_WDR_OE      => W_WDR_OE,
 		O_DRIVER_WE   => W_DRIVER_WE,
 		O_SOUND_WE    => W_SOUND_WE,
 		O_PITCH       => W_PITCH,
 		O_H_FLIP      => W_H_FLIP,
-		O_V_FLIP      => W_V_FLIP,
-		O_BD_G        => W_BD_G,
-		O_STARS_ON    => W_STARS_ON
+		O_V_FLIP      => W_V_FLIP
 	);
 
 	-- active high buttons
@@ -301,28 +273,9 @@ begin
 		I_COL         => W_COL,
 		I_C_BLnX      => W_C_BLnX,
 		O_C_BLXn      => W_C_BLXn,
-		O_STARS_OFFn  => W_STARS_OFFn,
 		O_R           => W_VIDEO_R,
 		O_G           => W_VIDEO_G,
 		O_B           => W_VIDEO_B
-	);
-
-	mc_stars : entity work.MC_STARS
-	port map (
-		I_CLK_18M     => W_CLK_18M,
-		I_CLK_6M      => W_CLK_6M,
-		I_H_FLIP      => W_H_FLIP,
-		I_V_SYNC      => W_V_SYNC_int,
-		I_8HF         => W_8HF,
-		I_256HnX      => W_256HnX,
-		I_1VF         => W_1VF,
-		I_2V          => W_V_CNT(1),
-		I_STARS_ON    => '0',--W_STARS_ON  -- No Stars on Victory,
-		I_STARS_OFFn  => W_STARS_OFFn,
-		O_R           => W_STARS_R,
-		O_G           => W_STARS_G,
-		O_B           => W_STARS_B,
-		O_NOISE       => open
 	);
 
 	mc_sound_a : entity work.MC_SOUND_A
@@ -368,9 +321,9 @@ begin
 	W_MS_G <= not   blx_comb  and W_MS_D;
 	W_MS_B <= not   blx_comb  and W_MS_D and not W_SHELLn ;
 
-	W_R <= W_VIDEO_R or (W_STARS_R & "0") or (W_MS_R & W_MS_R & "0");
-	W_G <= W_VIDEO_G or (W_STARS_G & "0") or (W_MS_G & W_MS_G & "0");
-	W_B <= W_VIDEO_B or (W_STARS_B & "0") or (W_MS_B & W_MS_B & "0");
+	W_R <= W_VIDEO_R or (W_MS_R & W_MS_R & "0");
+	W_G <= W_VIDEO_G or (W_MS_G & W_MS_G & "0");
+	W_B <= W_VIDEO_B or (W_MS_B & W_MS_B & "0");
 
 	process(W_CLK_6M)
 	begin
