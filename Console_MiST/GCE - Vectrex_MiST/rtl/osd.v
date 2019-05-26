@@ -160,15 +160,19 @@ wire [9:0] h_osd_start = ((dsp_width - OSD_WIDTH)>> 1) + OSD_X_OFFSET;
 wire [9:0] h_osd_end   = h_osd_start + OSD_WIDTH;
 wire [9:0] v_osd_start = ((dsp_height- (OSD_HEIGHT<<doublescan))>> 1) + OSD_Y_OFFSET;
 wire [9:0] v_osd_end   = v_osd_start + (OSD_HEIGHT<<doublescan);
-wire [9:0] osd_hcnt    = h_cnt - h_osd_start + 1'd1;  // one pixel offset for osd_byte register
-wire [9:0] osd_vcnt    = v_cnt - v_osd_start;
+reg  [9:0] osd_hcnt;
+reg  [9:0] osd_vcnt;
 
 wire osd_de = osd_enable && 
               (HSync != hs_pol) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
               (VSync != vs_pol) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
 
-reg  [7:0] osd_byte; 
-always @(posedge clk_sys) if(ce_pix) osd_byte <= osd_buffer[{doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt[7:0]}];
+reg  [7:0] osd_byte;
+always @(posedge clk_sys) if(ce_pix) begin
+	osd_hcnt <= h_cnt - h_osd_start + 2'd2;  // 1+1 pixel offset for osd_byte register
+	osd_vcnt <= v_cnt - v_osd_start;
+	osd_byte <= osd_buffer[{doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt[7:0]}];
+end
 
 wire osd_pixel = osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
 

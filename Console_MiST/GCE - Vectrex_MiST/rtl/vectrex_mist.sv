@@ -58,10 +58,10 @@ wire  [7:0] ioctl_dout;
 
 assign LED = !ioctl_downl;
 
-wire 			clk_24, clk_12, clk_6;
+wire 			clk_24, clk_12;
 wire 			pll_locked;
 
-always @(clk_12)begin
+always @(clk_24)begin
 	pot_x_1 = 8'h00;
 	pot_y_1 = 8'h00;
 	pot_x_2 = 8'h00;
@@ -83,9 +83,8 @@ end
 pll pll (
 	.inclk0			( CLOCK_27		),
 	.areset			( 0				),
-	.c0				( clk_24			),
-	.c1				( clk_12			),
-	.c2				( clk_6			),
+	.c0				( clk_24		),
+	.c1				( clk_12		),
 	.locked			( pll_locked	)
 	);
 
@@ -157,63 +156,85 @@ vectrex vectrex (
 
 dac dac (
 	.clk_i			( clk_24			),
-	.res_n_i			( 1				),
+	.res_n_i		( 1				),
 	.dac_i			( audio			),
 	.dac_o			( AUDIO_L		)
 	);
 assign AUDIO_R = AUDIO_L;
 
+//////////////////   VIDEO   //////////////////
+
 wire frame_line;
 wire [3:0] rr,gg,bb;
 
-	assign r = status[2] & frame_line ? 4'h40 : rr;
-	assign g = status[2] & frame_line ? 4'h00 : gg;
-	assign b = status[2] & frame_line ? 4'h00 : bb;
+assign r = status[2] & frame_line ? 4'h40 : blankn ? rr : 4'd0;
+assign g = status[2] & frame_line ? 4'h00 : blankn ? gg : 4'd0;
+assign b = status[2] & frame_line ? 4'h00 : blankn ? bb : 4'd0;
 
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer (
-	.clk_sys			( clk_24			),
-	.ce_pix			( clk_6			),
-	.ce_pix_actual	( clk_6			),
-	.SPI_SCK			( SPI_SCK		),
-	.SPI_SS3			( SPI_SS3		),
-	.SPI_DI			( SPI_DI			),
-	.R					(  blankn ? r : "0000"),
-	.G					(  blankn ? g : "0000"),
-	.B					(  blankn ? b : "0000"),
-	.HSync			( hs				),
-	.VSync			( vs			   ),
-	.VGA_R			( VGA_R			),
-	.VGA_G			( VGA_G			),
-	.VGA_B			( VGA_B			),
-	.VGA_VS			( VGA_VS			),
-	.VGA_HS			( VGA_HS			),
-	.scandoubler_disable(1			),
-	.ypbpr_full		( 1				),
-	.line_start		( 0				),
-	.mono				( 0				)
-	);
+wire        vsync_out;
+wire        hsync_out;
+wire        csync_out = ~(hs ^ vs);
+
+assign      VGA_HS = ypbpr ? csync_out : hs;
+assign      VGA_VS = ypbpr ? 1'b1 : vs;
+
+wire [5:0] osd_r_o, osd_g_o, osd_b_o;
+
+osd osd
+(
+	.clk_sys(clk_24),
+	.SPI_DI(SPI_DI),
+	.SPI_SCK(SPI_SCK),
+	.SPI_SS3(SPI_SS3),
+	.R_in({r, 2'b00}),
+	.G_in({g, 2'b00}),
+	.B_in({b, 2'b00}),
+	.HSync(hs),
+	.VSync(vs),
+	.R_out(osd_r_o),
+	.G_out(osd_g_o),
+	.B_out(osd_b_o)
+);
+    
+wire [5:0] y, pb, pr;
+
+rgb2ypbpr rgb2ypbpr
+(
+	.red   ( osd_r_o ),
+	.green ( osd_g_o ),
+	.blue  ( osd_b_o ),
+	.y     ( y       ),
+	.pb    ( pb      ),
+	.pr    ( pr      )
+);
+
+assign VGA_R = ypbpr?pr:osd_r_o;
+assign VGA_G = ypbpr? y:osd_g_o;
+assign VGA_B = ypbpr?pb:osd_b_o;
+
+////////////////////////////////////////////
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
-	.clk_sys       ( clk_24   	   ),
+	.clk_sys       ( clk_24       ),
 	.conf_str      ( CONF_STR     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.CONF_DATA0    ( CONF_DATA0   ),
-	.SPI_SS2			( SPI_SS2      ),
+	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DO        ( SPI_DO       ),
 	.SPI_DI        ( SPI_DI       ),
 	.buttons       ( buttons      ),
-	.switches   	( switches     ),
+	.switches      ( switches     ),
 	.ypbpr         ( ypbpr        ),
 	.ps2_kbd_clk   ( ps2_kbd_clk  ),
-	.ps2_kbd_data	( ps2_kbd_data	),
-	.joystick_0   	( joystick_0   ),
+	.ps2_kbd_data  ( ps2_kbd_data ),
+	.joystick_0    ( joystick_0   ),
 	.joystick_1    ( joystick_1   ),
 	.status        ( status       ),
 	.ioctl_download( ioctl_downl  ),
-	.ioctl_index	( ioctl_index	),
-	.ioctl_wr		( ioctl_wr		),
-	.ioctl_addr		( ioctl_addr	),
-	.ioctl_dout		( ioctl_dout	)
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
 	);
 
 keyboard keyboard (

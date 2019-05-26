@@ -1,0 +1,6 @@
+PLLJ_PLLSPE_INFO.txt
+db/
+incremental_db/
+output_files/
+build_id.v
+*.bak
