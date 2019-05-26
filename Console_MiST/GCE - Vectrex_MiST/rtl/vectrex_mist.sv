@@ -37,6 +37,8 @@ wire  [1:0] switches;
 wire  [15:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
+wire [15:0] joy_ana_0;
+wire [15:0] joy_ana_1;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [7:0]	pot_x_1, pot_x_2;
@@ -60,25 +62,6 @@ assign LED = !ioctl_downl;
 
 wire 			clk_24, clk_12;
 wire 			pll_locked;
-
-always @(clk_24)begin
-	pot_x_1 = 8'h00;
-	pot_y_1 = 8'h00;
-	pot_x_2 = 8'h00;
-	pot_y_2 = 8'h00;
-	//
-	if (joystick_0[1] | kbjoy[1]) pot_x_2 = 8'h80;
-	if (joystick_0[0] | kbjoy[0]) pot_x_2 = 8'h7F;
-	
-	if (joystick_0[3] | kbjoy[3]) pot_y_2 = 8'h7F;
-	if (joystick_0[2] | kbjoy[2]) pot_y_2 = 8'h80;
-	//Player2
-	if (joystick_1[1] | kbjoy[9]) pot_x_1 = 8'h80;
-	if (joystick_1[0] | kbjoy[8]) pot_x_1 = 8'h7F;
-	
-	if (joystick_1[3] | kbjoy[11]) pot_y_1 = 8'h7F;
-	if (joystick_1[2] | kbjoy[10]) pot_y_1 = 8'h80;	
-end
 
 pll pll (
 	.inclk0			( CLOCK_27		),
@@ -113,6 +96,11 @@ always @(posedge clk_24) begin
 	end
 end
 
+assign pot_x_1 = status[4] ? joy_ana_1[15:8] : joy_ana_0[15:8];
+assign pot_x_2 = status[4] ? joy_ana_0[15:8] : joy_ana_1[15:8];
+assign pot_y_1 = status[4] ? ~joy_ana_1[ 7:0] : ~joy_ana_0[ 7:0];
+assign pot_y_2 = status[4] ? ~joy_ana_0[ 7:0] : ~joy_ana_1[ 7:0];
+
 vectrex vectrex (
 	.clock_24		( clk_24			),  
 	.clock_12		( clk_12 		),
@@ -131,28 +119,21 @@ vectrex vectrex (
 	.cart_addr		( cart_addr		),
 	.cart_do			( cart_do		),
 	.cart_rd			( cart_rd		),	
-	.btn11			( joystick_0[4] | kbjoy[4] | status[4] ? joystick_1[4] : 1'b0),
-	.btn12			( joystick_0[5] | kbjoy[5] | status[4] ? joystick_1[5] : 1'b0),
-	.btn13			( joystick_0[6] | kbjoy[6] | status[4] ? joystick_1[6] : 1'b0),
-	.btn14			( joystick_0[7] | kbjoy[7] | status[4] ? joystick_1[7] : 1'b0),
-	.pot_x_1			( pot_x_1			),
-	.pot_y_1			( pot_y_1			),
-	.btn21			( kbjoy[12] | ~status[4] ? joystick_1[4] : 1'b0),
-	.btn22			( kbjoy[13] | ~status[4] ? joystick_1[5] : 1'b0),
-	.btn23			( kbjoy[14] | ~status[4] ? joystick_1[6] : 1'b0),
-	.btn24			( kbjoy[15] | ~status[4] ? joystick_1[7] : 1'b0),
-	.pot_x_2			( pot_x_2			),
-	.pot_y_2			( pot_y_2			),
+	.btn11          ( status[4] ? joystick_1[4] : joystick_0[4]),
+	.btn12          ( status[4] ? joystick_1[5] : joystick_0[5]),
+	.btn13          ( status[4] ? joystick_1[6] : joystick_0[6]),
+	.btn14          ( status[4] ? joystick_1[7] : joystick_0[7]),
+	.pot_x_1        ( pot_x_1			),
+	.pot_y_1        ( pot_y_1			),
+	.btn21          ( status[4] ? joystick_0[4] : joystick_1[4]),
+	.btn22          ( status[4] ? joystick_0[5] : joystick_1[5]),
+	.btn23          ( status[4] ? joystick_0[6] : joystick_1[6]),
+	.btn24          ( status[4] ? joystick_0[7] : joystick_1[7]),
+	.pot_x_2        ( pot_x_2			),
+	.pot_y_2        ( pot_y_2			),
 	.leds				(					),
 	.dbg_cpu_addr	(					)
 	);
-	
-	//	.pot_x_1(joya_0[7:0]  ? joya_0[7:0]   : {joystick_0[1], {7{joystick_0[0]}}}),
-	//.pot_y_1(joya_0[15:8] ? ~joya_0[15:8] : {joystick_0[2], {7{joystick_0[3]}}}),
-	
-	//	.pot_x_2(joya_1[7:0]  ? joya_1[7:0]   : {joystick_1[1], {7{joystick_1[0]}}}),
-	//.pot_y_2(joya_1[15:8] ? ~joya_1[15:8] : {joystick_1[2], {7{joystick_1[3]}}})
-	
 
 dac dac (
 	.clk_i			( clk_24			),
@@ -229,6 +210,8 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
 	.ps2_kbd_data  ( ps2_kbd_data ),
 	.joystick_0    ( joystick_0   ),
 	.joystick_1    ( joystick_1   ),
+	.joystick_analog_0( joy_ana_0 ),
+	.joystick_analog_1( joy_ana_1 ),
 	.status        ( status       ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
@@ -236,14 +219,5 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 	);
-
-keyboard keyboard (
-	.clk				( clk_24			),
-	.reset			( 0				),
-	.ps2_kbd_clk	( ps2_kbd_clk	),
-	.ps2_kbd_data	( ps2_kbd_data	),
-	.joystick		( kbjoy			)
-	);
-
 
 endmodule 
