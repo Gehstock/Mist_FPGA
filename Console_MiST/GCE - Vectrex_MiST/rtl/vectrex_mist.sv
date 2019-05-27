@@ -1,5 +1,6 @@
 module vectrex_mist
 (
+	input         CLOCK_27,
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -14,7 +15,18 @@ module vectrex_mist
 	input         SPI_SS2,
 	input         SPI_SS3,
 	input         CONF_DATA0,
-	input         CLOCK_27
+
+	output [12:0] SDRAM_A,
+	inout  [15:0] SDRAM_DQ,
+	output        SDRAM_DQML,
+	output        SDRAM_DQMH,
+	output        SDRAM_nWE,
+	output        SDRAM_nCAS,
+	output        SDRAM_nRAS,
+	output        SDRAM_nCS,
+	output  [1:0] SDRAM_BA,
+	output        SDRAM_CLK,
+	output        SDRAM_CKE
 );
 
 `include "rtl\build_id.v" 
@@ -49,7 +61,7 @@ wire  [3:0] r, g, b;
 wire 			hb, vb;
 wire       	blankn = ~(hb | vb);
 wire 			cart_rd;
-wire [13:0] cart_addr;
+wire [14:0] cart_addr;
 wire  [7:0] cart_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -71,14 +83,23 @@ pll pll (
 	.locked			( pll_locked	)
 	);
 
-card card (
-	.clock			( clk_24		),
-	.address			( ioctl_downl ? ioctl_addr : cart_addr),
-	.data				( ioctl_dout	),
-	.rden				( !ioctl_downl && cart_rd),
-	.wren				( ioctl_downl && ioctl_wr),
-	.q					( cart_do		)
-	);
+assign SDRAM_CLK = clk_24;
+wire [15:0] sdram_do;
+assign cart_do = sdram_do[7:0];
+
+sdram cart
+(
+    .*,
+    .init(~pll_locked),
+    .clk(clk_24),
+    .wtbt(2'b00),
+    .dout(sdram_do),
+    .din ({ioctl_dout, ioctl_dout}),
+    .addr(ioctl_downl ? ioctl_addr : cart_addr),
+    .we(ioctl_downl & ioctl_wr),
+    .rd(!ioctl_downl & cart_rd),
+	.ready()
+);
 
 	wire reset = (status[0] | status[6] | buttons[1] | ioctl_downl | second_reset);
 

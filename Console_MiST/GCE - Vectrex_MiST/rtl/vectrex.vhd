@@ -154,7 +154,7 @@ port
 	frame		    : out std_logic;
 	
 	audio_out    : out std_logic_vector(9 downto 0);
-	cart_addr    : out std_logic_vector(13 downto 0);
+	cart_addr    : out std_logic_vector(14 downto 0);
 	cart_do      : in std_logic_vector( 7 downto 0);
 	cart_rd      : out std_logic;	
 	btn11        : in std_logic;
@@ -837,7 +837,7 @@ port map(
 --);
 --------------------------------------------------------------------
 
- cart_addr <= cpu_addr(13 downto 0);
+cart_addr <= cpu_addr(14 downto 0);
 
 working_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 10)
