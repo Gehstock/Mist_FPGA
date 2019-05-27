@@ -65,8 +65,8 @@ module YM2149
 );
 
 assign ACTIVE  = ~ymreg[7][5:0];
-assign IOA_out = ymreg[14];
-assign IOB_out = ymreg[15];
+assign IOA_out = ymreg[7][6] ? ymreg[14] : 8'hff;
+assign IOB_out = ymreg[7][7] ? ymreg[15] : 8'hff;
 
 reg [7:0] addr;
 reg [7:0] ymreg[16];

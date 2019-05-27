@@ -372,7 +372,8 @@ architecture syn of vectrex is
  signal pot     : signed(7 downto 0);
  signal compare : std_logic;
  signal players_switches : std_logic_vector(7 downto 0);
- 
+ signal ay_ioa_out : std_logic_vector(7 downto 0);
+
  signal vectrex_bd_rate_div       : std_logic_vector(7 downto 0) := X"00";
  signal vectrex_serial_bit_in     : std_logic;
  signal vectrex_serial_bit_in_d   : std_logic;
@@ -772,6 +773,59 @@ audio_1  <= 	("00"&ay_chan_a) +
 
 audio_out <=  "000"&audio_1(9 downto 3) + audio_speech;
 
+-- vectrex just toggle port A forced/high Z to produce serial data
+-- when in high Z vectrex sense port A to get speech chip ready for new byte
+vectrex_serial_bit_in <= ay_ioa_out(4);
+
+-- get serial data from vectrex joystick port
+
+process (cpu_clock, reset)
+  begin
+	if reset='1' then
+		vectrex_bd_rate_div <= X"00";
+	elsif rising_edge(clock_24) then
+		if cpu_clock_en = '1' then
+
+                        vectrex_serial_bit_in_d <= vectrex_serial_bit_in;
+
+                        if vectrex_serial_bit_in /= vectrex_serial_bit_in_d then -- reset baud counter on either edge
+                                vectrex_bd_rate_div <= X"00";
+                        else
+                                if vectrex_bd_rate_div = X"9B" then -- 1.5MHz/156 = 9615kHz
+                                        vectrex_bd_rate_div <= X"00";
+                                else
+                                        vectrex_bd_rate_div <= vectrex_bd_rate_div + '1';
+                                end if;
+                        end if;
+
+                        if vectrex_bd_rate_div = X"4E" then
+                                vectrex_serial_data_shift <=  vectrex_serial_bit_in  & vectrex_serial_data_shift(7 downto 1); -- serial is lsb first (ok speakjet/vecvoice/vecvox)
+
+                                if vectrex_serial_bit_cnt = X"0" and vectrex_serial_bit_in = '0' then
+                                        vectrex_serial_bit_cnt <= X"1";
+                                        vectrex_serial_byte_rdy <= '0';
+                                end if;
+
+                                if vectrex_serial_bit_cnt > X"0" then
+                                        vectrex_serial_bit_cnt <= vectrex_serial_bit_cnt + '1';
+                                end if;
+
+                                if vectrex_serial_bit_cnt = X"A" then
+                                        vectrex_serial_bit_cnt <= X"0";
+                                end if;
+
+                        end if;
+
+                        if vectrex_bd_rate_div = X"60" then
+                                if vectrex_serial_bit_cnt = X"9" then
+                                        vectrex_serial_byte_rdy <= '1';
+                                        vectrex_serial_byte_out <= vectrex_serial_data_shift;
+                                end if;
+                        end if;
+
+		end if;
+	end if;
+end process;
 	
 frame <= frame_line;	
 ---------------------------
@@ -914,7 +968,7 @@ port map(
     ACTIVE      => open,
 
     IOA_in      => players_switches,
-    IOA_out     => open,
+    IOA_out     => ay_ioa_out,
 
     IOB_in      => (others => '0'),
     IOB_out     => open
