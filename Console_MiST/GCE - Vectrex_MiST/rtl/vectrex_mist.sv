@@ -169,9 +169,9 @@ assign AUDIO_R = AUDIO_L;
 wire frame_line;
 wire [3:0] rr,gg,bb;
 
-assign r = status[2] & frame_line ? 4'h40 : blankn ? rr : 4'd0;
-assign g = status[2] & frame_line ? 4'h00 : blankn ? gg : 4'd0;
-assign b = status[2] & frame_line ? 4'h00 : blankn ? bb : 4'd0;
+assign r = status[2] & frame_line ? 4'h4 : blankn ? rr : 4'd0;
+assign g = status[2] & frame_line ? 4'h0 : blankn ? gg : 4'd0;
+assign b = status[2] & frame_line ? 4'h0 : blankn ? bb : 4'd0;
 
 wire        vsync_out;
 wire        hsync_out;
