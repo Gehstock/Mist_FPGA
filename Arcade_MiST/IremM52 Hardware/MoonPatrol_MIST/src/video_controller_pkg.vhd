@@ -21,7 +21,8 @@ package video_controller_pkg is
     PACE_VIDEO_ARCADE_STD_336x240_60Hz,   -- arcade std resolution (7.16MHz)
     PACE_VIDEO_ARCADE_STD_336x240_60Hz_28M64,   -- arcade std resolution (28.64MHz)
     PACE_VIDEO_CVBS_720x288p_50Hz,        -- generic composite
-    PACE_VIDEO_LCM_320x240_60Hz           -- DE2 LCD
+    PACE_VIDEO_LCM_320x240_60Hz,          -- DE2 LCD
+	 PACE_VIDEO_PAL_320x288_50Hz
   );
 
   type PACEVideoDisplay_t is

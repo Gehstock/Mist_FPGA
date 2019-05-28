@@ -5,7 +5,9 @@ use ieee.numeric_std.all;
 library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
-use work.sprite_pkg.all;   
+use work.sprite_pkg.all;
+use work.project_pkg.all;
+use work.platform_pkg.all;    
 use work.platform_variant_pkg.all;
 
 entity spritectl is
@@ -56,7 +58,7 @@ begin
 		-- the width of rowCount determines the scanline multipler
 		-- - eg.	(4 downto 0) is 1:1
 		-- 				(5 downto 0) is 2:1 (scan-doubling)
-  	variable rowCount : unsigned(3+2 downto 0);
+  	variable rowCount : unsigned(3+PACE_VIDEO_V_SCALE downto 0);
     alias row         : unsigned(4 downto 0) is 
                           rowCount(rowCount'left downto rowCount'left-4);
 
@@ -69,7 +71,7 @@ begin
 		if rising_edge(clk) then
       if clk_ena = '1' then
 
-        x := unsigned(reg_i.x) + 7 - 3;
+        x := unsigned(reg_i.x) + PACE_VIDEO_PIPELINE_DELAY - 3;
         y := 254 - unsigned(reg_i.y) - 16;
         
         if video_ctl.hblank = '1' then

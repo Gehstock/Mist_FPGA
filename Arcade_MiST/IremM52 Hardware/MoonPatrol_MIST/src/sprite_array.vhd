@@ -8,7 +8,7 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
---use work.platform_pkg.all;
+use work.platform_pkg.all;
 
 entity sprite_array is
   generic
