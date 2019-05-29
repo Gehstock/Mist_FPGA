@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 library work;
---use work.target_pkg.all;
---use work.project_pkg.all;
---use work.platform_pkg.all;
+use work.target_pkg.all;
+use work.project_pkg.all;
+use work.platform_pkg.all;
 
 package platform_variant_pkg is
 
@@ -19,8 +19,6 @@ package platform_variant_pkg is
 
   constant PLATFORM_VARIANT             : string := "mpatrol";
   constant PLATFORM_VARIANT_SRC_DIR     : string := "";
-  type pal_rgb_t is array (0 to 2) of std_logic_vector(7 downto 0);
-  type pal_a is array (natural range <>) of pal_rgb_t;
   type rom_a is array (natural range <>) of string;
   constant M52_ROM                      : rom_a(0 to 3) := 
                                           (

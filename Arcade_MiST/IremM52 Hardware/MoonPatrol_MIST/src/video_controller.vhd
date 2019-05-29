@@ -1,7 +1,6 @@
-library ieee;
+library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
 
 library work;
 use work.video_controller_pkg.all;
@@ -259,6 +258,16 @@ begin
           v_back_porch_r <= 13;
           v_border_r <= (240-VIDEO_V_SIZE)/2;
 
+        when PACE_VIDEO_PAL_320x288_50Hz =>
+          h_front_porch_r <= 6;
+          h_sync_r <= 28;
+          h_back_porch_r <= 30;
+          h_border_r <= (320-VIDEO_H_SIZE)/2;
+          v_front_porch_r <= 8;
+          v_sync_r <= 3;
+          v_back_porch_r <= 13;
+          v_border_r <= (288-VIDEO_V_SIZE)/2;
+
 				when others =>
 					null;
 			end case;
@@ -439,8 +448,8 @@ begin
         end if;
         video_o.hsync <= hsync_v after SIM_DELAY;
         video_o.vsync <= vsync_v after SIM_DELAY;
-        video_o.hblank <= hblank_v after SIM_DELAY;
-        video_o.vblank <= vblank_v after SIM_DELAY;
+        video_o.hblank <= not hactive_v; -- hblank_v after SIM_DELAY;
+        video_o.vblank <= not vactive_v; -- vblank_v after SIM_DELAY;
         -- pipelined signals
         hsync_v_r := hsync_v_r(hsync_v_r'left-1 downto 0) & hsync_s;
         vsync_v_r := vsync_v_r(vsync_v_r'left-1 downto 0) & vsync_s;

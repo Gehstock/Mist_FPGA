@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 
 library work;
 use work.pace_pkg.all;
+use work.project_pkg.all;
+use work.platform_pkg.all;
 use work.platform_variant_pkg.all;
 use work.video_controller_pkg.all;
 
@@ -13,27 +15,7 @@ use work.video_controller_pkg.all;
 --	Tile data is 2 BPP.
 --
 
-entity TILEMAP_1 is          
-  generic
-  (
-    DELAY       : integer
-  );
-  port               
-  (
-    reset				: in std_logic;
-
-    -- video control signals		
-    video_ctl   : in from_VIDEO_CTL_t;
-
-    -- tilemap controller signals
-    ctl_i       : in to_TILEMAP_CTL_t;
-    ctl_o       : out from_TILEMAP_CTL_t;
-
-    graphics_i  : in to_GRAPHICS_t
-  );
-end entity TILEMAP_1;
-
-architecture tile1 of TILEMAP_1 is
+architecture TILEMAP_1 of tilemapCtl is
 
   alias clk       : std_logic is video_ctl.clk;
   alias clk_ena   : std_logic is video_ctl.clk_ena;
@@ -128,4 +110,4 @@ begin
 
   end process;
 
-end architecture tile1;
+end architecture TILEMAP_1;

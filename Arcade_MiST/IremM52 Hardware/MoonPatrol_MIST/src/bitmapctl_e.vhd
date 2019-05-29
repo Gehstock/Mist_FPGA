@@ -6,7 +6,8 @@ use ieee.numeric_std.all;
 library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
-
+use work.platform_pkg.all;
+use work.project_pkg.all;
 
 entity bitmapCtl is
   generic

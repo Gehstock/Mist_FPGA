@@ -8,6 +8,7 @@ use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
 use work.platform_variant_pkg.all;
+use work.platform_pkg.all;
 
 entity platform is
   generic
@@ -267,7 +268,7 @@ begin
     clk_en_inst : entity work.clk_div
       generic map
       (
-        DIVISOR		=> 16
+        DIVISOR		=> M52_CPU_CLK_ENA_DIVIDE_BY
       )
       port map
       (

@@ -1,34 +1,18 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
-use ieee.numeric_std.all;
 
 library work;
 use work.pace_pkg.all;
+use work.platform_pkg.all;
 use work.platform_variant_pkg.all;
 use work.video_controller_pkg.all;
 
-entity BITMAP_2 is
-  generic
-  (
-    DELAY         : integer
-  );
-  port               
-  (
-    reset					: in std_logic;
+--
+--	Moon Patrol Hills Renderer
+--
 
-    -- video control signals		
-    video_ctl     : in from_VIDEO_CTL_t;
-
-    -- bitmap controller signals
-    ctl_i         : in to_BITMAP_CTL_t;
-    ctl_o         : out from_BITMAP_CTL_t;
-
-    graphics_i    : in to_GRAPHICS_t
-  );
-end entity BITMAP_2;
-
-architecture bit2 of BITMAP_2 is
+architecture BITMAP_2 of bitmapCtl is
 
   alias clk       : std_logic is video_ctl.clk;
   alias clk_en    : std_logic is video_ctl.clk_ena;
@@ -37,16 +21,22 @@ architecture bit2 of BITMAP_2 is
   alias vblank    : std_logic is video_ctl.vblank;
   alias x         : std_logic_vector(video_ctl.x'range) is video_ctl.x;
   alias y         : std_logic_vector(video_ctl.y'range) is video_ctl.y;
-  alias rgb       : RGB_t is ctl_o.rgb;  
+
+  alias rgb       : RGB_t is ctl_o.rgb;
+  
   alias m52_bg1xpos   : std_logic_vector(7 downto 0) is graphics_i.bit16(0)(15 downto 8);
   alias m52_bg1ypos   : std_logic_vector(7 downto 0) is graphics_i.bit16(0)(7 downto 0);
+--  alias m52_bg2xpos   : std_logic_vector(7 downto 0) is graphics_i.bit16(1)(15 downto 8);
+--  alias m52_bg2ypos   : std_logic_vector(7 downto 0) is graphics_i.bit16(1)(7 downto 0);
   alias m52_bgcontrol : std_logic_vector(7 downto 0) is graphics_i.bit16(2)(7 downto 0);
   
 begin
 
   process (clk, reset)
     variable y_r          : std_logic_vector(y'range);
+    -- ensure bgy won't wrap on the screen
     variable bgy          : unsigned(7 downto 0);
+    -- must wrap at 256!!!
     variable bgx          : unsigned(7 downto 0);
     variable bitmap_d_r   : std_logic_vector(7 downto 0);
 		variable pel          : std_logic_vector(1 downto 0);
@@ -108,4 +98,4 @@ begin
   -- unused
   ctl_o.a(ctl_o.a'left downto 12) <= (others => '0');
 	
-end architecture bit2;
+end architecture BITMAP_2;

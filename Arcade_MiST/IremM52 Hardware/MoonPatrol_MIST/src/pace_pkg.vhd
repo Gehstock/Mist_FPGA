@@ -150,6 +150,13 @@ package pace_pkg is
   
   type from_MAPPED_INPUTS_t is array (natural range <>) of in8_t;
   
-	
+	-- create a constant that automatically determines 
+	-- whether this is simulation or synthesis
+	constant IN_SIMULATION : BOOLEAN := false
+	-- synthesis translate_off
+	or true
+	-- synthesis translate_on
+	;
+	constant IN_SYNTHESIS : boolean := not IN_SIMULATION;
 	
 end;

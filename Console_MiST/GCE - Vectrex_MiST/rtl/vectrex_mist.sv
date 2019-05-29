@@ -1,5 +1,6 @@
 module vectrex_mist
 (
+	input         CLOCK_27,
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -14,7 +15,18 @@ module vectrex_mist
 	input         SPI_SS2,
 	input         SPI_SS3,
 	input         CONF_DATA0,
-	input         CLOCK_27
+
+	output [12:0] SDRAM_A,
+	inout  [15:0] SDRAM_DQ,
+	output        SDRAM_DQML,
+	output        SDRAM_DQMH,
+	output        SDRAM_nWE,
+	output        SDRAM_nCAS,
+	output        SDRAM_nRAS,
+	output        SDRAM_nCS,
+	output  [1:0] SDRAM_BA,
+	output        SDRAM_CLK,
+	output        SDRAM_CKE
 );
 
 `include "rtl\build_id.v" 
@@ -22,9 +34,9 @@ module vectrex_mist
 localparam CONF_STR = {
 	"Vectrex;BINVECROM;",
 	"O2,Show Frame,Yes,No;",
-   "O3,Skip Logo,Yes,No;",
-	"O4,Second Joystick, Player 2, Player 1;",	
-//	"O5,Speech Mode,No,Yes;",
+	"O3,Skip Logo,Yes,No;",
+	"O4,Joystick swap,Off,On;",
+	"O5,Second port,Joystick,Speech;",
 //	"O23,Phosphor persistance,1,2,3,4;",
 //	"O8,Overburn,No,Yes;",	
 	"T6,Reset;",
@@ -37,6 +49,8 @@ wire  [1:0] switches;
 wire  [15:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
+wire [15:0] joy_ana_0;
+wire [15:0] joy_ana_1;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire  [7:0]	pot_x_1, pot_x_2;
@@ -47,7 +61,7 @@ wire  [3:0] r, g, b;
 wire 			hb, vb;
 wire       	blankn = ~(hb | vb);
 wire 			cart_rd;
-wire [13:0] cart_addr;
+wire [14:0] cart_addr;
 wire  [7:0] cart_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -58,45 +72,34 @@ wire  [7:0] ioctl_dout;
 
 assign LED = !ioctl_downl;
 
-wire 			clk_24, clk_12, clk_6;
+wire 			clk_24, clk_12;
 wire 			pll_locked;
-
-always @(clk_12)begin
-	pot_x_1 = 8'h00;
-	pot_y_1 = 8'h00;
-	pot_x_2 = 8'h00;
-	pot_y_2 = 8'h00;
-	//
-	if (joystick_0[1] | kbjoy[1]) pot_x_2 = 8'h80;
-	if (joystick_0[0] | kbjoy[0]) pot_x_2 = 8'h7F;
-	
-	if (joystick_0[3] | kbjoy[3]) pot_y_2 = 8'h7F;
-	if (joystick_0[2] | kbjoy[2]) pot_y_2 = 8'h80;
-	//Player2
-	if (joystick_1[1] | kbjoy[9]) pot_x_1 = 8'h80;
-	if (joystick_1[0] | kbjoy[8]) pot_x_1 = 8'h7F;
-	
-	if (joystick_1[3] | kbjoy[11]) pot_y_1 = 8'h7F;
-	if (joystick_1[2] | kbjoy[10]) pot_y_1 = 8'h80;	
-end
 
 pll pll (
 	.inclk0			( CLOCK_27		),
 	.areset			( 0				),
-	.c0				( clk_24			),
-	.c1				( clk_12			),
-	.c2				( clk_6			),
+	.c0				( clk_24		),
+	.c1				( clk_12		),
 	.locked			( pll_locked	)
 	);
 
-card card (
-	.clock			( clk_24		),
-	.address			( ioctl_downl ? ioctl_addr : cart_addr),
-	.data				( ioctl_dout	),
-	.rden				( !ioctl_downl && cart_rd),
-	.wren				( ioctl_downl && ioctl_wr),
-	.q					( cart_do		)
-	);
+assign SDRAM_CLK = clk_24;
+wire [15:0] sdram_do;
+assign cart_do = sdram_do[7:0];
+
+sdram cart
+(
+    .*,
+    .init(~pll_locked),
+    .clk(clk_24),
+    .wtbt(2'b00),
+    .dout(sdram_do),
+    .din ({ioctl_dout, ioctl_dout}),
+    .addr(ioctl_downl ? ioctl_addr : cart_addr),
+    .we(ioctl_downl & ioctl_wr),
+    .rd(!ioctl_downl & cart_rd),
+	.ready()
+);
 
 	wire reset = (status[0] | status[6] | buttons[1] | ioctl_downl | second_reset);
 
@@ -114,6 +117,11 @@ always @(posedge clk_24) begin
 	end
 end
 
+assign pot_x_1 = status[4] ? joy_ana_1[15:8] : joy_ana_0[15:8];
+assign pot_x_2 = status[4] ? joy_ana_0[15:8] : joy_ana_1[15:8];
+assign pot_y_1 = status[4] ? ~joy_ana_1[ 7:0] : ~joy_ana_0[ 7:0];
+assign pot_y_2 = status[4] ? ~joy_ana_0[ 7:0] : ~joy_ana_1[ 7:0];
+
 vectrex vectrex (
 	.clock_24		( clk_24			),  
 	.clock_12		( clk_12 		),
@@ -124,7 +132,7 @@ vectrex vectrex (
 	.video_csync	( cs				),
 	.video_hblank	( hb				),
 	.video_vblank	( vb				),
-//	.speech_mode   ( status[5]		),
+	.speech_mode    ( status[5]		),
 	.video_hs		( hs				),
 	.video_vs		( vs				),
 	.frame			( frame_line	),
@@ -132,97 +140,105 @@ vectrex vectrex (
 	.cart_addr		( cart_addr		),
 	.cart_do			( cart_do		),
 	.cart_rd			( cart_rd		),	
-	.btn11			( joystick_0[4] | kbjoy[4] | status[4] ? joystick_1[4] : 1'b0),
-	.btn12			( joystick_0[5] | kbjoy[5] | status[4] ? joystick_1[5] : 1'b0),
-	.btn13			( joystick_0[6] | kbjoy[6] | status[4] ? joystick_1[6] : 1'b0),
-	.btn14			( joystick_0[7] | kbjoy[7] | status[4] ? joystick_1[7] : 1'b0),
-	.pot_x_1			( pot_x_1			),
-	.pot_y_1			( pot_y_1			),
-	.btn21			( kbjoy[12] | ~status[4] ? joystick_1[4] : 1'b0),
-	.btn22			( kbjoy[13] | ~status[4] ? joystick_1[5] : 1'b0),
-	.btn23			( kbjoy[14] | ~status[4] ? joystick_1[6] : 1'b0),
-	.btn24			( kbjoy[15] | ~status[4] ? joystick_1[7] : 1'b0),
-	.pot_x_2			( pot_x_2			),
-	.pot_y_2			( pot_y_2			),
+	.btn11          ( status[4] ? joystick_1[4] : joystick_0[4]),
+	.btn12          ( status[4] ? joystick_1[5] : joystick_0[5]),
+	.btn13          ( status[4] ? joystick_1[6] : joystick_0[6]),
+	.btn14          ( status[4] ? joystick_1[7] : joystick_0[7]),
+	.pot_x_1        ( pot_x_1			),
+	.pot_y_1        ( pot_y_1			),
+	.btn21          ( status[4] ? joystick_0[4] : joystick_1[4]),
+	.btn22          ( status[4] ? joystick_0[5] : joystick_1[5]),
+	.btn23          ( status[4] ? joystick_0[6] : joystick_1[6]),
+	.btn24          ( status[4] ? joystick_0[7] : joystick_1[7]),
+	.pot_x_2        ( pot_x_2			),
+	.pot_y_2        ( pot_y_2			),
 	.leds				(					),
 	.dbg_cpu_addr	(					)
 	);
-	
-	//	.pot_x_1(joya_0[7:0]  ? joya_0[7:0]   : {joystick_0[1], {7{joystick_0[0]}}}),
-	//.pot_y_1(joya_0[15:8] ? ~joya_0[15:8] : {joystick_0[2], {7{joystick_0[3]}}}),
-	
-	//	.pot_x_2(joya_1[7:0]  ? joya_1[7:0]   : {joystick_1[1], {7{joystick_1[0]}}}),
-	//.pot_y_2(joya_1[15:8] ? ~joya_1[15:8] : {joystick_1[2], {7{joystick_1[3]}}})
-	
 
 dac dac (
 	.clk_i			( clk_24			),
-	.res_n_i			( 1				),
+	.res_n_i		( 1				),
 	.dac_i			( audio			),
 	.dac_o			( AUDIO_L		)
 	);
 assign AUDIO_R = AUDIO_L;
 
+//////////////////   VIDEO   //////////////////
+
 wire frame_line;
 wire [3:0] rr,gg,bb;
 
-	assign r = status[2] & frame_line ? 4'h40 : rr;
-	assign g = status[2] & frame_line ? 4'h00 : gg;
-	assign b = status[2] & frame_line ? 4'h00 : bb;
+assign r = status[2] & frame_line ? 4'h4 : blankn ? rr : 4'd0;
+assign g = status[2] & frame_line ? 4'h0 : blankn ? gg : 4'd0;
+assign b = status[2] & frame_line ? 4'h0 : blankn ? bb : 4'd0;
 
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer (
-	.clk_sys			( clk_24			),
-	.ce_pix			( clk_6			),
-	.ce_pix_actual	( clk_6			),
-	.SPI_SCK			( SPI_SCK		),
-	.SPI_SS3			( SPI_SS3		),
-	.SPI_DI			( SPI_DI			),
-	.R					(  blankn ? r : "0000"),
-	.G					(  blankn ? g : "0000"),
-	.B					(  blankn ? b : "0000"),
-	.HSync			( hs				),
-	.VSync			( vs			   ),
-	.VGA_R			( VGA_R			),
-	.VGA_G			( VGA_G			),
-	.VGA_B			( VGA_B			),
-	.VGA_VS			( VGA_VS			),
-	.VGA_HS			( VGA_HS			),
-	.scandoubler_disable(1			),
-	.ypbpr_full		( 1				),
-	.line_start		( 0				),
-	.mono				( 0				)
-	);
+wire        vsync_out;
+wire        hsync_out;
+wire        csync_out = ~(hs ^ vs);
+
+assign      VGA_HS = ypbpr ? csync_out : hs;
+assign      VGA_VS = ypbpr ? 1'b1 : vs;
+
+wire [5:0] osd_r_o, osd_g_o, osd_b_o;
+
+osd osd
+(
+	.clk_sys(clk_24),
+	.SPI_DI(SPI_DI),
+	.SPI_SCK(SPI_SCK),
+	.SPI_SS3(SPI_SS3),
+	.R_in({r, 2'b00}),
+	.G_in({g, 2'b00}),
+	.B_in({b, 2'b00}),
+	.HSync(hs),
+	.VSync(vs),
+	.R_out(osd_r_o),
+	.G_out(osd_g_o),
+	.B_out(osd_b_o)
+);
+    
+wire [5:0] y, pb, pr;
+
+rgb2ypbpr rgb2ypbpr
+(
+	.red   ( osd_r_o ),
+	.green ( osd_g_o ),
+	.blue  ( osd_b_o ),
+	.y     ( y       ),
+	.pb    ( pb      ),
+	.pr    ( pr      )
+);
+
+assign VGA_R = ypbpr?pr:osd_r_o;
+assign VGA_G = ypbpr? y:osd_g_o;
+assign VGA_B = ypbpr?pb:osd_b_o;
+
+////////////////////////////////////////////
 
 mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
-	.clk_sys       ( clk_24   	   ),
+	.clk_sys       ( clk_24       ),
 	.conf_str      ( CONF_STR     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.CONF_DATA0    ( CONF_DATA0   ),
-	.SPI_SS2			( SPI_SS2      ),
+	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DO        ( SPI_DO       ),
 	.SPI_DI        ( SPI_DI       ),
 	.buttons       ( buttons      ),
-	.switches   	( switches     ),
+	.switches      ( switches     ),
 	.ypbpr         ( ypbpr        ),
 	.ps2_kbd_clk   ( ps2_kbd_clk  ),
-	.ps2_kbd_data	( ps2_kbd_data	),
-	.joystick_0   	( joystick_0   ),
+	.ps2_kbd_data  ( ps2_kbd_data ),
+	.joystick_0    ( joystick_0   ),
 	.joystick_1    ( joystick_1   ),
+	.joystick_analog_0( joy_ana_0 ),
+	.joystick_analog_1( joy_ana_1 ),
 	.status        ( status       ),
 	.ioctl_download( ioctl_downl  ),
-	.ioctl_index	( ioctl_index	),
-	.ioctl_wr		( ioctl_wr		),
-	.ioctl_addr		( ioctl_addr	),
-	.ioctl_dout		( ioctl_dout	)
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
 	);
-
-keyboard keyboard (
-	.clk				( clk_24			),
-	.reset			( 0				),
-	.ps2_kbd_clk	( ps2_kbd_clk	),
-	.ps2_kbd_data	( ps2_kbd_data	),
-	.joystick		( kbjoy			)
-	);
-
 
 endmodule 

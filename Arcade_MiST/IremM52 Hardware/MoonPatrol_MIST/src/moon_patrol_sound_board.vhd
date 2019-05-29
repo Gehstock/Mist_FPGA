@@ -37,9 +37,37 @@ port(
 end moon_patrol_sound_board;
 
 architecture struct of moon_patrol_sound_board is
+  component YM2149
+  port (
+    CLK         : in  std_logic;
+    CE          : in  std_logic;
+    RESET       : in  std_logic;
+    A8          : in  std_logic := '1';
+    A9_L        : in  std_logic := '0';
+    BDIR        : in  std_logic; -- Bus Direction (0 - read , 1 - write)
+    BC          : in  std_logic; -- Bus control
+    DI          : in  std_logic_vector(7 downto 0);
+    DO          : out std_logic_vector(7 downto 0);
+    CHANNEL_A   : out std_logic_vector(7 downto 0);
+    CHANNEL_B   : out std_logic_vector(7 downto 0);
+    CHANNEL_C   : out std_logic_vector(7 downto 0);
+
+    SEL         : in  std_logic;
+    MODE        : in  std_logic;
+
+    ACTIVE      : out std_logic_vector(5 downto 0);
+
+    IOA_in      : in  std_logic_vector(7 downto 0);
+    IOA_out     : out std_logic_vector(7 downto 0);
+
+    IOB_in      : in  std_logic_vector(7 downto 0);
+    IOB_out     : out std_logic_vector(7 downto 0)
+    );
+  end component;
 
  signal reset_n   : std_logic;
  signal clock_div : std_logic_vector(3 downto 0);
+ signal cpu_clock_en : std_logic;
 
  signal cpu_clock  : std_logic;
  signal cpu_addr   : std_logic_vector(15 downto 0);
@@ -59,12 +87,18 @@ architecture struct of moon_patrol_sound_board is
  signal rom_cs    : std_logic;
  signal rom_do    : std_logic_vector( 7 downto 0);
 
+ signal ay1_chan_a    : std_logic_vector(7 downto 0);
+ signal ay1_chan_b    : std_logic_vector(7 downto 0);
+ signal ay1_chan_c    : std_logic_vector(7 downto 0);
  signal ay1_do        : std_logic_vector(7 downto 0);
- signal ay1_audio     : std_logic_vector(7 downto 0);
+ signal ay1_audio     : std_logic_vector(9 downto 0);
  signal ay1_port_b_do : std_logic_vector(7 downto 0);
-  
+ 
+ signal ay2_chan_a    : std_logic_vector(7 downto 0);
+ signal ay2_chan_b    : std_logic_vector(7 downto 0);
+ signal ay2_chan_c    : std_logic_vector(7 downto 0);
  signal ay2_do        : std_logic_vector(7 downto 0);
- signal ay2_audio     : std_logic_vector(7 downto 0);
+ signal ay2_audio     : std_logic_vector(9 downto 0);
 
  signal ports_cs    : std_logic;
  signal ports_we    : std_logic;
@@ -140,6 +174,7 @@ end process;
 
 -- cpu_clock is 3.58/4
 cpu_clock <= clock_div(1);
+cpu_clock_en <= '1' when clock_div(1 downto 0) = "00" else '0';
 
 -- cs
 wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
@@ -170,8 +205,8 @@ begin
 	if reset='1' then
 		cpu_irq  <= '0';
 		select_sound_7r := '0';
-	else 
-		if rising_edge(clock_div(0)) then
+	elsif rising_edge(clock_3p58) then
+		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
 			if select_sound_7r = '0' and select_sound(7) = '1' then
 				cpu_irq  <= '1';
 			end if;
@@ -194,8 +229,8 @@ begin
 		port1_data <= (others=>'0');  -- port1 data set to 0
 		port2_ddr  <= ("11100000");   -- port2 bit 7 to 5 should always remain output to simulate mode data
 		port2_data <= ("01000000");   -- port2 data bit 7 to 5 set to 2 (for mode 2 at start up)
-	else 
-		if rising_edge(clock_div(0)) then
+	elsif rising_edge(clock_3p58) then
+		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
 			if ports_cs = '1' and ports_we = '1' then
 				if cpu_addr(3 downto 0) = X"0" then port1_ddr  <= cpu_do; end if;
 				if cpu_addr(3 downto 0) = X"1" then port2_ddr  <= cpu_do and "11100000"; end if;
@@ -222,8 +257,8 @@ process (reset, clock_div(0))
 begin
 	if reset='1' then
 		adpcm_0_di <= (others=>'0');
-	else 
-		if rising_edge(clock_div(0)) then
+	elsif rising_edge(clock_3p58) then
+		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
 			if adpcm_cs = '1' and adpcm_we = '1' then
 				if cpu_addr(1) = '0' then adpcm_0_di  <= cpu_do(3 downto 0); end if;
 			end if;
@@ -301,7 +336,7 @@ begin
 end process;
 
 -- audio mux
-audio <= ("00000"&ay1_audio) + ("00000"&ay2_audio) + ('0'&std_logic_vector(to_unsigned((adpcm_signal)+2048,12)));
+audio <= ("000"&ay1_audio) + ("000"&ay2_audio) + ('0'&std_logic_vector(to_unsigned((adpcm_signal)+2048,12)));
 audio_out <= audio(12 downto 1);
 				 
 -- microprocessor 6800/01/03
@@ -325,7 +360,7 @@ port map(
 -- cpu program rom
 cpu_prog_rom : entity work.moon_patrol_sound_prog
 port map(
- clk  => clock_div(0),  -- 3p58/2
+ clk  => clock_3p58,  -- 3p58/2
  addr => cpu_addr(11 downto 0),
  data => rom_do
 );
@@ -333,7 +368,7 @@ port map(
 cpu_ram : entity work.spram
 generic map( widthad_a => 7)
 port map(
- clock			=> clock_div(0),  -- 3p58/2
+ clock			=> clock_3p58,  -- 3p58/2
  address			=> cpu_addr(6 downto 0),
  data				=> cpu_do,
  wren				=> wram_we,
@@ -351,69 +386,62 @@ port map(
 -- q    => wram_do
 --);
 
--- AY-3-8910 #1
-ay_3_8910_1 : entity work.YM2149
-port map(
-  -- data bus
-  I_DA       => port1_data,-- in  std_logic_vector(7 downto 0);
-  O_DA       => ay1_do,    -- out std_logic_vector(7 downto 0);
-  O_DA_OE_L  => open,      -- out std_logic;
-  -- control
-  I_A9_L     => port2_data(4),  -- in  std_logic;
-  I_A8       => '1',            -- in  std_logic;
-  I_BDIR     => port2_data(0),  -- in  std_logic;
-  I_BC2      => '1',            -- in  std_logic;
-  I_BC1      => port2_data(2),  -- in  std_logic;
-  I_SEL_L    => '1',            -- in  std_logic;
+  ay83910_inst1: YM2149
+  port map (
+    CLK         => clock_3p58,
+    CE          => cpu_clock_en,
+    RESET       => not reset_n,
+    A8          => '1',
+    A9_L        => port2_data(4),
+    BDIR        => port2_data(0),
+    BC          => port2_data(2),
+    DI          => port1_data,
+    DO          => ay1_do,
+    CHANNEL_A   => ay1_chan_a,
+    CHANNEL_B   => ay1_chan_b,
+    CHANNEL_C   => ay1_chan_c,
 
-  O_AUDIO    => ay1_audio,         -- out std_logic_vector(7 downto 0);
---  O_CHAN     => ay1_audio_chan,  -- out std_logic_vector(1 downto 0);
-  
-  -- port a
-  I_IOA      => select_sound, -- in  std_logic_vector(7 downto 0);
-  O_IOA      => open,         -- out std_logic_vector(7 downto 0);
-  O_IOA_OE_L => open,         -- out std_logic;
-  -- port b
-  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
-  O_IOB      => ay1_port_b_do,   -- out std_logic_vector(7 downto 0);
-  O_IOB_OE_L => open,            -- out std_logic;
+    SEL         => '0',
+    MODE        => '1',
 
-  ENA        => '1', --cpu_ena,  -- in  std_logic; -- clock enable for higher speed operation
-  RESET_L    => reset_n,         -- in  std_logic;
-  CLK        => cpu_clock        -- in  std_logic  -- note 6 Mhz
-);
+    ACTIVE      => open,
 
--- AY-3-8910 #2
-ay_3_8910_2 : entity work.YM2149
-port map(
-  -- data bus
-  I_DA       => port1_data,-- in  std_logic_vector(7 downto 0);
-  O_DA       => ay2_do,    -- out std_logic_vector(7 downto 0);
-  O_DA_OE_L  => open,      -- out std_logic;
-  -- control
-  I_A9_L     => port2_data(3),  -- in  std_logic;
-  I_A8       => '1',            -- in  std_logic;
-  I_BDIR     => port2_data(0),  -- in  std_logic;
-  I_BC2      => '1',            -- in  std_logic;
-  I_BC1      => port2_data(2),  -- in  std_logic;
-  I_SEL_L    => '1',            -- in  std_logic;
+    IOA_in      => select_sound,
+    IOA_out     => open,
 
-  O_AUDIO    => ay2_audio,         -- out std_logic_vector(7 downto 0);
---  O_CHAN     => ay2_audio_chan,  -- out std_logic_vector(1 downto 0);
-  
-  -- port a
-  I_IOA      => (others => '0'), -- in  std_logic_vector(7 downto 0);
-  O_IOA      => open,            -- out std_logic_vector(7 downto 0);
-  O_IOA_OE_L => open,            -- out std_logic;
-  -- port b
-  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
-  O_IOB      => open,            -- out std_logic_vector(7 downto 0);
-  O_IOB_OE_L => open,            -- out std_logic;
+    IOB_in      => (others => '0'),
+    IOB_out     => ay1_port_b_do
+    );
 
-  ENA        => '1', --cpu_ena,         -- in  std_logic; -- clock enable for higher speed operation
-  RESET_L    => reset_n,         -- in  std_logic;
-  CLK        => cpu_clock        -- in  std_logic  -- note 6 Mhz
-);
+  ay1_audio <= "0000000000" + ay1_chan_a + ay1_chan_b + ay1_chan_c;
 
+  ay83910_inst2: YM2149
+  port map (
+    CLK         => clock_3p58,
+    CE          => cpu_clock_en,
+    RESET       => not reset_n,
+    A8          => '1',
+    A9_L        => port2_data(3),
+    BDIR        => port2_data(0),
+    BC          => port2_data(2),
+    DI          => port1_data,
+    DO          => ay2_do,
+    CHANNEL_A   => ay2_chan_a,
+    CHANNEL_B   => ay2_chan_b,
+    CHANNEL_C   => ay2_chan_c,
+
+    SEL         => '0',
+    MODE        => '1',
+
+    ACTIVE      => open,
+
+    IOA_in      => (others => '0'),
+    IOA_out     => open,
+
+    IOB_in      => (others => '0'),
+    IOB_out     => open
+    );
+
+  ay2_audio <= "0000000000" + ay2_chan_a + ay2_chan_b + ay2_chan_c;
 
 end struct;
