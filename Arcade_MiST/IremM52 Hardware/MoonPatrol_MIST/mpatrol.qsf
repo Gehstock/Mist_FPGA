@@ -204,6 +204,7 @@ set_global_assignment -name VHDL_FILE src/video_controller_pkg.vhd
 set_global_assignment -name VHDL_FILE src/video_controller.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_board.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_prog.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE src/YM2149.sv
 set_global_assignment -name VHDL_FILE src/cpu68.vhd
 set_global_assignment -name VHDL_FILE src/tilemapctl.vhd
 set_global_assignment -name VHDL_FILE src/t80/Z80.vhd
@@ -214,7 +215,6 @@ set_global_assignment -name VHDL_FILE src/t80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE src/t80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE src/t80/T80.vhd
 set_global_assignment -name VHDL_FILE src/dac.vhd
-set_global_assignment -name VHDL_FILE src/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE src/sprom.vhd
 set_global_assignment -name VHDL_FILE src/spram.vhd
 set_global_assignment -name VHDL_FILE src/platform.vhd
