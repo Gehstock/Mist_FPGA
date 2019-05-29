@@ -234,8 +234,8 @@ u_keyboard : keyboard
 		joystick 		=> kbd_joy
 );
 
-		inputs_i.jamma_n.coin(1) <= kbd_joy(3) or status(1);--ESC
-		inputs_i.jamma_n.p(1).start <= kbd_joy(1) or kbd_joy(2) or status(2);--KB 1+2		
+		inputs_i.jamma_n.coin(1) <= joystick1(7) or joystick2(7) or kbd_joy(3);--ESC
+		inputs_i.jamma_n.p(1).start <= kbd_joy(1) or kbd_joy(2);--KB 1+2
 		inputs_i.jamma_n.p(1).up <= not (joystick1(3) or joystick2(3) or kbd_joy(4));
 		inputs_i.jamma_n.p(1).down <= not (joystick1(2) or joystick2(2) or kbd_joy(5));
 		inputs_i.jamma_n.p(1).left <= not (joystick1(1) or joystick2(1) or kbd_joy(6));
