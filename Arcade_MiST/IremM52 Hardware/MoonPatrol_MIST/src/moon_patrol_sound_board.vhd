@@ -111,7 +111,7 @@ architecture struct of moon_patrol_sound_board is
  signal adpcm_cs    : std_logic;
  signal adpcm_we    : std_logic;
  signal adpcm_0_di  : std_logic_vector(3 downto 0);
-  
+
  signal select_sound_7r : std_logic;
 
  signal audio : std_logic_vector(12 downto 0);
@@ -179,16 +179,15 @@ cpu_di <=
 process (reset, clock_E)
 begin
 	if reset='1' then
-		cpu_irq  <= '0';
-		select_sound_7r <= '0';
+		cpu_irq <= '0';
 	elsif rising_edge(clock_E) then
-			if select_sound_7r = '0' and select_sound(7) = '1' then
-				cpu_irq  <= '1';
-			end if;
-			if irqraz_we = '1' then
-				cpu_irq  <= '0';			
-			end if;
-			select_sound_7r <= select_sound(7);
+		select_sound_7r <= select_sound(7);
+		if select_sound_7r = '0' then
+			cpu_irq  <= '1';
+		end if;
+		if irqraz_we = '1' then
+			cpu_irq  <= '0';
+		end if;
 	end if;
 end process;
 
