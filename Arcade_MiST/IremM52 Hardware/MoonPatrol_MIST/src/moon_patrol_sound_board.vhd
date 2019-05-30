@@ -26,7 +26,7 @@ use ieee.numeric_std.all;
 
 entity moon_patrol_sound_board is
 port(
- clock_3p58   : in std_logic;
+ clock_E      : in std_logic; -- 3.58 Mhz/4
  reset        : in std_logic;
  
  select_sound : in std_logic_vector(7 downto 0);
@@ -66,10 +66,6 @@ architecture struct of moon_patrol_sound_board is
   end component;
 
  signal reset_n   : std_logic;
- signal clock_div : std_logic_vector(3 downto 0);
- signal cpu_clock_en : std_logic;
-
- signal cpu_clock  : std_logic;
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
  signal cpu_do     : std_logic_vector( 7 downto 0);
@@ -160,22 +156,6 @@ reset_n   <= not reset;
 
 dbg_cpu_addr <= cpu_addr;
 
--- clock divider
-process (reset, clock_3p58)
-begin
-	if reset='1' then
-		clock_div   <= (others => '0');
-	else 
-		if rising_edge(clock_3p58) then
-			clock_div  <= clock_div + '1';
-		end if;
-	end if;
-end process;
-
--- cpu_clock is 3.58/4
-cpu_clock <= clock_div(1);
-cpu_clock_en <= '1' when clock_div(1 downto 0) = "00" else '0';
-
 -- cs
 wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
 ports_cs  <= '1' when cpu_addr(15 downto  4) = X"000"    else '0'; -- 0000-000F
@@ -184,10 +164,10 @@ irqraz_cs <= '1' when cpu_addr(14 downto 12) = "001"     else '0'; -- 1000-1FFF 
 rom_cs    <= '1' when cpu_addr(14 downto 12) = "111"     else '0'; -- 7000-7FFF / F000-FFFF
 	
 -- write enables
-wram_we <=   '1' when cpu_rw = '0' and cpu_clock = '1' and wram_cs =   '1' else '0';
-ports_we <=  '1' when cpu_rw = '0' and cpu_clock = '1' and ports_cs =  '1' else '0';
-adpcm_we <=  '1' when cpu_rw = '0' and cpu_clock = '1' and adpcm_cs =  '1' else '0';
-irqraz_we <= '1' when cpu_rw = '0' and cpu_clock = '1' and irqraz_cs = '1' else '0';
+wram_we <=   '1' when cpu_rw = '0' and wram_cs =   '1' else '0';
+ports_we <=  '1' when cpu_rw = '0' and ports_cs =  '1' else '0';
+adpcm_we <=  '1' when cpu_rw = '0' and adpcm_cs =  '1' else '0';
+irqraz_we <= '1' when cpu_rw = '0' and irqraz_cs = '1' else '0';
 
 -- mux cpu in data between roms/io/wram
 cpu_di <=
@@ -199,22 +179,19 @@ cpu_di <=
 	rom_do when rom_cs = '1' else X"55";
 
 -- irq to cpu
-process (reset, clock_div(0))
-	variable select_sound_7r : std_logic;
+process (reset, clock_E)
 begin
 	if reset='1' then
 		cpu_irq  <= '0';
-		select_sound_7r := '0';
-	elsif rising_edge(clock_3p58) then
-		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
+		select_sound_7r <= '0';
+	elsif rising_edge(clock_E) then
 			if select_sound_7r = '0' and select_sound(7) = '1' then
 				cpu_irq  <= '1';
 			end if;
 			if irqraz_we = '1' then
 				cpu_irq  <= '0';			
 			end if;
-			select_sound_7r := select_sound(7);
-		end if;
+			select_sound_7r <= select_sound(7);
 	end if;
 end process;
 
@@ -222,22 +199,20 @@ end process;
 cpu_nmi <= adpcm_vclk;
 
 -- 6803 ports 1 and 2 (only)
-process (reset, clock_div(0))
+process (reset, clock_E)
 begin
 	if reset='1' then
 		port1_ddr  <= (others=>'0');  -- port1 set as input
 		port1_data <= (others=>'0');  -- port1 data set to 0
 		port2_ddr  <= ("11100000");   -- port2 bit 7 to 5 should always remain output to simulate mode data
 		port2_data <= ("01000000");   -- port2 data bit 7 to 5 set to 2 (for mode 2 at start up)
-	elsif rising_edge(clock_3p58) then
-		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
+	elsif rising_edge(clock_E) then
 			if ports_cs = '1' and ports_we = '1' then
 				if cpu_addr(3 downto 0) = X"0" then port1_ddr  <= cpu_do; end if;
 				if cpu_addr(3 downto 0) = X"1" then port2_ddr  <= cpu_do and "11100000"; end if;
 				if cpu_addr(3 downto 0) = X"2" then port1_data <= cpu_do; end if; 
 				if cpu_addr(3 downto 0) = X"3" then port2_data <= cpu_do; end if;
 			end if;
-		end if;
 	end if;
 end process;
 
@@ -253,21 +228,19 @@ port2_bus <= X"FF";
 
 
 -- latch adpcm (msm5205) data in
-process (reset, clock_div(0))
+process (reset, clock_E)
 begin
 	if reset='1' then
 		adpcm_0_di <= (others=>'0');
-	elsif rising_edge(clock_3p58) then
-		if clock_div(0) = '1' then --rising_edge(clock_div(0)) then
+	elsif rising_edge(clock_E) then
 			if adpcm_cs = '1' and adpcm_we = '1' then
 				if cpu_addr(1) = '0' then adpcm_0_di  <= cpu_do(3 downto 0); end if;
 			end if;
-		end if;
 	end if;
 end process;
 
 -- adcpm clocks and computation -- make 24kHz and vclk 8/6/4kHz
-adpcm_clocks : process(clock_3p58, ay1_port_b_do)
+adpcm_clocks : process(clock_E, ay1_port_b_do)
 	variable clock_div_a : integer range 0 to 148 := 0;
 	variable clock_div_b : integer range 0 to 5 := 0;
 	variable step   : integer range  0 to 48;
@@ -276,8 +249,8 @@ adpcm_clocks : process(clock_3p58, ay1_port_b_do)
 	variable dn : integer range -32768 to 32767;
 	variable adpcm_signal_n : integer range -32768 to 32767;
 begin
-	if rising_edge(clock_3p58) then
-		if clock_div_a = 148 then   -- 24kHz
+	if rising_edge(clock_E) then
+		if clock_div_a = 37 then   -- 24kHz
 			clock_div_a := 0;
 			
 			case ay1_port_b_do(3 downto 2) is				
@@ -342,7 +315,7 @@ audio_out <= audio(12 downto 1);
 -- microprocessor 6800/01/03
 main_cpu : entity work.cpu68
 port map(	
-	clk      => cpu_clock,-- E clock input (falling edge)
+	clk      => clock_E,   -- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
 	rw       => cpu_rw,   -- read not write output
 	vma      => open,     -- valid memory address (active high)
@@ -360,7 +333,7 @@ port map(
 -- cpu program rom
 cpu_prog_rom : entity work.moon_patrol_sound_prog
 port map(
- clk  => clock_3p58,  -- 3p58/2
+ clk  => clock_E,
  addr => cpu_addr(11 downto 0),
  data => rom_do
 );
@@ -368,7 +341,7 @@ port map(
 cpu_ram : entity work.spram
 generic map( widthad_a => 7)
 port map(
- clock			=> clock_3p58,  -- 3p58/2
+ clock			=> clock_E,
  address			=> cpu_addr(6 downto 0),
  data				=> cpu_do,
  wren				=> wram_we,
@@ -388,8 +361,8 @@ port map(
 
   ay83910_inst1: YM2149
   port map (
-    CLK         => clock_3p58,
-    CE          => cpu_clock_en,
+    CLK         => clock_E,
+    CE          => '1',
     RESET       => not reset_n,
     A8          => '1',
     A9_L        => port2_data(4),
@@ -417,8 +390,8 @@ port map(
 
   ay83910_inst2: YM2149
   port map (
-    CLK         => clock_3p58,
-    CE          => cpu_clock_en,
+    CLK         => clock_E,
+    CE          => '1',
     RESET       => not reset_n,
     A8          => '1',
     A9_L        => port2_data(3),

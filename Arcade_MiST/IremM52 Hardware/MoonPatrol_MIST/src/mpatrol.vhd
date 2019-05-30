@@ -162,7 +162,7 @@ begin
 Clock_inst : entity work.Clock
 	port map (
 		inclk0  => CLOCK_27,
-		c0      => clk_aud,    -- 3.58
+		c0      => clk_aud,    -- 3.58/4
 		c1      => clk_sys,    -- 6
 		c2      => clk_vid     -- 24
 	);
@@ -265,7 +265,7 @@ u_keyboard : keyboard
   
 moon_patrol_sound_board : entity work.moon_patrol_sound_board
 	port map(
-		clock_3p58    	=> clk_aud,
+		clock_E    		=> clk_aud,
 		reset     		=> clkrst_i.arst, 
 		select_sound  	=> sound_data,
 		audio_out     	=> audio_out,
