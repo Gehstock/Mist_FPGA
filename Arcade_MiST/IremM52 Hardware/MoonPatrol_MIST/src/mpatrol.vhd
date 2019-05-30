@@ -7,6 +7,8 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 
+use work.build_id.all;
+
 entity mpatrol is
   port
     (
@@ -86,8 +88,8 @@ architecture SYN of mpatrol is
 	"O7,Demo mode,Off,On;"&
 	"O8,Sector selection,Off,On;"&
 	"O9,Test mode,Off,On;"&
-	"T0,Reset;";
---	"V,v1.11.",`BUILD_DATE
+	"T0,Reset;"&
+	"V,v"&BUILD_DATE;
 
   -- convert string to std_logic_vector to be given to user_io
   function to_slv(s: string) return std_logic_vector is
