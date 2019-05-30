@@ -65,7 +65,6 @@ architecture struct of moon_patrol_sound_board is
     );
   end component;
 
- signal reset_n   : std_logic;
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
  signal cpu_do     : std_logic_vector( 7 downto 0);
@@ -151,8 +150,6 @@ architecture struct of moon_patrol_sound_board is
 --   | step   is then limited between     0..48
  
 begin
-
-reset_n   <= not reset;
 
 dbg_cpu_addr <= cpu_addr;
 
@@ -363,7 +360,7 @@ port map(
   port map (
     CLK         => clock_E,
     CE          => '1',
-    RESET       => not reset_n,
+    RESET       => reset,
     A8          => '1',
     A9_L        => port2_data(4),
     BDIR        => port2_data(0),
@@ -392,7 +389,7 @@ port map(
   port map (
     CLK         => clock_E,
     CE          => '1',
-    RESET       => not reset_n,
+    RESET       => reset,
     A8          => '1',
     A9_L        => port2_data(3),
     BDIR        => port2_data(0),

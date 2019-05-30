@@ -38,6 +38,8 @@ architecture SYN of mpatrol is
   signal clk_sys        : std_logic;
   signal clk_aud        : std_logic;
   signal clk_vid        : std_logic;
+  signal rst_audD       : std_logic;
+  signal rst_aud        : std_logic;
   signal clkrst_i       : from_CLKRST_t;
   signal buttons_i      : from_BUTTONS_t;
   signal switches_i     : from_SWITCHES_t;
@@ -218,8 +220,19 @@ Clock_inst : entity work.Clock
 		end if;
 	end process;
 
-  clkrst_i.arst 		<= init or status(0) or buttons(1);
-  clkrst_i.arst_n 	<= not clkrst_i.arst;
+	process (clk_sys) begin
+		if rising_edge(clk_sys) then
+			clkrst_i.arst    <= init or status(0) or buttons(1);
+			clkrst_i.arst_n  <= not clkrst_i.arst;
+		end if;
+	end process;
+
+	process (clk_aud) begin
+		if rising_edge(clk_aud) then
+			rst_audD <= clkrst_i.arst;
+			rst_aud  <= rst_audD;
+		end if;
+	end process;
 
   GEN_RESETS : for i in 0 to 3 generate
 
@@ -300,7 +313,7 @@ u_keyboard : keyboard
 moon_patrol_sound_board : entity work.moon_patrol_sound_board
 	port map(
 		clock_E    		=> clk_aud,
-		reset     		=> clkrst_i.arst, 
+		reset     		=> rst_aud,
 		select_sound  	=> sound_data,
 		audio_out     	=> audio_out,
 		dbg_cpu_addr  	=> open
@@ -309,7 +322,7 @@ moon_patrol_sound_board : entity work.moon_patrol_sound_board
 dac : entity work.dac
 	port map (
 		clk_i     => clk_aud,
-		res_n_i   => '1',
+		res_n_i   => not rst_aud,
 		dac_i     => audio_out,
 		dac_o     => audio
    );
