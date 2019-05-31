@@ -796,7 +796,7 @@ audio_out <=  "000"&audio_1(9 downto 3) + audio_speech;
 
 -- vectrex just toggle port A forced/high Z to produce serial data
 -- when in high Z vectrex sense port A to get speech chip ready for new byte
-vectrex_serial_bit_in <= ay_ioa_out(4);
+vectrex_serial_bit_in <= ay_ioa_out(4) and speech_mode;
 
 -- get serial data from vectrex joystick port
 
