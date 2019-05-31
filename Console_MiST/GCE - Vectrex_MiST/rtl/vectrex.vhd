@@ -719,7 +719,7 @@ begin
 		if rising_edge(clock_24) then
 		
 			hcnt <= hcnt + '1';
-			if hcnt = 799 then 
+			if hcnt = 767 then --799 for 25 MHz
 				hcnt <= (others => '0');
 				if vcnt = 523 then 
 					vcnt <= (others => '0');
@@ -730,7 +730,7 @@ begin
 				if vcnt =   1 then video_vs <= '1'; end if;
 			end if;			
 			
-			if hcnt = 799 then video_hs <= '0'; end if;
+			if hcnt = 767 then video_hs <= '0'; end if; --799 for 25 MHz
 			if hcnt =  90 then video_hs <= '1'; end if;
 			
 			if vcnt_video = 0 or vcnt_video = (max_v-1) then
