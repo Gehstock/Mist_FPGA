@@ -2,8 +2,14 @@ Midway 8080 Arcade Platform for Mist FPGA
 
 - with OSD
 - Keyboard/Joystick Support
-- only VGA Supported
+- 15kHz RGB/VGA/YPbPr Supported
 
+Controls:
+
+--   ESC     or Button C     : Coin
+--   1, 2    or Button Start : Start
+--   SPACE   or Button A     : Fire
+--   LEFT, RIGHT             : Move
 
 
 Following Games currently working:

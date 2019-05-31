@@ -56,11 +56,11 @@ begin
 					jamma_v(0).d(1) := jamma.p(2).start;
 					jamma_v(0).d(2) := jamma.p(1).start;
 					jamma_v(0).d(4) := jamma.p(1).button(1);
-					jamma_v(1).d(4) := jamma.p(1).button(1);
+					jamma_v(1).d(4) := jamma.p(2).button(1);
 					jamma_v(0).d(5) := jamma.p(1).left;
-					jamma_v(1).d(5) := jamma.p(1).left;
+					jamma_v(1).d(5) := jamma.p(2).left;
 					jamma_v(0).d(6) := jamma.p(1).right;
-					jamma_v(1).d(6) := jamma.p(1).right;
+					jamma_v(1).d(6) := jamma.p(2).right;
 					
           -- map the dipswitches
           keybd_v(1).d(3 downto 0) := dips(3 downto 0);

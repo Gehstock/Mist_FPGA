@@ -56,6 +56,8 @@ architecture SYN of target_top is
 
   signal joystick1    : std_logic_vector(7 downto 0);
   signal joystick2    : std_logic_vector(7 downto 0);
+  signal mist_joy1    : std_logic_vector(7 downto 0);
+  signal mist_joy2    : std_logic_vector(7 downto 0);
   signal switches     : std_logic_vector(1 downto 0);
   signal buttons      : std_logic_vector(1 downto 0);
   signal ps2Clk       : std_logic;
@@ -93,6 +95,7 @@ architecture SYN of target_top is
   constant CONF_STR : string :=
 	"Midw.8080;;"&
 	"O12,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;"&
+	"O3,Joystick swap,Off,On;"&
 	"T0,Reset;"&
 	"V,v1.0 by Gehstock;";
 
@@ -209,8 +212,8 @@ LED <= '1';
       buttons  => buttons,
       scandoubler_disable  => scandoubler_disable,
 	  ypbpr => ypbpr,
-      joystick_1 => joystick2,
-      joystick_0 => joystick1,
+      joystick_0 => mist_joy1,
+      joystick_1 => mist_joy2,
       status => status,
       ps2_kbd_clk => ps2Clk,
       ps2_kbd_data => ps2Data
@@ -269,40 +272,42 @@ LED <= '1';
 
   end generate GEN_RESETS;
 
- 
- 		inputs_i.jamma_n.coin(1) <= not (kbd_joy0(3)) or status(2);--ESC
-		inputs_i.jamma_n.p(1).start <= not (kbd_joy0(3)) or status(2);--ESC
-		
-		inputs_i.jamma_n.p(1).up <= not (joystick1(3) or joystick2(3) or kbd_joy0(4));
-		inputs_i.jamma_n.p(1).down <= not (joystick1(2) or joystick2(2) or kbd_joy0(5));
-		inputs_i.jamma_n.p(1).left <= not (joystick1(1) or joystick2(1) or kbd_joy0(6));
-		inputs_i.jamma_n.p(1).right <= not (joystick1(0) or joystick2(0) or kbd_joy0(7));
-		
-		inputs_i.jamma_n.p(1).button(1) <= not (joystick1(4) or joystick2(4) or kbd_joy0(0)); 
-		inputs_i.jamma_n.p(1).button(2) <= '1'; 
-		inputs_i.jamma_n.p(1).button(3) <= '1';
-		inputs_i.jamma_n.p(1).button(4) <= '1';
-		inputs_i.jamma_n.p(1).button(5) <= '1';
-		
-		inputs_i.jamma_n.p(2).up <= not (joystick1(3) or joystick2(3) or kbd_joy0(4));
-		inputs_i.jamma_n.p(2).down <= not (joystick1(2) or joystick2(2) or kbd_joy0(5));
-		inputs_i.jamma_n.p(2).left <= not (joystick1(1) or joystick2(1) or kbd_joy0(6));
-		inputs_i.jamma_n.p(2).right <= not (joystick1(0) or joystick2(0) or kbd_joy0(7));
-		
-		inputs_i.jamma_n.p(2).button(1) <= not (joystick1(4) or joystick2(4) or kbd_joy0(0)); 
-		inputs_i.jamma_n.p(2).button(2) <= '1';
-		inputs_i.jamma_n.p(2).button(3) <= '1';
-		inputs_i.jamma_n.p(2).button(4) <= '1';
-		inputs_i.jamma_n.p(2).button(5) <= '1';
+	joystick1 <= mist_joy1 when status(3) = '0' else mist_joy2;
+	joystick2 <= mist_joy2 when status(3) = '0' else mist_joy1;
 
-  
+	inputs_i.jamma_n.coin(1) <= not (kbd_joy0(3) or joystick1(6) or joystick2(6));--ESC
+	inputs_i.jamma_n.p(1).start <= not (kbd_joy0(1) or joystick1(7));--1
+
+	inputs_i.jamma_n.p(1).up <= not (joystick1(3) or kbd_joy0(4));
+	inputs_i.jamma_n.p(1).down <= not (joystick1(2) or kbd_joy0(5));
+	inputs_i.jamma_n.p(1).left <= not (joystick1(1) or kbd_joy0(6));
+	inputs_i.jamma_n.p(1).right <= not (joystick1(0) or kbd_joy0(7));
+
+	inputs_i.jamma_n.p(1).button(1) <= not (joystick1(4) or kbd_joy0(0));
+	inputs_i.jamma_n.p(1).button(2) <= not (joystick1(5));
+	inputs_i.jamma_n.p(1).button(3) <= '1';
+	inputs_i.jamma_n.p(1).button(4) <= '1';
+	inputs_i.jamma_n.p(1).button(5) <= '1';
+
+	inputs_i.jamma_n.p(2).start <= not (kbd_joy0(2) or joystick2(7));--2
+	inputs_i.jamma_n.p(2).up <= not (joystick2(3) or kbd_joy0(4));
+	inputs_i.jamma_n.p(2).down <= not (joystick2(2) or kbd_joy0(5));
+	inputs_i.jamma_n.p(2).left <= not (joystick2(1) or kbd_joy0(6));
+	inputs_i.jamma_n.p(2).right <= not (joystick2(0) or kbd_joy0(7));
+
+	inputs_i.jamma_n.p(2).button(1) <= not (joystick2(4) or kbd_joy0(0)); 
+	inputs_i.jamma_n.p(2).button(2) <= not (joystick2(5));
+	inputs_i.jamma_n.p(2).button(3) <= '1';
+	inputs_i.jamma_n.p(2).button(4) <= '1';
+	inputs_i.jamma_n.p(2).button(5) <= '1';
+
 	-- not currently wired to any inputs
 	inputs_i.jamma_n.coin_cnt <= (others => '1');
 	inputs_i.jamma_n.coin(2) <= '1';
 	inputs_i.jamma_n.service <= '1';
 	inputs_i.jamma_n.tilt <= '1';
 	inputs_i.jamma_n.test <= '1';
-		
+
   BLK_VIDEO : block
   begin
 
