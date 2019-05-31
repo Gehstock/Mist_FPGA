@@ -87,6 +87,7 @@ architecture SYN of mpatrol is
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;"&
 	"O34,Patrol cars,5,3,2,1;"&
 	"O56,New car at,10/30/50K,20/40/60K,10K,Never;"&
+	"OA,Freeze,Disable,Enable;"&
 	"O7,Demo mode,Off,On;"&
 	"O8,Sector selection,Off,On;"&
 	"O9,Test mode,Off,On;"&
@@ -333,7 +334,8 @@ AUDIO_L <= audio;
 switches_i(15) <= not status(9); -- Test mode
 switches_i(14) <= not status(7);
 switches_i(13) <= not status(8); -- Sector select
-switches_i(12 downto 8) <= "11100";
+switches_i(12) <= not status(10);-- Freeze enable
+switches_i(11 downto 8) <= "1100";
 switches_i( 7 downto 4) <= "1111";
 switches_i( 1 downto 0) <= not status(4 downto 3); -- Patrol cars
 switches_i( 3 downto 2) <= not status(6 downto 5); -- New car
