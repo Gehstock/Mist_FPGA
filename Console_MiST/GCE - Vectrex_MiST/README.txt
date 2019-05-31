@@ -1,21 +1,18 @@
 
 GCE(General Consumer Electronics) - Vectrex For Mist FPGA
 
-Max 16kb Roms supported
+Up to 32kb Roms supported
 
 Controls:
- Movement: 	Joystick, Keyboard(Arrow Keys)
+ Movement: 	Joystick
  Buttons: 	1-4 on Joystick Fire Buttons
-		(Player 1) 1-4 on Keyboard 1-4 and WASD
-		(Player 2) NUM, /, *, - on Numpad and Arrow Keys
 
-ToDo: Reset (hold Button longer for a Correct Reset)
+CPU: It's possible to choose between two CPUs:
+  - MC6809 - Greg Miller's cycle exact 6809
+  - CPU09  - John Kent's 6809 compatible CPU
 
-
-
-
-
-
+Speech extension can clash with the controls in some games,
+turn off Speech if it happens.
 
 
 

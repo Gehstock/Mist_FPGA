@@ -138,8 +138,8 @@ port
 	clock_24     : in std_logic;
 	clock_12     : in std_logic;
 	reset        : in std_logic;
+	cpu          : in std_logic; -- 1 - CPU by John Kent, 0 -- CPU by Greg Miller (Cycle exact)
 
-	 
 	video_r      : out std_logic_vector(3 downto 0);
 	video_g      : out std_logic_vector(3 downto 0);
 	video_b      : out std_logic_vector(3 downto 0);
@@ -205,7 +205,35 @@ architecture syn of vectrex is
     IOB_out     : out std_logic_vector(7 downto 0)
     );
   end component;
-  
+
+component mc6809 is port
+(
+	CPU    : in  std_logic;
+
+	CLK    : in  std_logic;
+	CLKEN  : in  std_logic;
+
+	E      : out std_logic;
+	riseE  : out std_logic;
+	fallE  : out std_logic;
+
+	Q      : out std_logic;
+	riseQ  : out std_logic;
+	fallQ  : out std_logic;
+
+	Din    : in  std_logic_vector(7 downto 0);
+	Dout   : out std_logic_vector(7 downto 0);
+	ADDR   : out std_logic_vector(15 downto 0);
+	RnW    : out std_logic;
+
+	nIRQ   : in  std_logic := '1';
+	nFIRQ  : in  std_logic := '1';
+	nNMI   : in  std_logic := '1';
+	nHALT  : in  std_logic := '1';
+	nRESET : in  std_logic := '1'
+);
+end component mc6809;
+
 --------------------------------------------------------------
 -- Configuration
 --------------------------------------------------------------
@@ -406,20 +434,13 @@ end process;
 reset_n <= not reset;
 clock_24n <= not clock_24;
 
-process (clock_24, reset)
-  begin
-	if reset='1' then
-		clock_div <= "0000";
-	else
-		if rising_edge(clock_24) then
-			clock_div <= clock_div + '1';
-		end if;
+process (clock_24) begin
+	if rising_edge(clock_24) then
+		clock_div <= clock_div + '1';
 	end if;
 end process;
 
 via_en_4  <= '1' when clock_div(1 downto 0) = "11" else '0';
-cpu_clock <= clock_div(3);
-cpu_clock_en <= '1' when clock_div(3 downto 0) = "1111" else '0';
 
 process (clock_24, reset)
 begin
@@ -457,7 +478,7 @@ ram_we <=   '1' when cpu_rw = '0' and ram_cs = '1' else '0';
 
 -- misc
 cpu_irq <= not via_irq_n;
-cpu_firq <= '0';
+cpu_firq <= btn14;
 cart_rd <= cart_cs;
 cpu_di <= cart_do when cart_cs  = '1' else
 			 ram_do  when ram_cs   = '1' else
@@ -833,29 +854,26 @@ frame <= frame_line;
 ---------------------------			
 
 -- microprocessor 6809
-main_cpu : entity work.cpu09
-port map(	
-	clk      => clock_24,-- E clock input (falling edge)
-	ce			=> cpu_clock_en,
-	rst      => reset,    -- reset input (active high)
-	vma      => open,     -- valid memory address (active high)
-   lic_out  => open,     -- last instruction cycle (active high)
-   ifetch   => open,     -- instruction fetch cycle (active high)
-   opfetch  => cpu_fetch,-- opcode fetch (active high)
-   ba       => open,     -- bus available (high on sync wait or DMA grant)
-   bs       => open,     -- bus status (high on interrupt or reset vector fetch or DMA grant)
-	addr     => cpu_addr, -- address bus output
-	rw       => cpu_rw,   -- read not write output
-	data_out => cpu_do,   -- data bus output
-	data_in  => cpu_di,   -- data bus input
-	irq      => cpu_irq,  -- interrupt request input (active high)
-	firq     => cpu_firq, -- fast interrupt request input (active high)
-	nmi      => '0',      -- non maskable interrupt request input (active high)
-	halt     => '0'--,      -- halt input (active high) grants DMA
---	hold_in  => '0'       -- hold input (active high) extend bus cycle
+main_cpu : mc6809
+port map
+(
+	CLK    => clock_24,
+	CLKEN  => via_en_4,
+	nRESET => not reset,
+	CPU    => not cpu,
+
+	E      => cpu_clock,
+	riseQ  => cpu_clock_en,
+
+	Din    => cpu_di,
+	Dout   => cpu_do,
+	ADDR   => cpu_addr,
+	RnW    => cpu_rw,
+
+	nIRQ   => not cpu_irq,
+	nFIRQ  => not cpu_firq
 );
 
-		
 cpu_prog_rom : entity work.vectrex_exec_prom
 port map(
  clk  => clock_24,
@@ -941,7 +959,7 @@ port map(
 
  RESET_L         => reset_n,
  CLK             => clock_24,
- I_P2_H          => cpu_clock,    -- high for phase 2 clock  ____----__
+ I_P2_H          => not cpu_clock,-- high for phase 2 clock  ____----__
  ENA_4           => via_en_4      -- 4x system clock (4HZ)   _-_-_-_-_-
 );
 
