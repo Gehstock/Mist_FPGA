@@ -39,8 +39,8 @@ architecture SYN of Sound is
 -- Signal Declarations
 
 	-- audio module clock
+	signal clk_10M		  : std_logic;
 	signal clk_5M		  : std_logic;
-	signal clk_10M	  : std_logic;
 	
 	-- port latches
 	signal s1_r			  : std_logic_vector(5 downto 0);
@@ -73,38 +73,13 @@ begin
 		end if;
 	end process;
 	
-	-- apparently the audio module wants a 10MHz clock
-	process (sysClk, reset)
-    subtype count_t is integer range 0 to CLK_MHz/5;
-		variable count : count_t := 0;
-	begin
-    if reset = '1' then
-      count := 0;
-      clk_10M <= '0';
-      clk_5M <= '0';
-		elsif rising_edge(sysClk) then
-      clk_10M <= '0';
-      clk_5M <= '0';
-      if count = count_t'high/2 then
-        clk_10M <= '1';
-        count := count + 1;
-      elsif count = count_t'high then
-        clk_10M <= '1';
-        clk_5M <= '1';
-        count := 0;
-      else
-        count := count + 1;
-      end if;
-		end if;
-	end process;
-
   -- can use anything suitable
-  snd_clk <= clk_5M;
+  snd_clk <= sysClk;
 		
   audio_inst : invaders_audio
     port map
       (
-        Clk => clk_10M,
+        Clk => sysClk,
         S1  => s1_r,
         S2  => s2_r,
         Aud => snd_data_s

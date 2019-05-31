@@ -115,6 +115,11 @@ set_global_assignment -name SEARCH_PATH src/platform/midway8080/ -tag from_archi
 set_global_assignment -name SEARCH_PATH src/platform/midway8080/invaders/ -tag from_archive
 set_global_assignment -name SEARCH_PATH src/platform/midway8080/invaders/roms/ -tag from_archive
 set_global_assignment -name SEARCH_PATH src/target/mist/ -tag from_archive
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/output_files/vid.stp
+set_global_assignment -name VERILOG_FILE src/mist/scandoubler.v
+set_global_assignment -name SYSTEMVERILOG_FILE src/mist/rgb2ypbpr.sv
+set_global_assignment -name VHDL_FILE src/mist/pll27.vhd
 set_global_assignment -name VERILOG_FILE src/mist/ps2_intf.v
 set_global_assignment -name VERILOG_FILE src/mist/osd.v
 set_global_assignment -name VERILOG_FILE src/mist/keyboard.v
@@ -135,7 +140,6 @@ set_global_assignment -name VHDL_FILE src/sprite_pkg.vhd
 set_global_assignment -name VHDL_FILE src/spram.vhd
 set_global_assignment -name VHDL_FILE src/Sound.vhd
 set_global_assignment -name VHDL_FILE src/project_pkg.vhd
-set_global_assignment -name QIP_FILE src/pllclk_ez.qip
 set_global_assignment -name VHDL_FILE src/platform_variant_pkg.vhd
 set_global_assignment -name VHDL_FILE src/platform_pkg.vhd
 set_global_assignment -name VHDL_FILE src/platform.vhd
@@ -160,5 +164,5 @@ set_global_assignment -name VHDL_FILE src/T80.vhd
 set_global_assignment -name VHDL_FILE src/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE src/T80_Reg.vhd
 set_global_assignment -name VHDL_FILE src/T80_MCode.vhd
-set_global_assignment -name QIP_FILE src/mist/pll27.qip
+set_global_assignment -name SIGNALTAP_FILE output_files/output_files/vid.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

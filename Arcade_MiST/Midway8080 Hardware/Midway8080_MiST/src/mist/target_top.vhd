@@ -38,7 +38,6 @@ end target_top;
 architecture SYN of target_top is
 
   signal init       	: std_logic := '1';  
-  signal clock_50       : std_logic;
   signal clkrst_i       : from_CLKRST_t;
   signal buttons_i      : from_BUTTONS_t;
   signal switches_i     : from_SWITCHES_t;
@@ -55,32 +54,48 @@ architecture SYN of target_top is
   signal target_i       : from_TARGET_IO_t;
   signal target_o       : to_TARGET_IO_t;
 
-  signal clk_kb       : std_logic;
-  signal joystick1       : std_logic_vector(7 downto 0);
-  signal joystick2      : std_logic_vector(7 downto 0);
-  signal switches       : std_logic_vector(1 downto 0);
-  signal buttons        : std_logic_vector(1 downto 0);
+  signal joystick1    : std_logic_vector(7 downto 0);
+  signal joystick2    : std_logic_vector(7 downto 0);
+  signal switches     : std_logic_vector(1 downto 0);
+  signal buttons      : std_logic_vector(1 downto 0);
   signal ps2Clk       : std_logic;
-  signal ps2Data       : std_logic;
-  signal kbd_joy0 		: std_logic_vector(7 downto 0);
-  signal osd_pclk       : std_logic;
-  signal clk8m       : std_logic;
-  signal clk16m       : std_logic;
+  signal ps2Data      : std_logic;
+  signal kbd_joy0     :std_logic_vector(7 downto 0);
+  signal clk6m        : std_logic;
+  signal clk24m       : std_logic;
   signal scandoubler_disable       : std_logic;
-  signal hsync_out : std_logic;
-  signal vsync_out : std_logic;
-  signal csync_out : std_logic;  
-  signal VGA_R_O  : std_logic_vector(5 downto 0);
-  signal VGA_G_O  : std_logic_vector(5 downto 0);
-  signal VGA_B_O  : std_logic_vector(5 downto 0);
-  signal VGA_HS_O : std_logic;
-  signal VGA_VS_O : std_logic;  
-  signal status     : std_logic_vector(7 downto 0);  
-  signal reset : std_logic;  
+  signal ypbpr        : std_logic;
+  signal status       : std_logic_vector(31 downto 0);  
+  signal VGA_R_O      : std_logic_vector(5 downto 0);
+  signal VGA_G_O      : std_logic_vector(5 downto 0);
+  signal VGA_B_O      : std_logic_vector(5 downto 0);
+  signal VGA_HS_O     : std_logic;
+  signal VGA_VS_O     : std_logic;  
 
+  signal sd_r         : std_logic_vector(5 downto 0);
+  signal sd_g         : std_logic_vector(5 downto 0);
+  signal sd_b         : std_logic_vector(5 downto 0);
+  signal sd_hs        : std_logic;
+  signal sd_vs        : std_logic;
 
-  constant CONF_STR : string := "Midw.8080;;O4,Scanlines,OFF,ON;T5,Reset;V,v1.0 by Gehstock;";
-	 
+  signal osd_red_i    : std_logic_vector(5 downto 0);
+  signal osd_green_i  : std_logic_vector(5 downto 0);
+  signal osd_blue_i   : std_logic_vector(5 downto 0);
+  signal osd_vs_i     : std_logic;
+  signal osd_hs_i     : std_logic;
+  signal osd_red_o    : std_logic_vector(5 downto 0);
+  signal osd_green_o  : std_logic_vector(5 downto 0);
+  signal osd_blue_o   : std_logic_vector(5 downto 0);
+  signal vga_y_o      : std_logic_vector(5 downto 0);
+  signal vga_pb_o     : std_logic_vector(5 downto 0);
+  signal vga_pr_o     : std_logic_vector(5 downto 0);  
+
+  constant CONF_STR : string :=
+	"Midw.8080;;"&
+	"O12,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;"&
+	"T0,Reset;"&
+	"V,v1.0 by Gehstock;";
+
   function to_slv(s: string) return std_logic_vector is
     constant ss: string(1 to s'length) := s;
     variable rval: std_logic_vector(1 to 8 * s'length);
@@ -96,34 +111,77 @@ architecture SYN of target_top is
     return rval;
 
   end function;
-  
+
   component user_io
-	 generic ( STRLEN : integer := 0 );
-    port (
-      SPI_CLK, SPI_SS_IO, SPI_MOSI :in std_logic;
-      SPI_MISO : out std_logic;
-      conf_str : in std_logic_vector(8*STRLEN-1 downto 0);
-      switches : out std_logic_vector(1 downto 0);
-      buttons : out std_logic_vector(1 downto 0);
-      scandoubler_disable : out std_logic;
-      joystick_0 : out std_logic_vector(7 downto 0);
-      joystick_1 : out std_logic_vector(7 downto 0);
-      status : out std_logic_vector(7 downto 0);
-      ps2_clk : in std_logic;
-      ps2_kbd_clk : out std_logic;
-      ps2_kbd_data : out std_logic
-    );
-  end component user_io;
+	generic ( STRLEN : integer := 0 );
+	port  (
+		clk_sys             :  in STD_LOGIC;
+		conf_str            :  in std_logic_vector(8*STRLEN-1 downto 0);
+		SPI_CLK             :  in STD_LOGIC;
+		SPI_SS_IO           :  in STD_LOGIC;
+		SPI_MOSI            :  in STD_LOGIC;
+		SPI_MISO            : out STD_LOGIC;
+		switches            : out STD_LOGIC_VECTOR(1 downto 0);
+		buttons             : out STD_LOGIC_VECTOR(1 downto 0);
+		scandoubler_disable : out STD_LOGIC;
+		ypbpr  				: out STD_LOGIC;
+		joystick_1          : out STD_LOGIC_VECTOR(7 downto 0);
+		joystick_0          : out STD_LOGIC_VECTOR(7 downto 0);
+		status              : out STD_LOGIC_VECTOR(31 downto 0);
+		ps2_kbd_clk         : out STD_LOGIC;
+		ps2_kbd_data        : out STD_LOGIC);
+  end component;
+
+  component scandoubler
+	port (
+		clk_sys     : in std_logic;
+		scanlines   : in std_logic_vector(1 downto 0);
+
+		hs_in       : in std_logic;
+		vs_in       : in std_logic;
+		r_in        : in std_logic_vector(5 downto 0);
+		g_in        : in std_logic_vector(5 downto 0);
+		b_in        : in std_logic_vector(5 downto 0);
+
+		hs_out      : out std_logic;
+		vs_out      : out std_logic;
+		r_out       : out std_logic_vector(5 downto 0);
+		g_out       : out std_logic_vector(5 downto 0);
+		b_out       : out std_logic_vector(5 downto 0)
+	);
+  end component scandoubler;
 
   component osd
-    port (
-      pclk, sck, ss, sdi, hs_in, vs_in, scanline_ena_h : in std_logic;
-      red_in, blue_in, green_in : in std_logic_vector(5 downto 0);
-      red_out, blue_out, green_out : out std_logic_vector(5 downto 0);
-      hs_out, vs_out : out std_logic
-    );
+	port (
+		clk_sys     : in std_logic;
+
+		R_in        : in std_logic_vector(5 downto 0);
+		G_in        : in std_logic_vector(5 downto 0);
+		B_in        : in std_logic_vector(5 downto 0);
+		HSync       : in std_logic;
+		VSync       : in std_logic;
+
+		R_out       : out std_logic_vector(5 downto 0);
+		G_out       : out std_logic_vector(5 downto 0);
+		B_out       : out std_logic_vector(5 downto 0);
+
+		SPI_SCK     : in std_logic;
+		SPI_SS3     : in std_logic;
+		SPI_DI      : in std_logic
+	);
   end component osd;
-  
+
+  COMPONENT rgb2ypbpr
+	PORT (
+		red     :        IN std_logic_vector(5 DOWNTO 0);
+		green   :        IN std_logic_vector(5 DOWNTO 0);
+		blue    :        IN std_logic_vector(5 DOWNTO 0);
+		y       :        OUT std_logic_vector(5 DOWNTO 0);
+		pb      :        OUT std_logic_vector(5 DOWNTO 0);
+		pr      :        OUT std_logic_vector(5 DOWNTO 0)
+	);
+  END COMPONENT;
+
   component keyboard
 	PORT(
 	  clk : in std_logic;
@@ -133,55 +191,15 @@ architecture SYN of target_top is
 	  joystick : out std_logic_vector (7 downto 0)
 	);
   end component;
-  
-  
-  component pll27
-	PORT
-	(
-		inclk0		: IN STD_LOGIC  := '0';
-		c0		: OUT STD_LOGIC;
-		c1		: OUT STD_LOGIC;
-		c2		: OUT STD_LOGIC 	
-	);
-  end component;
-
-
 
 begin
 
 LED <= '1';
 
---  OSD
-  osd_pclk <= clk16m when scandoubler_disable='0' else clk8m;
-
-  -- a minimig vga->scart cable expects a composite sync signal on the VGA_HS output 
-  -- and VCC on VGA_VS (to switch into rgb mode)
-  csync_out <= '1' when (hsync_out = vsync_out) else '0';
-  VGA_HS <= hsync_out when scandoubler_disable='0' else csync_out;
-  VGA_VS <= vsync_out when scandoubler_disable='0' else '1';
-  
-  osd_inst : osd
-    port map (
-      pclk => osd_pclk,
-      sdi => SPI_DI,
-      sck => SPI_SCK,
-      ss => SPI_SS3,
-      red_in => VGA_R_O,
-      green_in => VGA_G_O,
-      blue_in => VGA_B_O,
-      hs_in => VGA_HS_O,
-      vs_in => VGA_VS_O,
-      scanline_ena_h => status(4),
-      red_out => VGA_R,
-      green_out => VGA_G,
-      blue_out => VGA_B,
-      hs_out => hsync_out,
-      vs_out => vsync_out
-    );
-	 
-	  user_io_inst : user_io
+	user_io_inst : user_io
  	generic map (STRLEN => CONF_STR'length)
-   port map (
+	port map (
+	  clk_sys => clk6m,
       SPI_CLK => SPI_SCK,
       SPI_SS_IO => CONF_DATA0,
       SPI_MOSI => SPI_DI,
@@ -190,50 +208,40 @@ LED <= '1';
       switches => switches,
       buttons  => buttons,
       scandoubler_disable  => scandoubler_disable,
+	  ypbpr => ypbpr,
       joystick_1 => joystick2,
       joystick_0 => joystick1,
       status => status,
-      ps2_clk => clk_kb,
       ps2_kbd_clk => ps2Clk,
       ps2_kbd_data => ps2Data
-    );
+	);
 	 
-	 u_keyboard : keyboard
+	u_keyboard : keyboard
     port  map(
-	clk 				=> clock_50,
-	reset 			=> reset,
-	ps2_kbd_clk 	=> ps2Clk,
-	ps2_kbd_data 	=> ps2Data,
-	joystick 		=> kbd_joy0
-);
+		clk 			=> clk6m,
+		reset 			=> clkrst_i.arst,
+		ps2_kbd_clk 	=> ps2Clk,
+		ps2_kbd_data 	=> ps2Data,
+		joystick 		=> kbd_joy0
+	);
 
-
-kbclk : pll27
-        port map
-        (
+	Clock_inst : entity work.pll27
+	port map (
 		inclk0  => CLOCK_27,
-				c0 => clk_kb,
-				c1 => clk8m,
-				c2 => clk16m
+		c0 => clk6m,
+		c1 => clk24m
 	);
     clkrst_i.clk_ref <= CLOCK_27;
-  
-   pll_27_inst : entity work.pllclk_ez
-        port map
-        (
-          inclk0  => CLOCK_27,
-          c0      => clock_50,  -- master clock
-          c1      => clkrst_i.clk(1)  -- video clock
-        );
-		  clkrst_i.clk(0)<=clock_50;
 
-	
+	clkrst_i.clk(0) <= clk6m;
+	clkrst_i.clk(1) <= clk6m;
+
   -- FPGA STARTUP
 	-- should extend power-on reset if registers init to '0'
-	process (clock_50)
+	process (clk6m)
 		variable count : std_logic_vector (11 downto 0) := (others => '0');
 	begin
-		if rising_edge(clock_50) then
+		if rising_edge(clk6m) then
 			if count = X"FFF" then
 				init <= '0';
 			else
@@ -243,7 +251,7 @@ kbclk : pll27
 		end if;
 	end process;
 
-  clkrst_i.arst <= init or status(5) or buttons(1);
+  clkrst_i.arst <= init or status(0) or buttons(1);
   clkrst_i.arst_n <= not clkrst_i.arst;
 
   GEN_RESETS : for i in 0 to 3 generate
@@ -315,14 +323,14 @@ kbclk : pll27
   
     dacl : entity work.sigma_delta_dac
       port map (
-        clk     => CLOCK_27,
+        clk     => clk6m,
         din     => audio_o.ldata(15 downto 8),
         dout    => AUDIO_L
       );        
 
     dacr : entity work.sigma_delta_dac
       port map (
-        clk     => CLOCK_27,
+        clk     => clk6m,
         din     => audio_o.rdata(15 downto 8),
         dout    => AUDIO_R
       );        
@@ -359,4 +367,65 @@ kbclk : pll27
       target_i          => target_i,
       target_o          => target_o
     );
+
+scandoubler_inst: scandoubler
+	port map (
+		clk_sys     => clk24m,
+		scanlines   => status(2 downto 1),
+
+		hs_in       => VGA_HS_O,
+		vs_in       => VGA_VS_O,
+		r_in        => VGA_R_O,
+		g_in        => VGA_G_O,
+		b_in        => VGA_B_O,
+
+		hs_out      => sd_hs,
+		vs_out      => sd_vs,
+		r_out       => sd_r,
+		g_out       => sd_g,
+		b_out       => sd_b
+	);
+
+osd_inst: osd
+	port map (
+		clk_sys     => clk24m,
+
+		SPI_SCK     => SPI_SCK,
+		SPI_SS3     => SPI_SS3,
+		SPI_DI      => SPI_DI,
+
+		R_in        => osd_red_i,
+		G_in        => osd_green_i,
+		B_in        => osd_blue_i,
+		HSync       => osd_hs_i,
+		VSync       => osd_vs_i,
+
+		R_out       => osd_red_o,
+		G_out       => osd_green_o,
+		B_out       => osd_blue_o
+	);
+
+rgb2component: component rgb2ypbpr
+	port map (
+		red => osd_red_o,
+		green => osd_green_o,
+		blue => osd_blue_o,
+		y => vga_y_o,
+		pb => vga_pb_o,
+		pr => vga_pr_o
+	);
+
+osd_red_i   <= VGA_R_O when scandoubler_disable = '1' else sd_r;
+osd_green_i <= VGA_G_O when scandoubler_disable = '1' else sd_g;
+osd_blue_i  <= VGA_B_O when scandoubler_disable = '1' else sd_b;
+osd_hs_i    <= VGA_HS_O when scandoubler_disable = '1' else sd_hs;
+osd_vs_i    <= VGA_VS_O when scandoubler_disable = '1' else sd_vs;
+
+ -- If 15kHz Video - composite sync to VGA_HS and VGA_VS high for MiST RGB cable
+VGA_HS <= not (video_o.hsync xor video_o.vsync) when scandoubler_disable='1' else not (sd_hs xor sd_vs) when ypbpr='1' else sd_hs;
+VGA_VS <= '1' when scandoubler_disable='1' or ypbpr='1' else sd_vs;
+VGA_R <= vga_pr_o when ypbpr='1' else osd_red_o;
+VGA_G <= vga_y_o  when ypbpr='1' else osd_green_o;
+VGA_B <= vga_pb_o when ypbpr='1' else osd_blue_o;
+
 end SYN;
