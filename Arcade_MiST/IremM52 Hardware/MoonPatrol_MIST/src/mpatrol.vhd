@@ -7,6 +7,8 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 
+use work.build_id.all;
+
 entity mpatrol is
   port
     (
@@ -36,6 +38,8 @@ architecture SYN of mpatrol is
   signal clk_sys        : std_logic;
   signal clk_aud        : std_logic;
   signal clk_vid        : std_logic;
+  signal rst_audD       : std_logic;
+  signal rst_aud        : std_logic;
   signal clkrst_i       : from_CLKRST_t;
   signal buttons_i      : from_BUTTONS_t;
   signal switches_i     : from_SWITCHES_t;
@@ -48,6 +52,7 @@ architecture SYN of mpatrol is
   signal status     		: std_logic_vector(31 downto 0); 
   signal joystick1      : std_logic_vector(7 downto 0);
   signal joystick2      : std_logic_vector(7 downto 0);
+  signal joystick       : std_logic_vector(7 downto 0);
   signal kbd_joy 			: std_logic_vector(9 downto 0);	 
   signal switches       : std_logic_vector(1 downto 0);
   signal buttons        : std_logic_vector(1 downto 0);
@@ -77,6 +82,33 @@ architecture SYN of mpatrol is
   signal vga_pb_o     : std_logic_vector(5 downto 0);
   signal vga_pr_o     : std_logic_vector(5 downto 0);  
 
+  constant CONF_STR : string :=
+	"MPATROL;;"&
+	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;"&
+	"O34,Patrol cars,5,3,2,1;"&
+	"O56,New car at,10/30/50K,20/40/60K,10K,Never;"&
+	"OA,Freeze,Disable,Enable;"&
+	"O7,Demo mode,Off,On;"&
+	"O8,Sector selection,Off,On;"&
+	"O9,Test mode,Off,On;"&
+	"T0,Reset;"&
+	"V,v"&BUILD_DATE;
+
+  -- convert string to std_logic_vector to be given to user_io
+  function to_slv(s: string) return std_logic_vector is
+    constant ss: string(1 to s'length) := s;
+    variable rval: std_logic_vector(1 to 8 * s'length);
+    variable p: integer;
+    variable c: integer;
+  begin
+    for i in ss'range loop
+      p := 8 * i;
+      c := character'pos(ss(i));
+      rval(p - 7 to p) := std_logic_vector(to_unsigned(c,8));
+    end loop;
+    return rval;
+  end function;
+
 component keyboard
    port  (
 		clk						:in STD_LOGIC;
@@ -86,23 +118,24 @@ component keyboard
 		joystick					:out STD_LOGIC_VECTOR(9 downto 0));
 end component;
   
-component mist_io
-   port  (
-		clk_sys 					:in STD_LOGIC;
-      SPI_SCK 					:in STD_LOGIC;
-      CONF_DATA0 				:in STD_LOGIC;
-      SPI_DI 					:in STD_LOGIC;
-      SPI_DO 					:out STD_LOGIC;
-		SPI_SS2					:in STD_LOGIC;
-      switches 				:out STD_LOGIC_VECTOR(1 downto 0);
-      buttons  				:out STD_LOGIC_VECTOR(1 downto 0);
-      scan_disable  		:out STD_LOGIC;
-      ypbpr  				:out STD_LOGIC;
-      joystick_1  			:out STD_LOGIC_VECTOR(7 downto 0);
-      joystick_0 				:out STD_LOGIC_VECTOR(7 downto 0);
-      status					:out STD_LOGIC_VECTOR(31 downto 0);
-      ps2_kbd_clk 			:out STD_LOGIC;
-      ps2_kbd_data			:out STD_LOGIC);
+component user_io
+	generic ( STRLEN : integer := 0 );
+	port  (
+		clk_sys             :  in STD_LOGIC;
+		conf_str            :  in std_logic_vector(8*STRLEN-1 downto 0);
+		SPI_CLK             :  in STD_LOGIC;
+		SPI_SS_IO           :  in STD_LOGIC;
+		SPI_MOSI            :  in STD_LOGIC;
+		SPI_MISO            : out STD_LOGIC;
+		switches            : out STD_LOGIC_VECTOR(1 downto 0);
+		buttons             : out STD_LOGIC_VECTOR(1 downto 0);
+		scandoubler_disable : out STD_LOGIC;
+		ypbpr  				: out STD_LOGIC;
+		joystick_1          : out STD_LOGIC_VECTOR(7 downto 0);
+		joystick_0          : out STD_LOGIC_VECTOR(7 downto 0);
+		status              : out STD_LOGIC_VECTOR(31 downto 0);
+		ps2_kbd_clk         : out STD_LOGIC;
+		ps2_kbd_data        : out STD_LOGIC);
 end component;
 
 component scandoubler
@@ -162,7 +195,7 @@ begin
 Clock_inst : entity work.Clock
 	port map (
 		inclk0  => CLOCK_27,
-		c0      => clk_aud,    -- 3.58
+		c0      => clk_aud,    -- 3.58/4
 		c1      => clk_sys,    -- 6
 		c2      => clk_vid     -- 24
 	);
@@ -188,8 +221,19 @@ Clock_inst : entity work.Clock
 		end if;
 	end process;
 
-  clkrst_i.arst 		<= init or status(5) or buttons(1);
-  clkrst_i.arst_n 	<= not clkrst_i.arst;
+	process (clk_sys) begin
+		if rising_edge(clk_sys) then
+			clkrst_i.arst    <= init or status(0) or buttons(1);
+			clkrst_i.arst_n  <= not clkrst_i.arst;
+		end if;
+	end process;
+
+	process (clk_aud) begin
+		if rising_edge(clk_aud) then
+			rst_audD <= clkrst_i.arst;
+			rst_aud  <= rst_audD;
+		end if;
+	end process;
 
   GEN_RESETS : for i in 0 to 3 generate
 
@@ -206,23 +250,24 @@ Clock_inst : entity work.Clock
 
   end generate GEN_RESETS;	 
 	 
-mist_io_inst : mist_io
-   port map (
-		clk_sys 			=> clk_sys,
-      SPI_SCK 			=> SPI_SCK,
-      CONF_DATA0 		=> CONF_DATA0,
-      SPI_DI 			=> SPI_DI,
-      SPI_DO 			=> SPI_DO,
-		SPI_SS2			=> SPI_SS2,
-      switches 		=> switches,
-      buttons  		=> buttons,
-      scan_disable 	=> scandoubler_disable,
-      ypbpr  			=> ypbpr,
-      joystick_1  	=> joystick2,
-      joystick_0 		=> joystick1,
-      status			=> status,
-      ps2_kbd_clk 	=> ps2_kbd_clk,
-      ps2_kbd_data	=> ps2_kbd_data
+user_io_inst : user_io
+	generic map (STRLEN => CONF_STR'length)
+	port map (
+		clk_sys             => clk_sys,
+		conf_str            => to_slv(CONF_STR),
+		SPI_CLK             => SPI_SCK,
+		SPI_SS_IO           => CONF_DATA0,
+		SPI_MOSI            => SPI_DI,
+		SPI_MISO            => SPI_DO,
+		switches            => switches,
+		buttons             => buttons,
+		scandoubler_disable => scandoubler_disable,
+		ypbpr               => ypbpr,
+		joystick_1          => joystick2,
+		joystick_0          => joystick1,
+		status              => status,
+		ps2_kbd_clk         => ps2_kbd_clk,
+		ps2_kbd_data        => ps2_kbd_data
     );
 
 u_keyboard : keyboard
@@ -234,23 +279,26 @@ u_keyboard : keyboard
 		joystick 		=> kbd_joy
 );
 
-		inputs_i.jamma_n.coin(1) <= joystick1(7) or joystick2(7) or kbd_joy(3);--ESC
-		inputs_i.jamma_n.p(1).start <= kbd_joy(1) or kbd_joy(2);--KB 1+2
-		inputs_i.jamma_n.p(1).up <= not (joystick1(3) or joystick2(3) or kbd_joy(4));
-		inputs_i.jamma_n.p(1).down <= not (joystick1(2) or joystick2(2) or kbd_joy(5));
-		inputs_i.jamma_n.p(1).left <= not (joystick1(1) or joystick2(1) or kbd_joy(6));
-		inputs_i.jamma_n.p(1).right <= not (joystick1(0) or joystick2(0) or kbd_joy(7));		
-		inputs_i.jamma_n.p(1).button(1) <= not (joystick1(4) or joystick2(4) or kbd_joy(0));--Fire
-		inputs_i.jamma_n.p(1).button(2) <= not (joystick1(5) or joystick2(5) or kbd_joy(8) or joystick1(3) or joystick2(3) or kbd_joy(4));--Jump
+		joystick <= joystick1 or joystick2;
+
+		inputs_i.jamma_n.coin(1) <= not (joystick(6) or kbd_joy(3));--ESC
+		inputs_i.jamma_n.p(1).start <= not (kbd_joy(1) or joystick1(7));--KB 1
+		inputs_i.jamma_n.p(1).up <= not (joystick(3) or kbd_joy(4));
+		inputs_i.jamma_n.p(1).down <= not (joystick(2) or kbd_joy(5));
+		inputs_i.jamma_n.p(1).left <= not (joystick(1) or kbd_joy(6));
+		inputs_i.jamma_n.p(1).right <= not (joystick(0) or kbd_joy(7));
+		inputs_i.jamma_n.p(1).button(1) <= not (joystick(4) or kbd_joy(0));--Fire
+		inputs_i.jamma_n.p(1).button(2) <= not (joystick(5) or kbd_joy(8) or joystick(3) or kbd_joy(4));--Jump
 		inputs_i.jamma_n.p(1).button(3) <= '1';
 		inputs_i.jamma_n.p(1).button(4) <= '1';
 		inputs_i.jamma_n.p(1).button(5) <= '1';		
-		inputs_i.jamma_n.p(2).up <= not (joystick1(3) or joystick2(3) or kbd_joy(4));
-		inputs_i.jamma_n.p(2).down <= not (joystick1(2) or joystick2(2) or kbd_joy(5));
-		inputs_i.jamma_n.p(2).left <= not (joystick1(1) or joystick2(1) or kbd_joy(6));
-		inputs_i.jamma_n.p(2).right <= not (joystick1(0) or joystick2(0) or kbd_joy(7));		
-		inputs_i.jamma_n.p(2).button(1) <= not (joystick1(4) or joystick2(4) or kbd_joy(0));--Fire
-		inputs_i.jamma_n.p(2).button(2) <= not (joystick1(5) or joystick2(5) or kbd_joy(8) or joystick1(3) or joystick2(3) or kbd_joy(4)); --Jump
+		inputs_i.jamma_n.p(2).start <= not (kbd_joy(2) or joystick2(7));--KB 2
+		inputs_i.jamma_n.p(2).up <= not (joystick(3) or kbd_joy(4));
+		inputs_i.jamma_n.p(2).down <= not (joystick(2) or kbd_joy(5));
+		inputs_i.jamma_n.p(2).left <= not (joystick(1) or kbd_joy(6));
+		inputs_i.jamma_n.p(2).right <= not (joystick(0) or kbd_joy(7));
+		inputs_i.jamma_n.p(2).button(1) <= not (joystick(4) or kbd_joy(0));--Fire
+		inputs_i.jamma_n.p(2).button(2) <= not (joystick(5) or kbd_joy(8) or joystick(3) or kbd_joy(4)); --Jump
 		inputs_i.jamma_n.p(2).button(3) <= '1';
 		inputs_i.jamma_n.p(2).button(4) <= '1';
 		inputs_i.jamma_n.p(2).button(5) <= '1';
@@ -265,8 +313,8 @@ u_keyboard : keyboard
   
 moon_patrol_sound_board : entity work.moon_patrol_sound_board
 	port map(
-		clock_3p58    	=> clk_aud,
-		reset     		=> clkrst_i.arst, 
+		clock_E    		=> clk_aud,
+		reset     		=> rst_aud,
 		select_sound  	=> sound_data,
 		audio_out     	=> audio_out,
 		dbg_cpu_addr  	=> open
@@ -275,13 +323,22 @@ moon_patrol_sound_board : entity work.moon_patrol_sound_board
 dac : entity work.dac
 	port map (
 		clk_i     => clk_aud,
-		res_n_i   => '1',
+		res_n_i   => not rst_aud,
 		dac_i     => audio_out,
 		dac_o     => audio
    );
 
 AUDIO_R <= audio;
 AUDIO_L <= audio; 		
+
+switches_i(15) <= not status(9); -- Test mode
+switches_i(14) <= not status(7);
+switches_i(13) <= not status(8); -- Sector select
+switches_i(12) <= not status(10);-- Freeze enable
+switches_i(11 downto 8) <= "1100";
+switches_i( 7 downto 4) <= "1111";
+switches_i( 1 downto 0) <= not status(4 downto 3); -- Patrol cars
+switches_i( 3 downto 2) <= not status(6 downto 5); -- New car
 
 pace_inst : entity work.pace                                            
 	port map (
@@ -298,7 +355,7 @@ pace_inst : entity work.pace
 scandoubler_inst: scandoubler
 	port map (
 		clk_sys     => clk_vid,
-		scanlines   => status(4 downto 3),
+		scanlines   => status(2 downto 1),
 
 		hs_in       => video_o.hsync,
 		vs_in       => video_o.vsync,

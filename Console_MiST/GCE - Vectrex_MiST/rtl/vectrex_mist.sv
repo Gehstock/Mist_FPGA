@@ -33,6 +33,7 @@ module vectrex_mist
 
 localparam CONF_STR = {
 	"Vectrex;BINVECROM;",
+	"O1,CPU,MC6809,CPU09;",
 	"O2,Show Frame,Yes,No;",
 	"O3,Skip Logo,Yes,No;",
 	"O4,Joystick swap,Off,On;",
@@ -101,20 +102,28 @@ sdram cart
 	.ready()
 );
 
-	wire reset = (status[0] | status[6] | buttons[1] | ioctl_downl | second_reset);
-
+reg reset = 0;
 reg second_reset = 0;
+
 always @(posedge clk_24) begin
 	integer timeout = 0;
+	reg [15:0] reset_counter = 0;
+	reg reset_start;
 
-	if(ioctl_downl && status[3]) timeout <= 5000000;
-	else begin
-		if(!timeout) second_reset <= 0;
-		else begin
-			timeout <= timeout - 1;
-			if(timeout < 1000) second_reset <= 1;
-		end
+	reset <= 0;
+	reset_start <= status[0] | status[6] | buttons[1] | ioctl_downl | second_reset;
+	if (reset_counter) begin
+		reset <= 1'b1;
+		reset_counter <= reset_counter - 1'd1;
 	end
+	if (reset_start) reset_counter <= 16'd1000;
+
+	second_reset <= 0;
+	if (timeout) begin
+		timeout <= timeout - 1;
+		if(timeout == 1) second_reset <= 1'b1;
+	end
+	if(ioctl_downl && !status[3]) timeout <= 5000000;
 end
 
 assign pot_x_1 = status[4] ? joy_ana_1[15:8] : joy_ana_0[15:8];
@@ -126,6 +135,7 @@ vectrex vectrex (
 	.clock_24		( clk_24			),  
 	.clock_12		( clk_12 		),
 	.reset			( reset 			),
+	.cpu			( status[1]         ),
 	.video_r			( rr				),
 	.video_g			( gg				),
 	.video_b			( bb				),
@@ -173,8 +183,6 @@ assign r = status[2] & frame_line ? 4'h4 : blankn ? rr : 4'd0;
 assign g = status[2] & frame_line ? 4'h0 : blankn ? gg : 4'd0;
 assign b = status[2] & frame_line ? 4'h0 : blankn ? bb : 4'd0;
 
-wire        vsync_out;
-wire        hsync_out;
 wire        csync_out = ~(hs ^ vs);
 
 assign      VGA_HS = ypbpr ? csync_out : hs;

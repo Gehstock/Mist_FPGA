@@ -15,13 +15,13 @@
 ---------------------------------------------------------------------------------
 -- 
 -- 
--- Keyboard inputs :
+-- Keyboard and Joystick controls :
 --
---   ESC         : Coin + Start
---   SPACE       : Fire
---   CTRL,UP     : Jump
---   LEFT,RIGHT  : Increase/Decrease the speed
+--   ESC     or Button C     : Coin
+--   1, 2    or Button Start : Start
+--   SPACE   or Button A     : Fire
+--   ALT, UP or Button B     : Jump
+--   LEFT,RIGHT              : Increase/Decrease the speed
 --
--- Joystick support.
--- 
+--
 ---------------------------------------------------------------------------------

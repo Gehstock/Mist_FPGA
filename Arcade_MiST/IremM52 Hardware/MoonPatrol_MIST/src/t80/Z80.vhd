@@ -30,7 +30,7 @@ end Z80;
 
 architecture SYN of Z80 is
 
-	component T80se is
+	component T80s is
 		generic
 		(
 	  	Mode : integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
@@ -39,8 +39,8 @@ architecture SYN of Z80 is
 	  port
 		(
 	  	RESET_n     : in std_logic;
-	    CLK_n       : in std_logic;
-			CLKEN				: in std_logic;
+	    CLK         : in std_logic;
+	    CEN         : in std_logic;
 	    WAIT_n      : in std_logic;
 	    INT_n       : in std_logic;
 	    NMI_n       : in std_logic;
@@ -57,7 +57,7 @@ architecture SYN of Z80 is
 	    DI          : in std_logic_vector(7 downto 0);
 	    DO          : out std_logic_vector(7 downto 0)
 	  );
-	end component T80se;
+	end component T80s;
 	
 	-- Signal Declarations
 	
@@ -105,7 +105,7 @@ architecture SYN of Z80 is
 	  z80_datai <= intvec when ((z80_memrd or z80_iord) = '0') else
 	               datai;
 	
-	  Z80_uP : T80se
+	  Z80_uP : T80s
 	    generic map
 	    (
 	      Mode => 0      -- Z80
@@ -113,8 +113,8 @@ architecture SYN of Z80 is
 	    port map
 	    (
 	      RESET_n     => reset_n,
-	      CLK_n       => clk,
-				CLKEN				=> clk_en,
+	      CLK         => clk,
+	      CEN         => clk_en,
 	      WAIT_n      => wait_n,
 	      INT_n       => int_n,
 	      NMI_n       => nmi_n,

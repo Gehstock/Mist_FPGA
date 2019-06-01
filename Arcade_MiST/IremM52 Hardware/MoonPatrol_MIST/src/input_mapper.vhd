@@ -34,7 +34,7 @@ architecture SYN of inputmapper is
 
 begin
 
-  process (clk, rst_n)
+  process (clk, rst_n, dips)
     variable jamma_v	: from_MAPPED_INPUTS_t(0 to NUM_INPUTS-1);
     variable keybd_v 	: from_MAPPED_INPUTS_t(0 to NUM_INPUTS-1);
   begin
@@ -76,9 +76,9 @@ begin
       inputs(0).d <= jamma_v(0).d and not keybd_v(0).d;
       inputs(1).d <= jamma_v(1).d and not keybd_v(1).d;
       inputs(2).d <= jamma_v(2).d and not keybd_v(2).d;
-      inputs(3).d <= "11111111";  -- 1C/1C, 10/30/50K, 3 lives
+      inputs(3).d <= dips(7 downto 0); --"11111111";  -- 1C/1C, 10/30/50K, 3 lives
 		
-      inputs(4).d <= "11111100";
+      inputs(4).d <= dips(15 downto 8);--"11111100";
       -- activate service which is only checked on startup
      -- inputs(4).d <= "01111100";
       inputs(NUM_INPUTS-1).d <= keybd_v(NUM_INPUTS-1).d;
