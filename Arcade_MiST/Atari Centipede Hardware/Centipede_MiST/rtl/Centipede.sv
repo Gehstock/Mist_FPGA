@@ -42,7 +42,7 @@ module Centipede
 
 localparam CONF_STR = {
 	"Centipede;;",
-	"O1,Test,off,on;",
+	"O1,Test,Off,On;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T7,Reset;",
@@ -52,14 +52,13 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clk_24, clk_12, clk_6, clk_100mhz;
+wire clk_24, clk_12, clk_100mhz;
 wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_24),
 	.c2(clk_12),
-	.c3(clk_6),
 	.c4(clk_100mhz)
 	);
 	
@@ -94,10 +93,8 @@ centipede centipede(
 	.audio_o(audio)
 	);
 
-video_mixer video_mixer(
+mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.clk_sys(clk_24),
-	.ce_pix(clk_6),
-	.ce_pix_actual(clk_6),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -112,34 +109,32 @@ video_mixer video_mixer(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b0,status[2]}),//(left/right,on/off)
-	.scandoublerD(scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
+	.scandoubler_disable(scandoublerD),
+	.scanlines(status[4:3]),
+	.ypbpr(ypbpr)
 	);
 
-mist_io #(
-	.STRLEN(($size(CONF_STR)>>3))) 
-mist_io(
-	.clk_sys        (clk_24   	     ),
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_24         ),
 	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoublerD	 (scandoublerD	  ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_key			 (ps2_key        ),
-	.joystick_0   	 (joystick_0	  ),
-	.joystick_1     (joystick_1	  ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
-
+	
 dac #(
 	.msbi_g(15))
 dac (
@@ -174,24 +169,23 @@ reg btn_fire1 = 0;
 reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
-wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire       key_pressed;
+wire [7:0] key_code;
+wire       key_strobe;
 
 always @(posedge clk_24) begin
-	reg old_state;
-	old_state <= ps2_key[10];
-	if(old_state != ps2_key[10]) begin
-		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
-			'h6B: btn_left      		<= pressed; // left
-			'h74: btn_right       	<= pressed; // right
-			'h76: btn_coin				<= pressed; // ESC
-			'h05: btn_one_player   	<= pressed; // F1
-			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
-			'h29: btn_fire1   		<= pressed; // Space
+	if(key_strobe) begin
+		case(key_code)
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
+			'h6B: btn_left        <= key_pressed; // left
+			'h74: btn_right       <= key_pressed; // right
+			'h76: btn_coin        <= key_pressed; // ESC
+			'h05: btn_one_player  <= key_pressed; // F1
+			'h06: btn_two_players <= key_pressed; // F2
+			'h14: btn_fire3       <= key_pressed; // ctrl
+			'h11: btn_fire2       <= key_pressed; // alt
+			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end
 end
