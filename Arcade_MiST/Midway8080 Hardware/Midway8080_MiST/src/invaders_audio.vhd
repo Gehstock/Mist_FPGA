@@ -130,7 +130,7 @@ begin
 	begin
 	  wait until rising_edge(Clk);
 	  Clk7680_ena <= '0';
-	  if ClkDiv =  1277 then
+	  if ClkDiv =  781 then
 		Clk7680_ena <= '1';
 		ClkDiv <= (others => '0');
 	  else
