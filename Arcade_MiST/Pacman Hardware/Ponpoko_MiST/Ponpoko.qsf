@@ -46,30 +46,6 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Ponpoko.sv
-set_global_assignment -name VHDL_FILE rtl/pacman.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -173,4 +149,24 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # end ENTITY(Ponpoko)
 # -------------------
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Ponpoko.sv
+set_global_assignment -name VHDL_FILE rtl/pacman.vhd
+set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
+set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
