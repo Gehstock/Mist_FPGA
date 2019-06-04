@@ -108,47 +108,44 @@ scramble_top theend(
 	.ena_1_79(ce_1p79)
 );
 
-video_mixer video_mixer(
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
-	.ce_pix(ce_6p),
-	.ce_pix_actual(ce_6p),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,r,r} : 0),
-	.G(blankn ? {g,g,g} : 0),
-	.B(blankn ? {b,b,b} : 0),
-	.HSync(hs),
-	.VSync(vs),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? b : 0),
+	.HSync(~hs),
+	.VSync(~vs),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b1,status[2]}),
-	.scandoublerD(scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
+	.scandoubler_disable(scandoublerD),
+	.scanlines(status[4:3]),
+	.ypbpr(ypbpr)
 	);
 
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
-(
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
 	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoublerD	 (scandoublerD	  ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_key			 (ps2_key        ),
-	.joystick_0   	 (joystick_0     ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
@@ -178,26 +175,25 @@ reg btn_fire1 = 0;
 reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
-wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire       key_pressed;
+wire [7:0] key_code;
+wire       key_strobe;
 
 always @(posedge clk_sys) begin
-	reg old_state;
-	old_state <= ps2_key[10];
-	if(old_state != ps2_key[10]) begin
-		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
-			'h6B: btn_left      		<= pressed; // left
-			'h74: btn_right       	<= pressed; // right
-			'h76: btn_coin				<= pressed; // ESC
-			'h05: btn_one_player   	<= pressed; // F1
-			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
-			'h29: btn_fire1   		<= pressed; // Space
+	if(key_strobe) begin
+		case(key_code)
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
+			'h6B: btn_left        <= key_pressed; // left
+			'h74: btn_right       <= key_pressed; // right
+			'h76: btn_coin        <= key_pressed; // ESC
+			'h05: btn_one_player  <= key_pressed; // F1
+			'h06: btn_two_players <= key_pressed; // F2
+			'h14: btn_fire3       <= key_pressed; // ctrl
+			'h11: btn_fire2       <= key_pressed; // alt
+			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end
 end
 
-endmodule 
+endmodule

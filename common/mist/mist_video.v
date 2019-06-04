@@ -42,13 +42,37 @@ parameter OSD_COLOR    = 3'd4;
 parameter OSD_X_OFFSET = 10'd0;
 parameter OSD_Y_OFFSET = 10'd0;
 parameter SD_HCNT_WIDTH = 9;
-parameter COLOR_DEPTH = 6; // 3-6
+parameter COLOR_DEPTH = 6; // 1-6
 
 wire [5:0] SD_R_O;
 wire [5:0] SD_G_O;
 wire [5:0] SD_B_O;
 wire       SD_HS_O;
 wire       SD_VS_O;
+
+reg  [5:0] R_full;
+reg  [5:0] G_full;
+reg  [5:0] B_full;
+
+always @(*) begin
+	if (COLOR_DEPTH == 6) begin
+		R_full = R;
+		G_full = G;
+		B_full = B;
+	end else if (COLOR_DEPTH == 2) begin
+		R_full = {3{R}};
+		G_full = {3{G}};
+		B_full = {3{B}};
+	end else if (COLOR_DEPTH == 1) begin
+		R_full = {6{R}};
+		G_full = {6{G}};
+		B_full = {6{B}};
+	end else begin
+		R_full = { R, R[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
+		G_full = { G, G[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
+		B_full = { B, B[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
+	end
+end
 
 scandoubler #(SD_HCNT_WIDTH, COLOR_DEPTH) scandoubler
 (
@@ -77,9 +101,9 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR) osd
 	.SPI_DI  ( SPI_DI  ),
 	.SPI_SCK ( SPI_SCK ),
 	.SPI_SS3 ( SPI_SS3 ),
-	.R_in    ( scandoubler_disable ? R : SD_R_O ),
-	.G_in    ( scandoubler_disable ? G : SD_G_O ),
-	.B_in    ( scandoubler_disable ? B : SD_B_O ),
+	.R_in    ( scandoubler_disable ? R_full : SD_R_O ),
+	.G_in    ( scandoubler_disable ? G_full : SD_G_O ),
+	.B_in    ( scandoubler_disable ? B_full : SD_B_O ),
 	.HSync   ( scandoubler_disable ? HSync : SD_HS_O ),
 	.VSync   ( scandoubler_disable ? VSync : SD_VS_O ),
 	.R_out   ( osd_r_o ),

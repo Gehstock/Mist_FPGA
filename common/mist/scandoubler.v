@@ -74,6 +74,14 @@ always @(*) begin
 		b = sd_out[5:0];
 		g = sd_out[11:6];
 		r = sd_out[17:12];
+	end else if (COLOR_DEPTH == 2) begin
+		b = {3{sd_out[1:0]}};
+		g = {3{sd_out[3:2]}};
+		r = {3{sd_out[5:4]}};
+	end else if (COLOR_DEPTH == 1) begin
+		b = {6{sd_out[0]}};
+		g = {6{sd_out[1]}};
+		r = {6{sd_out[2]}};
 	end else begin
 		b = { sd_out[COLOR_DEPTH-1:0], sd_out[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
 		g = { sd_out[COLOR_DEPTH*2-1:COLOR_DEPTH], sd_out[COLOR_DEPTH*2-1 -:(6-COLOR_DEPTH)] };

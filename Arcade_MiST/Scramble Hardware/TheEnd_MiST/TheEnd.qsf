@@ -43,36 +43,7 @@ set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
-set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
-set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_LUT.vhd
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
 
 # Pin & Location Assignments
 # ==========================
@@ -161,17 +132,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# LogicLock Region Assignments
 		# ============================
-		set_global_assignment -name LL_ENABLED ON -section_id Region_0
-		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_0
-		set_global_assignment -name LL_STATE LOCKED -section_id Region_0
-		set_global_assignment -name LL_RESERVED OFF -section_id Region_0
-		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_0
-		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_0
-		set_global_assignment -name LL_PR_REGION OFF -section_id Region_0
-		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_0
-		set_global_assignment -name LL_WIDTH 4 -section_id Region_0
-		set_global_assignment -name LL_HEIGHT 1 -section_id Region_0
-		set_global_assignment -name LL_ORIGIN X28_Y23 -section_id Region_0
 
 	# end LOGICLOCK_REGION(Region_0)
 	# ------------------------------
@@ -181,17 +141,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# LogicLock Region Assignments
 		# ============================
-		set_global_assignment -name LL_ENABLED ON -section_id Region_1
-		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_1
-		set_global_assignment -name LL_STATE LOCKED -section_id Region_1
-		set_global_assignment -name LL_RESERVED OFF -section_id Region_1
-		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_1
-		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_1
-		set_global_assignment -name LL_PR_REGION OFF -section_id Region_1
-		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_1
-		set_global_assignment -name LL_WIDTH 5 -section_id Region_1
-		set_global_assignment -name LL_HEIGHT 7 -section_id Region_1
-		set_global_assignment -name LL_ORIGIN X7_Y23 -section_id Region_1
 
 	# end LOGICLOCK_REGION(Region_1)
 	# ------------------------------
@@ -201,17 +150,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# LogicLock Region Assignments
 		# ============================
-		set_global_assignment -name LL_ENABLED ON -section_id Region_2
-		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_2
-		set_global_assignment -name LL_STATE LOCKED -section_id Region_2
-		set_global_assignment -name LL_RESERVED OFF -section_id Region_2
-		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_2
-		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_2
-		set_global_assignment -name LL_PR_REGION OFF -section_id Region_2
-		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_2
-		set_global_assignment -name LL_WIDTH 2 -section_id Region_2
-		set_global_assignment -name LL_HEIGHT 3 -section_id Region_2
-		set_global_assignment -name LL_ORIGIN X6_Y30 -section_id Region_2
 
 	# end LOGICLOCK_REGION(Region_2)
 	# ------------------------------
@@ -221,17 +159,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# LogicLock Region Assignments
 		# ============================
-		set_global_assignment -name LL_ENABLED ON -section_id Region_3
-		set_global_assignment -name LL_AUTO_SIZE OFF -section_id Region_3
-		set_global_assignment -name LL_STATE LOCKED -section_id Region_3
-		set_global_assignment -name LL_RESERVED OFF -section_id Region_3
-		set_global_assignment -name LL_SECURITY_ROUTING_INTERFACE OFF -section_id Region_3
-		set_global_assignment -name LL_IGNORE_IO_BANK_SECURITY_CONSTRAINT OFF -section_id Region_3
-		set_global_assignment -name LL_PR_REGION OFF -section_id Region_3
-		set_global_assignment -name LL_ROUTING_REGION_EXPANSION_SIZE 2147483647 -section_id Region_3
-		set_global_assignment -name LL_WIDTH 3 -section_id Region_3
-		set_global_assignment -name LL_HEIGHT 8 -section_id Region_3
-		set_global_assignment -name LL_ORIGIN X3_Y23 -section_id Region_3
 
 	# end LOGICLOCK_REGION(Region_3)
 	# ------------------------------
@@ -250,4 +177,31 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(TheEnd)
 # ------------------
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
+set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
+set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_LUT.vhd
+set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name CDF_FILE output_files/Chain3.cdf
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
