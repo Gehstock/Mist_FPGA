@@ -1,8 +1,10 @@
-module galaksija_keyboard1(
+module galaksija_keyboard(
 	input 		clk,
 	input 		reset,
 	input  [5:0]addr,
-	input  [7:0]ps2_key,
+	 input [7:0] key_code,
+	 input key_strobe,
+	 input key_pressed,
 	output [7:0]key_out,
 	input 		rd_key
 );
@@ -23,7 +25,7 @@ always @(posedge clk) begin
 			begin
 				keys[num] = 1'b0;
 			end
-				case (ps2_key[7:0])					
+				case (key_code[7:0])					
 					//nix 00
 					8'h1C : keys[8'd01] = 1'b1; // A
 					8'h32 : keys[8'd02] = 1'b1; // B
@@ -93,7 +95,7 @@ always @(posedge clk) begin
 					
 				endcase
 				if (keys[8'd53] == 1'b1) begin//shift
-					case (ps2_key[7:0])	 
+					case (key_code[7:0])	 
 						8'h1C : keys[8'd01] = 1'b1; // a
 						8'h32 : keys[8'd02] = 1'b1; // b
 						8'h21 : keys[8'd03] = 1'b1; // c

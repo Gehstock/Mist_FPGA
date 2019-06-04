@@ -3,7 +3,7 @@ module invaders_memory(
 input				Clock,
 input				RW_n,
 input		[15:0]Addr,
-input		[12:0]Ram_Addr,
+input		[15:0]Ram_Addr,
 output	 [7:0]Ram_out,
 input		 [7:0]Ram_in,
 output	 [7:0]Rom_out
@@ -27,11 +27,13 @@ sprom #(
 `ifdef invaders	.init_file("./roms/SpaceInvaders/invaders_h.hex"), `endif//working
 `ifdef gunfight	.init_file("./roms/Gunfight/7609_e.hex"), `endif//not working
 `ifdef supearth	.init_file("./roms/SuperEarthInvasion/earthinv_h.hex"), `endif//working
-`ifdef seawolf		.init_file("./roms/Seawolf/sw0041_h.hex"), `endif//not working
+`ifdef seawolf		.init_file("./roms/Seawolf/hg.hex"), `endif//not working
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_h.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_h.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_e.hex"), `endif//not 
 `ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_h.hex"), `endif//
+`ifdef spacewalk	.init_file("./roms/Spacewalk/hg.hex"), `endif
+`ifdef extrainning	.init_file("./roms/ExtraInning/ei.h.hex"), `endif
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -51,11 +53,13 @@ sprom #(
 `ifdef invaders	.init_file("./roms/SpaceInvaders/invaders_g.hex"), `endif
 `ifdef gunfight	.init_file("./roms/Gunfight/7609_f.hex"), `endif//not working
 `ifdef supearth	.init_file("./roms/SuperEarthInvasion/earthinv_g.hex"), `endif//working
-`ifdef seawolf		.init_file("./roms/Seawolf/sw0042_g.hex"), `endif//not working
+`ifdef seawolf		.init_file("./roms/Seawolf/fe.hex"), `endif//not working
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_g.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_g.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_f.hex"), `endif//not working
 `ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_g.hex"), `endif//
+`ifdef spacewalk	.init_file("./roms/Spacewalk/fe.hex"), `endif
+`ifdef extrainning	.init_file("./roms/ExtraInning/ei.g.hex"), `endif
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -67,6 +71,7 @@ u_rom_g (
 	.q(rom_data_1)
 	);
 	
+`ifndef seawolf	
 sprom #(
 `ifdef sflush	.init_file("./roms/Strightflush/fr03_sc4.hex"), `endif//
 `ifdef zzzap280	.init_file("./roms/280zzz/zzzap_e.hex"), `endif//
@@ -75,11 +80,13 @@ sprom #(
 `ifdef invaders	.init_file("./roms/SpaceInvaders/invaders_f.hex"), `endif
 `ifdef gunfight	.init_file("./roms/Gunfight/7609_g.hex"), `endif//not working
 `ifdef supearth	.init_file("./roms/SuperEarthInvasion/earthinv_f.hex"), `endif//working
-`ifdef seawolf		.init_file("./roms/Seawolf/sw0043_f.hex"), `endif//not working
+
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_f.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_f.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_g.hex"), `endif//not working
 `ifdef blueshark	.init_file("./roms/BlueShark/blueshrk_f.hex"), `endif//
+`ifdef spacewalk	.init_file("./roms/Spacewalk/dc.hex"), `endif
+`ifdef extrainning	.init_file("./roms/ExtraInning/ei.f.hex"), `endif
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 //	.widthad_a(11), 
@@ -100,10 +107,12 @@ sprom #(
 `ifdef invaders	.init_file("./roms/SpaceInvaders/invaders_e.hex"), `endif
 `ifdef gunfight	.init_file("./roms/Gunfight/7609_h.hex"), `endif//not working
 `ifdef supearth	.init_file("./roms/SuperEarthInvasion/earthinv_e.hex"), `endif//working
-`ifdef seawolf		.init_file("./roms/Seawolf/sw0044_e.hex"), `endif//not working
+
 `ifdef dogpatch	.init_file("./roms/Dogpatch/dogpatch_e.hex"), `endif//not working
 `ifdef jspecter	.init_file("./roms/jspecter/rom_e.hex"), `endif//not working
 `ifdef invadrev	.init_file("./roms/InvadersRevenge/invrvnge_h.hex"), `endif//not working
+`ifdef spacewalk	.init_file("./roms/Spacewalk/ba.hex"), `endif
+`ifdef extrainning	.init_file("./roms/ExtraInning/ei.e.hex"), `endif
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 	.width_a(8))
@@ -113,12 +122,15 @@ u_rom_e (
 `ifdef generic	.Address(Addr[10:0]), `endif
 	.q(rom_data_3)
 	);
-	`endif//	
-`ifndef generic
+	`endif//
+	
+//`ifndef generic
+`ifdef extrainning
 sprom #(
 `ifdef sflush	.init_file("./roms/Strightflush/fr05_sc2.hex"), `endif//
 `ifdef zzzap280	.init_file("./roms/280zzz/zzzap_g.hex"), `endif//
 `ifdef lrescue		.init_file("./roms/LunarRescue/lrescue_5.hex"), `endif
+`ifdef extrainning	.init_file("./roms/ExtraInning/ei.b.hex"), `endif
 `ifdef zzzap280	.widthad_a(10), `endif//
 `ifdef generic	.widthad_a(11), `endif//
 	.width_a(8))
@@ -128,6 +140,9 @@ u_rom_i (
 `ifdef generic	.Address(Addr[10:0]), `endif
 	.q(rom_data_4)
 	);
+`endif//extrainning	
+`ifndef generic
+
 
 sprom #(
 `ifdef zzzap280	.init_file("./roms/280zzz/zzzap_h.hex"), `endif//
@@ -141,6 +156,7 @@ u_rom_j (
 `ifdef generic	.Address(Addr[10:0]), `endif
 	.q(rom_data_5)
 	);	
+`endif//	
 `endif//	
 always @(Addr, rom_data_0, rom_data_1, rom_data_2, rom_data_3, rom_data_4, rom_data_5, rom_data_6, rom_data_7) begin
 	Rom_out = 8'b00000000;

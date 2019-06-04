@@ -1,6 +1,6 @@
 `define generic
 //`define noDIP
-`define invaders
+//`define invaders
 `ifdef invaders 
 	`define dip = 8'b00000000 
 `endif
@@ -15,18 +15,21 @@
 	`define dip = 8'b00000000 //untested
 `endif
 
-//`define blueshark  Sync Problems
+//`define blueshark  //TILT(IMPUTS)  //60hz
 `ifdef blueshark 
 	`define dip = "00100100" //todo
 `endif
 
 //TODO
-//`define lrescue
+`define dip = 8'b00000000 
+`define lrescue
 
 //`define zzzap280
 //`define gunfight
 //`define sflush
-//`define seawolf
+//`define seawolf  //60hz
+//`define spacewalk  //60hz
+//`define extrainning
 //`define dogpatch
 //`define jspecter
 //`define invadrev
@@ -62,19 +65,25 @@ localparam CONF_STR = {
 `ifdef invaders "Space Inv.;;", `endif
 `ifdef supearth "SEarthInv.;;", `endif
 `ifdef slaser "Space Laser;;", `endif
-`ifdef blueshark "Blue Shark;;", `endif
-`ifdef noDIP "Midway 8080.;;", `endif
-	"O2,Joystick Control,Upright,Normal;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+`ifdef spacewalk "Space Walk;;", `endif
+`ifdef extrainning "Extra Inn.;;", `endif
+
+`ifdef blueshark "Blue Shark;;", `endif//NW
+`ifdef seawolf "Sea Wolf;;", `endif//NW
+`ifdef noDIP "Midway 8080;;", `endif
+	"O2,Rotate Controls,Off,On;",
+	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Overlay, On, Off;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.10.",`BUILD_DATE
 };
+
+assign LED = 1;
+assign AUDIO_R = AUDIO_L;
 
 
 wire clk_sys, clk_mist;
 wire pll_locked;
-
 pll pll
 (
 	.inclk0(CLOCK_27),
@@ -90,85 +99,16 @@ wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [7:0] kbjoy;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
-wire        scandoubler_disable;
+wire  [7:0] joystick_0,joystick_1;
+wire        scandoublerD;
 wire        ypbpr;
-wire        ps2_kbd_clk, ps2_kbd_data;
-wire [7:0] audio;
-wire hsync,vsync;
-assign LED = 1;
-
-wire hblank, vblank;
-wire ce_vid;
-wire hs, vs;
-wire r,g,b;
-
-video_mixer #(.LINE_LENGTH(640), .HALF_DEPTH(1)) video_mixer
-(
-	.clk_sys(clk_mist),
-	.ce_pix(clk_sys),
-	.ce_pix_actual(clk_sys),
-	.SPI_SCK(SPI_SCK),
-	.SPI_SS3(SPI_SS3),
-	.SPI_DI(SPI_DI),
-	.R({r,r,r}),
-	.G({g,g,g}),
-	.B({b,b,b}),
-	.HSync(hs),
-	.VSync(vs),
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_VS(VGA_VS),
-	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.hq2x(status[4:3]==1),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
-);
-
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
-(
-	.clk_sys        (clk_mist       ),
-	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoubler_disable(scandoubler_disable),
-	.ypbpr          (ypbpr          ),
-	.ps2_kbd_clk    (ps2_kbd_clk    ),
-	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
-);
-
-
-
-keyboard keyboard(
-	.clk(clk_mist),
-	.reset(),
-	.ps2_kbd_clk(ps2_kbd_clk),
-	.ps2_kbd_data(ps2_kbd_data),
-	.joystick(kbjoy)
-	);
-	
-//wire m_up     = status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
-//wire m_down   = status[2] ? kbjoy[7] | joystick_0[0] | joystick_1[0] : kbjoy[5] | joystick_0[2] | joystick_1[2];
-wire m_left   = status[2] ? kbjoy[5] | joystick_0[2] | joystick_1[2] : kbjoy[6] | joystick_0[1] | joystick_1[1];
-wire m_right  = status[2] ? kbjoy[4] | joystick_0[3] | joystick_1[3] : kbjoy[7] | joystick_0[0] | joystick_1[0];
-
-wire m_fire   = kbjoy[0] | joystick_0[4] | joystick_1[4];
-wire m_start1 = kbjoy[1];
-wire m_start2 = kbjoy[2];
-wire m_coin   = kbjoy[3];
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
+wire  [7:0] audio;
+wire 			hsync,vsync;
+wire 			hs, vs;
+wire 			r,g,b;
 
 wire [15:0]RAB;
 wire [15:0]AD;
@@ -187,9 +127,9 @@ invaderst invaderst(
 	.Rst_n(~(status[0] | status[6] | buttons[1])),
 	.Clk(clk_sys),
 	.ENA(),
-	.Coin(m_coin),
-	.Sel1Player(~m_start1),
-	.Sel2Player(~m_start2),
+	.Coin(btn_coin),
+	.Sel1Player(~btn_one_player),
+	.Sel2Player(~btn_two_players),
 	.Fire(~m_fire),
 	.MoveLeft(~m_left),
 	.MoveRight(~m_right),
@@ -239,6 +179,48 @@ invaders_video invaders_video (
 	.O_VSYNC(vs)
 	);
 
+mist_video #(.COLOR_DEPTH(3)) mist_video(
+	.clk_sys(clk_mist),
+	.SPI_SCK(SPI_SCK),
+	.SPI_SS3(SPI_SS3),
+	.SPI_DI(SPI_DI),
+	.R({r,r,r}),
+	.G({g,g,g}),
+	.B({b,b,b}),
+	.HSync(hs),
+	.VSync(vs),
+	.VGA_R(VGA_R),
+	.VGA_G(VGA_G),
+	.VGA_B(VGA_B),
+	.VGA_VS(VGA_VS),
+	.VGA_HS(VGA_HS),
+	.rotate({1'b0,status[2]}),
+	.scandoubler_disable(scandoublerD),
+	.scanlines(status[4:3]),
+	.ypbpr(ypbpr)
+	);
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_mist       ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
 dac dac (
 	.clk_i(clk_mist),
 	.res_n_i(1),
@@ -246,6 +228,38 @@ dac dac (
 	.dac_o(AUDIO_L)
 	);
 
-assign AUDIO_R = AUDIO_L;
+wire m_up     = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
+wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+reg btn_one_player = 0;
+reg btn_two_players = 0;
+reg btn_left = 0;
+reg btn_right = 0;
+reg btn_down = 0;
+reg btn_up = 0;
+reg btn_fire1 = 0;
+reg btn_fire2 = 0;
+reg btn_fire3 = 0;
+reg btn_coin  = 0;
+
+always @(posedge clk_mist) begin
+	if(key_strobe) begin
+		case(key_code)
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
+			'h6B: btn_left        <= key_pressed; // left
+			'h74: btn_right       <= key_pressed; // right
+			'h76: btn_coin        <= key_pressed; // ESC
+			'h05: btn_one_player  <= key_pressed; // F1
+			'h06: btn_two_players <= key_pressed; // F2
+			'h14: btn_fire3       <= key_pressed; // ctrl
+			'h11: btn_fire2       <= key_pressed; // alt
+			'h29: btn_fire1       <= key_pressed; // Space
+		endcase
+	end
+end
 
 endmodule

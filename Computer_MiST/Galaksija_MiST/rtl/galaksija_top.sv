@@ -3,7 +3,9 @@ module galaksija_top(
 	 input cpuclk,
 	 input audclk,
     input reset_in,
-	 input [10:0] ps2_key,
+	 input [7:0] key_code,
+	 input key_strobe,
+	 input key_pressed,
     input ps2_clk,
     input ps2_data,
 	 output [7:0] audio,
@@ -256,27 +258,16 @@ galaksija_video(
 	
 wire [7:0]key_out;
 wire rd_key;
-galaksija_keyboard1 galaksija_keyboard1(
+galaksija_keyboard galaksija_keyboard(
 	.clk(vidclk),
 	.addr(addr[5:0]),
 	.reset(~reset_in),
-	.ps2_key(ps2_key),
+   .key_code(key_code),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
 	.key_out(key_out),
 	.rd_key(rd_key)
 	);
-/*	
-galaksija_keyboard2 galaksija_keyboard2(
-	.clk(vidclk),
-	.reset_n(reset_in),
-	.addr(addr[5:0]),
-	.rd_key(rd_key),
-	.RD_n(rd_n),
-	.ps2_clk(ps2_clk), 
-	.ps2_data(ps2_data),
-	.LINE_IN(1'b0),
-	.KDatout(key_out)
-	);*/
-
 
 wire PIN_A = (1'b1 & 1'b1 & wr_n);
 wire [7:0]chan_A, chan_B, chan_C;
@@ -297,7 +288,7 @@ AY8912 AY8912(
    .CHANNEL_A(chan_A),
    .CHANNEL_B(chan_B),
    .CHANNEL_C(chan_C),
-   .SEL(1'b1),//divider?
+   .SEL(1'b1),//
 	.IO_in(),//not used
 	.IO_out()//not used
 	);

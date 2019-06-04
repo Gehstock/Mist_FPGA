@@ -10,9 +10,9 @@ package platform_variant_pkg is
 	
 --Test Area	
 	--$0000
-	constant ROM_0_NAME		: string := "../roms/jatrespecter.hex";
+	constant ROM_0_NAME		: string := "../roms/lrescue0.hex";
 	--$4000
-	constant ROM_1_NAME		: string := "";
+	constant ROM_1_NAME		: string := "../roms/lrescue1.hex";
 	constant VRAM_NAME		: string := "../roms/sivram.hex";
 
 
