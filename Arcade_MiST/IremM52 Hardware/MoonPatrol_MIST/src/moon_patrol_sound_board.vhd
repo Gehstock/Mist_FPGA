@@ -27,11 +27,11 @@ use ieee.numeric_std.all;
 entity moon_patrol_sound_board is
 port(
  clock_E      : in std_logic; -- 3.58 Mhz/4
- reset        : in std_logic;
- 
+ areset       : in std_logic;
+
  select_sound : in std_logic_vector(7 downto 0);
  audio_out    : out std_logic_vector(11 downto 0);
- 
+
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
 end moon_patrol_sound_board;
@@ -64,6 +64,9 @@ architecture struct of moon_patrol_sound_board is
     IOB_out     : out std_logic_vector(7 downto 0)
     );
   end component;
+
+ signal reset      : std_logic := '1';
+ signal reset_cnt  : integer range 0 to 1000000 := 1000000;
 
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
@@ -112,10 +115,10 @@ architecture struct of moon_patrol_sound_board is
  signal adpcm_we    : std_logic;
  signal adpcm_0_di  : std_logic_vector(3 downto 0);
 
- signal select_sound_7r : std_logic;
+ signal select_sound_r : std_logic_vector(7 downto 0);
 
  signal audio : std_logic_vector(12 downto 0);
- 
+
  type t_step_size is array(0 to 48) of integer range 0 to 1552;
  constant step_size : t_step_size := (
     16,   17,   19,   21,   23,   25,   28,   31,
@@ -175,14 +178,29 @@ cpu_di <=
 	port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
 	rom_do when rom_cs = '1' else X"55";
 
+process (clock_E)
+begin
+	if rising_edge(clock_E) then
+		reset <= '0';
+		if reset_cnt /= 0 then
+			reset_cnt <= reset_cnt - 1;
+			reset <= '1';
+		end if;
+		if areset = '1' then
+		   reset_cnt <= 1000000;
+		end if;
+	end if;
+end process;
+
 -- irq to cpu
 process (reset, clock_E)
 begin
 	if reset='1' then
 		cpu_irq <= '0';
+		select_sound_r(7) <= '1';
 	elsif rising_edge(clock_E) then
-		select_sound_7r <= select_sound(7);
-		if select_sound_7r = '0' then
+		select_sound_r <= select_sound;
+		if select_sound_r(7) = '0' then
 			cpu_irq  <= '1';
 		end if;
 		if irqraz_we = '1' then
@@ -334,26 +352,16 @@ port map(
  data => rom_do
 );
 
+-- cpu wram
 cpu_ram : entity work.spram
 generic map( widthad_a => 7)
 port map(
- clock			=> clock_E,
- address			=> cpu_addr(6 downto 0),
- data				=> cpu_do,
- wren				=> wram_we,
- q					=> wram_do
+ clock  => clock_E,
+ wren   => wram_we,
+ address => cpu_addr(6 downto 0),
+ data    => cpu_do,
+ q    => wram_do
 );
-
--- cpu wram 
---cpu_ram : entity work.gen_ram
---generic map( width_a => 8, aWidth => 7)
---port map(
--- clk  => clock_div(0),  -- 3p58/2
--- we   => wram_we,
--- addr => cpu_addr(6 downto 0),
--- d    => cpu_do,
--- q    => wram_do
---);
 
   ay83910_inst1: YM2149
   port map (
