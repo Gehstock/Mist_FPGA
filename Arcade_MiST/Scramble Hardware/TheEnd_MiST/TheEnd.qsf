@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 18:02:27  March 08, 2019
+# Date created = 20:49:14  June 04, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -44,6 +44,31 @@ set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
+set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
+set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_1.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/ROM_LUT.vhd
+set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -83,6 +108,7 @@ set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 
 # Analysis & Synthesis Assignments
 # ================================
@@ -127,42 +153,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # --------------------
 # start ENTITY(TheEnd)
 
-	# start LOGICLOCK_REGION(Region_0)
-	# --------------------------------
-
-		# LogicLock Region Assignments
-		# ============================
-
-	# end LOGICLOCK_REGION(Region_0)
-	# ------------------------------
-
-	# start LOGICLOCK_REGION(Region_1)
-	# --------------------------------
-
-		# LogicLock Region Assignments
-		# ============================
-
-	# end LOGICLOCK_REGION(Region_1)
-	# ------------------------------
-
-	# start LOGICLOCK_REGION(Region_2)
-	# --------------------------------
-
-		# LogicLock Region Assignments
-		# ============================
-
-	# end LOGICLOCK_REGION(Region_2)
-	# ------------------------------
-
-	# start LOGICLOCK_REGION(Region_3)
-	# --------------------------------
-
-		# LogicLock Region Assignments
-		# ============================
-
-	# end LOGICLOCK_REGION(Region_3)
-	# ------------------------------
-
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
@@ -177,31 +167,4 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(TheEnd)
 # ------------------
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
-set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TheEnd.sv
-set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
-set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_SND_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_OBJ_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_LUT.vhd
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
-set_global_assignment -name CDF_FILE output_files/Chain3.cdf
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

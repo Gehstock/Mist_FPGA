@@ -72,8 +72,6 @@ LASER310_TOP LASER310_TOP(
 	.VGA_VS(vs),
 	.AUD_ADCDAT(audio),
 	.audio_s(audio_s),
-//	.PS2_KBCLK(ps2_kbd_clk),
-//	.PS2_KBDAT(ps2_kbd_data),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),

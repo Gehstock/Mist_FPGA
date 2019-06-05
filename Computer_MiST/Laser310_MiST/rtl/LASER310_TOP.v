@@ -44,8 +44,6 @@ output	[7:0]	audio_s,
 input				key_strobe,
 input				key_pressed,
 input		[7:0]	key_code,
-//input 			PS2_KBCLK,
-//input				PS2_KBDAT,
 input		[9:0]	SWITCH,
 input				UART_RXD,
 output			UART_TXD
@@ -966,19 +964,6 @@ end
 
 always @ (posedge CLK50MHZ)				// 50MHz
 	KB_CLK <= KB_CLK + 1'b1;			// 50/32 = 1.5625 MHz
-/*
-ps2_keyboard KEYBOARD(
-		.RESET_N(RESET_N),
-		.CLK(KB_CLK[4]),
-		.key_strobe     (key_strobe     ),
-		.key_pressed    (key_pressed    ),
-		.key_code       (key_code       ),
-		.PS2_CLK(PS2_KBCLK),
-		.PS2_DATA(PS2_KBDAT),
-		.RX_SCAN(SCAN),
-		.RX_PRESSED(PRESS),
-		.RX_EXTENDED(EXTENDED)
-);*/
 
 assign PRESS_N = ~key_pressed;
 
