@@ -59,6 +59,7 @@ Aviable Arcade Cores
 
 #Irem M52 Hardware
 	Moon Patrol
+	Traverse USA
 
 #Ladybug Hardware
 	Cosmic Avenger
