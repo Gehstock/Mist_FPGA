@@ -115,10 +115,10 @@ architecture struct of moon_patrol_sound_board is
  signal adpcm_we    : std_logic;
  signal adpcm_0_di  : std_logic_vector(3 downto 0);
 
- signal select_sound_r : std_logic_vector(7 downto 0);
+ signal select_sound_r  : std_logic_vector(7 downto 0);
 
  signal audio : std_logic_vector(12 downto 0);
-
+ 
  type t_step_size is array(0 to 48) of integer range 0 to 1552;
  constant step_size : t_step_size := (
     16,   17,   19,   21,   23,   25,   28,   31,
@@ -345,7 +345,7 @@ port map(
 );
 
 -- cpu program rom
-cpu_prog_rom : entity work.moon_patrol_sound_prog
+cpu_prog_rom : entity work.travusa_sound
 port map(
  clk  => clock_E,
  addr => cpu_addr(11 downto 0),
@@ -353,13 +353,13 @@ port map(
 );
 
 -- cpu wram
-cpu_ram : entity work.spram
-generic map( widthad_a => 7)
+cpu_ram : entity work.gen_ram
+generic map( dWidth => 8, aWidth => 7)
 port map(
- clock  => clock_E,
- wren   => wram_we,
- address => cpu_addr(6 downto 0),
- data    => cpu_do,
+ clk  => clock_E,
+ we   => wram_we,
+ addr => cpu_addr(6 downto 0),
+ d    => cpu_do,
  q    => wram_do
 );
 

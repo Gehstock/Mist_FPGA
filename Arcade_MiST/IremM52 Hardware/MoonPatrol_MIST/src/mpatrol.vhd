@@ -226,7 +226,7 @@ u_keyboard : keyboard
 moon_patrol_sound_board : entity work.moon_patrol_sound_board
 	port map(
 		clock_E    		=> clk_aud,
-		reset     		=> rst_aud,
+		areset     		=> rst_aud,
 		select_sound  	=> sound_data,
 		audio_out     	=> audio_out,
 		dbg_cpu_addr  	=> open

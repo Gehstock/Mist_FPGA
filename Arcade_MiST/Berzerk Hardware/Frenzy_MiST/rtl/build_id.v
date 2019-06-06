@@ -1,2 +1,0 @@
-`define BUILD_DATE "190513"
-`define BUILD_TIME "152214"
