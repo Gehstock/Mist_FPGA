@@ -21,8 +21,6 @@
 -- 
 -- 
 ---------------------------------------------------------------------------------
-ToDo 	
-	60Hz
-	CONTROLS
-	Confirm Colors
+ToDo: Color Prom
+      Controls + DIP
 

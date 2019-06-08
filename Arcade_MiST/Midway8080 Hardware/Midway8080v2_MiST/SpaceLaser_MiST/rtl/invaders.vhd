@@ -169,15 +169,15 @@ begin
 				GDB1 when "01",
 				GDB2 when "10",
 				S when others;
-
-	GDB0(0) <= DIP(8);  -- Unused ?
-	GDB0(1) <= DIP(7);
-	GDB0(2) <= DIP(6);  -- Unused ?
-	GDB0(3) <= '1';             -- Unused ?
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
-	GDB0(7) <= DIP(5);  -- Unused ?
+GDB0 <= "11111111";
+--	GDB0(0) <= DIP(8);  -- Unused ?
+--	GDB0(1) <= DIP(7);
+--	GDB0(2) <= DIP(6);  -- Unused ?
+--	GDB0(3) <= '1';             -- Unused ?
+--	GDB0(4) <= not Fire;
+--	GDB0(5) <= not MoveLeft;
+--	GDB0(6) <= not MoveRight;
+--	GDB0(7) <= DIP(5);  -- Unused ?
 
 	GDB1(0) <= not Coin;-- Active High !
 	GDB1(1) <= not Sel2Player;

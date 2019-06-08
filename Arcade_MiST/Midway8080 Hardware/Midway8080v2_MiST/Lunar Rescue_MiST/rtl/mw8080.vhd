@@ -79,6 +79,7 @@ entity mw8080 is
 		Sample          : out std_logic;
 		Wr              : out std_logic;
 		Video           : out std_logic;
+		CAB             : out std_logic_vector(9 downto 0);
 		HSync           : out std_logic;
 		VSync           : out std_logic);
 end mw8080;
@@ -166,6 +167,7 @@ begin
 	RWE_n <= Wr_n or not (RR(8) xor RR(9)) or not CntD5(2);
 	RAB <= A(12 downto 0) when CntD5(2) = '1' else
 		std_logic_vector(CntE7(3 downto 0) & CntE6(3 downto 0) & CntE5(3 downto 0) & CntD5(3));
+   CAB <= std_logic_vector(CntE7(4 downto 0)) & std_logic_vector(CntE5(4 downto 0));
 
 	u_8080: T8080se
 		generic map (
@@ -182,7 +184,7 @@ begin
 			DBIN => DBin,
 			SYNC => Sync,
 			VAIT => Vait,
-			HLDA => HLDA,
+			HLDA => HLDA, 
 			WR_n => Wr_n,
 			A => A,
 			DI => DI,

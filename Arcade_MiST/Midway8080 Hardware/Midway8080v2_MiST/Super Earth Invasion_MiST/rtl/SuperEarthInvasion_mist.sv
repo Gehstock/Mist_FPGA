@@ -94,7 +94,7 @@ invaderst invaderst(
 	.VSync(VSync)
 	);
 		
-invaders_memory invaders_memory (
+SuperEarthInvasion_memory SuperEarthInvasion_memory (
 	.Clock(clk_sys),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -111,7 +111,7 @@ invaders_audio invaders_audio (
 	.Aud(audio)
 	);		
 	  
-invaders_video invaders_video (
+SuperEarthInvasion_overlay SuperEarthInvasion_overlay (
 	.Video(Video),
 	.Overlay(~status[5]),
 	.CLK(clk_sys),

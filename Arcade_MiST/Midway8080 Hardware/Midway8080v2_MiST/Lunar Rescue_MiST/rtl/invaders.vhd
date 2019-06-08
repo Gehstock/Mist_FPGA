@@ -76,6 +76,7 @@ entity invaderst is
 		Rst_n_s         : out std_logic;
 		RWE_n           : out std_logic;
 		Video           : out std_logic;
+		CAB             : out std_logic_vector(9 downto 0);
 		HSync           : out std_logic;
 		VSync           : out std_logic
 		);
@@ -160,6 +161,7 @@ begin
 			HldA => open,
 			Sample => Sample,
 			Wr => open,
+			CAB => CAB,
 			Video => Video,
 			HSync => HSync,
 			VSync => VSync);
@@ -169,33 +171,33 @@ begin
 				GDB1 when "01",
 				GDB2 when "10",
 				S when others;
-GDB0 <= (others => '1'); 
---	GDB0(0) <= DIP(7);
---	GDB0(1) <= DIP(6);
---	GDB0(2) <= DIP(5);
---	GDB0(3) <= '1';
---	GDB0(4) <= not Fire;
---	GDB0(5) <= not MoveLeft;
---	GDB0(6) <= not MoveRight;
---	GDB0(7) <= DIP(4);
-GDB1 <= (others => '0'); 
---	GDB1(0) <= not Coin;
---	GDB1(1) <= not Sel2Player;
---	GDB1(2) <= not Sel1Player;
---	GDB1(3) <= '1';
---	GDB1(4) <= not Fire;
---	GDB1(5) <= not MoveLeft;
---	GDB1(6) <= not MoveRight;
---	GDB1(7) <= '1';
-GDB2 <= (others => '1'); 
---	GDB2(0) <= DIP(3);
---	GDB2(1) <= DIP(2);
---	GDB2(2) <= '0';--TILT
---	GDB2(3) <= DIP(1);
---	GDB2(4) <= not Fire;
---	GDB2(5) <= not MoveLeft;
---	GDB2(6) <= not MoveRight;
---	GDB2(7) <= '1';
+
+	GDB0(0) <= DIP(7);
+	GDB0(1) <= DIP(6);
+	GDB0(2) <= DIP(5);
+	GDB0(3) <= '1';
+	GDB0(4) <= not Fire;
+	GDB0(5) <= not MoveLeft;
+	GDB0(6) <= not MoveRight;
+	GDB0(7) <= DIP(4);
+
+	GDB1(0) <= not Coin;
+	GDB1(1) <= not Sel2Player;
+	GDB1(2) <= not Sel1Player;
+	GDB1(3) <= '1';
+	GDB1(4) <= not Fire;
+	GDB1(5) <= not MoveLeft;
+	GDB1(6) <= not MoveRight;
+	GDB1(7) <= '1';
+
+	GDB2(0) <= DIP(3);
+	GDB2(1) <= DIP(2);
+	GDB2(2) <= '0';--TILT
+	GDB2(3) <= DIP(1);
+	GDB2(4) <= not Fire;
+	GDB2(5) <= not MoveLeft;
+	GDB2(6) <= not MoveRight;
+	GDB2(7) <= '1';
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';

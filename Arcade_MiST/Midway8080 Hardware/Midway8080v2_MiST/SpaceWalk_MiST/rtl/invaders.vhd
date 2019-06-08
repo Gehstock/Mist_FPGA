@@ -198,14 +198,14 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= DIP(8);  -- Unused ?
-	GDB0(1) <= DIP(7);
-	GDB0(2) <= DIP(6);  -- Unused ?
+	GDB0(0) <= '1';--DIP(8);  -- Unused ?
+	GDB0(1) <= '1';--DIP(7);
+	GDB0(2) <= '1';--DIP(6);  -- Unused ?
 	GDB0(3) <= '1';             -- Unused ?
 	GDB0(4) <= not Fire;
 	GDB0(5) <= not MoveLeft;
 	GDB0(6) <= not MoveRight;
-	GDB0(7) <= DIP(5);  -- Unused ?
+	GDB0(7) <= '1';--DIP(5);  -- Unused ?
 
 	GDB1(0) <= not Coin;-- Active High !
 	GDB1(1) <= not Sel2Player;
@@ -216,10 +216,10 @@ begin
 	GDB1(6) <= not MoveRight;
 	GDB1(7) <= '1';-- Unused ?
 
-	GDB2(0) <= DIP(4);  -- LSB Lives 3-6
-	GDB2(1) <= DIP(3);  -- MSB Lives 3-6
-	GDB2(2) <= '0';-- Tilt ?
-	GDB2(3) <= '0';--DIP(2);  -- Bonus life at 1000 or 1500
+	GDB2(0) <= '1';--DIP(4);  -- LSB Lives 3-6
+	GDB2(1) <= '1';--DIP(3);  -- MSB Lives 3-6
+	GDB2(2) <= '1';-- Tilt ?
+	GDB2(3) <= '1';--DIP(2);  -- Bonus life at 1000 or 1500
 	GDB2(4) <= not Fire;
 	GDB2(5) <= not MoveLeft;
 	GDB2(6) <= not MoveRight;

@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 12:59:14  June 05, 2019
+# Date created = 18:55:39  June 08, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		LunarRescue_assignment_defaults.qdf
+#		SuperEarthInvasion_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -47,8 +47,9 @@ set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SuperEarthInvasion_mist.sv
 set_global_assignment -name VHDL_FILE rtl/invaders.vhd
 set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SuperEarthInvasion_memory.sv
+set_global_assignment -name VHDL_FILE rtl/SuperEarthInvasion_overlay.vhd
 set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/invaders_memory.sv
 set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
@@ -58,7 +59,6 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/invaders_video.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
 set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
 
@@ -153,21 +153,21 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # end EDA_TOOL_SETTINGS(eda_simulation)
 # -------------------------------------
 
-# ------------------------------
-# start ENTITY(LunarRescue_mist)
+# -------------------------------------
+# start ENTITY(SuperEarthInvasion_mist)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(LunarRescue_mist)
-# ----------------------------
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+# end ENTITY(SuperEarthInvasion_mist)
+# -----------------------------------

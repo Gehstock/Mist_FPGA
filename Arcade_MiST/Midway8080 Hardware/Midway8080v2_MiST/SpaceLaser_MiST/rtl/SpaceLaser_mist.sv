@@ -79,7 +79,7 @@ invaderst invaderst(
 	.Fire(~m_fire),
 	.MoveLeft(~m_left),
 	.MoveRight(~m_right),
-	.DIP(dip),
+//	.DIP(""),
 	.RDB(RDB),
 	.IB(IB),
 	.RWD(RWD),
@@ -94,7 +94,7 @@ invaderst invaderst(
 	.VSync(VSync)
 	);
 		
-invaders_memory invaders_memory (
+spacelaser_memory spacelaser_memory (
 	.Clock(clk_sys),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -111,7 +111,7 @@ invaders_audio invaders_audio (
 	.Aud(audio)
 	);		
 	  
-invaders_video invaders_video (
+spacelaser_overlay spacelaser_overlay (
 	.Video(Video),
 	.Overlay(~status[5]),
 	.CLK(clk_sys),
