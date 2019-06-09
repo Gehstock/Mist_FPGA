@@ -74,6 +74,7 @@ Aviable Arcade Cores
 #Midway 8080 Hardware
 	Galaxy Wars
 	Lunar Rescue
+	Ozma Wars
 	Space Attack
 	Space Invaders
 	Space Invaders II(Deluxe)
@@ -116,7 +117,10 @@ Aviable Arcade Cores
 	Amidar
 	Frogger
 	Scramble
-	The End		
+	The End	
+
+#Williams 6809 rev.1 Hardware
+	Defender
 
 
 
