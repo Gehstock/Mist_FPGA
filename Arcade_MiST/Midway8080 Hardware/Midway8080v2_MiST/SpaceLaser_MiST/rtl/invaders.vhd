@@ -76,6 +76,7 @@ entity invaderst is
 		Rst_n_s         : out std_logic;
 		RWE_n           : out std_logic;
 		Video           : out std_logic;
+		CAB             : out std_logic_vector(7 downto 0);
 		HSync           : out std_logic;
 		VSync           : out std_logic
 		);
@@ -160,6 +161,7 @@ begin
 			HldA => open,
 			Sample => Sample,
 			Wr => open,
+			CAB => CAB,
 			Video => Video,
 			HSync => HSync,
 			VSync => VSync);
@@ -169,33 +171,33 @@ begin
 				GDB1 when "01",
 				GDB2 when "10",
 				S when others;
-GDB0 <= "11111111";
---	GDB0(0) <= DIP(8);  -- Unused ?
---	GDB0(1) <= DIP(7);
---	GDB0(2) <= DIP(6);  -- Unused ?
---	GDB0(3) <= '1';             -- Unused ?
---	GDB0(4) <= not Fire;
---	GDB0(5) <= not MoveLeft;
---	GDB0(6) <= not MoveRight;
---	GDB0(7) <= DIP(5);  -- Unused ?
 
-	GDB1(0) <= not Coin;-- Active High !
+	GDB0(0) <= '1';--unknown
+	GDB0(1) <= '1';--unknown
+	GDB0(2) <= '1';--unknown
+	GDB0(3) <= '1';--unknown
+	GDB0(4) <= '1';--unknown
+	GDB0(5) <= '1';--unknown
+	GDB0(6) <= '1';--unknown
+	GDB0(7) <= '1';--unknown
+
+	GDB1(0) <= not Coin;
 	GDB1(1) <= not Sel2Player;
 	GDB1(2) <= not Sel1Player;
-	GDB1(3) <= '1';-- Unused ?
+	GDB1(3) <= '1';--unknown
 	GDB1(4) <= not Fire;
 	GDB1(5) <= not MoveLeft;
 	GDB1(6) <= not MoveRight;
-	GDB1(7) <= '1';-- Unused ?
+	GDB1(7) <= '1';--unknown
 
-	GDB2(0) <= DIP(4);  -- LSB Lives 3-6
-	GDB2(1) <= DIP(3);  -- MSB Lives 3-6
-	GDB2(2) <= '0';-- Tilt ?
-	GDB2(3) <= '0';--DIP(2);  -- Bonus life at 1000 or 1500
-	GDB2(4) <= not Fire;
-	GDB2(5) <= not MoveLeft;
-	GDB2(6) <= not MoveRight;
-	GDB2(7) <= '1';--DIP(1);  -- Coin info
+	GDB2(0) <= '0';--unknown
+	GDB2(1) <= '0';--unknown
+	GDB2(2) <= '0';--unknown
+	GDB2(3) <= '0';--unknown
+	GDB2(4) <= not Fire;--player2
+	GDB2(5) <= not MoveLeft;--player2
+	GDB2(6) <= not MoveRight;--player2
+	GDB2(7) <= '1';-- Coinage
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
