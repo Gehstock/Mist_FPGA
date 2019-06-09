@@ -65,6 +65,8 @@ entity invaderst is
 		Fire            : in  std_logic;
 		MoveLeft        : in  std_logic;
 		MoveRight       : in  std_logic;
+		MoveUp          : in  std_logic;
+		MoveDown        : in  std_logic;
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -166,7 +168,7 @@ begin
 
 	u_mw8080: mw8080
 		port map(
-			Rst_n => Rst_n_s_i,
+			Rst_n => '1',--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -198,32 +200,32 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= '0';--
-	GDB0(1) <= '1';--
-	GDB0(2) <= '1';--
-	GDB0(3) <= '1';--
-	GDB0(4) <= '1';--
-	GDB0(5) <= '1';--
-	GDB0(6) <= '1';--
-	GDB0(7) <= '1';--
+	GDB0(0) <= not MoveUp;--active low
+	GDB0(1) <= not MoveDown;--active low
+	GDB0(2) <= not MoveLeft;--active low
+	GDB0(3) <= not MoveRight;--active low
+	GDB0(4) <= '1';--active low
+	GDB0(5) <= '1';--active low
+	GDB0(6) <= '1';--active low
+	GDB0(7) <= not Fire;
+	
+	GDB1(0) <= not MoveUp;--active low
+	GDB1(1) <= not MoveDown;--active low
+	GDB1(2) <= not MoveLeft;--active low
+	GDB1(3) <= not MoveRight;--active low
+	GDB1(4) <= '1';--active low
+	GDB1(5) <= '1';--active low
+	GDB1(6) <= '1';--active low
+	GDB1(7) <= not Fire;--active low
 
-	GDB1(0) <= '1';-- Unused ?
-	GDB1(1) <= '1';-- Unused ?
-	GDB1(2) <= '1';-- Unused ?
-	GDB1(2) <= '1';-- Unused ?
-	GDB1(4) <= not Sel2Player;
-	GDB1(5) <= not Sel1Player;
-	GDB1(6) <= not Coin;
-	GDB1(7) <= '1';-- Unused ?
-
-	GDB2(0) <= '0';--RAM-ROM Test
-	GDB2(1) <= '0';--RAM-ROM Test
-	GDB2(2) <= '0';--Springboard Alignment
-	GDB2(3) <= '0';--Extended Time At
-	GDB2(4) <= '0';--Coinage
-	GDB2(5) <= '0';--Game_Time
-	GDB2(6) <= '0';--Game_Time
-	GDB2(7) <= '0';--Game_Time
+	GDB2(0) <= '0';--active high
+	GDB2(1) <= '0';--active high
+	GDB2(2) <= '0';--active high
+	GDB2(3) <= '0';--active high
+	GDB2(4) <= '0';--DIPLOCK --active high
+	GDB2(5) <= not Sel1Player;--active low
+	GDB2(6) <= not Coin;--active low
+	GDB2(7) <= not Sel2Player;--active low
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
