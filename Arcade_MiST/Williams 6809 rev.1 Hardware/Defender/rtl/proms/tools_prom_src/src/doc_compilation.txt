@@ -1,0 +1,28 @@
+------------------------------------------------------
+LINUX build command
+------------------------------------------------------
+gcc  duplicate_byte.c -lm
+mv a.out duplicate_byte
+
+gcc  make_vhdl_prom.c -lm
+mv a.out make_vhdl_prom
+
+------------------------------------------------------
+Win32 build command (on linux system)
+------------------------------------------------------
+i686-w64-mingw32-gcc duplicate_byte.c -lm -m32
+mv a.exe duplicate_byte.exe
+
+i686-w64-mingw32-gcc make_vhdl_prom.c -lm -m32
+mv a.exe make_vhdl_prom.exe
+
+------------------------------------------------------
+Win64 build command (on linux system)
+------------------------------------------------------
+x86_64-w64-mingw32-gcc duplicate_byte.c -lm
+mv a.exe duplicate_byte.exe
+
+x86_64-w64-mingw32-gcc make_vhdl_prom.c -lm
+mv a.exe make_vhdl_prom.exe
+------------------------------------------------------
+------------------------------------------------------
