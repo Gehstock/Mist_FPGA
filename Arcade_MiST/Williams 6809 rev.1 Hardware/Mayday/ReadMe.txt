@@ -15,3 +15,8 @@ MAYDAY.ROM is required at the root of the SD-Card.
  Advance = A
  Auto up = U      
  Service = H  
+
+
+
+
+ToDo Sound is missing sometimes
