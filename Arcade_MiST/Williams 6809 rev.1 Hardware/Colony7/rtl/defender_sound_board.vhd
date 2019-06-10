@@ -30,11 +30,9 @@ port(
  clk_1p79     : in std_logic;
  clk_0p89     : in std_logic;
  reset        : in std_logic;
- hand		   : in  std_logic;
- 
+ hand		     : in  std_logic;
  select_sound : in std_logic_vector(5 downto 0);
  audio_out    : out std_logic_vector( 7 downto 0);
- 
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
 end defender_sound_board;
@@ -56,20 +54,6 @@ architecture struct of defender_sound_board is
  
  signal rom_cs    : std_logic;
  signal rom_do    : std_logic_vector( 7 downto 0);
-
--- pia port a
---      bit 0-7 audio output
-
--- pia port b
---      bit 0-4 select sound input (sel0-4)
---      bit 5-6 switch sound/notes/speech on/off
---      bit 7   sel5
-
--- pia io ca/cb
---      ca1 vdd
---      cb1 sound trigger (sel0-5 = 1)
---      ca2 speech data N/C
---      cb2 speech clock N/C
 
  signal pia_clock  : std_logic;
  signal pia_rw_n   : std_logic;
@@ -168,18 +152,11 @@ port map
 	irqb      	=> pia_irqb,
 	pa_i      	=> (others => '0'),
 	pa_o        => pia_pa_o,
-	pa_oe       => open,
 	ca1       	=> '1',
 	ca2_i      	=> '0',
-	ca2_o       => open,
-	ca2_oe      => open,
 	pb_i      	=> pia_pb_i,
-	pb_o        => open,
-	pb_oe       => open,
 	cb1       	=> pia_cb1_i,
-	cb2_i      	=> '0',
-	cb2_o       => open,
-	cb2_oe      => open
+	cb2_i      	=> '0'
 );
 
 end struct;

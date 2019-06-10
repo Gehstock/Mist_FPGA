@@ -38,7 +38,7 @@ localparam CONF_STR = {
 	"DEFENDER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.0.0",`BUILD_DATE
+	"V,v1.0.5",`BUILD_DATE
 };
 
 assign LED = 1;
@@ -66,8 +66,8 @@ wire [10:0] ps2_key;
 wire [7:0] audio;
 wire        hs, vs;
 wire        blankn;
-wire  [2:0] g,b;
-wire  [1:0] r;
+wire  [2:0] r,g;
+wire  [1:0] b;
 
 wire [14:0] cart_addr;
 wire [15:0] sdram_do;
@@ -159,9 +159,9 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? {r, r[1] } : 0 ),
+	.R              ( blankn ? r : 0   ),
 	.G              ( blankn ? g : 0   ),
-	.B              ( blankn ? b : 0   ),
+	.B              ( blankn ? {b, b[1] }  : 0   ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
