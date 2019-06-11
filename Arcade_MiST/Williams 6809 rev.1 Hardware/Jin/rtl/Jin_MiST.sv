@@ -39,20 +39,20 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.0.5",`BUILD_DATE
+	"V,v1.1.0",`BUILD_DATE
 };
 
 assign LED = 1;
+assign AUDIO_R = AUDIO_L;
 
-wire clk_sys, clock_6, clock_1p79, clock_0p89;
+wire clk_sys, clock_6, clock_0p89;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),//36
 	.c1(clock_6),//6
-	.c2(clock_1p79),//1.79
-	.c3(clock_0p89),//0.89
+	.c2(clock_0p89),//0.89
 	.locked(pll_locked)
 	);
 
@@ -70,9 +70,9 @@ wire        blankn;
 wire  [2:0] r,g;
 wire  [1:0] b;
 
-wire [14:0] cart_addr;
-wire [15:0] sdram_do;
-wire        cart_rd;
+wire [14:0] rom_addr;
+wire [15:0] rom_do;
+wire        rom_rd;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -99,11 +99,11 @@ sdram cart
 	.init          ( ~pll_locked  ),
 	.clk           ( clk_sys      ),
 	.wtbt          ( 2'b00        ),
-	.dout          ( sdram_do     ),
+	.dout          ( rom_do     ),
 	.din           ( {ioctl_dout, ioctl_dout} ),
-	.addr          ( ioctl_downl ? ioctl_addr : cart_addr ),
+	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
 	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl),
+	.rd            ( !ioctl_downl & rom_rd ),
 	.ready()
 );
 
@@ -118,34 +118,34 @@ always @(posedge clk_sys) begin
 end
 
 defender defender (
-	.clock_6			(clock_6),
-	.clk_1p79		(clock_1p79),
-	.clk_0p89		(clock_0p89),
-	.reset        ( reset ),
+	.clock_6				( clock_6			),
+	.clk_0p89			( clock_0p89		),
+	.reset        		( reset 				),
 
-	.video_r      ( r               ),
-	.video_g      ( g               ),
-	.video_b      ( b               ),
-   .video_hs     ( hs              ),
-	.video_vs     ( vs              ),
-	.video_blankn ( blankn          ),
+	.video_r      		( r               ),
+	.video_g      		( g               ),
+	.video_b      		( b               ),
+   .video_hs     		( hs              ),
+	.video_vs     		( vs              ),
+	.video_blankn 		( blankn          ),
 
-	.audio_out    ( audio           ),
+	.audio_out    		( audio           ),
 	
-	.roms_addr ( cart_addr       ),
-	.roms_do   ( sdram_do[7:0]   ),
+	.roms_addr 			( rom_addr       	),
+	.roms_do   			( rom_do[7:0]   	),
+	.vma					( rom_rd				),
 
-	.btn_two_players       ( btn_two_players ),
-	.btn_one_player       ( btn_one_player  ),
-	.btn_left_coin        ( btn_coin        ),
+	.btn_two_players  ( btn_two_players ),
+	.btn_one_player   ( btn_one_player  ),
+	.btn_left_coin    ( btn_coin        ),
 
-	.btn_fire(m_fire),
-	.btn_fire2(m_bomb),
+	.btn_fire			(m_fire				),
+	.btn_fire2			(m_bomb				),
 
-	.btn_left(m_left),
-	.btn_right(m_right),
-	.btn_down(m_down),
-	.btn_up(m_up)
+	.btn_left			(m_left				),
+	.btn_right			(m_right				),
+	.btn_down			(m_down				),
+	.btn_up				(m_up					)
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
@@ -190,17 +190,13 @@ user_io(
 	.status         (status         )
 	);
 
-wire dac_o;
-assign AUDIO_L = dac_o;
-assign AUDIO_R = dac_o;
-
 dac #(
 	.C_bits(15))
 dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i({audio,audio}),
-	.dac_o(dac_o)
+	.dac_o(AUDIO_L)
 	);
 
 //											Rotated														Normal
@@ -219,7 +215,6 @@ reg btn_down = 0;
 reg btn_up = 0;
 reg btn_fire1 = 0;
 reg btn_fire2 = 0;
-reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       key_pressed;
 wire [7:0] key_code;
@@ -235,7 +230,6 @@ always @(posedge clk_sys) begin
 			'h76: btn_coin        <= key_pressed; // ESC
 			'h05: btn_one_player  <= key_pressed; // F1
 			'h06: btn_two_players <= key_pressed; // F2
-			'h14: btn_fire3       <= key_pressed; // ctrl
 			'h11: btn_fire2       <= key_pressed; // alt
 			'h29: btn_fire1       <= key_pressed; // Space
 		endcase

@@ -38,20 +38,20 @@ localparam CONF_STR = {
 	"DEFENDER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.0.5",`BUILD_DATE
+	"V,v1.1.0",`BUILD_DATE
 };
 
 assign LED = 1;
+assign SDRAM_CLK = clk_sys;
 
-wire clk_sys, clock_6, clock_1p79, clock_0p89;
+wire clk_sys, clock_6, clock_0p89;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),//36
 	.c1(clock_6),//6
-	.c2(clock_1p79),//1.79
-	.c3(clock_0p89),//0.89
+	.c2(clock_0p89),//0.89
 	.locked(pll_locked)
 	);
 
@@ -63,15 +63,15 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [10:0] ps2_key;
-wire [7:0] audio;
+wire  [7:0] audio;
 wire        hs, vs;
 wire        blankn;
 wire  [2:0] r,g;
 wire  [1:0] b;
 
-wire [14:0] cart_addr;
-wire [15:0] sdram_do;
-wire        cart_rd;
+wire [14:0] rom_addr;
+wire [15:0] rom_do;
+wire        rom_rd;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -89,8 +89,6 @@ data_io data_io (
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-
-assign SDRAM_CLK = clk_sys;
 		
 sdram cart
 (
@@ -98,11 +96,11 @@ sdram cart
 	.init          ( ~pll_locked  ),
 	.clk           ( clk_sys      ),
 	.wtbt          ( 2'b00        ),
-	.dout          ( sdram_do     ),
+	.dout          ( rom_do     ),
 	.din           ( {ioctl_dout, ioctl_dout} ),
-	.addr          ( ioctl_downl ? ioctl_addr : cart_addr ),
+	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
 	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl),
+	.rd            ( !ioctl_downl & rom_rd ),
 	.ready()
 );
 
@@ -117,41 +115,33 @@ always @(posedge clk_sys) begin
 end
 
 defender defender (
-	.clock_6			(clock_6),
-	.clk_1p79		(clock_1p79),
-	.clk_0p89		(clock_0p89),
-	.reset        ( reset ),
-
-	.video_r      ( r               ),
-	.video_g      ( g               ),
-	.video_b      ( b               ),
-   .video_hs     ( hs              ),
-	.video_vs     ( vs              ),
-	.video_blankn ( blankn          ),
-
-	.audio_out    ( audio           ),
-	
-	.roms_addr ( cart_addr       ),
-	.roms_do   ( sdram_do[7:0]   ),
-
-	.btn_two_players       ( btn_two_players ),
-	.btn_one_player       ( btn_one_player  ),
-	.btn_left_coin        ( btn_coin        ),
-
-	.btn_auto_up(btn_auto_up),
-	.btn_advance(btn_advance),
+	.clock_6				(clock_6),
+	.clk_0p89			(clock_0p89),
+	.reset        		( reset ),
+	.video_r      		( r               ),
+	.video_g      		( g               ),
+	.video_b      		( b               ),
+   .video_hs     		( hs              ),
+	.video_vs     		( vs              ),
+	.video_blankn 		( blankn          ),
+	.audio_out    		( audio           ),	
+	.roms_addr 			( rom_addr       ),
+	.roms_do   			( rom_do[7:0]   ),
+	.vma					( rom_rd				),
+	.btn_two_players  ( btn_two_players ),
+	.btn_one_player   ( btn_one_player  ),
+	.btn_left_coin    ( btn_coin        ),
+	.btn_auto_up		(btn_auto_up),
+	.btn_advance		(btn_advance),
 	.btn_high_score_reset(btn_score_reset),
-
-
-	.btn_fire(m_fire1),
-	.btn_thrust(m_fire2),
-	.btn_smart_bomb(m_fire3),
-	.btn_hyperSpace(m_fire4),
-	.btn_reverse(m_left | m_right),
-	.btn_down(m_down),
-	.btn_up(m_up),
-
-   .sw_coktail_table(1)
+	.btn_fire			(m_fire1),
+	.btn_thrust			(m_fire2),
+	.btn_smart_bomb	(m_fire3),
+	.btn_hyperSpace	(m_fire4),
+	.btn_reverse		(m_left | m_right),
+	.btn_down			(m_down),
+	.btn_up				(m_up),
+   .sw_coktail_table	(1)
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(

@@ -27,22 +27,16 @@ use ieee.numeric_std.all;
 
 entity defender_sound_board is
 port(
- clk_1p79     : in std_logic;
  clk_0p89     : in std_logic;
  reset        : in std_logic;
- 
  select_sound : in std_logic_vector(5 downto 0);
- audio_out    : out std_logic_vector( 7 downto 0);
- 
- dbg_cpu_addr : out std_logic_vector(15 downto 0)
+ audio_out    : out std_logic_vector( 7 downto 0)
 );
 end defender_sound_board;
 
 architecture struct of defender_sound_board is
 
  signal reset_n   : std_logic;
-
- signal cpu_clock  : std_logic;
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
  signal cpu_do     : std_logic_vector( 7 downto 0);
@@ -55,22 +49,6 @@ architecture struct of defender_sound_board is
  
  signal rom_cs    : std_logic;
  signal rom_do    : std_logic_vector( 7 downto 0);
-
--- pia port a
---      bit 0-7 audio output
-
--- pia port b
---      bit 0-4 select sound input (sel0-4)
---      bit 5-6 switch sound/notes/speech on/off
---      bit 7   sel5
-
--- pia io ca/cb
---      ca1 vdd
---      cb1 sound trigger (sel0-5 = 1)
---      ca2 speech data N/C
---      cb2 speech clock N/C
-
- signal pia_clock  : std_logic;
  signal pia_rw_n   : std_logic;
  signal pia_cs     : std_logic;
  signal pia_irqa   : std_logic;
@@ -83,19 +61,14 @@ architecture struct of defender_sound_board is
 begin
 
 reset_n   <= not reset;
-
-dbg_cpu_addr <= cpu_addr;
-cpu_clock <= clk_0p89;
-
-
 -- pia cs
-wram_cs <= '1' when cpu_addr(15 downto  8) = X"00" else '0';                       -- 0000-007F
-pia_cs  <= '1' when cpu_addr(15 downto 12) = X"0" and cpu_addr(10) = '1' else '0'; -- 8400-8403 ? => 0400-0403
-rom_cs  <= '1' when cpu_addr(15 downto 12) = X"F" else '0';                        -- F800-FFFF
+wram_cs <= '1' when cpu_addr(15 downto  8) = X"00" else '0';
+pia_cs  <= '1' when cpu_addr(15 downto 12) = X"0" and cpu_addr(10) = '1' else '0';
+rom_cs  <= '1' when cpu_addr(15 downto 12) = X"F" else '0';
 	
 -- write enables
-wram_we <=    '1' when cpu_rw = '0' and cpu_clock = '1' and wram_cs = '1' else '0';
-pia_rw_n <=   '0' when cpu_rw = '0' and cpu_clock = '1' and pia_cs = '1' else '1'; 
+wram_we <=    '1' when cpu_rw = '0' and wram_cs = '1' else '0';
+pia_rw_n <=   '0' when cpu_rw = '0' and pia_cs = '1' else '1'; 
 
 -- mux cpu in data between roms/io/wram
 cpu_di <=
@@ -104,7 +77,6 @@ cpu_di <=
 	rom_do when rom_cs = '1' else X"55";
 
 -- pia I/O
-pia_clock <= clk_1p79; -- 3p58/2
 audio_out <= pia_pa_o;
 
 pia_pb_i(4 downto 0) <= select_sound(4 downto 0);
@@ -120,7 +92,7 @@ cpu_irq  <= pia_irqa or pia_irqb;
 -- microprocessor 6800
 main_cpu : entity work.cpu68
 port map(	
-	clk      => cpu_clock,-- E clock input (falling edge)
+	clk      => clk_0p89, -- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
 	rw       => cpu_rw,   -- read not write output
 	vma      => open,     -- valid memory address (active high)
@@ -138,7 +110,7 @@ port map(
 -- cpu program rom
 cpu_prog_rom : entity work.defender_sound
 port map(
- clk  => clk_1p79,
+ clk  => clk_0p89,
  addr => cpu_addr(10 downto 0),
  data => rom_do
 );
@@ -147,7 +119,7 @@ port map(
 cpu_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 7)
 port map(
- clk  => clk_1p79,
+ clk  => clk_0p89,
  we   => wram_we,
  addr => cpu_addr(6 downto 0),
  d    => cpu_do,
@@ -158,7 +130,7 @@ port map(
 pia : entity work.pia6821
 port map
 (	
-	clk       	=> clk_1p79,
+	clk       	=> clk_0p89,
 	rst       	=> reset,
 	cs        	=> pia_cs,
 	rw        	=> pia_rw_n,

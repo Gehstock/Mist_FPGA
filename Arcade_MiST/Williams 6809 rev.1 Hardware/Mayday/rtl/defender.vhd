@@ -123,50 +123,35 @@ use ieee.numeric_std.all;
 
 entity defender is
 port(
- clk_sys        : in std_logic;
- clock_6     	 : in std_logic;
- clk_1p79       : in std_logic;
- clk_0p89       : in std_logic;
- reset          : in std_logic;
- 
- dbg_cpu_addr   : out std_logic_vector(15 downto 0);
--- tv15Khz_mode : in std_logic;
- video_r        : out std_logic_vector(2 downto 0);
- video_g        : out std_logic_vector(2 downto 0);
- video_b        : out std_logic_vector(1 downto 0);
--- video_clk      : out std_logic;
- video_csync    : out std_logic;
- video_blankn   : out std_logic;
- video_hs       : out std_logic;
- video_vs       : out std_logic;
- 
- audio_out      : out std_logic_vector(7 downto 0);
- 
- roms_addr   : out std_logic_vector(14 downto 0);
- roms_do     : in  std_logic_vector( 7 downto 0);
-
-
- 
- btn_auto_up          : in std_logic;
- btn_advance          : in std_logic; 
- btn_service : in std_logic;
-
- btn_left_coin  : in std_logic;
- btn_one_player : in std_logic;
- btn_two_players: in std_logic;
-
- btn_ffire      : in std_logic;
- btn_bfire      : in std_logic;
- btn_mayday     : in std_logic;
- 
- btn_right      : in std_logic;
- btn_down       : in std_logic;
- btn_up         : in std_logic;
-
+ clk_sys        	: in std_logic;
+ clock_6     	 	: in std_logic;
+ clk_0p89       	: in std_logic;
+ reset          	: in std_logic;
+ video_r        	: out std_logic_vector(2 downto 0);
+ video_g        	: out std_logic_vector(2 downto 0);
+ video_b        	: out std_logic_vector(1 downto 0);
+ video_csync    	: out std_logic;
+ video_blankn   	: out std_logic;
+ video_hs       	: out std_logic;
+ video_vs       	: out std_logic;
+ audio_out      	: out std_logic_vector(7 downto 0);
+ roms_addr   		: out std_logic_vector(14 downto 0);
+ roms_do     		: in  std_logic_vector( 7 downto 0);
+ vma         		: out std_logic;
+ btn_auto_up      : in std_logic;
+ btn_advance      : in std_logic; 
+ btn_service 		: in std_logic;
+ btn_left_coin  	: in std_logic;
+ btn_one_player 	: in std_logic;
+ btn_two_players	: in std_logic;
+ btn_ffire     	: in std_logic;
+ btn_bfire      	: in std_logic;
+ btn_mayday     	: in std_logic;
+ btn_right      	: in std_logic;
+ btn_down       	: in std_logic;
+ btn_up         	: in std_logic;
  sw_coktail_table : in std_logic;
-
  cmd_select_players_btn : out std_logic
-
 );
 end defender;
 
@@ -176,8 +161,6 @@ architecture struct of defender is
  signal clock_div : std_logic_vector(1 downto 0);
 
  signal clock_6n  : std_logic;
-
- signal cpu_clock  : std_logic;
  signal cpu_a   : std_logic_vector(15 downto 0);
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
@@ -292,16 +275,13 @@ architecture struct of defender is
  signal hsync0,hsync1,hsync2,csync,hblank,vblank : std_logic;
  
  signal select_sound : std_logic_vector(5 downto 0);
-
+ signal cpu_ce  : std_logic;
+ 
 begin
 
 clock_6n  <= not clock_6;
 reset_n   <= not reset;
 
--- for debug
-dbg_cpu_addr <= cpu_addr;
-		
-		
 -- make pixels counters and cpu clock
 -- in original hardware cpu clock = 1us = 6pixels
 -- here one make 2 cpu clock within 1us
@@ -309,30 +289,14 @@ process (reset, clock_6n)
 begin
 	if reset='1' then
 		pixel_cnt <= "000";
-		cpu_clock <= '0';
 	else 
 		if rising_edge(clock_6n) then
 		
 			if pixel_cnt = "101" then
 				pixel_cnt <= "000";
-				cpu_clock <= '0';
 			else
 				pixel_cnt <= pixel_cnt + '1';
 			end if;
-			
-			if pixel_cnt = "010" then 
-				cpu_clock <= '1';
-			end if;
-			
-			if pixel_cnt = "011" then   -- speed up processor (two clocks / 1us)
-				cpu_clock <= '0';
-			end if;
-			
-			if pixel_cnt = "100" then 
-				cpu_clock <= '1';
-			end if;
-
-						
 		end if;
 	end if;
 end process;
@@ -396,7 +360,7 @@ video_scan_addr   <= screen_ctrl & vcnt(7 downto 0);
 
 -- mux cpu addr/scan addr to wram
 wram_addr <= 
-	cpu_addr(7 downto 0) & cpu_to_video_do(5 downto 0) when cpu_clock = '1' else
+	cpu_addr(7 downto 0) & cpu_to_video_do(5 downto 0) when cpu_ce = '1' else
 	video_scan_do & hcnt;	
 
 --	mux cpu addr/pixels data to palette addr
@@ -435,14 +399,14 @@ begin
 end process;
 
 -- pias cs
-io_cs   <=      '1' when cpu_clock = '1' and cpu_addr(15 downto 12) = X"C" and rom_page ="000" else '0'; 	
+io_cs   <=      '1' when cpu_ce = '1' and cpu_addr(15 downto 12) = X"C" and rom_page ="000" else '0'; 	
 pia_rom_cs <=   '1' when io_cs = '1' and cpu_addr(11 downto 10) = "11" and cpu_addr(2) = '0' else '0'; -- CC00-CC03
 pia_io_cs <=    '1' when io_cs = '1' and cpu_addr(11 downto 10) = "11" and cpu_addr(2) = '1' else '0'; -- CC04-CC07
 	
 -- write enables
-wram_we <=        '1' when cpu_rw = '0' and cpu_clock = '1' and cpu_addr(15 downto 12) < X"C" else '0';
-io_we   <=        '1' when cpu_rw = '0' and cpu_clock = '1' and cpu_addr(15 downto 12) = X"C" and rom_page ="000" else '0'; 	
-rom_page_we <=    '1' when cpu_rw = '0' and cpu_clock = '1' and cpu_addr(15 downto 12) = X"D" else '0';
+wram_we <=        '1' when cpu_rw = '0' and cpu_ce = '1' and cpu_addr(15 downto 12) < X"C" else '0';
+io_we   <=        '1' when cpu_rw = '0' and cpu_ce = '1' and cpu_addr(15 downto 12) = X"C" and rom_page ="000" else '0'; 	
+rom_page_we <=    '1' when cpu_rw = '0' and cpu_ce = '1' and cpu_addr(15 downto 12) = X"D" else '0';
 
 palette_we <=     '1' when io_we = '1' and cpu_addr(11 downto 10) = "00" and cpu_addr(4) = '0' else '0'; -- C000-C00F
 screen_ctrl_we <= '1' when io_we = '1' and cpu_addr(11 downto 10) = "00" and cpu_addr(4) = '1' else '0'; -- C010-C01F
@@ -550,13 +514,14 @@ cpu_irq  <= pia_rom_irqa or pia_rom_irqb;
 -- pia rom to sound board
 select_sound <= pia_rom_pb_o(5 downto 0);
 
+cpu_ce <= '1' when pixel_cnt = "100" or pixel_cnt = "010" else '0';
 
 -- microprocessor 6809
 main_cpu : entity work.cpu09
 port map(	
-	clk      => cpu_clock,-- E clock input (falling edge)
+	clk      => clock_6,-- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
-	vma      => open,     -- valid memory address (active high)
+	vma      => vma,      -- valid memory address (active high)
    lic_out  => open,     -- last instruction cycle (active high)
    ifetch   => open,     -- instruction fetch cycle (active high)
    opfetch  => open,     -- opcode fetch (active high)
@@ -570,7 +535,7 @@ port map(
 	firq     => '0',      -- fast interrupt request input (active high)
 	nmi      => '0',      -- non maskable interrupt request input (active high)
 	halt     => '0',      -- halt input (active high) grants DMA
-	hold     => '0'       -- hold input (active high) extend bus cycle
+	hold     => not cpu_ce-- hold input (active high) extend bus cycle
 );
 
 -- Mayday protection.
@@ -765,10 +730,10 @@ if rising_edge(clock_6n) then
   end if;
 
   if    hcnt = hcnt_base-2     then hblank <= '1'; 
-  elsif hcnt = hcnt_base+11-64 then hblank <= '0';
+  elsif hcnt = hcnt_base+12-64 then hblank <= '0';
   end if;
 
-  if    vcnt = 492 then vblank <= '1';   -- 492 ok
+  if    vcnt = 502 then vblank <= '1';   -- 492 ok
   elsif vcnt = 262 then vblank <= '0';   -- 262 ok 
   end if;
 
@@ -787,7 +752,6 @@ end process;
 -- sound board
 defender_sound_board : entity work.defender_sound_board
 port map(
- clk_1p79      => clk_1p79,
  clk_0p89      => clk_0p89,
  reset         => reset,
  select_sound  => select_sound,

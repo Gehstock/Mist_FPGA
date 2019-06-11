@@ -1,22 +1,25 @@
-Williams Mayday
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: Mayday port to MiST by Gehstock
+-- 11 June 2019
+-- 
+---------------------------------------------------------------------------------
+-- A simulation model of Williams 6809 hardware
+-- by Dar (darfpga@aol.fr)
+-- http://darfpga.blogspot.fr
 
-Port to MiST
-
-MAYDAY.ROM is required at the root of the SD-Card.
-
- Fire Forward = Fire or Space
- Mayday = Fire2 or ALT
- Fire Backward = Fire3 or CTRL
-
- Change Direction = Left or Right
- Up = Up
- Down = Down
-
- Advance = A
- Auto up = U      
- Service = H  
-
-
-
-
-ToDo Sound is missing sometimes
+---------------------------------------------------------------------------------
+-- 
+-- Only controls and OSD are rotated on Video output.
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   ESC         : Coin
+--   F2          : Start 2 players
+--   F1          : Start 1 player
+--   UP,DOWN,LEFT,RIGHT arrows : Movements
+--
+-- Joystick support.
+-- 
+---------------------------------------------------------------------------------

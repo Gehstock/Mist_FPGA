@@ -209,7 +209,7 @@ begin
 	GDB0(6) <= '1';--
 	GDB0(7) <= '1';--
 	
-	GDB1(0) <= not Coin;
+	GDB1(0) <= Coin;
 	GDB1(1) <= not Sel2Player;
 	GDB1(2) <= not Sel1Player;
 	GDB1(3) <= '1';
