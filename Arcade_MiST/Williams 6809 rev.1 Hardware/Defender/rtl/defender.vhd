@@ -125,7 +125,6 @@ entity defender is
 port(
  clk_sys        : in std_logic;
  clock_6     	 : in std_logic;
- clk_1p79       : in std_logic;
  clk_0p89       : in std_logic;
  reset          : in std_logic;
  
@@ -144,6 +143,7 @@ port(
  
  roms_addr   : out std_logic_vector(14 downto 0);
  roms_do     : in  std_logic_vector( 7 downto 0);
+ vma         : out std_logic;
 
 
  
@@ -554,7 +554,7 @@ main_cpu : entity work.cpu09
 port map(	
 	clk      => cpu_clock,-- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
-	vma      => open,     -- valid memory address (active high)
+	vma      => vma,     -- valid memory address (active high)
    lic_out  => open,     -- last instruction cycle (active high)
    ifetch   => open,     -- instruction fetch cycle (active high)
    opfetch  => open,     -- opcode fetch (active high)
@@ -788,7 +788,6 @@ end process;
 -- sound board
 defender_sound_board : entity work.defender_sound_board
 port map(
- clk_1p79      => clk_1p79,
  clk_0p89      => clk_0p89,
  reset         => reset,
  select_sound  => select_sound,

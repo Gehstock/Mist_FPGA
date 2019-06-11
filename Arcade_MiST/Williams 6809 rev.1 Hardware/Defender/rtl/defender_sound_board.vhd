@@ -27,8 +27,7 @@ use ieee.numeric_std.all;
 
 entity defender_sound_board is
 port(
- clk_1p79     : in std_logic;
- clk_0p89     : in std_logic;
+ clk_0p89     : in std_logic; -- E clock
  reset        : in std_logic;
  
  select_sound : in std_logic_vector(5 downto 0);
@@ -94,8 +93,8 @@ pia_cs  <= '1' when cpu_addr(15 downto 12) = X"0" and cpu_addr(10) = '1' else '0
 rom_cs  <= '1' when cpu_addr(15 downto 12) = X"F" else '0';                        -- F800-FFFF
 	
 -- write enables
-wram_we <=    '1' when cpu_rw = '0' and cpu_clock = '1' and wram_cs = '1' else '0';
-pia_rw_n <=   '0' when cpu_rw = '0' and cpu_clock = '1' and pia_cs = '1' else '1'; 
+wram_we <=    '1' when cpu_rw = '0' and wram_cs = '1' else '0';
+pia_rw_n <=   '0' when cpu_rw = '0' and pia_cs = '1' else '1'; 
 
 -- mux cpu in data between roms/io/wram
 cpu_di <=
@@ -104,7 +103,7 @@ cpu_di <=
 	rom_do when rom_cs = '1' else X"55";
 
 -- pia I/O
-pia_clock <= clk_1p79; -- 3p58/2
+pia_clock <= clk_0p89;
 audio_out <= pia_pa_o;
 
 pia_pb_i(4 downto 0) <= select_sound(4 downto 0);
@@ -138,7 +137,7 @@ port map(
 -- cpu program rom
 cpu_prog_rom : entity work.defender_sound
 port map(
- clk  => clk_1p79,
+ clk  => clk_0p89,
  addr => cpu_addr(10 downto 0),
  data => rom_do
 );
@@ -147,7 +146,7 @@ port map(
 cpu_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 7)
 port map(
- clk  => clk_1p79,
+ clk  => clk_0p89,
  we   => wram_we,
  addr => cpu_addr(6 downto 0),
  d    => cpu_do,
@@ -158,7 +157,7 @@ port map(
 pia : entity work.pia6821
 port map
 (	
-	clk       	=> clk_1p79,
+	clk       	=> clk_0p89,
 	rst       	=> reset,
 	cs        	=> pia_cs,
 	rw        	=> pia_rw_n,

@@ -43,14 +43,13 @@ localparam CONF_STR = {
 
 assign LED = 1;
 
-wire clk_sys, clock_6, clock_1p79, clock_0p89;
+wire clk_sys, clock_6, clock_0p89;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),//36
 	.c1(clock_6),//6
-	.c2(clock_1p79),//1.79
 	.c3(clock_0p89),//0.89
 	.locked(pll_locked)
 	);
@@ -102,7 +101,7 @@ sdram cart
 	.din           ( {ioctl_dout, ioctl_dout} ),
 	.addr          ( ioctl_downl ? ioctl_addr : cart_addr ),
 	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl),
+	.rd            ( !ioctl_downl & cart_rd ),
 	.ready()
 );
 
@@ -118,7 +117,6 @@ end
 
 defender defender (
 	.clock_6			(clock_6),
-	.clk_1p79		(clock_1p79),
 	.clk_0p89		(clock_0p89),
 	.reset        ( reset ),
 
@@ -133,6 +131,7 @@ defender defender (
 	
 	.roms_addr ( cart_addr       ),
 	.roms_do   ( sdram_do[7:0]   ),
+	.vma       ( cart_rd         ),
 
 	.btn_two_players       ( btn_two_players ),
 	.btn_one_player       ( btn_one_player  ),
@@ -203,7 +202,7 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(15))
 dac(
-	.clk_i(clk_sys),
+	.clk_i(clock_0p89),
 	.res_n_i(1),
 	.dac_i({audio,audio}),
 	.dac_o(dac_o)
