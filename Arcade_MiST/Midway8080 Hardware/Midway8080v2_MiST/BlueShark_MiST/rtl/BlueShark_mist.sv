@@ -181,7 +181,7 @@ user_io(
 	);
 
 dac dac (
-	.clk_i(clk_mist),
+	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)

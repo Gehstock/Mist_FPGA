@@ -359,8 +359,8 @@ port map(
 --  O_VIDEO_R <= COLOR(2);
 --  O_VIDEO_G <= COLOR(1);
 --  O_VIDEO_B <= COLOR(0);
-  O_HSYNC   <= not HSync;
-  O_VSYNC   <= not VSync;
+  O_HSYNC   <= HSync;
+  O_VSYNC   <= VSync;
 
 
 end;
