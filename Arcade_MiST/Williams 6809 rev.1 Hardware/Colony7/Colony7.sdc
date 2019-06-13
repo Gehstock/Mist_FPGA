@@ -87,8 +87,8 @@ set_input_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk
 #**************************************************************
 
 set_output_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_DO}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}]  1.000 [get_ports {AUDIO_L}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}]  1.000 [get_ports {AUDIO_R}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[2]}]  1.000 [get_ports {AUDIO_L}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[2]}]  1.000 [get_ports {AUDIO_R}]
 set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED}]
 set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {VGA_*}]
 
@@ -115,9 +115,6 @@ set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks 
 
 set_multicycle_path -to {VGA_*[*]} -setup 2
 set_multicycle_path -to {VGA_*[*]} -hold 1
-
-set_multicycle_path -from [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -to [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}] -setup 2
-set_multicycle_path -from [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -to [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}] -hold 1
 
 #**************************************************************
 # Set Maximum Delay
