@@ -25,6 +25,7 @@ module scandoubler
 
 	// scanlines (00-none 01-25% 10-50% 11-75%)
 	input      [1:0] scanlines,
+	input            ce_divider, // 0 - 4, 1 - 2
 
 	// shifter video interface
 	input            hs_in,
@@ -48,8 +49,18 @@ parameter COLOR_DEPTH = 6;
 // it
 
 reg [1:0] i_div;
-wire ce_x1 = (i_div == 2'b01);
-wire ce_x2 = i_div[0];
+
+reg ce_x1, ce_x2;
+
+always @(*) begin
+	if (!ce_divider) begin
+		ce_x1 = (i_div == 2'b01);
+		ce_x2 = i_div[0];
+	end else begin
+		ce_x1 = i_div[0];
+		ce_x2 = 1'b1;
+	end
+end
 
 always @(posedge clk_sys) begin
 	reg last_hs_in;
