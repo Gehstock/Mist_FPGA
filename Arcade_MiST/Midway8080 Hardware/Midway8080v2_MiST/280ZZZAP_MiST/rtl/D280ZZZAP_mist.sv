@@ -30,14 +30,13 @@ assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 
-wire clk_sys, clk_mist;
+wire clk_sys;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
-	.c0(clk_sys),
-	.c1(clk_mist)
+	.c0(clk_sys)
 );
 
 wire [31:0] status;
@@ -154,7 +153,7 @@ D280ZZZAP_Overlay D280ZZZAP_Overlay (
 	);
 
 mist_video #(.COLOR_DEPTH(3)) mist_video(
-	.clk_sys(clk_mist),
+	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -170,13 +169,14 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_HS(VGA_HS),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
+	.ce_divider(1),
 	.ypbpr(ypbpr)
 	);
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_mist       ),
+	.clk_sys        (clk_sys       ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -195,7 +195,7 @@ user_io(
 	);
 
 dac dac (
-	.clk_i(clk_mist),
+	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -211,7 +211,7 @@ reg btn_right = 0;
 reg btn_fire1 = 0;
 reg btn_coin  = 0;
 
-always @(posedge clk_mist) begin
+always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
 			'h6B: btn_left        <= key_pressed; // left
