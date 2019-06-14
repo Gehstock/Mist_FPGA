@@ -38,7 +38,7 @@ localparam CONF_STR = {
 	"DEFENDER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.1.0",`BUILD_DATE
+	"V,v1.1.5.",`BUILD_DATE
 };
 
 assign LED = 1;

@@ -23,3 +23,5 @@
 -- Joystick support.
 -- 
 ---------------------------------------------------------------------------------
+
+MAYDAY.ROM is required at the root of the SD-Card.

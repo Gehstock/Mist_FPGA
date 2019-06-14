@@ -42,7 +42,7 @@ localparam CONF_STR = {
 	"MAYDAY;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.1.0",`BUILD_DATE
+	"V,v1.1.5.",`BUILD_DATE
 };
 
 wire clk_sys, clock_6, clock_0p89;
