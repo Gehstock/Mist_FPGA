@@ -183,55 +183,35 @@ assign r = status[2] & frame_line ? 4'h4 : blankn ? rr : 4'd0;
 assign g = status[2] & frame_line ? 4'h0 : blankn ? gg : 4'd0;
 assign b = status[2] & frame_line ? 4'h0 : blankn ? bb : 4'd0;
 
-wire        csync_out = ~(hs ^ vs);
-
-assign      VGA_HS = ypbpr ? csync_out : hs;
-assign      VGA_VS = ypbpr ? 1'b1 : vs;
-
-wire [5:0] osd_r_o, osd_g_o, osd_b_o;
-
-osd osd
+mist_video #(.COLOR_DEPTH(4)) mist_video
 (
 	.clk_sys(clk_24),
 	.SPI_DI(SPI_DI),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
-	.R_in({r, 2'b00}),
-	.G_in({g, 2'b00}),
-	.B_in({b, 2'b00}),
+	.scandoubler_disable(1),
+	.rotate(2'b00),
+	.ypbpr(ypbpr),
 	.HSync(hs),
 	.VSync(vs),
-	.R_out(osd_r_o),
-	.G_out(osd_g_o),
-	.B_out(osd_b_o)
+	.R(r),
+	.G(g),
+	.B(b),
+	.VGA_HS(VGA_HS),
+	.VGA_VS(VGS_VS),
+	.VGA_R(VGA_R),
+	.VGA_G(VGA_G),
+	.VGA_B(VGA_B)
 );
     
-wire [5:0] y, pb, pr;
-
-rgb2ypbpr rgb2ypbpr
-(
-	.red   ( osd_r_o ),
-	.green ( osd_g_o ),
-	.blue  ( osd_b_o ),
-	.y     ( y       ),
-	.pb    ( pb      ),
-	.pr    ( pr      )
-);
-
-assign VGA_R = ypbpr?pr:osd_r_o;
-assign VGA_G = ypbpr? y:osd_g_o;
-assign VGA_B = ypbpr?pb:osd_b_o;
-
 ////////////////////////////////////////////
-
-mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
+user_io #(.STRLEN(($size(CONF_STR)>>3))) user_io (
 	.clk_sys       ( clk_24       ),
 	.conf_str      ( CONF_STR     ),
-	.SPI_SCK       ( SPI_SCK      ),
-	.CONF_DATA0    ( CONF_DATA0   ),
-	.SPI_SS2       ( SPI_SS2      ),
-	.SPI_DO        ( SPI_DO       ),
-	.SPI_DI        ( SPI_DI       ),
+	.SPI_CLK       ( SPI_SCK      ),
+	.SPI_SS_IO     ( CONF_DATA0   ),
+	.SPI_MISO      ( SPI_DO       ),
+	.SPI_MOSI      ( SPI_DI       ),
 	.buttons       ( buttons      ),
 	.switches      ( switches     ),
 	.ypbpr         ( ypbpr        ),
@@ -241,7 +221,14 @@ mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io (
 	.joystick_1    ( joystick_1   ),
 	.joystick_analog_0( joy_ana_0 ),
 	.joystick_analog_1( joy_ana_1 ),
-	.status        ( status       ),
+	.status        ( status       )
+	);
+
+data_io data_io (
+	.clk_sys       ( clk_24       ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),

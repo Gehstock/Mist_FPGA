@@ -193,7 +193,7 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(15))
 dac(
-	.clk_i(clk_sys),
+	.clk_i(clock_0p89),
 	.res_n_i(1),
 	.dac_i({audio,audio}),
 	.dac_o(dac_o)
