@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 19:28:53  March 07, 2019
+# Date created = 02:57:11  June 09, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		Centipede_assignment_defaults.qdf
+#		OzmaWars_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -39,14 +39,28 @@
 
 # Project-Wide Assignments
 # ========================
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:27:39  NOVEMBER 20, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Vortex_mist.sv
+set_global_assignment -name VHDL_FILE rtl/invaders.vhd
+set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
+set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Vortex_memory.sv
+set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE "D:/Github/Mist_FPGA/common/mist/mist.qip"
 # Pin & Location Assignments
 # ==========================
 set_location_assignment PIN_7 -to LED
@@ -85,36 +99,36 @@ set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
 
 # Analysis & Synthesis Assignments
 # ================================
+set_global_assignment -name TOP_LEVEL_ENTITY Vortex_mist
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY Centipede
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name SAVE_DISK_SPACE OFF
 
 # Fitter Assignments
 # ==================
-set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
-set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
-set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name DEVICE EP3C25E144C8
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
+# EDA Netlist Writer Assignments
+# ==============================
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+
 # Assembler Assignments
 # =====================
-set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name GENERATE_RBF_FILE ON
 
 # Power Estimation Assignments
 # ============================
@@ -128,38 +142,37 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -----------------------
-# start ENTITY(Centipede)
+# start EDA_TOOL_SETTINGS(eda_simulation)
+# ---------------------------------------
+
+	# EDA Netlist Writer Assignments
+	# ==============================
+	set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+
+# end EDA_TOOL_SETTINGS(eda_simulation)
+# -------------------------------------
+
+# ---------------------------
+# start ENTITY(OzmaWars_mist)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(Centipede)
-# ---------------------
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Centipede.sv
-set_global_assignment -name VERILOG_FILE rtl/centipede.v
-set_global_assignment -name VERILOG_FILE rtl/pf_ram.v
-set_global_assignment -name VHDL_FILE rtl/t65/T65_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/t65/T65_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/t65/T65_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/t65/T65.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Pokey/POKEY.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Pokey/matoro.sv
-set_global_assignment -name VHDL_FILE rtl/roms/F7.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/HJ7.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/PROG.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/P4.vhd
+# end ENTITY(OzmaWars_mist)
+# -------------------------
+set_global_assignment -name VHDL_FILE rtl/roms/1.t36.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/2.t35.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/3.t34.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/4.t33.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/5.t32.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/6.t31.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

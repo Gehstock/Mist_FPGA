@@ -73,16 +73,16 @@ begin
 	  end if;
 
 	  if HStart then
-		if (Vcnt >= x"C4") then--Top Start
+		if (Vcnt >= x"C4") then
 		  Overlay_B1_VCnt <= true;
 		else
 		  Overlay_B1_VCnt <= false;
 		end if;
 	  end if;
 
-	  if (HCnt <= x"0") and Overlay_B1_VCnt then--Left Start
+	  if (HCnt <= x"0") and Overlay_B1_VCnt then
 		Overlay_B1 <= true;
-	  elsif (HCnt >= x"228") then--Right End
+	  elsif (HCnt >= x"228") then
 		Overlay_B1 <= false;
 	  end if;
 	end if;

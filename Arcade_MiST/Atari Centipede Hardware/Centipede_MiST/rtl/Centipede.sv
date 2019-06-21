@@ -136,7 +136,7 @@ user_io(
 	);
 	
 dac #(
-	.msbi_g(15))
+	.C_bits(15))
 dac (
 	.clk_i(clk_24),
 	.res_n_i(1),
