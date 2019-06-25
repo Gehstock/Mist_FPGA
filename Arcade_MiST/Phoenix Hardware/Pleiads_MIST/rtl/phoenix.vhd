@@ -296,29 +296,29 @@ video_hblank_bg <= hblank_bkgrd;
 video_r     <= rgb_1(0) & rgb_0(0) when (hcnt>=192) else "00";
 video_g     <= rgb_1(2) & rgb_0(2) when (hcnt>=192) else "00";
 video_b     <= rgb_1(1) & rgb_0(1) when (hcnt>=192) else "00";
-
-frgnd_bit0 : entity work.PROM_39
+	
+frgnd_bit0 : entity work.ic39
 port map(
 	clk  => clk,
 	addr => frgnd_graph_adr(10 downto 0),
 	data => frgnd_bit0_graph
 	);
 	
-frgnd_bit1 : entity work.PROM_40
+frgnd_bit1 : entity work.ic40
 port map(
 	clk  => clk,
 	addr => frgnd_graph_adr(10 downto 0),
 	data => frgnd_bit1_graph
 	);	
 
-bkgnd_bit0 : entity work.PROM_23
+bkgnd_bit0 : entity work.ic23
 port map(
 	clk  => clk,
 	addr => bkgnd_graph_adr(10 downto 0),
 	data => bkgnd_bit0_graph
 	);
 
-bkgnd_bit1 : entity work.PROM_24
+bkgnd_bit1 : entity work.ic24
 port map(
 	clk  => clk,
 	addr => bkgnd_graph_adr(10 downto 0),
@@ -337,17 +337,18 @@ port map(
 	clk  => clk,
 	addr => palette_adr(7 downto 0),
 	data => rgb_1
-	);
+	);		
+
 
 -- Program PROM
 S_prog_rom_addr(C_prog_rom_addr_bits-1 downto 0) <= cpu_adr(C_prog_rom_addr_bits-1 downto 0);
-
+	
 prog : entity work.prog
 port map(
 	clk  => clk,
 	addr => S_prog_rom_addr,
 	data => prog_do
-	);	
+	);		
 
 -- foreground RAM   0x4000-0x433F
 -- cpu working area 0x4340-0x43FF 
