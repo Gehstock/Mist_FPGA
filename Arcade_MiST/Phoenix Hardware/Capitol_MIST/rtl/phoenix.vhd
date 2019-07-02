@@ -290,12 +290,25 @@ color_id  <=  (fr_bit0 or fr_bit1) &  fr_bit1 & fr_bit0 & fr_lin when (fr_bit0 o
 -- address palette with pixel bits color and color set
 palette_adr <= color_set2 & color_set & color_id;
 -- output video to top level
-video_vblank <= vblank;
-video_hblank_fg <= hblank_frgrd;
-video_hblank_bg <= hblank_bkgrd;
-video_r     <= rgb_1(0) & rgb_0(0) when (hcnt>=192) else "00";
-video_g     <= rgb_1(2) & rgb_0(2) when (hcnt>=192) else "00";
-video_b     <= rgb_1(1) & rgb_0(1) when (hcnt>=192) else "00";
+-- output video to top level
+process(clk) begin
+	if rising_edge(clk) then
+		if ce_pix1='1' then
+			video_vblank <= vblank;
+			video_hblank_fg <= hblank_frgrd;
+			video_hblank_bg <= hblank_bkgrd;
+			if hcnt>=192 then
+				video_r <= rgb_1(0) & rgb_0(0);
+				video_g <= rgb_1(2) & rgb_0(2);
+				video_b <= rgb_1(1) & rgb_0(1);
+			else
+				video_r <= "00";
+				video_g <= "00";
+				video_b <= "00";
+			end if;
+		end if;
+	end if;
+end process;
 
 frgnd_bit0 : entity work.PROM_39
 port map(
