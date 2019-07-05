@@ -42,41 +42,8 @@
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:59:05  MARCH 16, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
-set_global_assignment -name PROJECT_OUTPUT_DIRECTORY Output
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/galaga_mist.sv
-set_global_assignment -name VHDL_FILE rtl/galaga.vhd
-set_global_assignment -name VHDL_FILE rtl/gen_video.vhd
-set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/galaga_video.vhd
-set_global_assignment -name VHDL_FILE rtl/stars_machine.vhd
-set_global_assignment -name VHDL_FILE rtl/stars.vhd
-set_global_assignment -name VHDL_FILE rtl/sound_machine.vhd
-set_global_assignment -name VHDL_FILE rtl/mb88.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/sp_palette.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/sp_graphx.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/sound_seq.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/sound_samples.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/rgb.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu3.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu2.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu1.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/bg_palette.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/bg_graphx.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/cs54xx_prog.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -184,7 +151,7 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
 # EDA Netlist Writer Assignments
 # ==============================
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+set_global_assignment -name EDA_SIMULATION_TOOL "<None>"
 
 # Assembler Assignments
 # =====================
@@ -208,7 +175,7 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 	# EDA Netlist Writer Assignments
 	# ==============================
-	set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT NONE -section_id eda_simulation
 
 # end EDA_TOOL_SETTINGS(eda_simulation)
 # -------------------------------------
@@ -221,13 +188,42 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(galaga_mist)
 # -----------------------
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/galaga_mist.sv
+set_global_assignment -name VHDL_FILE rtl/galaga.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_video.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/galaga_video.vhd
+set_global_assignment -name VHDL_FILE rtl/stars_machine.vhd
+set_global_assignment -name VHDL_FILE rtl/stars.vhd
+set_global_assignment -name VHDL_FILE rtl/sound_machine.vhd
+set_global_assignment -name VHDL_FILE rtl/mb88.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/sp_palette.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/sp_graphx.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/sound_seq.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/sound_samples.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/rgb.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu3.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu2.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/galaga_cpu1.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/bg_palette.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/bg_graphx.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/cs54xx_prog.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
