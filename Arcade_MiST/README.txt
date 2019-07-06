@@ -71,7 +71,7 @@ Aviable Arcade Cores
 	Pooyan
 	Time Pilot
 
-#Midway 8080 Hardware
+#Midway / Taito 8080 Hardware
 	Galaxy Wars
 	Lunar Rescue
 	Ozma Wars
@@ -112,6 +112,7 @@ Aviable Arcade Cores
 #Phoenix Hardware
 	Capitol
 	Phoenix
+	Pleiads
 
 #Scramble Hardware
 	Amidar

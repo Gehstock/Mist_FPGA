@@ -1,15 +1,4 @@
-//============================================================================
-//  Arcade: Pleiads
-//
-//-------------------------------------------------------------------------------
-// DE2-35 Top level for Phoenix by Dar (darfpga@aol.fr) (April 2016)
-// http://darfpga.blogspot.fr
-//
-//
-//-------------------------------------------------------------------------------
-
-module Pleiads_MiST
-(
+module BalloonBomber_mist(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -30,9 +19,10 @@ module Pleiads_MiST
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Pleiads;;",
+	"BallBomb;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Overlay, On, Off;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -40,58 +30,111 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
+
 wire clk_sys, clk_mist;
 wire pll_locked;
-pll pll(
+pll pll
+(
 	.inclk0(CLOCK_27),
-	.areset(0),
-	.c0(clk_mist),//22
-	.c1(clk_sys)//11
-	);
+	.areset(),
+	.c0(clk_sys),
+	.c1(clk_mist)
+);
 
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire  [7:0] kbjoy;
+wire  [7:0] joystick_0,joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-reg	[11:0] audio;
-wire 			hb1, hb2, vb;
-wire        blankn = ~(hb1 | hb2 | vb);
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
+wire  [7:0] audio;
 wire 			hs, vs;
-wire  [1:0] r,g,b;
+wire 			r,g,b;
 
-phoenix phoenix(
-	.clk(clk_sys),
-	.reset(status[0] | status[6] | buttons[1]),
-	.dip_switch(8'b00001111),
-	.btn_coin(btn_coin),
-	.btn_player_start({btn_two_players,btn_one_player}),
-	.btn_left(m_left),
-	.btn_right(m_right),
-	.btn_barrier(m_bomb),
-	.btn_fire(m_fire),
-	.video_r(r),
-	.video_g(g),
-	.video_b(b),
-	.video_hs(hs),
-	.video_vs(vs),
-	.video_vblank(vb), 
-	.video_hblank_bg(hb1), 
-	.video_hblank_fg(hb2),
-	.audio_select("000"),
-	.audio(audio)
+
+wire [15:0]RAB;
+wire [15:0]AD;
+wire [7:0]RDB;
+wire [7:0]RWD;
+wire [7:0]IB;
+wire [5:0]SoundCtrl3;
+wire [5:0]SoundCtrl5;
+wire Rst_n_s;
+wire RWE_n;
+wire Video;
+wire HSync;
+wire VSync;
+
+invaderst invaderst(
+	.Rst_n(~(status[0] | status[6] | buttons[1])),
+	.Clk(clk_sys),
+	.ENA(),
+	.Coin(btn_coin),
+	.Sel1Player(~btn_one_player),
+	.Sel2Player(~btn_two_players),
+	.Fire(~m_fire),
+	.MoveLeft(~m_left),
+	.MoveRight(~m_right),
+	.MoveUp(~m_up),
+	.MoveDown(~m_down),	
+	.RDB(RDB),
+	.IB(IB),
+	.RWD(RWD),
+	.RAB(RAB),
+	.AD(AD),
+	.SoundCtrl3(SoundCtrl3),
+	.SoundCtrl5(SoundCtrl5),
+	.Rst_n_s(Rst_n_s),
+	.RWE_n(RWE_n),
+	.Video(Video),
+	.HSync(HSync),
+	.VSync(VSync)
+	);
+		
+BalloonBomber_memory BalloonBomber_memory (
+	.Clock(clk_sys),
+	.RW_n(RWE_n),
+	.Addr(AD),
+	.Ram_Addr(RAB),
+	.Ram_out(RDB),
+	.Ram_in(RWD),
+	.Rom_out(IB)
 	);
 	
+BalloonBomber_Overlay BalloonBomber_Overlay (
+	.Video(Video),
+	.Overlay(~status[5]),
+	.CLK(clk_sys),
+	.Rst_n_s(Rst_n_s),
+	.HSync(HSync),
+	.VSync(VSync),
+	.O_VIDEO_R(r),
+	.O_VIDEO_G(g),
+	.O_VIDEO_B(b),
+	.O_HSYNC(hs),
+	.O_VSYNC(vs)
+	);
+	
+		
+invaders_audio invaders_audio (
+	.Clk(clk_sys),
+	.S1(SoundCtrl3),
+	.S2(SoundCtrl5),
+	.Aud(audio)
+	);
+
 mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.clk_sys(clk_mist),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,r,r} : "000"),
-	.G(blankn ? {g,g,g} : "000"),
-	.B(blankn ? {b,b,b} : "000"),
+	.R({r,r,r}),
+	.G({g,g,g}),
+	.B({b,b,b}),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -99,12 +142,12 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.rotate({1'b1,status[2]}),
+	.rotate({1'b0,status[2]}),
 	.scandoubler_disable(scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
+	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
 	);
-	
+
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
@@ -126,22 +169,19 @@ user_io(
 	.status         (status         )
 	);
 
-
-dac #(
-	.C_bits(15))
-dac(
+dac dac (
 	.clk_i(clk_mist),
 	.res_n_i(1),
-	.dac_i({audio, 4'b0000}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
-//											Rotated														Normal
-//wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-//wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+
+wire m_up     = status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
@@ -150,15 +190,10 @@ reg btn_right = 0;
 reg btn_down = 0;
 reg btn_up = 0;
 reg btn_fire1 = 0;
-reg btn_fire2 = 0;
 reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
 
 always @(posedge clk_mist) begin
-if(key_strobe) begin
+	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up          <= key_pressed; // up
 			'h72: btn_down        <= key_pressed; // down
@@ -168,10 +203,8 @@ if(key_strobe) begin
 			'h05: btn_one_player  <= key_pressed; // F1
 			'h06: btn_two_players <= key_pressed; // F2
 			'h29: btn_fire1       <= key_pressed; // Space
-			'h11: btn_fire2 		 <= key_pressed; // Alt
 		endcase
 	end
 end
 
-
-endmodule 
+endmodule

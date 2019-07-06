@@ -60,14 +60,12 @@ wire [10:0] ps2_key;
 reg	[11:0] audio;
 wire 			hb1, hb2, vb;
 wire        blankn = ~(hb1 | hb2 | vb);
-wire 			ce_pix;
 wire 			hs, vs;
 wire  [1:0] r,g,b;
 
 phoenix phoenix(
 	.clk(clk_sys),
 	.reset(status[0] | status[6] | buttons[1]),
-	.ce_pix(ce_pix),
 	.dip_switch(8'b00001111),
 	.btn_coin(btn_coin),
 	.btn_player_start({btn_two_players,btn_one_player}),
