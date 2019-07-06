@@ -31,12 +31,10 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clk_36, clk_18, clk_9;
+wire clk_18;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_36),
-	.c1(clk_18),
-	.c2(clk_9)
+	.c0(clk_18)
 	);
 
 
@@ -78,16 +76,14 @@ galaga galaga(
 	.fire2(m_fire)
 	);
 	
-video_mixer video_mixer(
-	.clk_sys(clk_36),
-	.ce_pix(clk_9),
-	.ce_pix_actual(clk_9),
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
+	.clk_sys(clk_18),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,3'b1} : 0),
-	.G(blankn ? {g,3'b1} : 0),
-	.B(blankn ? {b,4'b1} : 0),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? {b, b[1]} : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -95,41 +91,38 @@ video_mixer video_mixer(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.ce_divider(1'b1),
 	.rotate({1'b1,status[2]}),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-//	.scanlines(scandoublerD ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-//	.hq2x(status[4:3]==1),
-	.scandoublerD(scandoublerD),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
+	.scandoubler_disable(scandoublerD),
+	.ypbpr(ypbpr)
 	);
 
-mist_io #(
+user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
-mist_io(
-	.clk_sys        (clk_36         ),
+user_io(
+	.clk_sys        (clk_18         ),
 	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoublerD	 (scandoublerD	  ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_key			 (ps2_key        ),
-	.joystick_0   	 (joystick_0     ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
 dac #(
-	.msbi_g(9))
-dac (
-	.clk_i(clk_36),
+	.C_bits(10))
+dac(
+	.clk_i(clk_18),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -154,24 +147,23 @@ reg btn_fire1 = 0;
 reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
-wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire       key_pressed;
+wire [7:0] key_code;
+wire       key_strobe;
 
-always @(posedge clk_36) begin
-	reg old_state;
-	old_state <= ps2_key[10];
-	if(old_state != ps2_key[10]) begin
-		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
-			'h6B: btn_left      		<= pressed; // left
-			'h74: btn_right       	<= pressed; // right
-			'h76: btn_coin				<= pressed; // ESC
-			'h05: btn_one_player   	<= pressed; // F1
-			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
-			'h29: btn_fire1   		<= pressed; // Space
+always @(posedge clk_18) begin
+	if(key_strobe) begin
+		case(key_code)
+			'h75: btn_up         	<= key_pressed; // up
+			'h72: btn_down        	<= key_pressed; // down
+			'h6B: btn_left      	<= key_pressed; // left
+			'h74: btn_right       	<= key_pressed; // right
+			'h76: btn_coin			<= key_pressed; // ESC
+			'h05: btn_one_player   	<= key_pressed; // F1
+			'h06: btn_two_players  	<= key_pressed; // F2
+			'h14: btn_fire3 		<= key_pressed; // ctrl
+			'h11: btn_fire2 		<= key_pressed; // alt
+			'h29: btn_fire1   		<= key_pressed; // Space
 		endcase
 	end
 end

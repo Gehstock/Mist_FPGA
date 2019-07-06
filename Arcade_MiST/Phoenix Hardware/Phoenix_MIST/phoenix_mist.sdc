@@ -23,11 +23,20 @@
 
 # Clock constraints
 
-create_clock -name "CLOCK_27" -period 37.037 [get_ports {CLOCK_27}]
-create_clock -name {SPI_SCK}  -period 10.000 -waveform { 0.000 0.500 } [get_ports {SPI_SCK}]
+create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
 
 # Automatically constrain PLL and other generated clocks
 derive_pll_clocks -create_base_clocks
 
 # Automatically calculate clock uncertainty to jitter and other effects.
 derive_clock_uncertainty
+
+set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {pll|altpll_component|auto_generated|pll1|clk[*]}]
+
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {AUDIO_L}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {AUDIO_R}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {VGA_*}]
+
+set_multicycle_path -to {VGA_*[*]} -setup 2
+set_multicycle_path -to {VGA_*[*]} -hold 1
