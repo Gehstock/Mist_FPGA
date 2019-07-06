@@ -40,13 +40,12 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clk_sys, clk_mist;
+wire clk_sys;
 wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_mist),//22
-	.c1(clk_sys)//11
+	.c0(clk_sys)//11
 	);
 
 wire [31:0] status;
@@ -58,7 +57,12 @@ wire        scandoublerD;
 wire        ypbpr;
 reg	[11:0] audio;
 wire 			hb1, hb2, vb;
+<<<<<<< HEAD
 wire        blankn = ~(hb1 | hb2 | vb);
+=======
+wire        blankn = ~((hb1 & hb2) | vb);
+wire 			ce_pix;
+>>>>>>> 446007a4fb619051d6e65af18a1c0b2ed9b4dae6
 wire 			hs, vs;
 wire  [1:0] r,g,b;
 
@@ -84,21 +88,22 @@ phoenix phoenix(
 	.audio(audio)
 	);
 	
-mist_video #(.COLOR_DEPTH(3)) mist_video(
-	.clk_sys(clk_mist),
+mist_video #(.COLOR_DEPTH(2)) mist_video(
+	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,r,r} : "000"),
-	.G(blankn ? {g,g,g} : "000"),
-	.B(blankn ? {b,b,b} : "000"),
-	.HSync(hs),
-	.VSync(vs),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? b : 0),
+	.HSync(~hs),
+	.VSync(~vs),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.ce_divider(1'b1),
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
@@ -108,7 +113,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_mist       ),
+	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -130,9 +135,9 @@ user_io(
 dac #(
 	.C_bits(15))
 dac(
-	.clk_i(clk_mist),
+	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({audio, 4'b0000}),
+	.dac_i({audio, 3'b000}),
 	.dac_o(AUDIO_L)
 	);
 //											Rotated														Normal
@@ -157,7 +162,7 @@ wire [7:0] key_code;
 wire       key_strobe;
 
 
-always @(posedge clk_mist) begin
+always @(posedge clk_sys) begin
 if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up          <= key_pressed; // up
