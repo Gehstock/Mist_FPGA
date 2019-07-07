@@ -45,7 +45,7 @@ wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys)//11
+	.c0(clk_sys)
 	);
 
 wire [31:0] status;
@@ -57,12 +57,8 @@ wire        scandoublerD;
 wire        ypbpr;
 reg	[11:0] audio;
 wire 			hb1, hb2, vb;
-<<<<<<< HEAD
-wire        blankn = ~(hb1 | hb2 | vb);
-=======
 wire        blankn = ~((hb1 & hb2) | vb);
 wire 			ce_pix;
->>>>>>> 446007a4fb619051d6e65af18a1c0b2ed9b4dae6
 wire 			hs, vs;
 wire  [1:0] r,g,b;
 

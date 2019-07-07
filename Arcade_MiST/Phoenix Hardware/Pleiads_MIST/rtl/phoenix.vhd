@@ -106,11 +106,9 @@ architecture struct of phoenix is
  signal fr_lin   : std_logic_vector(2 downto 0);
  signal bk_lin   : std_logic_vector(2 downto 0);
 
- signal color_set : std_logic;
- signal color_set2 : std_logic;
+ signal color_set : std_logic_vector(1 downto 0);
  signal color_id  : std_logic_vector(5 downto 0);
- signal rgb_0     : std_logic_vector(7 downto 0);
- signal rgb_1     : std_logic_vector(7 downto 0);
+ signal rgb     : std_logic_vector(7 downto 0);
 
  signal player2      : std_logic := '0';
  signal pl2_cocktail : std_logic := '0';
@@ -228,8 +226,7 @@ begin
     when "11000" => sound_b      <= cpu_do;
     when "11010" => sound_a      <= cpu_do;
     when "10100" => player2      <= cpu_do(0);
-                    color_set    <= cpu_do(1);
-						  color_set2   <= cpu_do(2);
+                    color_set    <= cpu_do(2 downto 1);
 						  A11    		<= cpu_do(3);
     when others => null;
    end case;
@@ -288,7 +285,7 @@ color_id  <=  (fr_bit0 or fr_bit1) &  fr_bit1 & fr_bit0 & fr_lin when (fr_bit0 o
               (fr_bit0 or fr_bit1) &  bk_bit1 & bk_bit0 & bk_lin;
 
 -- address palette with pixel bits color and color set
-palette_adr <= color_set2 & color_set & color_id;
+palette_adr <= color_set & color_id;
 
 -- output video to top level
 process(clk) begin
@@ -298,9 +295,9 @@ process(clk) begin
 			video_hblank_fg <= hblank_frgrd;
 			video_hblank_bg <= hblank_bkgrd;
 			if hcnt>=192 then
-				video_r <= rgb_1(0) & rgb_0(0);
-				video_g <= rgb_1(2) & rgb_0(2);
-				video_b <= rgb_1(1) & rgb_0(1);
+				video_r <= rgb(4) & rgb(0);
+				video_g <= rgb(6) & rgb(2);
+				video_b <= rgb(5) & rgb(1);
 			else
 				video_r <= "00";
 				video_g <= "00";
@@ -342,14 +339,14 @@ col_l : entity work.col_l
 port map(
 	clk  => clk,
 	addr => palette_adr(7 downto 0),
-	data => rgb_0
+	data => rgb(7 downto 4)
 	);	
 	
 col_h : entity work.col_h
 port map(
 	clk  => clk,
 	addr => palette_adr(7 downto 0),
-	data => rgb_1
+	data => rgb(3 downto 0)
 	);		
 
 
