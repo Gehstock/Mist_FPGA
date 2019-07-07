@@ -45,7 +45,7 @@ wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys)//11
+	.c0(clk_sys)
 	);
 
 wire [31:0] status;
