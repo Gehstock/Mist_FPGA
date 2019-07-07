@@ -96,7 +96,7 @@ wire [9:0] dsp_height = vs_pol ? vs_low : vs_high;
 wire doublescan = (dsp_height>350);
 
 reg ce_pix;
-always @(negedge clk_sys) begin
+always @(posedge clk_sys) begin
 	integer cnt = 0;
 	integer pixsz, pixcnt;
 	reg hs;
@@ -110,7 +110,8 @@ always @(negedge clk_sys) begin
 
 	if(hs && ~HSync) begin
 		cnt    <= 0;
-		pixsz  <= (cnt >> 9) - 1;
+		if (cnt <= 512) pixsz = 0;
+		else pixsz  <= (cnt >> 9) - 1;
 		pixcnt <= 0;
 		ce_pix <= 1;
 	end
