@@ -12,12 +12,10 @@ entity ckong is
 port(
   clock_12  : in std_logic;
   reset        : in std_logic;
-  tv15Khz_mode : in std_logic;
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
   video_b      : out std_logic_vector(1 downto 0);
-  video_clk    : out std_logic;
-  video_csync  : out std_logic;
+  video_cs  	: out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
   blankn       : out std_logic;
@@ -47,10 +45,6 @@ architecture struct of ckong is
 signal clock_12n : std_logic;
 signal reset_n   : std_logic;
 
--- video syncs
-signal hsync       : std_logic;
-signal vsync       : std_logic;
-signal csync       : std_logic;
 signal blank       : std_logic;
 
 -- global synchronisation
@@ -171,11 +165,9 @@ signal player1  : std_logic_vector(7 downto 0);
 signal player2  : std_logic_vector(7 downto 0);
 signal coins    : std_logic_vector(7 downto 0);
 
--- line doubler I/O
+
 signal video_i : std_logic_vector (7 downto 0);
-signal video_o : std_logic_vector (7 downto 0);
-signal hsync_o : std_logic;
-signal vsync_o : std_logic;
+
 
 begin
 
@@ -210,14 +202,10 @@ begin
 	end if;
 end process;
 
-video_r     <= video_o(2 downto 0) when tv15Khz_mode = '0' else video_i(2 downto 0);
-video_g     <= video_o(5 downto 3) when tv15Khz_mode = '0' else video_i(5 downto 3);
-video_b     <= video_o(7 downto 6) when tv15Khz_mode = '0' else video_i(7 downto 6);
+video_r     <= video_i(2 downto 0);
+video_g     <= video_i(5 downto 3);
+video_b     <= video_i(7 downto 6);
 
-video_clk   <= clock_12;
-video_csync <= csync;
-video_hs    <= hsync_o;
-video_vs    <= vsync_o;
 
 ------------------
 -- player controls
@@ -615,9 +603,9 @@ video : entity work.video_gen
 port map (
   clock_12  => clock_12,
   ena_pixel => ena_pixel,
-  hsync     => hsync,
-  vsync     => vsync,
-  csync     => csync,
+  hsync     => video_hs,
+  vsync     => video_vs,
+  csync     => video_cs,
   blank     => blank,
 
   is_sprite  => is_sprite,
@@ -628,18 +616,6 @@ port map (
   y_pixel    => y_pixel,
 	
   cpu_clock  => cpu_clock
-);
-
--- line doubler 
-line_doubler : entity work.line_doubler
-port map(
-	clock_12mhz => clock_12,
-	video_i     => video_i,
-	hsync_i     => hsync,
-	vsync_i     => vsync,
-	video_o     => video_o,
-	hsync_o     => hsync_o,
-	vsync_o     => vsync_o
 );
 
 -- sprite palette rom

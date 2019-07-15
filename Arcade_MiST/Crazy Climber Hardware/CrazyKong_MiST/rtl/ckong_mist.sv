@@ -29,12 +29,12 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clock_24, clock_12, clock_6;
+wire clock_12;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_24),
-	.c1(clock_12),
-	.c2(clock_6)
+//	.c0(clock_24),
+	.c1(clock_12)//,
+//	.c2(clock_6)
 	);
 
 
@@ -56,7 +56,6 @@ wire [1:0] 	b;
 ckong ckong(
 	.clock_12(clock_12),
 	.reset(status[0] | status[6] | buttons[1]),
-	.tv15Khz_mode(scandoublerD),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
@@ -78,17 +77,15 @@ ckong ckong(
 	.down2(m_down),
 	.up2(m_up)
 	);
-
-video_mixer video_mixer(
-	.clk_sys(clock_24),
-	.ce_pix(clock_6),
-	.ce_pix_actual(clock_6),
+	
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
+	.clk_sys(clock_12),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({r,r}),//blankn ? {r,r} : 0),
-	.G({g,g}),//blankn ? {g,g} : 0),
-	.B({b,b,b}),//blankn ? {b,b} : 0),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? {b,b[1]} : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -96,41 +93,43 @@ video_mixer video_mixer(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.ce_divider(1'b1),
 	.rotate({1'b1,status[2]}),
-	.scandoublerD(1'b1),//scandoublerD),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
+	.scandoubler_disable(scandoublerD),
+	.ypbpr(ypbpr)
 	);
 
-mist_io #(
+user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
-mist_io(
-	.clk_sys        (clock_24       ),
+user_io(
+	.clk_sys        (clock_12       ),
 	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoublerD	 (scandoublerD	  ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
-	.ps2_key			 (ps2_key        ),
-	.joystick_0   	 (joystick_0     ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
-dac dac(
-	.CLK(clock_24),
-	.RESET(0),
-	.DACin({~audio[15],audio[14:0]}),
-	.DACout(AUDIO_L)
+dac #(
+	.C_bits(15))
+dac(
+	.clk_i(clock_12),
+	.res_n_i(1),
+	.dac_i({~audio[15],audio[14:0]}),
+	.dac_o(AUDIO_L)
 	);
+
 //											Rotated														Normal
 wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
 wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
@@ -138,7 +137,6 @@ wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left
 wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
@@ -147,29 +145,25 @@ reg btn_right = 0;
 reg btn_down = 0;
 reg btn_up = 0;
 reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
 reg btn_coin  = 0;
-wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
+wire       key_pressed;
+wire [7:0] key_code;
+wire       key_strobe;
 
-always @(posedge clock_24) begin
-	reg old_state;
-	old_state <= ps2_key[10];
-	if(old_state != ps2_key[10]) begin
-		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
-			'h6B: btn_left      		<= pressed; // left
-			'h74: btn_right       	<= pressed; // right
-			'h76: btn_coin				<= pressed; // ESC
-			'h05: btn_one_player   	<= pressed; // F1
-			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
-			'h29: btn_fire1   		<= pressed; // Space
+always @(posedge clock_12) begin
+	if(key_strobe) begin
+		case(key_code)
+			'h75: btn_up         	<= key_pressed; // up
+			'h72: btn_down        	<= key_pressed; // down
+			'h6B: btn_left      	<= key_pressed; // left
+			'h74: btn_right       	<= key_pressed; // right
+			'h76: btn_coin			<= key_pressed; // ESC
+			'h05: btn_one_player   	<= key_pressed; // F1
+			'h06: btn_two_players  	<= key_pressed; // F2
+			'h29: btn_fire1   		<= key_pressed; // Space
 		endcase
 	end
 end
+
 
 endmodule 
