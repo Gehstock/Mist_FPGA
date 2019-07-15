@@ -57,7 +57,6 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -213,6 +212,6 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 # end ENTITY(Galaksija_MiST)
 # --------------------------
-set_global_assignment -name QIP_FILE ../../Mist_FPGA/common/mist/mist.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/galaksija_keyboard.sv
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

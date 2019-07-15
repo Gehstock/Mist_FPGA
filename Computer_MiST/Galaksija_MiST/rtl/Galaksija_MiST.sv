@@ -106,7 +106,7 @@ user_io(
 	);
 
 dac #(
-   .msbi_g(7))
+   .C_bits(7))
 dac (
    .clk_i(clk_25),
    .res_n_i(1'b1),

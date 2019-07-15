@@ -24,12 +24,9 @@ Aviable Arcade Cores
 	Berzerk
 	Frenzy
 
-#Custom Hardware
-	Crazy Kong
-	Galaga
-
 #Crazy Climber Hardware
 	Crazy Climber
+	Crazy Kong
 	River Patrol
 	Silver Land
 
@@ -39,6 +36,9 @@ Aviable Arcade Cores
 
 #Dottori-Kun Hardware
 	Dottori Kun / Dottori-Man Jr / Mine Sweeper   (3in1Game)
+
+#Galaga Hardware
+	Galaga
 
 #Galaxian Hardware
 	Azurian Attack
