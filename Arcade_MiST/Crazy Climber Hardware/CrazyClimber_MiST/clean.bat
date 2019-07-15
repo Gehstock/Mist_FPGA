@@ -17,7 +17,7 @@ cd sys
 for /d %%i in (*_sim) do rmdir /s /q "%%~nxi"
 cd ..
 for /d %%i in (*_sim) do rmdir /s /q "%%~nxi"
-del build_id.v
+del /s build_id.v
 del c5_pin_model_dump.txt
 del PLLJ_PLLSPE_INFO.txt
 del /s *.qws

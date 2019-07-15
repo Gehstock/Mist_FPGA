@@ -16,14 +16,14 @@ module ckong_mist (
 	input         CLOCK_27
 );
 
-`include "rtl\build_id.sv" 
+`include "rtl\build_id.v" 
 
 localparam CONF_STR = {
 	"CrazyKong;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.21.",`BUILD_DATE
 };
 
 assign LED = 1;
@@ -32,9 +32,7 @@ assign AUDIO_R = AUDIO_L;
 wire clock_12;
 pll pll(
 	.inclk0(CLOCK_27),
-//	.c0(clock_24),
-	.c1(clock_12)//,
-//	.c2(clock_6)
+	.c0(clock_12)
 	);
 
 

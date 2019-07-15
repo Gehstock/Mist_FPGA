@@ -16,7 +16,7 @@ module SilverLand_mist (
 	input         CLOCK_27
 );
 
-`include "rtl\build_id.sv" 
+`include "rtl\build_id.v" 
 
 localparam CONF_STR = {
 	"SilverLand;;",
