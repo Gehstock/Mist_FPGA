@@ -53,7 +53,7 @@ always @(Addr, rom_data_0, rom_data_1, rom_data_2, rom_data_3, rom_data_4) begin
 			5'b00001 : Rom_out = rom_data_1;
 			5'b00010 : Rom_out = rom_data_2;
 			5'b00011 : Rom_out = rom_data_3;
-			5'b01000 : Rom_out = rom_data_4;
+			5'b01000 : Rom_out = rom_data_4;//0100 0000 0000 0000
 			default : Rom_out = 8'b00000000;
 		endcase
 end
