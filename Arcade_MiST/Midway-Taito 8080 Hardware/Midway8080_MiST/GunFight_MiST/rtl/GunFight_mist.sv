@@ -162,7 +162,7 @@ user_io(
 	);
 
 dac #(
-	.c_bits(7))
+	.c_bits(8))
 dac (
 	.clk_i(clk_sys),
 	.res_n_i(1),

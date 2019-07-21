@@ -52,7 +52,8 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+use IEEE.NUMERIC_STD.ALL;
+
 
 entity invaderst is
 	port(
@@ -137,10 +138,27 @@ architecture rtl of invaderst is
 	signal WD_Cnt       : unsigned(7 downto 0);
 	signal Sample       : std_logic;
 	signal Rst_n_s_i    : std_logic;
-	signal gun1           : std_logic_vector(2 downto 0);
-	signal gun2           : std_logic_vector(2 downto 0);
+	signal gun1           : std_logic_vector(3 downto 0);
+	signal gun2           : std_logic_vector(3 downto 0);
+
+signal state1 : unsigned(2 downto 0);
+signal state2 : unsigned(2 downto 0);
+
+type gun_array is array(0 to  6) of std_logic_vector(3 downto 0);
+signal gun: gun_array := (
+		X"6",X"2",X"0",X"4",X"5",X"1",X"3");
 	
 begin
+
+process (Clk, GunUp1, GunUp2, GunDown1, GunDown2)
+begin
+if Clk = '1' then
+ if GunUp1 = '1' and not (state1 = 6) then state1 <= state1 + 1; elsif
+	 GunDown1 = '1' and not (state1 = 0)  then state1 <= state1 - 1; elsif
+	 GunUp2 = '1'  and not (state2 = 6) then state2 <= state2 + 1; elsif
+	 GunDown2 = '1'  and not (state2 = 0) then state2 <= state2 - 1; end if;	
+	end if; 
+end process;
 
 	Rst_n_s <= Rst_n_s_i;
 	RWD <= DB;
@@ -218,18 +236,18 @@ with AD_i(9 downto 8) select
 	GDB0(1) <= not MoveDown1;
 	GDB0(2) <= not MoveLeft1;
 	GDB0(3) <= not MoveRight1;
-	GDB0(4) <= not GunUp1;--Gun1(0);--todo
-	GDB0(5) <= '0';--not Gun1(1);--todo
-	GDB0(6) <= not GunDown1;--Gun1(2);--todo
+	GDB0(4) <= not Gun1(0);--todo
+	GDB0(5) <= not Gun1(1);--todo
+	GDB0(6) <= not Gun1(2);--todo
 	GDB0(7) <= not Fire1;
 
 	GDB1(0) <= not MoveUp2;
 	GDB1(1) <= not MoveDown2;
 	GDB1(2) <= not MoveLeft2;
 	GDB1(3) <= not MoveRight2;
-	GDB1(4) <= not GunUp2;--Gun2(0);--todo
-	GDB1(5) <= '0';--not Gun2(1);--todo
-	GDB1(6) <= not GunDown2;--Gun2(2);--todo
+	GDB1(4) <= Gun2(0);--todo
+	GDB1(5) <= Gun2(1);--todo
+	GDB1(6) <= Gun2(2);--todo
 	GDB1(7) <= not Fire2;
 
 	GDB2(0) <= '0';--Coinage
@@ -256,6 +274,8 @@ with AD_i(9 downto 8) select
 			SoundCtrl3 <= (others => '0');
 			SoundCtrl5 <= (others => '0');
 			OldSample := '0';
+			gun1 <= gun(to_integer(state1));
+			gun2 <= gun(to_integer(state2));
 		elsif Clk'event and Clk = '1' then
 			if PortWr(2) = '1' then
 				EA <= DB(2 downto 0);
