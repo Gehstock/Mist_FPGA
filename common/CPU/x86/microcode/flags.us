@@ -1,0 +1,70 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// CLC
+.at 0xf8;
+    b_sel IMMEDIATE, immediate 0x0, alu_op SETFLAGSB, update_flags CF,
+        next_instruction;
+
+// STC
+.at 0xf9;
+    b_sel IMMEDIATE, immediate 0xffff, alu_op SETFLAGSB, update_flags CF,
+        next_instruction;
+
+// CLI
+.at 0xfa;
+    b_sel IMMEDIATE, immediate 0x0, alu_op SETFLAGSB, update_flags IF,
+        ext_int_inhibit, next_instruction;
+
+// STI
+.at 0xfb;
+    b_sel IMMEDIATE, immediate 0xffff, alu_op SETFLAGSB, update_flags IF,
+        ext_int_inhibit, next_instruction;
+
+// CLD
+.at 0xfc;
+    b_sel IMMEDIATE, immediate 0x0, alu_op SETFLAGSB, update_flags DF,
+        next_instruction;
+
+// STD
+.at 0xfd;
+    b_sel IMMEDIATE, immediate 0xffff, alu_op SETFLAGSB, update_flags DF,
+        next_instruction;
+
+// CMC
+.at 0xf5;
+    alu_op CMC, update_flags CF, next_instruction;
+
+// LAHF
+.at 0x9f;
+    alu_op GETFLAGS, rd_sel_source MICROCODE_RD_SEL, rd_sel AH,
+        width W8, next_instruction;
+
+// SAHF
+.at 0x9e;
+    ra_sel AH, width W8, jmp sahf;
+.auto_address;
+sahf:
+    a_sel RA, alu_op SETFLAGSA, update_flags CF PF AF ZF SF, next_instruction;
+
+// SETALC
+.at 0xd6;
+    ra_sel CX, rb_cl, jmp setalc;
+.auto_address;
+setalc:
+    width W8, a_sel RA, b_sel RB, alu_op SBB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel AL, next_instruction;

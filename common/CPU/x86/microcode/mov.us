@@ -1,0 +1,151 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// MOV 0x88     r/m := r (8-bit)
+.at 0x88;
+    mar_write, mar_wr_sel EA, width W8, jmp_rm_reg_mem mov88_reg;
+// MOV 0x89     r/m := r (16-bit)
+.at 0x89;
+    mar_write, mar_wr_sel EA, jmp_rm_reg_mem mov88_reg;
+.auto_address;
+mov88_reg:
+    b_sel RB, alu_op SELB, rd_sel_source MODRM_RM_REG,
+        width WAUTO, next_instruction;
+mov88_mem:
+    b_sel RB, alu_op SELB, mdr_write, segment DS, jmp write_complete;
+
+// MOV 0x8a     r := r/m (8-bit)
+.at 0x8a;
+    mar_write, mar_wr_sel EA, ra_modrm_rm_reg, width W8,
+        jmp_rm_reg_mem mov8a_reg, segment DS, a_sel RA;
+// MOV 0x8b     r := r/m (16-bit)
+.at 0x8b;
+    mar_write, mar_wr_sel EA, ra_modrm_rm_reg,
+        jmp_rm_reg_mem mov8a_reg, a_sel RA, segment DS;
+.auto_address;
+mov8a_reg:
+    a_sel RA, ra_modrm_rm_reg, alu_op SELA,
+        rd_sel_source MODRM_REG, width WAUTO,
+        next_instruction;
+mov8a_mem:
+    mem_read, width WAUTO, segment DS;
+    rd_sel_source MODRM_REG, a_sel MDR, alu_op SELA, width WAUTO,
+        next_instruction;
+
+// MOV 0xc6     r/m := immed8
+.at 0xc6;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg c6_dispatch;
+// MOV 0xc7     r/m := immed16
+.at 0xc7;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg c6_dispatch;
+.auto_address;
+c6_dispatch:
+    jmp_rm_reg_mem movc6_reg; // reg == 0
+    next_instruction; // reg == 1
+    next_instruction; // reg == 2
+    next_instruction; // reg == 3
+    next_instruction; // reg == 4
+    next_instruction; // reg == 5
+    next_instruction; // reg == 6
+    next_instruction; // reg == 7
+movc6_reg:
+    b_sel IMMEDIATE, alu_op SELB,
+        rd_sel_source MODRM_RM_REG, width WAUTO,
+        next_instruction;
+movc6_mem:
+    b_sel IMMEDIATE, alu_op SELB, mdr_write, segment DS, jmp write_complete;
+
+#define MOV_REG_IMMED8(opcode, reg) \
+    .at opcode; \
+        rd_sel_source MICROCODE_RD_SEL, rd_sel reg, \
+            alu_op SELB, b_sel IMMEDIATE, width W8, next_instruction;
+
+MOV_REG_IMMED8(0xb0, AL)
+MOV_REG_IMMED8(0xb1, CL)
+MOV_REG_IMMED8(0xb2, DL)
+MOV_REG_IMMED8(0xb3, BL)
+MOV_REG_IMMED8(0xb4, AH)
+MOV_REG_IMMED8(0xb5, CH)
+MOV_REG_IMMED8(0xb6, DH)
+MOV_REG_IMMED8(0xb7, BH)
+
+#define MOV_REG_IMMED16(opcode, reg) \
+    .at opcode; \
+        rd_sel_source MICROCODE_RD_SEL, rd_sel reg, \
+            alu_op SELB, b_sel IMMEDIATE, next_instruction;
+
+MOV_REG_IMMED16(0xb8, AX)
+MOV_REG_IMMED16(0xb9, CX)
+MOV_REG_IMMED16(0xba, DX)
+MOV_REG_IMMED16(0xbb, BX)
+MOV_REG_IMMED16(0xbc, SP)
+MOV_REG_IMMED16(0xbd, BP)
+MOV_REG_IMMED16(0xbe, SI)
+MOV_REG_IMMED16(0xbf, DI)
+
+// MOV 0xa0     al := m[immed16]
+.at 0xa0;
+    mar_write, mar_wr_sel Q, b_sel IMMEDIATE, alu_op SELB, jmp mova0, segment DS;
+// MOV 0xa1     ax := m[immed16]
+.at 0xa1;
+    mar_write, mar_wr_sel Q, b_sel IMMEDIATE, alu_op SELB, jmp mova0, segment DS;
+.auto_address;
+mova0:
+    segment DS, width WAUTO, mem_read;
+    rd_sel_source MICROCODE_RD_SEL, rd_sel AL, width WAUTO,
+        a_sel MDR, alu_op SELA, next_instruction;
+
+// MOV 0xa2     m[immed16] := al
+.at 0xa2;
+    mar_write, mar_wr_sel Q, b_sel IMMEDIATE, alu_op SELB, jmp mova2, ra_sel AL;
+.at 0xa3;
+    mar_write, mar_wr_sel Q, b_sel IMMEDIATE, alu_op SELB, jmp mova2, ra_sel AL;
+.auto_address;
+mova2:
+    a_sel RA, alu_op SELA, mdr_write, segment DS, jmp write_complete;
+
+// MOV 0x8e     sr := reg/mem
+.at 0x8e;
+    mar_write, mar_wr_sel EA, ra_modrm_rm_reg,
+        segment DS, jmp_rm_reg_mem mov8e_reg;
+.auto_address;
+mov8e_reg:
+    segment_wr_en, rd_sel_source MODRM_REG, a_sel RA, alu_op SELA,
+        ext_int_inhibit, next_instruction;
+mov8e_mem:
+    segment DS, mem_read;
+    rd_sel_source MODRM_REG, segment_wr_en, a_sel MDR, alu_op SELA,
+        ext_int_inhibit, next_instruction;
+
+// MOV 0x8c     reg/mem := sr
+.at 0x8c;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_8c;
+.auto_address;
+dispatch_8c:
+    segment_force, segment ES, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment CS, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment SS, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment DS, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment ES, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment CS, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment SS, jmp_rm_reg_mem mov8c_reg;
+    segment_force, segment DS, jmp_rm_reg_mem mov8c_reg;
+mov8c_reg:
+    rd_sel_source MODRM_RM_REG, b_sel SR, alu_op SELB,
+        next_instruction;
+mov8c_mem:
+    b_sel SR, alu_op SELB, mdr_write, segment DS, jmp write_16_complete;

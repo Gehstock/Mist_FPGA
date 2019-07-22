@@ -1,0 +1,194 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+pushff_reg:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, rd_sel SP,
+        rd_sel_source MICROCODE_RD_SEL, mar_write, mar_wr_sel Q,
+        jmp pushff_reg_save, ra_modrm_rm_reg, segment DS;
+pushff_mem:
+    segment DS, mem_read, jmp pushff_mem_save, ra_sel SP;
+pushff_reg_save:
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write, a_sel MAR, next_instruction;
+pushff_mem_save:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, rd_sel SP,
+        rd_sel_source MICROCODE_RD_SEL, mar_write, mar_wr_sel Q,
+        segment_force, segment SS;
+    segment_force, segment SS, mem_write, a_sel MAR, alu_op SELA,
+        next_instruction;
+
+#define PUSH_GPR(opcode, reg)                                           \
+.at opcode;                                                             \
+    ra_sel reg, jmp push_gpr;
+
+#define PUSH_SR(opcode, reg)                                            \
+.at opcode;                                                             \
+    segment_force, segment reg, jmp push_sr;
+
+PUSH_SR(0x06, ES)
+PUSH_SR(0x0e, CS)
+PUSH_SR(0x16, SS)
+PUSH_SR(0x1e, DS)
+
+PUSH_GPR(0x50, AX)
+PUSH_GPR(0x51, CX)
+PUSH_GPR(0x52, DX)
+PUSH_GPR(0x53, BX)
+PUSH_GPR(0x55, BP)
+PUSH_GPR(0x56, SI)
+PUSH_GPR(0x57, DI)
+
+.auto_address;
+push_gpr:
+    a_sel RA, alu_op SELA, mdr_write, ra_sel SP;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, rd_sel SP,
+        mar_write, mar_wr_sel Q, segment_force, segment SS;
+    segment_force, segment SS, mem_write, a_sel MAR, rd_sel SP,
+        rd_sel_source MICROCODE_RD_SEL, next_instruction;
+
+// push SP, emulate broken 8086 behaviour: the decremented value gets pushed
+// rather than the original value
+.at 0x54;
+    ra_sel SP, jmp push_sp;
+.auto_address;
+push_sp:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, rd_sel SP,
+        mar_write, mar_wr_sel Q, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write, a_sel MAR, rd_sel SP,
+        rd_sel_source MICROCODE_RD_SEL, next_instruction;
+
+push_sr:
+    b_sel SR, alu_op SELB, mdr_write, ra_sel SP;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, rd_sel SP,
+        mar_write, mar_wr_sel Q, segment_force, segment SS;
+    segment_force, segment SS, mem_write, a_sel MAR, rd_sel SP,
+        rd_sel_source MICROCODE_RD_SEL, next_instruction;
+
+.at 0x68;
+    ra_sel SP, jmp push_immed16;
+.auto_address;
+push_immed16:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, mar_write,
+        mar_wr_sel Q, rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    b_sel IMMEDIATE, alu_op SELB, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write, next_instruction;
+
+.at 0x6a;
+    ra_sel SP, jmp push_immed8;
+.auto_address;
+push_immed8:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB, mar_write,
+        mar_wr_sel Q, rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    b_sel IMMEDIATE, alu_op SELB, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write, next_instruction;
+
+.at 0x9c;
+    alu_op GETFLAGS, mdr_write, ra_sel SP, jmp pushf;
+.auto_address;
+pushf:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write, segment_force, segment SS,
+        rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    segment_force, segment SS, mem_write, next_instruction;
+
+.at 0x60;
+    ra_sel SP, jmp pusha;
+.auto_address;
+pusha:
+    a_sel RA, ra_sel AX, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_write, mar_wr_sel Q;
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel CX, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel DX, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel BX, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel SP, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel BP, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel SI, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        ra_sel DI, a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op SUB,
+        mar_wr_sel Q, mar_write;
+    a_sel RA, alu_op SELA, mdr_write, segment_force, segment SS;
+    segment_force, segment SS, mem_write,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SP, a_sel MAR, alu_op SELA,
+        next_instruction;
+
+.at 0x61;
+    ra_sel SP, jmp popa;
+.auto_address;
+popa:
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment_force,
+        segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DI, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+    // Skip over SP
+        rd_sel_source MICROCODE_RD_SEL, rd_sel BP, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x4, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel BX, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DX, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, segment_force, segment SS;
+
+    segment_force, segment SS, mem_read,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel AX, a_sel MDR;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SP, next_instruction;

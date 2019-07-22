@@ -1,0 +1,92 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+.at 0xc3;
+    ra_sel SP, jmp retc3;
+.auto_address;
+retc3:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment SS,
+        segment_force;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SP;
+    a_sel MDR, alu_op SELA, load_ip, next_instruction;
+
+.at 0xc2;
+    ra_sel SP, jmp retc2;
+.auto_address;
+retc2:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment SS,
+        segment_force;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SP;
+    a_sel MDR, alu_op SELA, load_ip, ra_sel SP;
+    a_sel RA, b_sel IMMEDIATE, alu_op ADD, rd_sel_source
+        MICROCODE_RD_SEL, rd_sel SP, next_instruction;
+
+.at 0xcb;
+    ra_sel SP, jmp retcb;
+.auto_address;
+retcb:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment SS,
+        segment_force;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, mar_wr_sel Q, mar_write;
+    a_sel MDR, alu_op SELA, load_ip, segment_force, segment SS;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SP;
+    a_sel MDR, alu_op SELA, segment_force, segment CS,
+        segment_wr_en, next_instruction;
+
+.at 0xca;
+    ra_sel SP, jmp retca;
+.auto_address;
+retca:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment SS,
+        segment_force;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, mar_wr_sel Q, mar_write;
+    a_sel MDR, alu_op SELA, load_ip, segment_force, segment SS;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, mar_wr_sel Q, mar_write;
+    a_sel MAR, b_sel IMMEDIATE, alu_op ADD, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SP;
+    a_sel MDR, alu_op SELA, segment_force, segment CS,
+        segment_wr_en, next_instruction;
+
+// iret
+.at 0xcf;
+    ra_sel SP, jmp retcf;
+.auto_address;
+retcf:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment SS,
+        segment_force;
+    segment SS, segment_force, mem_read, a_sel MAR, b_sel IMMEDIATE,
+        immediate 0x2, alu_op ADD, mar_wr_sel Q, mar_write;
+    a_sel MDR, alu_op SELA, load_ip, segment_force, segment SS;
+    segment SS, segment_force, mem_read;
+    a_sel MDR, alu_op SELA, segment_force, segment CS,
+        segment_wr_en;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        mar_wr_sel Q, mar_write, segment SS, segment_force;
+    segment SS, segment_force, mem_read, a_sel MDR, alu_op SETFLAGSA,
+        update_flags CF PF AF ZF SF TF IF DF OF;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        rd_sel SP, rd_sel_source MICROCODE_RD_SEL,
+        ext_int_inhibit, next_instruction;

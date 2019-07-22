@@ -1,0 +1,84 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// Multiplexed inc/dec
+.at 0xfe;
+    width W8, mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_fe;
+.auto_address;
+dispatch_fe:
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem inc_fe_reg; // reg == 0
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem dec_fe_reg; // reg == 1
+    next_instruction; // reg == 2
+    next_instruction; // reg == 3
+    next_instruction; // reg == 4
+    next_instruction; // reg == 5
+    next_instruction; // reg == 6
+    jmp invalid_opcode; // reg == 7
+
+inc_fe_reg:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op ADD,
+        rd_sel_source MODRM_RM_REG, update_flags OF SF ZF AF PF,
+        width WAUTO, next_instruction;
+inc_fe_mem:
+    width WAUTO, segment DS, mem_read;
+    a_sel MDR, b_sel IMMEDIATE, immediate 0x1, alu_op ADD,
+        mdr_write, update_flags OF SF ZF AF PF, width WAUTO, segment DS,
+        jmp write_complete;
+
+dec_fe_reg:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MODRM_RM_REG, update_flags OF SF ZF AF PF,
+        width WAUTO, next_instruction;
+dec_fe_mem:
+    width WAUTO, segment DS, mem_read;
+    a_sel MDR, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        mdr_write, update_flags OF SF ZF AF PF, width WAUTO, segment DS,
+        jmp write_complete;
+
+#define INC_REG(opcode, reg)                                            \
+.at opcode;                                                             \
+    ra_sel reg, jmp inc ## reg;                                         \
+inc ## reg:                                                             \
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op ADD,               \
+        rd_sel_source MICROCODE_RD_SEL, rd_sel reg,          \
+        update_flags OF SF ZF AF PF, next_instruction;
+
+#define DEC_REG(opcode, reg)                                            \
+.at opcode;                                                             \
+    ra_sel reg, jmp dec ## reg;                                         \
+dec ## reg:                                                             \
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,               \
+        rd_sel_source MICROCODE_RD_SEL, rd_sel reg,          \
+        update_flags OF SF ZF AF PF, next_instruction;
+
+INC_REG(0x40, AX)
+INC_REG(0x41, CX)
+INC_REG(0x42, DX)
+INC_REG(0x43, BX)
+INC_REG(0x44, SP)
+INC_REG(0x45, BP)
+INC_REG(0x46, SI)
+INC_REG(0x47, DI)
+
+DEC_REG(0x48, AX)
+DEC_REG(0x49, CX)
+DEC_REG(0x4a, DX)
+DEC_REG(0x4b, BX)
+DEC_REG(0x4c, SP)
+DEC_REG(0x4d, BP)
+DEC_REG(0x4e, SI)
+DEC_REG(0x4f, DI)

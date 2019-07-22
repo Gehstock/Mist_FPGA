@@ -1,0 +1,166 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+.at 0x102;
+debug_wait:
+    jmp debug_wait;
+
+#define DEBUG_READ_GPR(reg, addr) \
+.at addr; \
+    ra_sel reg, jmp debug_read_gpr;
+
+#define DEBUG_READ_SR(reg, addr) \
+.at addr; \
+    segment_force, segment reg, jmp debug_read_sr;
+
+DEBUG_READ_GPR(AX, 0x103)
+DEBUG_READ_GPR(CX, 0x104)
+DEBUG_READ_GPR(DX, 0x105)
+DEBUG_READ_GPR(BX, 0x106)
+DEBUG_READ_GPR(SP, 0x107)
+DEBUG_READ_GPR(BP, 0x108)
+DEBUG_READ_GPR(SI, 0x109)
+DEBUG_READ_GPR(DI, 0x10a)
+DEBUG_READ_SR(ES, 0x10b)
+DEBUG_READ_SR(CS, 0x10c)
+DEBUG_READ_SR(SS, 0x10d)
+DEBUG_READ_SR(DS, 0x10e)
+
+#define DEBUG_WRITE_GPR(reg, addr) \
+.at addr; \
+    b_sel TEMP, alu_op SELB, rd_sel_source MICROCODE_RD_SEL, rd_sel reg, \
+        jmp debug_wait;
+
+#define DEBUG_WRITE_SR(reg, addr) \
+.at addr; \
+    b_sel TEMP, alu_op SELB, segment_force, segment_wr_en, \
+        segment_force, segment reg, next_instruction, \
+        ext_int_inhibit, jmp debug_wait;
+
+DEBUG_WRITE_GPR(AX, 0x113)
+DEBUG_WRITE_GPR(CX, 0x114)
+DEBUG_WRITE_GPR(DX, 0x115)
+DEBUG_WRITE_GPR(BX, 0x116)
+DEBUG_WRITE_GPR(SP, 0x117)
+DEBUG_WRITE_GPR(BP, 0x118)
+DEBUG_WRITE_GPR(SI, 0x119)
+DEBUG_WRITE_GPR(DI, 0x11a)
+DEBUG_WRITE_SR(ES, 0x11b)
+DEBUG_WRITE_SR(CS, 0x11c)
+DEBUG_WRITE_SR(SS, 0x11d)
+DEBUG_WRITE_SR(DS, 0x11e)
+
+.auto_address;
+debug_read_gpr:
+    a_sel RA, alu_op SELA, tmp_wr_en, jmp debug_wait;
+
+debug_read_sr:
+    b_sel SR, alu_op SELB, tmp_wr_en, jmp debug_wait;
+
+// Get IP
+.at 0x10f;
+    a_sel IP, alu_op SELA, tmp_wr_en, jmp debug_wait;
+
+// Get flags
+.at 0x110;
+    alu_op GETFLAGS, tmp_wr_en, jmp debug_wait;
+
+// Set IP
+.at 0x111;
+    b_sel TEMP, alu_op SELB, load_ip, next_instruction, ext_int_inhibit,
+        jmp debug_wait;
+
+// Set flags
+.at 0x112;
+    b_sel TEMP, alu_op SETFLAGSB, update_flags CF PF AF ZF SF TF IF DF OF,
+        jmp debug_wait;
+
+// Write MAR
+.at 0x11f;
+    b_sel TEMP, alu_op SELB, mar_wr_sel Q, mar_write, jmp debug_wait;
+
+// Write MDR
+.at 0x120;
+    b_sel TEMP, alu_op SELB, mdr_write, jmp debug_wait;
+
+// Read 8
+.at 0x121;
+    segment_force, segment DS, jmp debug_read8;
+.auto_address;
+debug_read8:
+    segment_force, segment DS, width W8, mem_read;
+    a_sel MDR, alu_op SELA, tmp_wr_en;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x1, alu_op ADD, mar_wr_sel Q,
+        mar_write, jmp debug_wait;
+
+// Read 16
+.at 0x122;
+    segment_force, segment DS, jmp debug_read16;
+.auto_address;
+debug_read16:
+    segment_force, segment DS, mem_read;
+    a_sel MDR, alu_op SELA, tmp_wr_en;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, jmp debug_wait;
+
+// Write 8
+.at 0x123;
+    segment_force, segment DS, jmp debug_write8;
+.auto_address;
+debug_write8:
+    segment_force, segment DS, width W8, mem_write;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x1, alu_op ADD, mar_wr_sel Q,
+        mar_write, jmp debug_wait;
+
+// Write 16
+.at 0x124;
+    segment_force, segment DS, jmp debug_write16;
+.auto_address;
+debug_write16:
+    segment_force, segment DS, mem_write;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD, mar_wr_sel Q,
+        mar_write, jmp debug_wait;
+
+// Read 8 IO
+.at 0x125;
+    segment_force, segment DS, jmp debug_read8io;
+.auto_address;
+debug_read8io:
+    segment_force, segment DS, width W8, mem_read, io;
+    a_sel MDR, alu_op SELA, tmp_wr_en, jmp debug_wait;
+
+// Read 16 IO
+.at 0x126;
+    segment_force, segment DS, jmp debug_read16io;
+.auto_address;
+debug_read16io:
+    segment_force, segment DS, mem_read, io;
+    a_sel MDR, alu_op SELA, tmp_wr_en, jmp debug_wait;
+
+// Write 8 IO
+.at 0x127;
+    segment_force, segment DS, jmp debug_write8io;
+.auto_address;
+debug_write8io:
+    segment_force, segment DS, width W8, mem_write, io, jmp debug_wait;
+
+// Write 16 IO
+.at 0x128;
+    segment_force, segment DS, jmp debug_write16io;
+.auto_address;
+debug_write16io:
+    segment_force, segment DS, mem_write, io, jmp debug_wait;

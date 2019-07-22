@@ -1,0 +1,11 @@
+The files available in this directory were created by me and I claim ownership
+and copyright.  I grant to anyone and everyone the right to download, use, modify
+and redistribute them freely so long as this notice is included with any
+redistribution, in whole or in part, whether modified or not.
+
+All files in this directory are provided as-is for no charge.  There is no
+warranty, guarantee, or claim of suitability for any purpose.  No offer of
+support or service has been or will be made.
+
+Peter J. Bartlett
+2012

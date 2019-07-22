@@ -1,0 +1,18 @@
+CPU core original CPU unclear items:
+
+- CMPM, MOVE, ADDX, SUBX, ABCD, SBCD: generally spoken all operations where a source and a destination location are given. The predecrement and the postincrement addressing modes are affected. Which result is calculated by addressing modes (ax)+,(ay)+ and -(ax),-(ay). The result depends on the time when the address registers are incremented or decremented and the order, the operands are loaded. I assume, that the addresws registers are incremented twice during these instructions and that the address registers are incremented during the operation in a way, that the second operand is already taken from the postincremented or the predecremented address.
+
+MOVEM:
+- If the addressing register is included in the register list, the initial value of the register should be written to the memory. For the 68K20+ the decremented value is written. Which value is the correct one? Decremented by the actual amount of already transfered registers or the decremented value for the total amount of decremented registers?
+- If the register list mask is empty, the MOVEM does nothing and behaves like a NOP.
+
+ROL, ROR, ROXL, ROXR, ROTL, ROTR:
+- The operation (example) ROL d0,d0 takes the number of required rotations out of do, rotates d0 and copies afterwards the result to d0.
+- If the immediate rotation register is zero, no shift operation results, the status flags are updated.
+
+ILLEGAL: The address written on the stack is the address of the ILLEGAL statement. In the simulator, the address written is the address of the ILLEGAL statement plus two.
+
+Other things to do:
+Further reduction of the core size.
+
+WF 20071224

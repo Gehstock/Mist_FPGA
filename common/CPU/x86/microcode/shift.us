@@ -1,0 +1,63 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+#define SHIFT1(alu_func, flags)                                                 \
+.auto_address;                                                                  \
+alu_func ## d0_d1_reg:                                                          \
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op alu_func, 			\
+        rd_sel_source MODRM_RM_REG, update_flags flags,                         \
+        width WAUTO, next_instruction;                               \
+alu_func ## d0_d1_mem:                                                          \
+    segment DS, mem_read, width WAUTO;                                          \
+    width WAUTO, a_sel MDR, b_sel IMMEDIATE, immediate 0x1, alu_op alu_func,    \
+        mdr_write, update_flags flags, segment DS, jmp write_complete;
+
+// Variable shifts first write the number of shifts into the temporary
+// register, then when processing, the ALU will perform a subtraction of the
+// count (which is an input to the ALU), and output the decremented value
+// along with a single bit-shifted value, stalling until complete.  The
+// temporary register needs to be written each cycle, as does the result.
+
+#define SHIFTN(alu_func, flags)                                                 \
+alu_func ## d2_d3:							        \
+    ra_modrm_rm_reg, b_sel RB, alu_op SELB, tmp_wr_en, width WAUTO,             \
+        segment DS, jmp_rm_reg_mem alu_func ## d2_d3_reg;	                \
+alu_func ## d2_d3_reg:                                                          \
+    a_sel RA, b_sel RB, alu_op alu_func, rd_sel_source MODRM_RM_REG, 		\
+        update_flags flags, width WAUTO, tmp_wr_sel Q_HIGH, 		\
+        tmp_wr_en, next_instruction, ra_modrm_rm_reg;                           \
+alu_func ## d2_d3_mem:                                                          \
+    segment DS, mem_read, width WAUTO, rb_cl;                                   \
+    width WAUTO, a_sel MDR, b_sel RB, alu_op alu_func, mdr_write,        	\
+        update_flags flags, segment DS, tmp_wr_sel Q_HIGH, tmp_wr_en,           \
+        jmp write_complete;
+
+#define SHIFTN_IMM8(alu_func, flags)                                            \
+alu_func ## c0_reg:                                                             \
+    a_sel RA, b_sel IMMEDIATE, alu_op alu_func, rd_sel_source MODRM_RM_REG,     \
+        update_flags flags, width WAUTO, tmp_wr_sel Q_HIGH, 		\
+        tmp_wr_en, next_instruction, ra_modrm_rm_reg;                           \
+alu_func ## c0_mem:                                                             \
+    segment DS, mem_read, width WAUTO;                                          \
+    width WAUTO, a_sel MDR, b_sel IMMEDIATE, alu_op alu_func, mdr_write,        \
+        update_flags flags, segment DS, tmp_wr_sel Q_HIGH, tmp_wr_en,           \
+        jmp write_complete;
+
+#define SHIFTN_IMM16(alu_func, flags)                                           \
+alu_func ## c1: 								\
+    tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, ra_modrm_rm_reg, segment DS, 	\
+	jmp_rm_reg_mem alu_func ## c0_reg;

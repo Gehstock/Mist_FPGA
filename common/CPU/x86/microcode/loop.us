@@ -1,0 +1,57 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// LOOP
+.at 0xe2;
+    ra_sel CX, jmp loop;
+
+.auto_address;
+loop:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX,
+        rb_cl;
+    jmp_rb_zero loop_not_taken;
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip, next_instruction;
+loop_not_taken:
+    next_instruction;
+
+// LOOPE
+.at 0xe1;
+    ra_sel CX, jmp loope;
+
+.auto_address;
+loope:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX, rb_cl,
+        jmp_if_zero loope_maybe_taken;
+    jmp loop_not_taken;
+loope_maybe_taken:
+    jmp_rb_zero loop_not_taken;
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip, next_instruction;
+
+// LOOPNE
+.at 0xe0;
+    ra_sel CX, jmp loopne;
+
+.auto_address;
+loopne:
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX, rb_cl,
+        jmp_if_zero loop_not_taken;
+    jmp_rb_zero loop_not_taken;
+loopne_taken:
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip, next_instruction;

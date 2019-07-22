@@ -1,0 +1,169 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// out imm8, al
+.at 0xe6;
+    width W8, b_sel IMMEDIATE, alu_op SELB, mar_wr_sel Q, mar_write,
+        jmp oute6, ra_sel AL;
+// out imm16, al
+.at 0xe7;
+    width W8, b_sel IMMEDIATE, alu_op SELB, mar_wr_sel Q, mar_write, jmp oute6;
+.auto_address;
+oute6:
+    a_sel MAR, b_sel IMMEDIATE, immediate 0xff, alu_op AND, mar_write,
+        mar_wr_sel Q;
+    a_sel RA, alu_op SELA, mdr_write;
+    width WAUTO, io, mem_write, next_instruction;
+
+// out dx, al
+.at 0xee;
+    width W8, ra_sel AL, jmp outee;
+// out dx, ax
+.at 0xef;
+    ra_sel AX, jmp outee;
+.auto_address;
+outee:
+    a_sel RA, alu_op SELA, mdr_write, ra_sel DX;
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q;
+    width WAUTO, io, mem_write, next_instruction;
+
+// in al, immed8
+.at 0xe4;
+    width W8, b_sel IMMEDIATE, alu_op SELB, mar_wr_sel Q, mar_write, jmp ine4;
+// in ax, immed16
+.at 0xe5;
+    width W8, b_sel IMMEDIATE, alu_op SELB, mar_wr_sel Q, mar_write, jmp ine4;
+.auto_address;
+ine4:
+    a_sel MAR, b_sel IMMEDIATE, immediate 0xff, alu_op AND, mar_write,
+        mar_wr_sel Q;
+    width WAUTO, io, mem_read;
+    a_sel MDR, alu_op SELA, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel AL, width WAUTO, next_instruction;
+
+// in dx, al
+.at 0xec;
+    ra_sel DX, jmp inec;
+// in dx, ax
+.at 0xed;
+    ra_sel DX, jmp inec;
+.auto_address;
+inec:
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q;
+    width WAUTO, io, mem_read;
+    a_sel MDR, alu_op SELA, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel AL, width WAUTO, next_instruction;
+
+.at 0x6e;
+    jmp outsb;
+
+.auto_address;
+outsb:
+    ra_sel SI, jmp_if_not_rep outsb_no_rep;
+    rb_cl;
+outsb_rep_loop:
+    ra_sel CX, a_sel RA, b_sel IMMEDIATE, immediate 0x0, alu_op SUB,
+        jmp_rb_zero outsb_done;
+    ra_sel SI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+outsb_no_rep:
+    ra_sel SI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, segment DS;
+    width W8, segment DS, mem_read;
+    ra_sel DX;
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q;
+    width W8, io, mem_write, jmp_if_not_rep outsb_done;
+    rb_cl, ext_int_yield, jmp outsb_rep_loop;
+outsb_done:
+    next_instruction;
+
+.at 0x6f;
+    jmp outsw;
+
+.auto_address;
+outsw:
+    ra_sel SI, jmp_if_not_rep outsw_no_rep;
+    rb_cl;
+outsw_rep_loop:
+    ra_sel CX, a_sel RA, b_sel IMMEDIATE, immediate 0x0, alu_op SUB,
+        jmp_rb_zero outsw_done;
+    ra_sel SI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+outsw_no_rep:
+    ra_sel SI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, segment DS;
+    segment DS, mem_read;
+    ra_sel DX;
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q;
+    io, mem_write, jmp_if_not_rep outsw_done;
+    rb_cl, ext_int_yield, jmp outsw_rep_loop;
+outsw_done:
+    next_instruction;
+
+.at 0x6c;
+    jmp insb;
+
+.auto_address;
+insb:
+    ra_sel DX, jmp_if_not_rep insb_no_rep;
+    rb_cl;
+insb_rep_loop:
+    ra_sel CX, a_sel RA, b_sel IMMEDIATE, immediate 0x0, alu_op SUB,
+        jmp_rb_zero insb_done;
+    ra_sel DI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX, ra_sel DX;
+insb_no_rep:
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write;
+    width W8, io, mem_read;
+    ra_sel DI;
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment ES, segment_force;
+    segment ES, segment_force, width W8, mem_write;
+    ra_sel DI;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DI,
+        jmp_if_not_rep insb_done;
+    rb_cl, ext_int_yield, jmp insb_rep_loop;
+insb_done:
+    next_instruction;
+
+.at 0x6d;
+    jmp insw;
+
+.auto_address;
+insw:
+    ra_sel DX, jmp_if_not_rep insw_no_rep;
+    rb_cl;
+insw_rep_loop:
+    ra_sel CX, a_sel RA, b_sel IMMEDIATE, immediate 0x0, alu_op SUB,
+        jmp_rb_zero insw_done;
+    ra_sel DI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX, ra_sel DX;
+insw_no_rep:
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write;
+    io, mem_read;
+    ra_sel DI;
+    a_sel RA, alu_op SELA, mar_write, mar_wr_sel Q, segment ES, segment_force;
+    segment ES, segment_force, mem_write;
+    ra_sel DI;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DI,
+        jmp_if_not_rep insw_done;
+    rb_cl, ext_int_yield, jmp insw_rep_loop;
+insw_done:
+    next_instruction;

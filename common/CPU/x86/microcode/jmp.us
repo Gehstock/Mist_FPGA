@@ -1,0 +1,89 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+.at 0xe9;
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip,
+        next_instruction;
+
+.at 0xea;
+    b_sel IMMEDIATE, alu_op SELB, load_ip, jmp jmpea;
+.auto_address;
+jmpea:
+    b_sel IMMEDIATE2, alu_op SELB, segment_wr_en,
+        segment_force, segment CS, next_instruction;
+
+.at 0xeb;
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip,
+        next_instruction;
+
+jmpff_indirect_intra_reg:
+    a_sel RA, alu_op SELA, load_ip,
+        next_instruction;
+jmpff_indirect_intra_mem:
+    segment DS, mem_read;
+    a_sel MDR, alu_op SELA, load_ip,
+        next_instruction;
+
+jmpff_indirect_inter_reg:
+    next_instruction;
+jmpff_indirect_inter_mem:
+    segment DS, mem_read;
+    a_sel MDR, alu_op SELA, load_ip;
+    immediate 0x2, a_sel MAR, b_sel IMMEDIATE, alu_op ADD,
+        mar_wr_sel Q, mar_write, segment DS;
+    segment DS, mem_read;
+    a_sel MDR, alu_op SELA, segment_wr_en,
+        segment_force, segment CS, next_instruction;
+
+// JCXZ
+.at 0xe3;
+    rb_cl, jmp jcxz;
+
+.auto_address;
+jcxz:
+    jmp_rb_zero jcxz_taken;
+    next_instruction;
+jcxz_taken:
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip, next_instruction;
+
+#define JUMP(opcode) \
+.at opcode; \
+    jmp test_jump
+
+JUMP(0x70);
+JUMP(0x71);
+JUMP(0x72);
+JUMP(0x73);
+JUMP(0x74);
+JUMP(0x75);
+JUMP(0x76);
+JUMP(0x77);
+JUMP(0x78);
+JUMP(0x79);
+JUMP(0x7a);
+JUMP(0x7b);
+JUMP(0x7c);
+JUMP(0x7d);
+JUMP(0x7e);
+JUMP(0x7f);
+
+.auto_address;
+test_jump:
+    jmp_if_taken jmp_taken;
+    next_instruction;
+jmp_taken:
+    a_sel IP, b_sel IMMEDIATE, alu_op ADD, load_ip, next_instruction;

@@ -1,0 +1,74 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+.at 0xa6;
+    jmp cmpsb;
+
+.auto_address;
+cmpsb:
+    ra_sel DI, rb_cl, jmp_if_not_rep cmpsb_no_rep;
+cmpsb_rep_loop:
+    ra_sel CX, jmp_rb_zero cmpsb_done;
+    ra_sel DI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+cmpsb_no_rep:
+    ra_sel DI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment ES,
+        segment_force;
+    width W8, segment ES, segment_force, mem_read,
+        a_sel MDR, alu_op SELA, tmp_wr_en;
+    a_sel MAR, b_sel IMMEDIATE, immediate 0x1, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DI,
+        ra_sel SI;
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS, ra_sel SI;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI,
+        segment DS;
+    width W8, segment DS, mem_read;
+    width W8, a_sel MDR, b_sel TEMP, alu_op SUB,
+        update_flags OF SF ZF CF PF AF, jmp_if_not_rep cmpsb_done;
+    rb_cl, alu_op GETFLAGS, ext_int_yield,
+        jmp_if_rep_not_complete cmpsb_rep_loop;
+cmpsb_done:
+    next_instruction;
+
+.at 0xa7;
+    jmp cmpsw;
+
+.auto_address;
+cmpsw:
+    ra_sel DI, rb_cl, jmp_if_not_rep cmpsw_no_rep;
+cmpsw_rep_loop:
+    ra_sel CX, jmp_rb_zero cmpsw_done;
+    ra_sel DI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+cmpsw_no_rep:
+    ra_sel DI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment ES,
+        segment_force;
+    segment ES, segment_force, mem_read, a_sel MDR, alu_op SELA, tmp_wr_en,
+        ra_sel DI;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel DI,
+        ra_sel SI;
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS, ra_sel SI;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, segment DS;
+    segment DS, mem_read, a_sel MDR, b_sel TEMP, alu_op SUB,
+        update_flags OF SF ZF CF PF AF, jmp_if_not_rep cmpsw_done;
+    rb_cl, alu_op GETFLAGS, ext_int_yield,
+        jmp_if_rep_not_complete cmpsw_rep_loop;
+cmpsw_done:
+    next_instruction;

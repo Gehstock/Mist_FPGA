@@ -1,0 +1,84 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+// Multiplicand in TEMP, multiplier in MDR
+mulf6_reg:
+    width W8, a_sel RA, alu_op SELA, mdr_write, ra_sel AL, jmp do_mul8;
+mulf6_mem:
+    width W8, segment DS, mem_read, ra_sel AL, jmp do_mul8;
+do_mul8:
+    width W8, a_sel RA, alu_op SELA, tmp_wr_en;
+    // 8-bit multiplication yields a 16-bit result so move the result into
+    // TEMP to later transfer to AX as a 16-bit operation.
+    width W8, a_sel MDR, b_sel TEMP, alu_op MUL, update_flags ZF OF CF,
+        tmp_wr_en;
+    b_sel TEMP, alu_op SELB, rd_sel_source MICROCODE_RD_SEL, rd_sel AX,
+        next_instruction;
+
+// Multiplicand in TEMP, multiplier in MDR
+mulf7_reg:
+    a_sel RA, alu_op SELA, mdr_write, ra_sel AX, jmp do_mul16;
+mulf7_mem:
+    segment DS, mem_read, ra_sel AX, jmp do_mul16;
+do_mul16:
+    a_sel RA, alu_op SELA, tmp_wr_en;
+    a_sel MDR, b_sel TEMP, alu_op MUL, update_flags ZF OF CF,
+        tmp_wr_sel Q_HIGH, tmp_wr_en, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel AX;
+    b_sel TEMP, alu_op SELB, rd_sel_source MICROCODE_RD_SEL, rd_sel DX,
+        next_instruction;
+
+// imultiplicand in TEMP, imultiplier in MDR
+imulf6_reg:
+    width W8, a_sel RA, alu_op SELA, mdr_write, ra_sel AL, jmp do_imul8;
+imulf6_mem:
+    width W8, segment DS, mem_read, ra_sel AL, jmp do_imul8;
+do_imul8:
+    width W8, a_sel RA, alu_op SELA, tmp_wr_en;
+    // 8-bit imultiplication yields a 16-bit result so move the result into
+    // TEMP to later transfer to AX as a 16-bit operation.
+    width W8, a_sel MDR, b_sel TEMP, alu_op IMUL, update_flags ZF OF CF,
+        tmp_wr_en;
+    b_sel TEMP, alu_op SELB, rd_sel_source MICROCODE_RD_SEL, rd_sel AX,
+        next_instruction;
+
+// imultiplicand in TEMP, imultiplier in MDR
+imulf7_reg:
+    a_sel RA, alu_op SELA, mdr_write, ra_sel AX, jmp do_imul16;
+imulf7_mem:
+    segment DS, mem_read, ra_sel AX, jmp do_imul16;
+do_imul16:
+    a_sel RA, alu_op SELA, tmp_wr_en;
+    a_sel MDR, b_sel TEMP, alu_op IMUL, update_flags ZF OF CF,
+        tmp_wr_sel Q_HIGH, tmp_wr_en, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel AX;
+    b_sel TEMP, alu_op SELB, rd_sel_source MICROCODE_RD_SEL, rd_sel DX,
+        next_instruction;
+
+.at 0x6b;
+    mar_write, mar_wr_sel EA, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem imul6b_reg;
+.auto_address;
+imul6b_reg:
+    a_sel RA, b_sel IMMEDIATE, alu_op IMUL, update_flags ZF OF CF,
+        rd_sel_source MODRM_REG, next_instruction;
+imul6b_mem:
+    segment DS, mem_read;
+    a_sel MDR, b_sel IMMEDIATE, alu_op IMUL, update_flags ZF OF CF,
+        rd_sel_source MODRM_REG, next_instruction;
+
+.at 0x69;
+    mar_write, mar_wr_sel EA, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem imul6b_reg;

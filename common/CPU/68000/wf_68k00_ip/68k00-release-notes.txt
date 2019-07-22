@@ -1,0 +1,19 @@
+The CPU IP core has been improved during the last release. There are still open topics. For more information see the 68K00 quirks-and-squirrels.txt in this directory.
+
+Main changes since the last release:
+1. The CPU does now work with the SUSKA IP core to run the emutos operating system.
+2. Reduced the size from 10200 LEs (Altera Cyclone II) to about 9400 LEs.
+3. Simplified the data register section.
+4. Some bug fixes in several modules.
+ 
+Please send me an email to wf@inventronik.de if bugs are encountered or also for tips and
+suggestions.
+
+Known issues:
+The function code outputs (FC) are coded in a way, that the patterns during the bus transfers meet the patterns of the original 68000 CPUs. If there is no bus transfer and the processor is the bus master, there results a funcion code of "000". If the processor has no control over the bus, the function code outputs are high impedant.
+
+The deasserted bus control signals UDSn or LDSn produce during byte wide bus access and in the predecrement addressing mode short spikes. This behaviour does not affect the correct bus transfer.
+
+The EXT operation in the operation type OP_68K00 is named EXTW due to compiler constraints with the Xilinx ISE.
+
+WF - 20080418.

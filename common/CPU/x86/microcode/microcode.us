@@ -1,0 +1,291 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <config.h>
+
+.at 0x100;
+opcode_fetch:
+    ext_int_yield, jmp_opcode;
+
+// See 0xcc in int.us for more details, this is the same thing but for a
+// divide error.
+.at 0x101;
+divide_error:
+    b_sel IMMEDIATE, immediate 0x0, alu_op SELB, tmp_wr_en, jmp do_int;
+
+// See 0xcc in int.us for more details, this is the same thing but for a
+// IRQ.
+.at 0x12b;
+    // IRQ number to temp
+    a_sel MDR, b_sel IMMEDIATE, immediate 0x4, alu_op MUL, tmp_wr_en,
+        jmp do_int;
+
+// See 0xcc in int.us for more details, this is the same thing but for a
+// NMI.
+.at 0x12a;
+nmi:
+    b_sel IMMEDIATE, immediate 0x8, alu_op SELB, tmp_wr_en, jmp do_int;
+
+// See 0xcc in int.us for more details, this is the same thing but for a
+// single step trap.
+.at 0x12c;
+single_step:
+    b_sel IMMEDIATE, immediate 0x4, alu_op SELB, tmp_wr_en, jmp do_int;
+
+// Wait a single cycle for modrm decoding to complete
+.at 0x12e;
+modrm_decode:
+    jmp_opcode;
+
+.at 0x12f;
+bad_opcode:
+    jmp invalid_opcode;
+
+#define INVALID_OPCODE(opc) \
+.at opc; \
+    jmp invalid_opcode
+
+#define FILL(opc) \
+.at opc; \
+    next_instruction
+
+INVALID_OPCODE(0x0f);
+INVALID_OPCODE(0x63);
+INVALID_OPCODE(0x64);
+INVALID_OPCODE(0x65);
+INVALID_OPCODE(0x66);
+INVALID_OPCODE(0x67);
+INVALID_OPCODE(0xf1);
+
+FILL(0x26);
+FILL(0x2e);
+FILL(0x36);
+FILL(0x3e);
+FILL(0xf0);
+FILL(0xf2);
+FILL(0xf3);
+
+.auto_address;
+invalid_opcode:
+    b_sel IMMEDIATE, immediate 0x18, alu_op SELB, tmp_wr_en, jmp do_int;
+
+// Multiplexed add/adc/sub/sbb/cmp/xor/or/and
+// r/m OP immed8
+.at 0x80;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_80_81;
+.auto_address;
+dispatch_80_81:
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem ADD80_81_reg; // reg == 0
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem OR80_81_reg; // reg == 1
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem ADC80_81_reg; // reg == 2
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SBB80_81_reg; // reg == 3
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem AND80_81_reg; // reg == 4
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SUB80_81_reg; // reg == 5
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem XOR80_81_reg; // reg == 6
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem compSUB80_81_reg; // reg == 7
+
+// Multiplexed add/adc/sub/sbb/cmp/xor/or/and
+// r/m OP immed16
+.at 0x81;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_80_81;
+
+// Multiplexed add/adc/sub/sbb/cmp
+// r/m OP immed8
+.at 0x82;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_80_81;
+
+// Multiplexed add/adc/sub/sbb/cmp/xor/or/and
+// r/m OP immed16
+.at 0x83;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_83;
+.auto_address;
+dispatch_83:
+    segment DS, jmp_rm_reg_mem ADD83_reg; // reg == 0
+    segment DS, jmp_rm_reg_mem OR83_reg; // reg == 1
+    segment DS, jmp_rm_reg_mem ADC83_reg; // reg == 2
+    segment DS, jmp_rm_reg_mem SBB83_reg; // reg == 3
+    segment DS, jmp_rm_reg_mem AND83_reg; // reg == 4
+    segment DS, jmp_rm_reg_mem SUB83_reg; // reg == 5
+    segment DS, jmp_rm_reg_mem XOR83_reg; // reg == 6
+    segment DS, jmp_rm_reg_mem compSUB83_reg; // reg == 7
+
+// Multiplexed pop/8f
+.at 0x8f;
+    mar_write, mar_wr_sel EA, segment SS, jmp_dispatch_reg dispatch_8f;
+.auto_address;
+dispatch_8f:
+    ra_sel SP, jmp_rm_reg_mem pop8f_reg; // reg == 0
+    next_instruction; // reg == 1
+    next_instruction; // reg == 2
+    next_instruction; // reg == 3
+    next_instruction; // reg == 4
+    next_instruction; // reg == 5
+    next_instruction; // reg == 6
+    next_instruction; // reg == 7
+
+// Multiplexed shift single 8-bit
+.at 0xd0;
+    width WAUTO, mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_d0_d1;
+.auto_address;
+dispatch_d0_d1:
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem ROLd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RORd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RCLd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RCRd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHLd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHRd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHLd0_d1_reg;
+    width WAUTO, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SARd0_d1_reg;
+
+// Multiplexed shift single 8-bit by immediate
+.at 0xc0;
+    width W8, mar_write, mar_wr_sel EA,
+	jmp_dispatch_reg dispatch_c0;
+.auto_address;
+dispatch_c0:
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem ROLc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RORc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RCLc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem RCRc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHLc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHRc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SHLc0_reg;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE,
+	ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem SARc0_reg;
+
+// Multiplexed shift single 16-bit by immediate
+.at 0xc1;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_c1;
+.auto_address;
+dispatch_c1:
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp ROLc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp RORc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp RCLc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp RCRc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp SHLc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp SHRc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp SHLc1;
+    width W8, tmp_wr_en, alu_op SELB, b_sel IMMEDIATE, jmp SARc1;
+
+// Multiplexed shift single 16-bit
+.at 0xd1;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_d0_d1;
+
+// Multiplexed shift multiple 8-bit
+.at 0xd2;
+    width WAUTO, mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_d2_d3;
+.auto_address;
+dispatch_d2_d3:
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp ROLd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp RORd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp RCLd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp RCRd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp SHLd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp SHRd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp SHLd2_d3;
+    width WAUTO, ra_modrm_rm_reg, rb_cl, segment DS, jmp SARd2_d3;
+
+// Multiplexed shift multiple 16-bit
+.at 0xd3;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_d2_d3;
+
+// Multiplexed neg/mul/not/test/div 8 bit
+.at 0xf6;
+    width W8, mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_f6;
+.auto_address;
+dispatch_f6:
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem compANDf6_reg; // reg == 0
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem compANDf6_reg; // reg == 1
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem notf6_reg; // reg == 3
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem negf6_reg; // reg == 3
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem mulf6_reg; // reg == 4
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem imulf6_reg; // reg == 5
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem divf6_reg; // reg == 6
+    width W8, ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem idivf6_reg; // reg == 7
+
+// Multiplexed neg/mul/not/test/div 16 bit
+.at 0xf7;
+    mar_write, mar_wr_sel EA, jmp_dispatch_reg dispatch_f7;
+.auto_address;
+dispatch_f7:
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem compANDf7_reg; // reg == 0
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem compANDf7_reg; // reg == 1
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem notf6_reg; // reg == 2
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem negf6_reg; // reg == 3
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem mulf7_reg; // reg == 4
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem imulf7_reg; // reg == 5
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem divf7_reg; // reg == 6
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem idivf7_reg; // reg == 7
+
+// Multiplexed push/inc/jmp/call/ff
+.at 0xff;
+    mar_write, mar_wr_sel EA, segment DS, jmp_dispatch_reg dispatch_ff;
+.auto_address;
+dispatch_ff:
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem inc_fe_reg; // reg == 0
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem dec_fe_reg; // reg == 1
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem callff_indirect_intra_reg; // reg == 2
+    segment_force, segment CS, jmp_rm_reg_mem callff_indirect_inter_reg; // reg == 3
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem jmpff_indirect_intra_reg; // reg == 4
+    ra_modrm_rm_reg, segment DS, jmp_rm_reg_mem jmpff_indirect_inter_reg; // reg == 5
+    ra_sel SP, segment DS, jmp_rm_reg_mem pushff_reg; // reg == 6
+    jmp invalid_opcode;
+
+.at 0x129;
+    jmp reset;
+
+.auto_address;
+reset:
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel AX;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel CX;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel DX;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel BX;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SP;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel BP;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel SI;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, rd_sel_source MICROCODE_RD_SEL,
+        rd_sel DI;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, segment_force, segment ES,
+        segment_wr_en;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0xffff, segment_force, segment CS,
+        segment_wr_en;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, segment_force, segment SS,
+        segment_wr_en;
+    b_sel IMMEDIATE, alu_op SELB, immediate 0x0, segment_force, segment DS,
+        segment_wr_en;
+    next_instruction, jmp opcode_fetch;
+
+.auto_address;
+write_16_complete:
+    segment DS, mem_write, next_instruction;
+
+write_complete:
+    segment DS, mem_write, width WAUTO, next_instruction;

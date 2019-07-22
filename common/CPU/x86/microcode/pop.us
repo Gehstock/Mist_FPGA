@@ -1,0 +1,85 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+pop8f_reg:
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write,
+        segment_force, segment SS, jmp pop8f_reg_restore;
+pop8f_mem:
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write,
+        segment_force, segment SS, jmp pop8f_mem_restore;
+pop8f_reg_restore:
+    segment_force, segment SS, mem_read, ra_sel SP;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    a_sel MDR, alu_op SELA, rd_sel_source MODRM_RM_REG,
+        next_instruction;
+pop8f_mem_restore:
+    segment_force, segment SS, mem_read, ra_sel SP;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    mar_write, mar_wr_sel EA, segment DS, jmp write_16_complete;
+
+#define POP_GPR(opcode, reg)                                            \
+.at opcode;                                                             \
+    ra_sel SP, jmp pop_gpr ## reg;                                      \
+.auto_address;                                                          \
+pop_gpr ## reg:                                                         \
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write,                     \
+        segment_force, segment SS;                                      \
+    segment_force, segment SS, mem_read, a_sel MAR, b_sel IMMEDIATE,    \
+        immediate 0x2, alu_op ADD, rd_sel SP,                           \
+        rd_sel_source MICROCODE_RD_SEL;                                 \
+    a_sel MDR, alu_op SELA, rd_sel reg,                                 \
+        rd_sel_source MICROCODE_RD_SEL, next_instruction;
+
+#define POP_SR(opcode, reg)                                             \
+.at opcode;                                                             \
+    ra_sel SP, jmp pop_sr ## reg;                                       \
+.auto_address;                                                          \
+pop_sr ## reg:                                                          \
+    a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write,                     \
+        segment_force, segment SS;                                      \
+    segment_force, segment SS, mem_read, a_sel MAR, b_sel IMMEDIATE,    \
+        immediate 0x2, alu_op ADD, rd_sel SP,                           \
+        rd_sel_source MICROCODE_RD_SEL;                                 \
+    a_sel MDR, alu_op SELA, segment_force, segment reg,                 \
+        segment_wr_en, ext_int_inhibit, next_instruction;
+
+POP_SR(0x07, ES)
+POP_SR(0x17, SS)
+POP_SR(0x1f, DS)
+
+POP_GPR(0x58, AX)
+POP_GPR(0x59, CX)
+POP_GPR(0x5a, DX)
+POP_GPR(0x5b, BX)
+POP_GPR(0x5c, SP)
+POP_GPR(0x5d, BP)
+POP_GPR(0x5e, SI)
+POP_GPR(0x5f, DI)
+
+// popf
+.at 0x9d;
+    ra_sel SP, jmp popf;
+.auto_address;
+popf:
+    alu_op SELA, mar_wr_sel Q, mar_write, segment_force, segment SS;
+    segment_force, segment SS, mem_read,
+        a_sel MAR, b_sel IMMEDIATE, immediate 0x2, alu_op ADD,
+        rd_sel SP, rd_sel_source MICROCODE_RD_SEL;
+    a_sel MDR, alu_op SETFLAGSA, update_flags CF PF AF ZF SF TF IF DF OF,
+        ext_int_inhibit, next_instruction;

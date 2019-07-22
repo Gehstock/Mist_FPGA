@@ -1,0 +1,56 @@
+// Copyright Jamie Iles, 2017
+//
+// This file is part of s80x86.
+//
+// s80x86 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// s80x86 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with s80x86.  If not, see <http://www.gnu.org/licenses/>.
+
+.at 0xac;
+    jmp lodsb;
+
+.auto_address;
+lodsb:
+    ra_sel SI, rb_cl, jmp_if_not_rep lodsb_no_rep;
+lodsb_rep_loop:
+    ra_sel CX, jmp_rb_zero lodsb_done;
+    ra_sel SI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+lodsb_no_rep:
+    ra_sel SI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, segment DS;
+    width W8, segment DS, mem_read, a_sel MDR, alu_op SELA,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel AL, jmp_if_not_rep lodsb_done;
+    rb_cl, ext_int_yield, jmp lodsb_rep_loop;
+lodsb_done:
+    next_instruction;
+
+.at 0xad;
+    jmp lodsw;
+
+.auto_address;
+lodsw:
+    ra_sel SI, rb_cl, jmp_if_not_rep lodsw_no_rep;
+lodsw_rep_loop:
+    ra_sel CX, jmp_rb_zero lodsw_done;
+    ra_sel SI, a_sel RA, b_sel IMMEDIATE, immediate 0x1, alu_op SUB,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel CX;
+lodsw_no_rep:
+    ra_sel SI, a_sel RA, alu_op SELA, mar_wr_sel Q, mar_write, segment DS;
+    a_sel RA, b_sel IMMEDIATE, immediate 0x2, alu_op NEXT,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel SI, segment DS;
+    segment DS, mem_read, a_sel MDR, alu_op SELA,
+        rd_sel_source MICROCODE_RD_SEL, rd_sel AX, jmp_if_not_rep lodsw_done;
+    rb_cl, ext_int_yield, jmp lodsw_rep_loop;
+lodsw_done:
+    next_instruction;
