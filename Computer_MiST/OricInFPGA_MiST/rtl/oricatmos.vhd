@@ -67,8 +67,9 @@ entity oricatmos is
     K7_TAPEIN         : in    std_logic;
     K7_TAPEOUT        : out   std_logic;
     K7_REMOTE         : out   std_logic;
-	 PSG_RIGHT         : out   std_logic_vector(15 downto 0);
-	 PSG_LEFT          : out   std_logic_vector(15 downto 0);
+--	 PSG_RIGHT         : out   std_logic_vector(15 downto 0);
+--	 PSG_LEFT          : out   std_logic_vector(15 downto 0);
+	 PSG_OUT           : out   std_logic_vector(15 downto 0);
     VIDEO_R           : out   std_logic;
     VIDEO_G           : out   std_logic;
     VIDEO_B           : out   std_logic;
@@ -297,12 +298,14 @@ ad  <= ula_AD_SRAM when ula_PHI2 = '0' else cpu_ad(15 downto 0);
 	bc0      	=> psg_bdir,
 	bdir     	=> via_cb2_out,
 	Data_in     => via_pa_out,
-	oData       => via_pa_in,
+	Data_out    => via_pa_in,
+	IO_A    		=> x"FF",
 	chanA       => open,
 	chanB       => open,
 	chanC       => open,
-	Arechts     => PSG_RIGHT,
-	Alinks      => PSG_LEFT
+--	Arechts     => PSG_RIGHT,
+--	Alinks      => PSG_LEFT,
+	Amono       => PSG_OUT
     );
 
   inst_key : keyboard

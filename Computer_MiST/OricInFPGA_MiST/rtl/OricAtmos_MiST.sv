@@ -25,22 +25,22 @@ localparam CONF_STR = {
 	"T9,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
-wire clk_24, clk_12, clk_6;
+wire clk_24, clk_6;
 wire [10:0] ps2_key;
-wire 			r, g,b; 
+wire 			r, g, b; 
 wire 			hs, vs;
 wire  [1:0] buttons, switches;
 wire			ypbpr;
 wire        scandoublerD;
 wire [31:0] status;
-wire [15:0] audiol, audior;
+wire [15:0] audio;
 assign LED = 1'b1;
+assign AUDIO_R = AUDIO_L;
 
 pll pll (
 	 .inclk0 ( CLOCK_27   ),
 	 .c0     ( clk_24  ),
-	 .c1     ( clk_12  ),
-	 .c2     ( clk_6 )
+	 .c1     ( clk_6  )
 	);
 
 
@@ -90,8 +90,7 @@ video_mixer video_mixer (
 oricatmos oricatmos(
 	.RESET(status[0] | status[9] | buttons[1]),
 	.ps2_key(ps2_key),
-	.PSG_LEFT(audiol),
-	.PSG_RIGHT(audior),
+	.PSG_OUT(audio),
 	.VIDEO_R(r),
 	.VIDEO_G(g),
 	.VIDEO_B(b),
@@ -104,22 +103,11 @@ oricatmos oricatmos(
 	
 dac #(
    .msbi_g(15))
-dacl (
+dac(
    .clk_i(clk_24),
    .res_n_i(1'b1),
-   .dac_i(audiol),
+   .dac_i(audio),
    .dac_o(AUDIO_L)
   );	
 
-dac #(
-   .msbi_g(15))
-dacr (
-   .clk_i(clk_24),
-   .res_n_i(1'b1),
-   .dac_i(audior),
-   .dac_o(AUDIO_R)
-  );
-  
-  
-  
 endmodule

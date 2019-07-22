@@ -27,18 +27,20 @@ use ieee.std_logic_unsigned.all;
 
 entity ay8912 is
     port (
-	cpuclk    : in STD_LOGIC;	--48MHz
-	reset    : in STD_LOGIC;
-	cs    : in STD_LOGIC;		--H-aktiv
-	bc0    : in STD_LOGIC;		--
-	bdir    : in STD_LOGIC;
-	Data_in    : in STD_LOGIC_VECTOR (7 downto 0);
-	oData     : out STD_LOGIC_VECTOR (7 downto 0);
-	chanA     : buffer STD_LOGIC_VECTOR (10 downto 0);
-	chanB     : buffer STD_LOGIC_VECTOR (10 downto 0);
-	chanC     : buffer STD_LOGIC_VECTOR (10 downto 0);
+	cpuclk    	: in STD_LOGIC;	--48MHz
+	reset    	: in STD_LOGIC;
+	cs    		: in STD_LOGIC;		--H-aktiv
+	bc0    		: in STD_LOGIC;		--
+	bdir    		: in STD_LOGIC;
+	Data_in    	: in STD_LOGIC_VECTOR (7 downto 0);
+	Data_out    : out STD_LOGIC_VECTOR (7 downto 0);
+	IO_A    		: in STD_LOGIC_VECTOR (7 downto 0);
+	chanA     	: buffer STD_LOGIC_VECTOR (10 downto 0);
+	chanB     	: buffer STD_LOGIC_VECTOR (10 downto 0);
+	chanC     	: buffer STD_LOGIC_VECTOR (10 downto 0);
 	Arechts     : out STD_LOGIC_VECTOR (15 downto 0);
-	Alinks     : out STD_LOGIC_VECTOR (15 downto 0)
+	Alinks     	: out STD_LOGIC_VECTOR (15 downto 0);
+	Amono     	: out STD_LOGIC_VECTOR (15 downto 0)
     );
 end ay8912;
 
@@ -92,7 +94,7 @@ begin
 process (cpuclk, clockgen)
 begin 
 	S_Tick <= '0';	--sound
-	H_Tick <= '0';	--Huellkurve
+	H_Tick <= '0';	--Hüllkurve
 	IF clockgen(9 downto 1)=0 THEN
 		S_Tick <= '1';
 		IF clockgen(0)='0' THEN
@@ -102,6 +104,7 @@ begin
 	IF rising_edge(cpuclk) THEN  
 		Arechts <= (chanA&"00000")+('0'&chanB&"0000");
 		Alinks <= (chanC&"00000")+('0'&chanB&"0000");
+		Amono <= (chanC&"00000")+('0'&chanB&"0000")+(chanA&"00000");
 		IF H_Tick='1' THEN
 --			clockgen <= ((48*16)-1);	--48MHz
 			clockgen <= "1011111111";	--48MHz
@@ -113,7 +116,7 @@ END process;
 -------------------------------------------------------------------------
 --IO Regs
 -------------------------------------------------------------------------
-process (cpuclk, reset, PortA, PortB, Aperiode, Bperiode, Cperiode, Hperiode, AVol, BVol, CVol, Noise, HKurve, enable, Data_in, t_Data, PSGReg, bdir, bc0)
+process (cpuclk, reset, IO_A, PortA, PortB, Aperiode, Bperiode, Cperiode, Hperiode, AVol, BVol, CVol, Noise, HKurve, enable, Data_in, t_Data, PSGReg, bdir, bc0)
 begin 
 	IF reset='0' THEN
 		enable <= (others => '0');
@@ -171,7 +174,7 @@ begin
 	END IF;
 	CASE Data_in(3 downto 0) IS
 		WHEN "1111"	=>	n_Pegel <= X"2AA";		-- Umsetzung in logarithmische Werte in ca. 3dB Schritten
-		WHEN "1110"	=>	n_Pegel <= X"1E2";		-- f�r Kan�le
+		WHEN "1110"	=>	n_Pegel <= X"1E2";		-- für Kanäle
 		WHEN "1101"	=>	n_Pegel <= X"155";
 		WHEN "1100"	=>	n_Pegel <= X"0F1";
 		WHEN "1011"	=>	n_Pegel <= X"0AA";
@@ -191,9 +194,9 @@ begin
 -- read reg	
 
 	IF bc0='1' AND bdir='0' THEN
-		oData <= t_Data;
+		Data_out <= t_Data;
 	ELSE
-		oData <= "11111111";
+		Data_out <= "11111111";
 	END IF;	
 	
 	t_Data <= "00000000";
@@ -227,7 +230,11 @@ begin
 		WHEN "1101" =>
 			t_Data(3 downto 0) <= HKurve;
 		WHEN "1110" =>
+			IF enable(6)='0' THEN
+				t_Data <= PortA AND IO_A;
+			ELSE
 				t_Data <= PortA;
+			END IF;
 		WHEN "1111" =>
 			t_Data <= PortB;
 	END CASE;
@@ -351,7 +358,7 @@ begin
 	
 	CASE nHVol(3 downto 0) IS
 		WHEN "1111"	=>	HVollog <= X"2AA";		-- Umsetzung in logarithmische Werte in ca. 3dB Schritten
-		WHEN "1110"	=>	HVollog <= X"1E2";		-- f�r H�llkurve
+		WHEN "1110"	=>	HVollog <= X"1E2";		-- für Hüllkurve
 		WHEN "1101"	=>	HVollog <= X"155";
 		WHEN "1100"	=>	HVollog <= X"0F1";
 		WHEN "1011"	=>	HVollog <= X"0AA";
