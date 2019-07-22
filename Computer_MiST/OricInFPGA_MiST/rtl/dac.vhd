@@ -1,65 +1,71 @@
+-------------------------------------------------------------------------------
 --
---  DAC.vhd
+-- Delta-Sigma DAC
 --
---  Digital to analog convertor.
+-- $Id: dac.vhd,v 1.1 2005/10/25 21:09:42 arnim Exp $
 --
---        Copyright (C)2001 SEILEBOST
---                   All rights reserved.
+-- Refer to Xilinx Application Note XAPP154.
 --
--- $Id: DAC.vhd, v0.2 2001/11/02 00:00:00 SEILEBOST $
+-- This DAC requires an external RC low-pass filter:
 --
--- from  XAPP154.pdf & XAPP154.ZIP (XILINX APPLICATION)
--- 
--- DAC 8 Bits ( method : sigma delta)
--- 2^N clock to convert with N = width of input
--- Ex : Bus 8 bits => 256 CLOCK master to convert an value.
--- Theorem Shannon : 2 x Fmax x 256 =< 16 MHz => Fmax = 31250 Hz
--- band of sound : 0 -> 20000 Hz : Ok !!
+--   dac_o 0---XXXXX---+---0 analog audio
+--              3k3    |
+--                    === 4n7
+--                     |
+--                    GND
+--
+-------------------------------------------------------------------------------
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
 
-entity DAC is
-    Port ( CLK_DAC : in std_logic;
-           RST     : in std_logic;
-           IN_DAC  : in std_logic_vector(7 downto 0);
-           OUT_DAC : out std_logic );
-end DAC;
+entity dac is
 
-architecture Behavioral of DAC is
+  generic (
+    msbi_g : integer := 7
+  );
+  port (
+    clk_i   : in  std_logic;
+    res_n_i : in  std_logic;
+    dac_i   : in  std_logic_vector(msbi_g downto 0);
+    dac_o   : out std_logic
+  );
 
-signal DeltaAdder : std_logic_vector(9 downto 0);
-signal SigmaAdder : std_logic_vector(9 downto 0);
-signal SigmaLatch : std_logic_vector(9 downto 0);
-signal DeltaB     : std_logic_vector(9 downto 0);
+end dac;
+
+library ieee;
+use ieee.numeric_std.all;
+
+architecture rtl of dac is
+
+  signal DACout_q      : std_logic;
+  signal DeltaAdder_s,
+         SigmaAdder_s,
+         SigmaLatch_q,
+         DeltaB_s      : unsigned(msbi_g+2 downto 0);
 
 begin
- PROCESS(SigmaLatch, DeltaB)
- BEGIN
-     DeltaB <= TRANSPORT ( SigmaLatch(9) & SigmaLatch(9) & "00000000");
- END PROCESS;
 
- PROCESS(IN_DAC, DeltaB, DeltaAdder)
- BEGIN      
-      DeltaAdder <= IN_DAC + DeltaB;
- END PROCESS;
+  DeltaB_s(msbi_g+2 downto msbi_g+1) <= SigmaLatch_q(msbi_g+2) &
+                                        SigmaLatch_q(msbi_g+2);
+  DeltaB_s(msbi_g   downto        0) <= (others => '0');
 
- PROCESS(DeltaAdder, SigmaLatch)
- BEGIN
-      SigmaAdder <= DeltaAdder + SigmaLatch;
- END PROCESS;
+  DeltaAdder_s <= unsigned('0' & '0' & dac_i) + DeltaB_s;
 
- PROCESS(CLK_DAC, RST)
- BEGIN
-      if (RST = '1') then
-         SigmaLatch <= "0100000000";
-         OUT_DAC    <= '1';
-      elsif (CLK_DAC'event and CLK_DAC = '1') then
-         SigmaLatch <= SigmaAdder;
-         OUT_DAC    <= SigmaLatch(9);
-      end if;
- END PROCESS;
+  SigmaAdder_s <= DeltaAdder_s + SigmaLatch_q;
 
-end Behavioral;
+  seq: process (clk_i, res_n_i)
+  begin
+    if res_n_i = '0' then
+      SigmaLatch_q <= to_unsigned(2**(msbi_g+1), SigmaLatch_q'length);
+      DACout_q     <= '0';
+
+    elsif clk_i'event and clk_i = '1' then
+      SigmaLatch_q <= SigmaAdder_s;
+      DACout_q     <= SigmaLatch_q(msbi_g+2);
+    end if;
+  end process seq;
+
+  dac_o <= DACout_q;
+
+end rtl;

@@ -67,7 +67,8 @@ entity oricatmos is
     K7_TAPEIN         : in    std_logic;
     K7_TAPEOUT        : out   std_logic;
     K7_REMOTE         : out   std_logic;
-	 PSG_OUT         	 : out   std_logic_vector(7 downto 0);
+	 PSG_RIGHT         : out   std_logic_vector(15 downto 0);
+	 PSG_LEFT          : out   std_logic_vector(15 downto 0);
     VIDEO_R           : out   std_logic;
     VIDEO_G           : out   std_logic;
     VIDEO_B           : out   std_logic;
@@ -287,36 +288,30 @@ ad  <= ula_AD_SRAM when ula_PHI2 = '0' else cpu_ad(15 downto 0);
 		ENA_4         => '1',
 		CLK           => ula_CLK_4
 	);
-
-	 
-	 inst_psg : entity work.YM2149
+	
+	 inst_psg : entity work.ay8912
 	port map (
-		I_DA       => via_pa_out,
-		O_DA       => via_pa_in,
-		O_DA_OE_L  => open,
-		-- control
-		I_A9_L     => '0',
-		I_A8       => '1',
-		I_BDIR     => via_cb2_out,
-		I_BC2      => '1',
-		I_BC1      => psg_bdir,
-		I_SEL_L    => '1',
-
-		O_AUDIO    => PSG_OUT,
-		RESET_L    => RESETn,
-		ENA        => '1',
-		CLK        => ula_PHI2
-	);
+	cpuclk      => CLK_IN,
+	reset    	=> RESETn,
+	cs        	=> '1',
+	bc0      	=> psg_bdir,
+	bdir     	=> via_cb2_out,
+	Data_in     => via_pa_out,
+	oData       => via_pa_in,
+	chanA       => open,
+	chanB       => open,
+	chanC       => open,
+	Arechts     => PSG_RIGHT,
+	Alinks      => PSG_LEFT
+    );
 
   inst_key : keyboard
 	port map(
 		clk_24	=> CLK_IN,
 		clk		=> ula_phi2,
-		reset	=> not RESETn, -- active high reset
-
+		reset		=> not RESETn,
 		ps2_key	=> ps2_key,
-		row	=> via_pa_out,
-
+		row		=> via_pa_out,
 		col		=> via_out(2 downto 0),
 		ROWbit	=> KEY_ROW,
 		swrst		=> break

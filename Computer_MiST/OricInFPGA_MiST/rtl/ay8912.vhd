@@ -32,7 +32,6 @@ entity ay8912 is
 	cs    : in STD_LOGIC;		--H-aktiv
 	bc0    : in STD_LOGIC;		--
 	bdir    : in STD_LOGIC;
-	PortAin    : in STD_LOGIC_VECTOR (7 downto 0);
 	Data_in    : in STD_LOGIC_VECTOR (7 downto 0);
 	oData     : out STD_LOGIC_VECTOR (7 downto 0);
 	chanA     : buffer STD_LOGIC_VECTOR (10 downto 0);
@@ -114,7 +113,7 @@ END process;
 -------------------------------------------------------------------------
 --IO Regs
 -------------------------------------------------------------------------
-process (cpuclk, reset, PortA, PortAin, PortB, Aperiode, Bperiode, Cperiode, Hperiode, AVol, BVol, CVol, Noise, HKurve, enable, Data_in, t_Data, PSGReg, bdir, bc0)
+process (cpuclk, reset, PortA, PortB, Aperiode, Bperiode, Cperiode, Hperiode, AVol, BVol, CVol, Noise, HKurve, enable, Data_in, t_Data, PSGReg, bdir, bc0)
 begin 
 	IF reset='0' THEN
 		enable <= (others => '0');
@@ -228,11 +227,7 @@ begin
 		WHEN "1101" =>
 			t_Data(3 downto 0) <= HKurve;
 		WHEN "1110" =>
-			IF enable(6)='0' THEN
-				t_Data <= PortA AND PortAin;
-			ELSE
 				t_Data <= PortA;
-			END IF;	
 		WHEN "1111" =>
 			t_Data <= PortB;
 	END CASE;

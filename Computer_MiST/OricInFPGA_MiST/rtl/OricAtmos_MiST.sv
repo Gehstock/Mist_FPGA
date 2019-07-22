@@ -34,9 +34,7 @@ wire			ypbpr;
 wire        scandoublerD;
 wire [31:0] status;
 wire [15:0] audiol, audior;
-wire  [7:0] PSG_OUT;
 assign LED = 1'b1;
-assign AUDIO_R = AUDIO_L;
 
 pll pll (
 	 .inclk0 ( CLOCK_27   ),
@@ -92,7 +90,8 @@ video_mixer video_mixer (
 oricatmos oricatmos(
 	.RESET(status[0] | status[9] | buttons[1]),
 	.ps2_key(ps2_key),
-	.PSG_OUT(PSG_OUT),
+	.PSG_LEFT(audiol),
+	.PSG_RIGHT(audior),
 	.VIDEO_R(r),
 	.VIDEO_G(g),
 	.VIDEO_B(b),
@@ -102,14 +101,25 @@ oricatmos oricatmos(
 	.K7_TAPEOUT(UART_TXD),
 	.clk_in(clk_24)
 	);
-
-dac2 #(
-   .msbi_g(8))
+	
+dac #(
+   .msbi_g(15))
 dacl (
    .clk_i(clk_24),
    .res_n_i(1'b1),
-   .dac_i(PSG_OUT),
+   .dac_i(audiol),
    .dac_o(AUDIO_L)
+  );	
+
+dac #(
+   .msbi_g(15))
+dacr (
+   .clk_i(clk_24),
+   .res_n_i(1'b1),
+   .dac_i(audior),
+   .dac_o(AUDIO_R)
   );
+  
+  
   
 endmodule
