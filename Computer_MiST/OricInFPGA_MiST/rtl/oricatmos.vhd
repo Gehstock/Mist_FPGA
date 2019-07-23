@@ -55,9 +55,6 @@
   use ieee.std_logic_1164.all;
   use ieee.std_logic_arith.all;
   use ieee.std_logic_unsigned.all;
-  library WORK;
-  library STD;
-  USE STD.TEXTIO.ALL;
 
   
 entity oricatmos is
@@ -67,8 +64,6 @@ entity oricatmos is
     K7_TAPEIN         : in    std_logic;
     K7_TAPEOUT        : out   std_logic;
     K7_REMOTE         : out   std_logic;
---	 PSG_RIGHT         : out   std_logic_vector(15 downto 0);
---	 PSG_LEFT          : out   std_logic_vector(15 downto 0);
 	 PSG_OUT           : out   std_logic_vector(15 downto 0);
     VIDEO_R           : out   std_logic;
     VIDEO_G           : out   std_logic;
@@ -146,22 +141,19 @@ architecture RTL of oricatmos is
     
 	 signal lSRAM_D            : std_logic_vector(7 downto 0);
 	 signal ENA_1MHZ           : std_logic;
-    signal ROM_DO      : std_logic_vector(7 downto 0);
-	  
+    signal ROM_DO      			: std_logic_vector(7 downto 0);
 
 
-signal ad                 : std_logic_vector(15 downto 0);
-signal SRAM_DO            : std_logic_vector(7 downto 0);
-signal break           : std_logic;
+	 signal ad                 : std_logic_vector(15 downto 0);
+	 signal SRAM_DO            : std_logic_vector(7 downto 0);
+	 signal break           	: std_logic;
 
 component keyboard port (
 		clk_24	: in  std_logic;
 		clk		: in  std_logic;
 		reset	: in  std_logic;
-
 		ps2_key	: in std_logic_vector(10 downto 0);
 		row	: in std_logic_vector(7 downto 0);
-
 		col		: in std_logic_vector(2 downto 0);
 		ROWbit	: out std_logic_vector(7 downto 0);
 		swrst		: out std_logic
@@ -171,184 +163,141 @@ end component;
 begin
 RESETn <= not RESET;
 
-  ------------------------------------------------------------
-  -- GESTION CPU 6502
-  ------------------------------------------------------------
-  cpu : entity work.T65
-      port map (
-          Mode    => "00",
-          Res_n   => RESETn,
-          Enable  => '1',
-          Clk     => ula_phi2,
-          Rdy     => '1',
-          Abort_n => '1',
-          IRQ_n   => cpu_irq,
-          NMI_n   => not break,
-          SO_n    => '1',
-          R_W_n   => cpu_rw,
-          A       => cpu_ad,
-          DI      => cpu_di,
-          DO      => cpu_do
-      );
+inst_cpu : entity work.T65
+	port map (
+		Mode    		=> "00",
+      Res_n   		=> RESETn,
+      Enable  		=> '1',
+      Clk     		=> ula_phi2,
+      Rdy     		=> '1',
+      Abort_n 		=> '1',
+      IRQ_n   		=> cpu_irq,
+      NMI_n   		=> not break,
+      SO_n    		=> '1',
+      R_W_n   		=> cpu_rw,
+      A       		=> cpu_ad,
+      DI      		=> cpu_di,
+      DO      		=> cpu_do
+);
 		
 ad  <= ula_AD_SRAM when ula_PHI2 = '0' else cpu_ad(15 downto 0);
 
-	inst_ram : entity work.ram48k
+inst_ram : entity work.ram48k
 	port map(
-		clk  => CLK_IN,
-		cs   => ula_CE_SRAM,
-		oe   => ula_OE_SRAM,
-		we   => ula_WE_SRAM,
-		addr => ad,
-		di   => cpu_do,
-		do   => SRAM_DO
-	);
+		clk  			=> CLK_IN,
+		cs   			=> ula_CE_SRAM,
+		oe   			=> ula_OE_SRAM,
+		we   			=> ula_WE_SRAM,
+		addr 			=> ad,
+		di   			=> cpu_do,
+		do   			=> SRAM_DO
+);
 
-  
-  inst_rom : entity work.BASIC
+inst_rom : entity work.BASIC11
 	port map (
-		clk  => CLK_IN,
-		addr => cpu_ad(13 downto 0),
-		data => ROM_DO
-	);
+		clk  			=> CLK_IN,
+		addr 			=> cpu_ad(13 downto 0),
+		data 			=> ROM_DO
+);
 
-  
-  ------------------------------------------------------------
-  -- GESTION ULA
-  ------------------------------------------------------------
-  ulag : entity work.ULA
-    port map (
-      CLK        => CLK_IN,
-      PHI2       => ula_PHI2,
-      CLK_4      => ula_CLK_4,
-      RW         => cpu_rw,
-      RESETn     => RESETn,
-		MAPn       => '1',
-      DB         => SRAM_DO,
-      ADDR         => cpu_ad(15 downto 0),
+inst_ula : entity work.ULA
+   port map (
+      CLK        	=> CLK_IN,
+      PHI2       	=> ula_PHI2,
+      CLK_4      	=> ula_CLK_4,
+      RW         	=> cpu_rw,
+      RESETn     	=> RESETn,
+		MAPn      	=> '1',
+      DB         	=> SRAM_DO,
+      ADDR       	=> cpu_ad(15 downto 0),
+      SRAM_AD    	=> ula_AD_SRAM,
+		SRAM_OE    	=> ula_OE_SRAM,
+		SRAM_CE    	=> ula_CE_SRAM,
+		SRAM_WE    	=> ula_WE_SRAM,
+		LATCH_SRAM 	=> ula_LATCH_SRAM,
+      CSIOn      	=> ula_CSIOn,
+      CSROMn     	=> ula_CSROMn,
+      CSRAMn     	=> ula_CSRAMn,
+      R          	=> VIDEO_R,
+      G          	=> VIDEO_G,
+      B          	=> VIDEO_B,
+      SYNC       	=> VIDEO_SYNC,
+		HSYNC      	=> VIDEO_HSYNC,
+		VSYNC      	=> VIDEO_VSYNC		
+);
 
-      SRAM_AD    => ula_AD_SRAM,
-		SRAM_OE    => ula_OE_SRAM,
-		SRAM_CE    => ula_CE_SRAM,
-		SRAM_WE    => ula_WE_SRAM,
-		LATCH_SRAM => ula_LATCH_SRAM,
-      CSIOn      => ula_CSIOn,
-      CSROMn     => ula_CSROMn,
-      CSRAMn     => ula_CSRAMn,
-      R          => VIDEO_R,
-      G          => VIDEO_G,
-      B          => VIDEO_B,
-      SYNC       => VIDEO_SYNC,
-		HSYNC      => VIDEO_HSYNC,
-		VSYNC      => VIDEO_VSYNC		
-      );
-     
-  ------------------------------------------------------------
-  -- GESTION VIA
-  ------------------------------------------------------------
-  ula_CSIO <= not(ula_CSIOn);
-  inst_via : entity work.M6522
+ula_CSIO <= not(ula_CSIOn);
+inst_via : entity work.M6522
 	port map (
-		I_RS          => cpu_ad(3 downto 0),
-		I_DATA        => cpu_do(7 downto 0),
-		O_DATA        => VIA_DO,
-		O_DATA_OE_L   => open,
-
-		I_RW_L        => cpu_rw,
-		I_CS1         => ula_CSIO,
-		I_CS2_L       => ula_IOCONTROL,
-
-		O_IRQ_L       => cpu_irq,   -- note, not open drain
-
-		-- PORT A
-		I_CA1         => '1',       -- PRT_ACK
-		I_CA2         => '1',       -- psg_bdir
-		O_CA2         => psg_bdir,  -- via_ca2_out
-		O_CA2_OE_L    => open,
-
-		I_PA          => via_pa_in,
-		O_PA          => via_pa_out,
-		O_PA_OE_L     => via_pa_out_oe,
-
-		-- PORT B
-		I_CB1         => K7_TAPEIN,
-		O_CB1         => via_cb1_out,
-		O_CB1_OE_L    => via_cb1_oe_l,
-
-		I_CB2         => '1',
-		O_CB2         => via_cb2_out,
-		O_CB2_OE_L    => via_cb2_oe_l,
-
-		I_PB          => via_in,
-		O_PB          => via_out,
-		O_PB_OE_L     => via_oe_l,
-
-		--
-		RESET_L       => RESETn,
-		I_P2_H        => ula_phi2,
-		ENA_4         => '1',
-		CLK           => ula_CLK_4
-	);
+		I_RS        => cpu_ad(3 downto 0),
+		I_DATA      => cpu_do(7 downto 0),
+		O_DATA      => VIA_DO,
+		I_RW_L      => cpu_rw,
+		I_CS1       => ula_CSIO,
+		I_CS2_L     => ula_IOCONTROL,
+		O_IRQ_L     => cpu_irq,   -- note, not open drain
+		I_CA1       => '1',       -- PRT_ACK
+		I_CA2       => '1',       -- psg_bdir
+		O_CA2       => psg_bdir,  -- via_ca2_out
+		I_PA        => via_pa_in,
+		O_PA        => via_pa_out,
+		O_PA_OE_L   => via_pa_out_oe,
+		I_CB1       => K7_TAPEIN,
+		O_CB1       => via_cb1_out,
+		O_CB1_OE_L  => via_cb1_oe_l,
+		I_CB2       => '1',
+		O_CB2       => via_cb2_out,
+		O_CB2_OE_L  => via_cb2_oe_l,
+		I_PB        => via_in,
+		O_PB        => via_out,
+		O_PB_OE_L   => via_oe_l,
+		RESET_L     => RESETn,
+		I_P2_H      => ula_phi2,
+		ENA_4       => '1',
+		CLK         => ula_CLK_4
+);
 	
-	 inst_psg : entity work.ay8912
+inst_psg : entity work.ay8912
 	port map (
-	cpuclk      => CLK_IN,
-	reset    	=> RESETn,
-	cs        	=> '1',
-	bc0      	=> psg_bdir,
-	bdir     	=> via_cb2_out,
-	Data_in     => via_pa_out,
-	Data_out    => via_pa_in,
-	IO_A    		=> x"FF",
-	chanA       => open,
-	chanB       => open,
-	chanC       => open,
---	Arechts     => PSG_RIGHT,
---	Alinks      => PSG_LEFT,
-	Amono       => PSG_OUT
-    );
+		cpuclk      => CLK_IN,
+		reset    	=> RESETn,
+		cs        	=> '1',
+		bc0      	=> psg_bdir,
+		bdir     	=> via_cb2_out,
+		Data_in     => via_pa_out,
+		Data_out    => via_pa_in,
+		IO_A    		=> x"FF",
+		Amono       => PSG_OUT
+);
 
-  inst_key : keyboard
+inst_key : keyboard
 	port map(
-		clk_24	=> CLK_IN,
-		clk		=> ula_phi2,
-		reset		=> not RESETn,
-		ps2_key	=> ps2_key,
-		row		=> via_pa_out,
-		col		=> via_out(2 downto 0),
-		ROWbit	=> KEY_ROW,
-		swrst		=> break
-	);
+		clk_24		=> CLK_IN,
+		clk			=> ula_phi2,
+		reset			=> not RESETn,
+		ps2_key		=> ps2_key,
+		row			=> via_pa_out,
+		col			=> via_out(2 downto 0),
+		ROWbit		=> KEY_ROW,
+		swrst			=> break
+);
 
-	-- Keyboard
-	via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF" else x"FF";
-
-  ------------------------------------------------------------
-  -- GESTION PORT K7
-  ------------------------------------------------------------
-  K7_TAPEOUT  <= via_out(7);
-  K7_REMOTE   <= via_out(6);
-
-
-  
+via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF" else x"FF";
+K7_TAPEOUT  <= via_out(7);
+K7_REMOTE   <= via_out(6);
 ula_IOCONTROL <= '0'; -- ula_IOCONTROL <= IOCONTROL; 
-  process
-	begin
-		wait until rising_edge(clk_in);
 
-		-- expansion port
-		if    cpu_rw = '1' and ula_IOCONTROL = '1' and ula_CSIOn  = '0'                       then
-			cpu_di <= SRAM_DO;
-		-- Via
+process begin
+	wait until rising_edge(clk_in);
+		if    cpu_rw = '1' and ula_IOCONTROL = '1' and ula_CSIOn  = '0' then
+			cpu_di <= SRAM_DO;-- expansion port
 		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSIOn  = '0' and ula_LATCH_SRAM = '0' then
-			cpu_di <= VIA_DO;
-		-- ROM
-		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSROMn = '0'                       then
-			cpu_di <= ROM_DO;
-		-- Read data
+			cpu_di <= VIA_DO;-- Via
+		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSROMn = '0' then
+			cpu_di <= ROM_DO;		-- ROM
 		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_phi2   = '1' and ula_LATCH_SRAM = '0' then
-			cpu_di <= SRAM_DO;
+			cpu_di <= SRAM_DO;-- Read data
 		end if;
-	end process;
+end process;
 
 end RTL;
