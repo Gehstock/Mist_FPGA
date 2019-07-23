@@ -25,8 +25,11 @@ localparam CONF_STR = {
 	"T9,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
-wire clk_24, clk_6;
-wire [10:0] ps2_key;
+wire clk_24;
+wire        key_pressed;
+wire [7:0]  key_code;
+wire        key_strobe;
+wire        key_extended;
 wire 			r, g, b; 
 wire 			hs, vs;
 wire  [1:0] buttons, switches;
@@ -38,76 +41,75 @@ assign LED = 1'b1;
 assign AUDIO_R = AUDIO_L;
 
 pll pll (
-	 .inclk0 ( CLOCK_27   ),
-	 .c0     ( clk_24  ),
-	 .c1     ( clk_6  )
+	.inclk0				(CLOCK_27			),
+	.c0					(clk_24 				)
 	);
-
-
-mist_io #(
-	.STRLEN($size(CONF_STR)>>3)) 
-user_io (
-	.clk_sys(clk_24),
-	.CONF_DATA0(CONF_DATA0),
-	.SPI_SCK(SPI_SCK),
-	.SPI_DI(SPI_DI),
-	.SPI_DO(SPI_DO),
-	.SPI_SS2(SPI_SS2),	
-	.conf_str(CONF_STR),
-	.ypbpr(ypbpr),
-	.status(status),
-	.scandoublerD(scandoublerD),
-	.buttons(buttons),
-	.switches(switches),
-	.ps2_key(ps2_key)
+	
+user_io #(
+	.STRLEN				(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        	(clk_24         	),
+	.conf_str       	(CONF_STR       	),
+	.SPI_CLK        	(SPI_SCK        	),
+	.SPI_SS_IO      	(CONF_DATA0     	),
+	.SPI_MISO       	(SPI_DO         	),
+	.SPI_MOSI       	(SPI_DI         	),
+	.buttons        	(buttons        	),
+	.switches       	(switches      	),
+	.scandoubler_disable (scandoublerD	),
+	.ypbpr          	(ypbpr          	),
+	.key_strobe     	(key_strobe     	),
+	.key_pressed    	(key_pressed    	),
+	.key_extended   	(key_extended   	),
+	.key_code       	(key_code       	),
+	.status         	(status         	)
 	);
-
-video_mixer video_mixer (
-	.clk_sys			( clk_24		),
-	.ce_pix			( clk_6		),
-	.ce_pix_actual	( clk_6		),
-	.SPI_SCK			( SPI_SCK		),
-	.SPI_SS3			( SPI_SS3		),
-	.SPI_DI			( SPI_DI			),
-	.R					( {r,r,r}),
-	.G					( {g,g,g}),
-	.B					( {b,b,b}),
-	.HSync			( hs				),
-	.VSync			( vs	   		),
-	.VGA_R			( VGA_R			),
-	.VGA_G			( VGA_G			),
-	.VGA_B			( VGA_B			),
-	.VGA_VS			( VGA_VS			),
-	.VGA_HS			( VGA_HS			),
-	.scanlines		(scandoublerD ? 2'b00 : status[3:2]),
-	.scandoublerD  (scandoublerD	),
-	.ypbpr			( ypbpr			),
-	.ypbpr_full		( 1				),
-	.line_start		( 0				),
-	.mono				( 0				)
+	
+mist_video #(.COLOR_DEPTH(3)) mist_video(
+	.clk_sys				(clk_24				),
+	.SPI_SCK				(SPI_SCK				),
+	.SPI_SS3				(SPI_SS3				),
+	.SPI_DI				(SPI_DI				),
+	.R						({r,r,r}				),
+	.G						({g,g,g}				),
+	.B						({b,b,b}				),
+	.HSync				(hs					),
+	.VSync				(vs					),
+	.VGA_R				(VGA_R				),
+	.VGA_G				(VGA_G				),
+	.VGA_B				(VGA_B				),
+	.VGA_VS				(VGA_VS				),
+	.VGA_HS				(VGA_HS				),
+	.ce_divider			(1'b0					),
+	.scandoubler_disable(scandoublerD	),
+	.scanlines			(scandoublerD ? 2'b00 : status[4:3]),
+	.ypbpr				(ypbpr				)
 	);
 
 oricatmos oricatmos(
-	.RESET(status[0] | status[9] | buttons[1]),
-	.ps2_key(ps2_key),
-	.PSG_OUT(audio),
-	.VIDEO_R(r),
-	.VIDEO_G(g),
-	.VIDEO_B(b),
-	.VIDEO_HSYNC(hs),
-	.VIDEO_VSYNC(vs),
-	.K7_TAPEIN(UART_RXD),
-	.K7_TAPEOUT(UART_TXD),
-	.clk_in(clk_24)
+	.RESET				(status[0] | status[9] | buttons[1]),
+	.key_pressed		(key_pressed		),
+	.key_code			(key_code			),
+	.key_extended		(key_extended		),
+	.key_strobe			(key_strobe			),
+	.PSG_OUT				(audio				),
+	.VIDEO_R				(r						),
+	.VIDEO_G				(g						),
+	.VIDEO_B				(b						),
+	.VIDEO_HSYNC		(hs					),
+	.VIDEO_VSYNC		(vs					),
+	.K7_TAPEIN			(UART_RXD			),
+	.K7_TAPEOUT			(UART_TXD			),
+	.clk_in				(clk_24				)
 	);
 	
 dac #(
-   .msbi_g(15))
+   .c_bits				(16					))
 dac(
-   .clk_i(clk_24),
-   .res_n_i(1'b1),
-   .dac_i(audio),
-   .dac_o(AUDIO_L)
+   .clk_i				(clk_24				),
+   .res_n_i				(1						),
+   .dac_i				(audio				),
+   .dac_o				(AUDIO_L				)
   );	
 
 endmodule

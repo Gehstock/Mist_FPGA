@@ -5,7 +5,11 @@ module keyboard
 	input			 clk_24,
 	input			 clk,
 	input			 reset,
-	input  [10:0]	 ps2_key,
+//	input  [10:0]	 ps2_key,
+	input          key_pressed,  // 1-make (pressed), 0-break (released)
+	input          key_extended, // extended code
+	input          key_strobe,   // strobe
+	input    [7:0] key_code,     // key scan code
 	input  [2:0]	 col,
 	input	 [7:0]	 row,
 	output [7:0]	 ROWbit,
@@ -84,82 +88,79 @@ reg swf4 = 1'b0;
 reg swf5 = 1'b0;
 reg swf6 = 1'b0;
 
-
-	wire       pressed = ps2_key[9];
-	wire [8:0] code    = ps2_key[8:0];
 always @(posedge clk_24) begin
 	reg old_state;
-	old_state <= ps2_key[10];
+	old_state <= key_strobe;
 	
-	if(old_state != ps2_key[10]) begin
-		casex(code)
-			'h045: sw0      			<= pressed; // 0
-			'h016: sw1       			<= pressed; // 1
-			'h01e: sw2   				<= pressed; // 2
-			'h026: sw3  				<= pressed; // 3
-			'h025: sw4   				<= pressed; // 4
-			'h02e: sw5   				<= pressed; // 5
-			'h036: sw6      			<= pressed; // 6
-			'h03d: sw7      			<= pressed; // 7
-			'h03e: sw8		   		<= pressed; // 8
-			'h046: sw9      			<= pressed; // 9
-			'h01c: swa       			<= pressed; // a
-			'h032: swb   				<= pressed; // b
-			'h021: swc  				<= pressed; // c
-			'h023: swd   				<= pressed; // d
-			'h024: swe   				<= pressed; // e
-			'h02b: swf      			<= pressed; // f
-			'h034: swg		   		<= pressed; // g
-			'h033: swh					<= pressed; // h
-			'h043: swi					<= pressed; // i
-			'h03b: swj					<= pressed; // j
-			'h042: swk					<= pressed; // k
-			'h04b: swl   				<= pressed; // l
-			'h03a: swm      			<= pressed; // m
-			'h031: swn					<= pressed; // n
-			'h044: swo					<= pressed; // o
-			'h04d: swp   				<= pressed; // p
-			'h015: swq					<= pressed; // q
-			'h02d: swr   				<= pressed; // r
-			'h01b: sws  				<= pressed; // s
-			'h02c: swt					<= pressed; // t
-			'h03c: swu					<= pressed; // u
-			'h02a: swv					<= pressed; // v
-			'h01d: sww					<= pressed; // w
-			'h022: swx					<= pressed; // x
-			'h035: swy					<= pressed; // y
-			'h01a: swz					<= pressed; // z
+	if(old_state != key_strobe) begin
+		casex(key_code)
+			'h045: sw0      			<= key_pressed; // 0
+			'h016: sw1       			<= key_pressed; // 1
+			'h01e: sw2   				<= key_pressed; // 2
+			'h026: sw3  				<= key_pressed; // 3
+			'h025: sw4   				<= key_pressed; // 4
+			'h02e: sw5   				<= key_pressed; // 5
+			'h036: sw6      			<= key_pressed; // 6
+			'h03d: sw7      			<= key_pressed; // 7
+			'h03e: sw8		   		<= key_pressed; // 8
+			'h046: sw9      			<= key_pressed; // 9
+			'h01c: swa       			<= key_pressed; // a
+			'h032: swb   				<= key_pressed; // b
+			'h021: swc  				<= key_pressed; // c
+			'h023: swd   				<= key_pressed; // d
+			'h024: swe   				<= key_pressed; // e
+			'h02b: swf      			<= key_pressed; // f
+			'h034: swg		   		<= key_pressed; // g
+			'h033: swh					<= key_pressed; // h
+			'h043: swi					<= key_pressed; // i
+			'h03b: swj					<= key_pressed; // j
+			'h042: swk					<= key_pressed; // k
+			'h04b: swl   				<= key_pressed; // l
+			'h03a: swm      			<= key_pressed; // m
+			'h031: swn					<= key_pressed; // n
+			'h044: swo					<= key_pressed; // o
+			'h04d: swp   				<= key_pressed; // p
+			'h015: swq					<= key_pressed; // q
+			'h02d: swr   				<= key_pressed; // r
+			'h01b: sws  				<= key_pressed; // s
+			'h02c: swt					<= key_pressed; // t
+			'h03c: swu					<= key_pressed; // u
+			'h02a: swv					<= key_pressed; // v
+			'h01d: sww					<= key_pressed; // w
+			'h022: swx					<= key_pressed; // x
+			'h035: swy					<= key_pressed; // y
+			'h01a: swz					<= key_pressed; // z
 	
-			'hX75: swU           	<= pressed; // up
-			'hX72: swD		        	<= pressed; // down
-			'hx6b: swL					<= pressed; // left
-			'hx74: swR					<= pressed; // right
-			'h059: swrs					<= pressed; // right shift
-			'h012: swls					<= pressed; // left shift
-			'h029: swsp					<= pressed; // space
-			'h041: swcom				<= pressed; // comma
-			'h049: swdot				<= pressed; // full stop
-			'h05a: swret				<= pressed; // return
-			'h04a: swfs					<= pressed; // forward slash
-			'h055: sweq					<= pressed; // equals
-			'h011: swfcn				<= pressed; // ALT
-			'hx71: swdel				<= pressed; // delete
-			'h05b: swrsb				<= pressed; // right sq bracket
-			'h054: swlsb				<= pressed; // left sq bracket
-			'h05d: swbs					<= pressed; // back slash h05d
-			'h04e: swdsh				<= pressed; // dash
-			'h052: swsq					<= pressed; // single quote
-			'h04c: swsc					<= pressed; // semi colon
-			'h076: swesc				<= pressed; // escape
-			'h014: swctl				<= pressed; // left control
+			'hX75: swU           	<= key_pressed; // up
+			'hX72: swD		        	<= key_pressed; // down
+			'hx6b: swL					<= key_pressed; // left
+			'hx74: swR					<= key_pressed; // right
+			'h059: swrs					<= key_pressed; // right shift
+			'h012: swls					<= key_pressed; // left shift
+			'h029: swsp					<= key_pressed; // space
+			'h041: swcom				<= key_pressed; // comma
+			'h049: swdot				<= key_pressed; // full stop
+			'h05a: swret				<= key_pressed; // return
+			'h04a: swfs					<= key_pressed; // forward slash
+			'h055: sweq					<= key_pressed; // equals
+			'h011: swfcn				<= key_pressed; // ALT
+			'hx71: swdel				<= key_pressed; // delete
+			'h05b: swrsb				<= key_pressed; // right sq bracket
+			'h054: swlsb				<= key_pressed; // left sq bracket
+			'h05d: swbs					<= key_pressed; // back slash h05d
+			'h04e: swdsh				<= key_pressed; // dash
+			'h052: swsq					<= key_pressed; // single quote
+			'h04c: swsc					<= key_pressed; // semi colon
+			'h076: swesc				<= key_pressed; // escape
+			'h014: swctl				<= key_pressed; // left control
 			
-			'h009: swrst      		<= pressed; // F10 break
-			'h005: swf1	      		<= pressed; // f1
-			'h006: swf2	      		<= pressed; // f2
-			'h004: swf3	      		<= pressed; // f3
-			'h00c: swf4	      		<= pressed; // f4
-			'h003: swf5	      		<= pressed; // f5
-			'h00b: swf6	      		<= pressed; // f6
+			'h009: swrst      		<= key_pressed; // F10 break
+			'h005: swf1	      		<= key_pressed; // f1
+			'h006: swf2	      		<= key_pressed; // f2
+			'h004: swf3	      		<= key_pressed; // f3
+			'h00c: swf4	      		<= key_pressed; // f4
+			'h003: swf5	      		<= key_pressed; // f5
+			'h00b: swf6	      		<= key_pressed; // f6
 			
 		endcase
 	end
@@ -171,7 +172,7 @@ wire no_key = (~sw0 & ~sw1 & ~sw2 & ~sw3 & ~sw4 & ~sw5 & ~sw6 & ~sw7 & ~sw8 & ~s
 					~sweq & ~swfcn & ~swdel & ~swrsb & ~swlsb & ~swbs & ~swdsh & ~swsq & ~swsc & ~swesc & ~swctl & ~swf1 & ~swf2 &
 					~swf3 & ~swf4 & ~swf5 & ~swf6);
 					
-wire sp_key = ( swls | swrs | swctl | swfcn );
+//wire sp_key = ( swls | swrs | swctl | swfcn );
 
 	always @(posedge clk) begin
 		if (no_key) ROWbit <= 8'b11111111;

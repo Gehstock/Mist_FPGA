@@ -8,7 +8,6 @@ ENTITY sprom IS
 	GENERIC
 	(
 		init_file		  : string := "";
-		numwords_a	  : natural := 0;   -- not used any more
 		widthad_a		  : natural;
 		width_a			  : natural := 8;
     outdata_reg_a : string := "UNREGISTERED"
@@ -26,8 +25,11 @@ ARCHITECTURE SYN OF sprom IS
 
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
 
+
+
 	COMPONENT altsyncram
 	GENERIC (
+		address_aclr_a		: STRING;
 		clock_enable_input_a		: STRING;
 		clock_enable_output_a		: STRING;
 		init_file		: STRING;
@@ -54,10 +56,11 @@ BEGIN
 
 	altsyncram_component : altsyncram
 	GENERIC MAP (
+		address_aclr_a => "NONE",
 		clock_enable_input_a => "BYPASS",
 		clock_enable_output_a => "BYPASS",
 		init_file => init_file,
-		intended_device_family => "Cyclone II",
+		intended_device_family => "Cyclone III",
 		lpm_hint => "ENABLE_RUNTIME_MOD=NO",
 		lpm_type => "altsyncram",
 		numwords_a => 2**widthad_a,
@@ -73,5 +76,7 @@ BEGIN
 		address_a => address,
 		q_a => sub_wire0
 	);
+
+
 
 END SYN;

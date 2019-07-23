@@ -60,7 +60,11 @@
 entity oricatmos is
   port (
     RESET             : in    std_logic;
-	 ps2_key         	 : in   std_logic_vector(10 downto 0);
+	 ps2_key         	 : in    std_logic_vector(10 downto 0);
+	 key_pressed       : in    std_logic;
+	 key_extended      : in    std_logic;
+	 key_code          : in    std_logic_vector(7 downto 0);
+	 key_strobe        : in    std_logic;
     K7_TAPEIN         : in    std_logic;
     K7_TAPEOUT        : out   std_logic;
     K7_REMOTE         : out   std_logic;
@@ -91,7 +95,7 @@ architecture RTL of oricatmos is
     signal cpu_irq            : std_logic;
       
     -- VIA    
-    signal via_pa_out_oe      : std_logic_vector(7 downto 0);
+--    signal via_pa_out_oe      : std_logic_vector(7 downto 0);
     signal via_pa_in          : std_logic_vector(7 downto 0);
     signal via_pa_out         : std_logic_vector(7 downto 0);
     signal via_ca1_in         : std_logic;     
@@ -99,14 +103,14 @@ architecture RTL of oricatmos is
     -- le 17/11/2009 signal via_ca2_out        : std_logic;
     -- le 17/11/2009 signal via_ca2_oe_l       : std_logic;    
     -- le 17/11/2009 signal via_cb1_in         : std_logic;
-    signal via_cb1_out        : std_logic;
-    signal via_cb1_oe_l       : std_logic;
+--    signal via_cb1_out        : std_logic;
+--    signal via_cb1_oe_l       : std_logic;
     signal via_cb2_in         : std_logic;
     signal via_cb2_out        : std_logic;
-    signal via_cb2_oe_l       : std_logic;
+--    signal via_cb2_oe_l       : std_logic;
     signal via_in             : std_logic_vector(7 downto 0);
     signal via_out            : std_logic_vector(7 downto 0);
-    signal via_oe_l           : std_logic_vector(7 downto 0);
+--    signal via_oe_l           : std_logic_vector(7 downto 0);
     signal VIA_DO             : std_logic_vector(7 downto 0);
     
     -- Clavier : émulation par port PS2
@@ -121,7 +125,7 @@ architecture RTL of oricatmos is
     signal ula_CSIOn          : std_logic;
 	 signal ula_CSIO           : std_logic;
     signal ula_CSROMn         : std_logic;
-    signal ula_CSRAMn         : std_logic; -- add 05/02/09    
+--    signal ula_CSRAMn         : std_logic; -- add 05/02/09    
     signal ula_AD_RAM         : std_logic_vector(7 downto 0);
     signal ula_AD_SRAM        : std_logic_vector(15 downto 0);
     signal ula_CE_SRAM        : std_logic;
@@ -148,17 +152,22 @@ architecture RTL of oricatmos is
 	 signal SRAM_DO            : std_logic_vector(7 downto 0);
 	 signal break           	: std_logic;
 
-component keyboard port (
-		clk_24	: in  std_logic;
-		clk		: in  std_logic;
-		reset	: in  std_logic;
-		ps2_key	: in std_logic_vector(10 downto 0);
-		row	: in std_logic_vector(7 downto 0);
-		col		: in std_logic_vector(2 downto 0);
-		ROWbit	: out std_logic_vector(7 downto 0);
-		swrst		: out std_logic
+COMPONENT keyboard
+	PORT
+	(
+		clk_24		:	 IN STD_LOGIC;
+		clk			:	 IN STD_LOGIC;
+		reset			:	 IN STD_LOGIC;
+		key_pressed	:	 IN STD_LOGIC;
+		key_extended:	 IN STD_LOGIC;
+		key_strobe	:	 IN STD_LOGIC;
+		key_code		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		col			:	 IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+		row			:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		ROWbit		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		swrst			:	 OUT STD_LOGIC
 	);
-end component;
+END COMPONENT;
 
 begin
 RESETn <= not RESET;
@@ -217,7 +226,7 @@ inst_ula : entity work.ULA
 		LATCH_SRAM 	=> ula_LATCH_SRAM,
       CSIOn      	=> ula_CSIOn,
       CSROMn     	=> ula_CSROMn,
-      CSRAMn     	=> ula_CSRAMn,
+--      CSRAMn     	=> ula_CSRAMn,
       R          	=> VIDEO_R,
       G          	=> VIDEO_G,
       B          	=> VIDEO_B,
@@ -241,16 +250,16 @@ inst_via : entity work.M6522
 		O_CA2       => psg_bdir,  -- via_ca2_out
 		I_PA        => via_pa_in,
 		O_PA        => via_pa_out,
-		O_PA_OE_L   => via_pa_out_oe,
+--		O_PA_OE_L   => via_pa_out_oe,
 		I_CB1       => K7_TAPEIN,
-		O_CB1       => via_cb1_out,
-		O_CB1_OE_L  => via_cb1_oe_l,
+--		O_CB1       => via_cb1_out,
+--		O_CB1_OE_L  => via_cb1_oe_l,
 		I_CB2       => '1',
 		O_CB2       => via_cb2_out,
-		O_CB2_OE_L  => via_cb2_oe_l,
+--		O_CB2_OE_L  => via_cb2_oe_l,
 		I_PB        => via_in,
 		O_PB        => via_out,
-		O_PB_OE_L   => via_oe_l,
+--		O_PB_OE_L   => via_oe_l,
 		RESET_L     => RESETn,
 		I_P2_H      => ula_phi2,
 		ENA_4       => '1',
@@ -275,7 +284,10 @@ inst_key : keyboard
 		clk_24		=> CLK_IN,
 		clk			=> ula_phi2,
 		reset			=> not RESETn,
-		ps2_key		=> ps2_key,
+		key_pressed	=> key_pressed,
+		key_extended => key_extended,
+		key_strobe	=> key_strobe,
+		key_code		=> key_code,
 		row			=> via_pa_out,
 		col			=> via_out(2 downto 0),
 		ROWbit		=> KEY_ROW,

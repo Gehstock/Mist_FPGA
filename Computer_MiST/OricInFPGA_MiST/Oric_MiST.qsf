@@ -58,15 +58,8 @@ set_global_assignment -name VHDL_FILE rtl/T65/t65_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/t65_alu.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/t65.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/pack_t65.vhd
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
 set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -216,10 +209,12 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(OricAtmos_MiST)
 # --------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
