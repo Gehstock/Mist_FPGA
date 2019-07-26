@@ -23,15 +23,16 @@ assign R = {Bout[7] & Video & ~Video, Bout[1] & Video};
 assign G = {Bout[6] & Video & ~Video, Bout[2] & Video};
 assign B = {Bout[5] & Video & ~Video, Bout[3] & Video};
 
-wire [7:0] Ain, Bin, Aout, Bout;
-CPLD_74LS245 IC2 ( 
-	.nE(CSX_n),
-   .dir(RD_n),
-   .Bin(Bin),
-   .Ain(Din),
-	.Bout(Bout),
-   .Aout(Dout),
-	);
+wire [7:0] Bin, Bout;
+	
+LS245 LS245(
+	.DIR(~RD_n),
+   .OE(CSX_n),
+   .Ai(Din),
+   .Bi(Bin),
+	.Ao(Dout),
+   .Bo(Bout)
+    );
 	
 spram #(
 	.addr_width_g(10),

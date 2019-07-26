@@ -10,14 +10,24 @@ module HighResBoard(
 	output[10:0]	VAout
 );
 
+wire [7:0] IC1_Aout, IC1_Bin;
 TTL74LS245 IC1(
 	.OE(CS2_n),
 	.DIR(1'b0),
 	.Ain(Din),
-	.Aout(),
+	.Aout(Aout),
 	.Bin(),
-	.Bout()
+	.Bout(Dout)
 	);
+	
+LS245 IC1(
+	.DIR(1'b0),
+   .OE(CS2_n),
+   .Ai(Din),
+   .Bi(Bin),
+	.Ao(Dout),
+   .Bo(Bout)
+    );	
 	
 TTL74LS373 IC2(
 	.LE(CS0_n),

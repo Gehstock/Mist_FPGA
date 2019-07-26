@@ -1,0 +1,29 @@
+inst_via : entity work.M6522
+	port map (
+		I_RS        => cpu_ad(3 downto 0),
+		I_DATA      => cpu_do(7 downto 0),
+		O_DATA      => VIA_DO,
+		I_RW_L      => cpu_rw,
+		I_CS1       => ula_CSIO,
+		I_CS2_L     => ula_IOCONTROL,
+		O_IRQ_L     => cpu_irq,   -- note, not open drain
+		I_CA1       => '1',       -- PRT_ACK
+		I_CA2       => '1',       -- psg_bdir
+		O_CA2       => psg_bdir,  -- via_ca2_out
+		I_PA        => via_pa_in,
+		O_PA        => via_pa_out,
+--		O_PA_OE_L   => via_pa_out_oe,
+		I_CB1       => K7_TAPEIN,
+--		O_CB1       => via_cb1_out,
+--		O_CB1_OE_L  => via_cb1_oe_l,
+		I_CB2       => '1',
+		O_CB2       => via_cb2_out,
+--		O_CB2_OE_L  => via_cb2_oe_l,
+		I_PB        => via_in,
+		O_PB        => via_out,
+--		O_PB_OE_L   => via_oe_l,
+		RESET_L     => RESETn,
+		I_P2_H      => ula_phi2,
+		ENA_4       => '1',
+		CLK         => ula_CLK_4
+);

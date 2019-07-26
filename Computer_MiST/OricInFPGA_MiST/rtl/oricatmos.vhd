@@ -170,8 +170,8 @@ COMPONENT keyboard
 END COMPONENT;
 
 begin
-RESETn <= not RESET;
 
+RESETn <= not RESET;
 inst_cpu : entity work.T65
 	port map (
 		Mode    		=> "00",
@@ -190,7 +190,6 @@ inst_cpu : entity work.T65
 );
 		
 ad  <= ula_AD_SRAM when ula_PHI2 = '0' else cpu_ad(15 downto 0);
-
 inst_ram : entity work.ram48k
 	port map(
 		clk  			=> CLK_IN,
