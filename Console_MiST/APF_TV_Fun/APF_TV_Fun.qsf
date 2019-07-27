@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 21:40:59  July 23, 2019
+# Date created = 02:08:17  July 22, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -44,22 +44,6 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "07:11:53  MARCH 09, 2017
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/OricAtmos_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/oricatmos.vhd
-set_global_assignment -name VHDL_FILE rtl/ula.vhd
-set_global_assignment -name VHDL_FILE rtl/ay8912.vhd
-set_global_assignment -name VHDL_FILE rtl/m6522.vhd
-set_global_assignment -name VHDL_FILE rtl/ram48k.vhd
-set_global_assignment -name VHDL_FILE rtl/video.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/BASIC11.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/BASIC10.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/BASIC22.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/t65_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/t65_alu.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/t65.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/pack_t65.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
 
 # Pin & Location Assignments
 # ==========================
@@ -153,7 +137,7 @@ set_global_assignment -name SEARCH_PATH src/ps2kybrd/ -tag from_archive
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name TOP_LEVEL_ENTITY OricAtmos_MiST
+set_global_assignment -name TOP_LEVEL_ENTITY APF_TV_Fun_MiST
 
 # Fitter Assignments
 # ==================
@@ -206,15 +190,88 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(OricAtmos_MiST)
 # --------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/keyboard.sv
+set_global_assignment -name VERILOG_FILE rtl/ay_3_8500NTSC.v
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/APF_TV_Fun_MiST.sv
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to UART_TXD
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to CLOCK_27
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to CONF_DATA0
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to LED
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DI
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SCK
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SS2
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_SS3
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_HS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_VS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[8]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[9]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[10]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[11]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_A[12]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[8]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[9]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[10]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[11]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[12]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[13]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[14]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQ[15]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_BA[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_BA[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQMH
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_DQML
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_nRAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_nCAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_nWE
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_nCS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_CKE
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_CLK
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to UART_RXD
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

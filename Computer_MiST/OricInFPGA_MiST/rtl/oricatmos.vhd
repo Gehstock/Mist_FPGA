@@ -293,16 +293,17 @@ inst_key : keyboard
 		swrst			=> break
 );
 
-via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF" else x"FF";
+via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF-" else x"FF";
 K7_TAPEOUT  <= via_out(7);
 K7_REMOTE   <= via_out(6);
 ula_IOCONTROL <= '0'; -- ula_IOCONTROL <= IOCONTROL; 
 
 process begin
 	wait until rising_edge(clk_in);
-		if    cpu_rw = '1' and ula_IOCONTROL = '1' and ula_CSIOn  = '0' then
-			cpu_di <= SRAM_DO;-- expansion port
-		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSIOn  = '0' and ula_LATCH_SRAM = '0' then
+--		if    cpu_rw = '1' and ula_IOCONTROL = '1' and ula_CSIOn  = '0' then
+--			cpu_di <= EXP_DO;-- expansion port
+--		els
+		if cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSIOn  = '0' and ula_LATCH_SRAM = '0' then
 			cpu_di <= VIA_DO;-- Via
 		elsif cpu_rw = '1' and ula_IOCONTROL = '0' and ula_CSROMn = '0' then
 			cpu_di <= ROM_DO;		-- ROM

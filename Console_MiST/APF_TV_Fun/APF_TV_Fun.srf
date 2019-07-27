@@ -1,0 +1,21 @@
+{ "" "" "" "Verilog HDL macro warning at hq2x.sv(26): overriding existing definition for macro \"BITS_TO_FIT\", which was defined in \"rtl/scandoubler.v\", line 109" {  } {  } 0 10274 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL information at scandoubler.v(102): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at t65.vhd(101): object \"D\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at keymatrix.vhd(24): object \"SPOi\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at spram.vhd(10): ignored assignment of value to null range" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at spram.vhd(66): ignored assignment of value to null range" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at t65.vhd(186): comparison between unequal length operands always returns TRUE" {  } {  } 0 10620 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "VHDL warning at m6522.vhd(338): sensitivity list already contains r_ira" {  } {  } 0 10812 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Output port \"UART_TXD\" at OricAtmos_MiST.sv(10) has no driver" {  } {  } 0 10034 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Design contains 2 input pin(s) that do not drive logic" {  } {  } 0 21074 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "PLL \"pll:pll\|altpll:altpll_component\|pll_altpll:auto_generated\|pll1\" has parameters clk1_multiply_by and clk1_divide_by specified but port CLK\[1\] is not connected" {  } {  } 0 15899 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Output pins are stuck at VCC or GND" {  } {  } 0 13024 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Inferred dual-clock RAM node \"video_mixer:video_mixer\|osd:osd\|osd_buffer_rtl_0\" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design." {  } {  } 0 276027 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Design contains 1 input pin(s) that do not drive logic" {  } {  } 0 21074 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Found invalid Fitter assignments. See the Ignored Assignments panel in the Fitter Compilation Report for more information." {  } {  } 0 171167 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Ignored locations or region assignments to the following nodes" {  } {  } 0 15705 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "7 pins must meet Altera requirements for 3.3-, 3.0-, and 2.5-V interfaces. For more information, refer to AN 447: Interfacing Cyclone III Devices with 3.3/3.0/2.5-V LVTTL/LVCMOS I/O Systems." {  } {  } 0 169177 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details" {  } {  } 0 15714 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "PCI-clamp diode is not supported in this mode. The following 1 pins must meet the Altera requirements for 3.3V, 3.0V, and 2.5V interfaces if they are connected to devices other than the supported configuration devices. In these cases, Altera recommends termination method as specified in the Application Note 447." {  } {  } 0 169203 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
