@@ -68,18 +68,6 @@ wire			gameRifle2;
 wire 			m_left, m_right;
 wire 			LPin, RPin, Rifle1, Rifle2;
 
-always @(clk_16)
-begin
-	if (RPin) begin
-		if (joystick_0[2]) m_right  = 1'b1; else
-		if (joystick_0[3]) m_right  = 1'b0;
-	end else m_right  = 1'bz;	
-		
-	if (LPin) begin	
-		if (joystick_1[2]) m_left  = 1'b1; else
-		if (joystick_1[3]) m_left  = 1'b0;
-	end else m_left  = 1'bz;	
-end
 
 always @(*) begin
  case (status[3:2])
