@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 02:57:11  June 09, 2019
+# Date created = 18:00:39  August 08, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		OzmaWars_assignment_defaults.qdf
+#		Vortex_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -57,7 +57,14 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/1.t36.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/2.t35.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/3.t34.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/4.t33.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/5.t32.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/6.t31.vhd
 set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
+
 # Pin & Location Assignments
 # ==========================
 set_location_assignment PIN_7 -to LED
@@ -99,10 +106,10 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 
 # Analysis & Synthesis Assignments
 # ================================
-set_global_assignment -name TOP_LEVEL_ENTITY Vortex_mist
 set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY Vortex_mist
 
 # Fitter Assignments
 # ==================
@@ -149,8 +156,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # end EDA_TOOL_SETTINGS(eda_simulation)
 # -------------------------------------
 
-# ---------------------------
-# start ENTITY(OzmaWars_mist)
+# -------------------------
+# start ENTITY(Vortex_mist)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -164,12 +171,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(OzmaWars_mist)
-# -------------------------
-set_global_assignment -name VHDL_FILE rtl/roms/1.t36.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/2.t35.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/3.t34.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/4.t33.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/5.t32.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/6.t31.vhd
+# end ENTITY(Vortex_mist)
+# -----------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

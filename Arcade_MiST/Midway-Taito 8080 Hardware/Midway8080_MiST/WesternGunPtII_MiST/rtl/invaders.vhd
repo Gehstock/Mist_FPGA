@@ -204,14 +204,14 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= not MoveRight1;
-	GDB0(1) <= not MoveLeft1;
-	GDB0(2) <= not MoveUp1;
-	GDB0(3) <= not MoveDown1;
-	GDB0(4) <= not MoveRight2;
-	GDB0(5) <= not MoveLeft2;
-	GDB0(6) <= not MoveUp2;
-	GDB0(7) <= not MoveDown2;
+	GDB0(0) <= '0';
+	GDB0(1) <= '0';
+	GDB0(2) <= '0';
+	GDB0(3) <= '0';
+	GDB0(4) <= '0';
+	GDB0(5) <= '0';
+	GDB0(6) <= '0';
+	GDB0(7) <= '0';
 
 	GDB1(0) <= not MoveRight1;
 	GDB1(1) <= not MoveLeft1;

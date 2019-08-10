@@ -72,7 +72,6 @@ set_global_assignment -name VHDL_FILE rtl/sn76489/sn76489_attenuator.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name VERILOG_FILE rtl/reset_de.v
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name TEXT_FILE rtl/tv80/Text1.txt

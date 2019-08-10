@@ -293,7 +293,7 @@ inst_key : keyboard
 		swrst			=> break
 );
 
-via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF-" else x"FF";
+via_in <= x"F7" when (KEY_ROW or via_pa_out) = x"FF" else x"FF";
 K7_TAPEOUT  <= via_out(7);
 K7_REMOTE   <= via_out(6);
 ula_IOCONTROL <= '0'; -- ula_IOCONTROL <= IOCONTROL; 

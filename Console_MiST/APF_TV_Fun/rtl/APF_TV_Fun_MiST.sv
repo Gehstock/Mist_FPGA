@@ -14,7 +14,9 @@ module APF_TV_Fun_MiST
 	input         SPI_DI,
 	input         SPI_SS2,
 	input         SPI_SS3,
-	input         CONF_DATA0
+	input         CONF_DATA0,
+	input         UART_RXD,
+	output        UART_TXD
 );
 
 `include "rtl\build_id.v" 
@@ -86,6 +88,7 @@ always @(*) begin
  endcase
 end
 
+wire ltest;
 ay38500NTSC ay38500NTSC(
 	.clk(clk_2),
 	.reset(~(buttons[1] | status[0] | status[9])),
@@ -110,14 +113,14 @@ ay38500NTSC ay38500NTSC(
 	.pinSquash(gameSquash),
 	.pinPractice(gamePractice),	
 	
-	.pinShotIn(1'b1),//							todo
-	.pinHitIn(1'b0),//							todo
-	.pinRifle1_DWN(Rifle1),//					?
-	.pinTennis_DWN(Rifle2),//					?
-	.pinRPin_DWN(RPin),
-	.pinLPin_DWN(LPin),
-	.pinRPin(m_right),//							todo
-	.pinLPin(m_left)//							todo
+	.pinShotIn(1),//							todo
+	.pinHitIn(0),//							todo
+//	.pinRifle1_DWN(Rifle1),//					?
+//	.pinTennis_DWN(Rifle2),//					?
+//	.pinRPin_DWN(1'b1),
+	.pinLPin_DWN(ltest),
+	.pinRPin(1'b1),//							todo
+	.pinLPin(ltest ? UART_RXD : 1'b1)//							todo
 	);
 
 dac #(

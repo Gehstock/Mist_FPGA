@@ -71,11 +71,12 @@ LASER310_TOP LASER310_TOP(
 	.VGA_HS(hs),
 	.VGA_VS(vs),
 	.AUD_ADCDAT(audio),
+//	.VIDEO_MODE(1'b0),
 	.audio_s(audio_s),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.SWITCH({"00000",!status[5],!status[2],!status[1]}),
+	.SWITCH({"00000",~status[5],~status[2],~status[1]}),
 	.UART_RXD(),
 	.UART_TXD()
 	);
@@ -95,8 +96,8 @@ mist_video #(.COLOR_DEPTH(6)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(1'b1),//scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
+	.scandoubler_disable(scandoublerD),
+	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
 	);
 

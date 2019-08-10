@@ -138,7 +138,7 @@ begin
 
 	u_mw8080: entity work.mw8080
 		port map(
-			Rst_n => Rst_n_s_i,
+			Rst_n => Rst_n,--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -170,32 +170,32 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= DIP(7);  -- Unused ?
-	GDB0(1) <= DIP(6);
-	GDB0(2) <= DIP(5);  -- Unused ?
-	GDB0(3) <= '1';             -- Unused ?
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
-	GDB0(7) <= DIP(4);  -- Unused ?
+	GDB0(0) <= '1';             -- Unused
+	GDB0(1) <= '1';             -- Unused
+	GDB0(2) <= '1';             -- Unused
+	GDB0(3) <= '1';             -- Unused
+	GDB0(4) <= '1';             -- Unused
+	GDB0(5) <= '1';             -- Unused
+	GDB0(6) <= '1';             -- Unused
+	GDB0(7) <= '1';             -- Unused
 
-	GDB1(0) <= not Coin;-- Active High !
-	GDB1(1) <= not Sel2Player;
-	GDB1(2) <= not Sel1Player;
-	GDB1(3) <= '1';-- Unused ?
-	GDB1(4) <= not Fire;
-	GDB1(5) <= not MoveLeft;
-	GDB1(6) <= not MoveRight;
-	GDB1(7) <= '1';-- Unused ?
+	GDB1(0) <= '1';	-- PADDLE
+	GDB1(1) <= '1';	-- PADDLE
+	GDB1(2) <= '1';	-- PADDLE
+	GDB1(3) <= '1';	-- PADDLE
+	GDB1(4) <= '1';	-- PADDLE
+	GDB1(5) <= '1';	-- PADDLE
+	GDB1(6) <= '1';	-- PADDLE
+	GDB1(7) <= '0';	-- PADDLE
 
-	GDB2(0) <= DIP(4);
-	GDB2(1) <= DIP(3);
-	GDB2(2) <= '1';-- DIP(1);
-	GDB2(3) <= '1';--DIP(3);
-	GDB2(4) <= not Fire;
-	GDB2(5) <= not MoveLeft;
-	GDB2(6) <= not MoveRight;
-	GDB2(7) <= '1';--DIP(2);
+	GDB2(0) <= not Fire;
+	GDB2(1) <= not Coin;
+	GDB2(2) <= '1';	-- unknown
+	GDB2(3) <= '1';	-- TILT
+	GDB2(4) <= '1';	-- unknown
+	GDB2(5) <= '1';	-- Replay
+	GDB2(6) <= '1';	-- Replay
+	GDB2(7) <= '1';	-- TEST
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';

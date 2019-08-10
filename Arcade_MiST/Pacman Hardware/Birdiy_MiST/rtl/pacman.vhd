@@ -658,11 +658,12 @@ begin
 
       -- on is low
       freeze <= '0';
-      dipsw_reg(7) <= '1'; -- character set ?
-      dipsw_reg(6) <= '1'; -- difficulty ?
-      dipsw_reg(5 downto 4) <= "00"; -- bonus pacman at 10K
-      dipsw_reg(3 downto 2) <= "11"; -- pacman (3)
-      dipsw_reg(1 downto 0) <= "01"; -- cost  (1 coin, 1 play)
+      dipsw_reg(7) <= '1'; -- Stop Screen - Seems to have no function?
+      dipsw_reg(6) <= '1'; -- Unused ?
+		dipsw_reg(5) <= '1'; -- Skip Screen - Used to skip "Act" (AKA level)?? - How do you activate it?
+      dipsw_reg(4) <= '1'; -- Cabinet
+      dipsw_reg(3 downto 2) <= "00"; -- Lives 1, 2, 3, 4
+      dipsw_reg(1 downto 0) <= "01"; -- Coinage  (FreePlay, 1C_1C, 1C_2C, 2C_1C)
     end if;
   end process;
 

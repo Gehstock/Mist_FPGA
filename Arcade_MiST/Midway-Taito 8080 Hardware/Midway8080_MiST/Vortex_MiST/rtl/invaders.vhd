@@ -169,7 +169,7 @@ begin
 
 	u_mw8080: mw8080
 		port map(
-			Rst_n => '1',--Rst_n_s_i,
+			Rst_n => Rst_n,--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,

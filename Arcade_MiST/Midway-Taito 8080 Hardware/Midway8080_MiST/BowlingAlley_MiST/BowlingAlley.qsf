@@ -49,7 +49,6 @@ set_global_assignment -name VHDL_FILE rtl/invaders.vhd
 set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
 set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/BowlingAlley_memory.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd

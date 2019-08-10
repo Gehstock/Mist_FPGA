@@ -1,8 +1,8 @@
 //============================================================================
 //  Arcade: Birdiy
 //
-//  Version for MiSTer
-//  Copyright (C) 2017 Sorgelig
+//  Version for MiST
+//  Copyright (C) 2018 Gehstock
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -91,8 +91,8 @@ pacmant pacmant(
    .O_VBLANK(vb),
 	.O_AUDIO(audio),
 	.I_JOYSTICK_A(~{m_fire,m_right,m_left,m_down,m_up}),
-	.I_JOYSTICK_B(5'b11111), 
-   .I_SW({btn_two_players, btn_coin, 1'b0, btn_one_player}),
+	.I_JOYSTICK_B(~{m_fire,m_right,m_left,m_down,m_up}),
+   .I_SW({/*btn_two_players*/1'b0, btn_coin, 1'b0, btn_one_player}),
    .RESET(status[0] | status[6] | buttons[1]),
 	.CLK(clk_sys),
    .ENA_6(ce_6m)
@@ -105,7 +105,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : 0),
 	.G(blankn ? g : 0),
-	.B(blankn ? b : 0),
+	.B(blankn ? {b,b[1]} : 0),
 	.HSync(~hs),
 	.VSync(~vs),
 	.VGA_R(VGA_R),

@@ -73,8 +73,10 @@ entity invaderst is
 		RWD             : out std_logic_vector(7 downto 0);
 		RAB             : out std_logic_vector(12 downto 0);
 		AD              : out std_logic_vector(15 downto 0);
-		SoundCtrl3      : out std_logic_vector(5 downto 0);
-		SoundCtrl5      : out std_logic_vector(5 downto 0);
+		SoundCtrl3      : out std_logic_vector(5 downto 0);--audio1
+		SoundCtrl4      : out std_logic_vector(5 downto 0);--audio2
+		SoundCtrl5      : out std_logic_vector(5 downto 0);--low
+		SoundCtrl6      : out std_logic_vector(5 downto 0);--hi
 		Rst_n_s         : out std_logic;
 		RWE_n           : out std_logic;
 		Video           : out std_logic;
@@ -122,7 +124,7 @@ architecture rtl of invaderst is
 	signal DB           : std_logic_vector(7 downto 0);
 	signal Sounds       : std_logic_vector(7 downto 0);
 	signal AD_i         : std_logic_vector(15 downto 0);
-	signal PortWr       : std_logic_vector(6 downto 2);
+	signal PortWr       : std_logic_vector(7 downto 0);
 	signal EA           : std_logic_vector(2 downto 0);
 	signal D5           : std_logic_vector(15 downto 0);
 	signal WD_Cnt       : unsigned(7 downto 0);
@@ -159,7 +161,7 @@ begin
 			if Sounds(0) = '1' and Old_S0 = '0' then
 				WD_Cnt <= WD_Cnt + 1;
 			end if;
-			if PortWr(6) = '1' then
+			if PortWr(4) = '1' then
 				WD_Cnt <= (others => '0');
 			end if;
 			Old_S0 := Sounds(0);
@@ -168,7 +170,7 @@ begin
 
 	u_mw8080: mw8080
 		port map(
-			Rst_n => '1',--Rst_n_s_i,
+			Rst_n => Rst_n,--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -204,34 +206,34 @@ begin
 	GDB0(1) <= not MoveDown;--active low
 	GDB0(2) <= not MoveLeft;--active low
 	GDB0(3) <= not MoveRight;--active low
-	GDB0(4) <= '1';--active low
+	GDB0(4) <= '0';--active low
 	GDB0(5) <= '1';--active low
-	GDB0(6) <= '1';--active low
+	GDB0(6) <= '0';--active low
 	GDB0(7) <= not Fire;
 	
 	GDB1(0) <= not MoveUp;--active low
 	GDB1(1) <= not MoveDown;--active low
 	GDB1(2) <= not MoveLeft;--active low
 	GDB1(3) <= not MoveRight;--active low
-	GDB1(4) <= '1';--active low
+	GDB1(4) <= '0';--active low
 	GDB1(5) <= '1';--active low
-	GDB1(6) <= '1';--active low
+	GDB1(6) <= '0';--active low
 	GDB1(7) <= not Fire;--active low
 
-	GDB2(0) <= '0';--active high
-	GDB2(1) <= '0';--active high
-	GDB2(2) <= '0';--active high
-	GDB2(3) <= '0';--active high
+	GDB2(0) <= '1';--coin
+	GDB2(1) <= '0';--coin
+	GDB2(2) <= '1';--time
+	GDB2(3) <= '1';--time
 	GDB2(4) <= '0';--DIPLOCK --active high
 	GDB2(5) <= not Sel1Player;--active low
 	GDB2(6) <= not Coin;--active low
 	GDB2(7) <= not Sel2Player;--active low
 
-	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
-	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
-	PortWr(4) <= '1' when AD_i(10 downto 8) = "100" and Sample = '1' else '0';
-	PortWr(5) <= '1' when AD_i(10 downto 8) = "101" and Sample = '1' else '0';
-	PortWr(6) <= '1' when AD_i(10 downto 8) = "110" and Sample = '1' else '0';
+--	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
+---	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
+---	PortWr(4) <= '1' when AD_i(10 downto 8) = "100" and Sample = '1' else '0';
+--	PortWr(5) <= '1' when AD_i(10 downto 8) = "101" and Sample = '1' else '0';
+--	PortWr(6) <= '1' when AD_i(10 downto 8) = "110" and Sample = '1' else '0';
 
 	process (Rst_n_s_i, Clk)
 		variable OldSample : std_logic;
@@ -240,21 +242,29 @@ begin
 			D5 <= (others => '0');
 			EA <= (others => '0');
 			SoundCtrl3 <= (others => '0');
+			SoundCtrl4 <= (others => '0');
 			SoundCtrl5 <= (others => '0');
+			SoundCtrl6 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
 			if PortWr(2) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
 			if PortWr(3) = '1' then
-				SoundCtrl3 <= DB(5 downto 0);
+				SoundCtrl3 <= DB(5 downto 0);--audio_1_w
 			end if;
-			if PortWr(4) = '1' and OldSample = '0' then
-				D5(15 downto 8) <= DB;
-				D5(7 downto 0) <= D5(15 downto 8);
-			end if;
+--			if PortWr(4) = '1' and OldSample = '0' then
+--				D5(15 downto 8) <= DB;
+--				D5(7 downto 0) <= D5(15 downto 8);
+--			end if;
 			if PortWr(5) = '1' then
-				SoundCtrl5 <= DB(5 downto 0);
+				SoundCtrl5 <= DB(5 downto 0);--tone_generator_lo_w
+			end if;
+			if PortWr(6) = '1' then
+				SoundCtrl6 <= DB(5 downto 0);--tone_generator_hi_w
+			end if;
+			if PortWr(7) = '1' then
+				SoundCtrl4 <= DB(5 downto 0);--audio_2_w
 			end if;
 			OldSample := Sample;
 		end if;

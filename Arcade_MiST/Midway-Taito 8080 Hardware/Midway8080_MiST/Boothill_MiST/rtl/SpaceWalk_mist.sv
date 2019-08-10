@@ -19,7 +19,7 @@ module SpaceWalk_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Boothill;;",
+	"Boot Hill;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
@@ -29,14 +29,14 @@ assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 
-wire clk_sys, clk_mist;
+wire clk_core, clk_sys;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
-	.c0(clk_sys),
-	.c1(clk_mist)
+	.c0(clk_core),
+	.c1(clk_sys)
 );
 
 wire [31:0] status;
@@ -61,17 +61,18 @@ wire [7:0]RWD;
 wire [7:0]IB;
 wire [5:0]SoundCtrl3;
 wire [5:0]SoundCtrl5;
+wire [5:0]SoundCtrl6;
 wire Rst_n_s;
 wire RWE_n;
 wire Video;
 
 invaderst invaderst(
 	.Rst_n(~(status[0] | status[6] | buttons[1])),
-	.Clk(clk_sys),
+	.Clk(clk_core),
 	.ENA(),
 	.Coin(btn_coin),
-	.Sel1Player(~btn_one_player),
-	.Sel2Player(~btn_two_players),
+	.Sel1Player(btn_one_player),
+	.Sel2Player(btn_two_players),
 	.Fire(~m_fire),
 	.MoveLeft(~m_left),
 	.MoveRight(~m_right),
@@ -84,6 +85,7 @@ invaderst invaderst(
 	.AD(AD),
 	.SoundCtrl3(SoundCtrl3),
 	.SoundCtrl5(SoundCtrl5),
+	.SoundCtrl6(SoundCtrl6),
 	.Rst_n_s(Rst_n_s),
 	.RWE_n(RWE_n),
 	.Video(Video),
@@ -92,7 +94,7 @@ invaderst invaderst(
 	);
 		
 invaders_memory invaders_memory (
-	.Clock(clk_sys),
+	.Clock(clk_core),
 	.RW_n(RWE_n),
 	.Addr(AD),
 	.Ram_Addr(RAB),
@@ -102,14 +104,16 @@ invaders_memory invaders_memory (
 	);
 		
 invaders_audio invaders_audio (
-	.Clk(clk_sys),
-	.S1(SoundCtrl3),
-	.S2(SoundCtrl5),
+	.Clk(clk_core),
+	.S0(SoundCtrl3 | SoundCtrl4),
+	.S1(SoundCtrl4),
+	.S2(SoundCtrl5 | SoundCtrl6),//hi
+	.S3(SoundCtrl6),//lo
 	.Aud(audio)
-	);		
+	);
 
 mist_video #(.COLOR_DEPTH(3)) mist_video(
-	.clk_sys(clk_mist),
+	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -123,6 +127,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.ce_divider(0),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
@@ -131,7 +136,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_mist       ),
+	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -150,7 +155,7 @@ user_io(
 	);
 
 dac dac (
-	.clk_i(clk_mist),
+	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -173,7 +178,7 @@ reg btn_fire2 = 0;
 reg btn_fire3 = 0;
 reg btn_coin  = 0;
 
-always @(posedge clk_mist) begin
+always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up          <= key_pressed; // up

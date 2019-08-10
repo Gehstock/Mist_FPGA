@@ -31,12 +31,14 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity invaders_audio is
 	Port (
 	  Clk : in  std_logic;
+	  S0  : in  std_logic_vector(5 downto 0);
 	  S1  : in  std_logic_vector(5 downto 0);
 	  S2  : in  std_logic_vector(5 downto 0);
+	  S3  : in  std_logic_vector(5 downto 0);
 	  Aud : out std_logic_vector(7 downto 0)
 	  );
 end;
- --* Port 3: (S1)
+ --* Port 3: (S0)
  --* bit 0=UFO  (repeats)
  --* bit 1=Shot
  --* bit 2=Base hit
@@ -59,7 +61,7 @@ architecture Behavioral of invaders_audio is
   signal Clk240_ena   : std_logic;
   signal Clk60_ena    : std_logic;
 
-  signal s1_t1        : std_logic_vector(5 downto 0);
+  signal s0_t1        : std_logic_vector(5 downto 0);
   signal s2_t1        : std_logic_vector(5 downto 0);
   signal tempsum      : std_logic_vector(7 downto 0);
 
@@ -166,7 +168,7 @@ begin
    p_delay : process
    begin
 	 wait until rising_edge(Clk);
-	 s1_t1 <= S1;
+	 s0_t1 <= S0;
 	 s2_t1 <= S2;
    end process;
 --*************************Saucer Sound***************************************
@@ -177,7 +179,7 @@ begin
 	begin
 	  wait until rising_edge(Clk);
 	  term := 8 + Fnum;
-	  if (S1(0) = '1') and (Clk7680_ena = '1') then
+	  if (S0(0) = '1') and (Clk7680_ena = '1') then
 		if vco_cnt = term then
 
 		  vco_cnt <= (others => '0');
@@ -346,7 +348,7 @@ begin
 	p_invader_hit : process
 	begin
 	  wait until rising_edge(Clk);
-	  if (S1(3) = '1') and (s1_t1(3) = '0') then -- rising_edge
+	  if (S0(3) = '1') and (s0_t1(3) = '0') then -- rising_edge
 		TrigIH <= '1';
 	  elsif (Clk480_ena = '1') then
 		TrigIH <= '0';
@@ -393,7 +395,7 @@ begin
 	p_explosion_trig : process
 	begin
 	  wait until rising_edge(Clk);
-	  if (S1(2) = '1') and (s1_t1(2) = '0') then -- rising_edge
+	  if (S0(2) = '1') and (s0_t1(2) = '0') then -- rising_edge
 		TrigEx <= '1';
 	  elsif (Clk480_ena = '1') then
 		TrigEx <= '0';
@@ -447,7 +449,7 @@ begin
 	p_missile_trig : process
 	begin
 	  wait until rising_edge(Clk);
-	  if (S1(1) = '1') and (s1_t1(1) = '0') then -- rising_edge
+	  if (S0(1) = '1') and (s0_t1(1) = '0') then -- rising_edge
 		TrigMis <= '1';
 	  elsif (Clk480_ena = '1') then
 		TrigMis <= '0';

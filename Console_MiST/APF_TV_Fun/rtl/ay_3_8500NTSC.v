@@ -849,4 +849,4 @@ module ay38500NTSC(
 	//MC: Some changes to this line
 	wire mux1_100 = (!or81 & counter1_2005) | (!or80 & counter1_2001) | (!or79 & counter1_2003) | counter1_2002 | counter1_2004;//constants had to be added manually
 	wire mux2_100 = (!or81 & counter1_2005) | (!or85 & counter1_2001) | (!or83 & counter1_2003) | (!or84 & counter1_2002) | (!or82 & counter1_2004);
-endmodule
+endmodule 

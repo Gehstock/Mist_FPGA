@@ -63,6 +63,7 @@ entity invaderst is
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
 		Fire            : in  std_logic;
+		Fire2           : in  std_logic;
 		MoveLeft        : in  std_logic;
 		MoveRight       : in  std_logic;
 		DIP             : in  std_logic_vector(7 downto 0);
@@ -115,6 +116,7 @@ architecture rtl of invaderst is
 	signal GDB0         : std_logic_vector(7 downto 0);
 	signal GDB1         : std_logic_vector(7 downto 0);
 	signal GDB2         : std_logic_vector(7 downto 0);
+	signal GDB3         : std_logic_vector(7 downto 0);
 	signal S            : std_logic_vector(7 downto 0);
 	signal GDB          : std_logic_vector(7 downto 0);
 	signal DB           : std_logic_vector(7 downto 0);
@@ -196,34 +198,44 @@ begin
 		GDB <= GDB0 when "00",
 				GDB1 when "01",
 				GDB2 when "10",
-				S when others;
-
-	GDB0(0) <= DIP(7);  -- Unused ?
-	GDB0(1) <= DIP(6);
-	GDB0(2) <= DIP(5);  -- Unused ?
-	GDB0(3) <= '1';             -- Unused ?
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
-	GDB0(7) <= DIP(4);  -- Unused ?
+				GDB3 when "11";
+--				S when others;
+				
+	GDB0(0) <= '0';  -- Language
+	GDB0(1) <= '0';  -- Language
+	GDB0(2) <= '0';  -- Demo_Sounds
+	GDB0(3) <= '0';  -- Game_Time 
+	GDB0(4) <= '0';  -- Coinage
+	GDB0(5) <= '0';  -- Difficulty
+	GDB0(6) <= '1';  -- Cabinet
+	GDB0(7) <= '1';  -- Unused
 
 	GDB1(0) <= not Coin;-- Active High !
-	GDB1(1) <= not Sel2Player;
+	GDB1(1) <= not Fire;
 	GDB1(2) <= not Sel1Player;
-	GDB1(3) <= '1';-- Unused ?
-	GDB1(4) <= not Fire;
-	GDB1(5) <= not MoveLeft;
-	GDB1(6) <= not MoveRight;
-	GDB1(7) <= '1';-- Unused ?
+	GDB1(3) <= not Fire2;
+	GDB1(4) <= '1';  --
+	GDB1(5) <= '1';  --
+	GDB1(6) <= '1';  --
+	GDB1(7) <= '1';  -- Unused ?
 
-	GDB2(0) <= DIP(3);  -- LSB Lives 3-6
-	GDB2(1) <= DIP(2);  -- MSB Lives 3-6
-	GDB2(2) <= '1';-- Tilt ?
-	GDB2(3) <= '1';--DIP(2);  -- Bonus life at 1000 or 1500
-	GDB2(4) <= not Fire;
-	GDB2(5) <= not MoveLeft;
-	GDB2(6) <= not MoveRight;
-	GDB2(7) <= '0';--DIP(1);  -- Coin info
+	GDB2(0) <= '1';  -- TRACKBALL Y
+	GDB2(1) <= '1';  -- TRACKBALL Y
+	GDB2(2) <= '1';  -- TRACKBALL Y
+	GDB2(3) <= '1';  -- TRACKBALL Y
+	GDB2(4) <= '0';  -- TRACKBALL Y
+	GDB2(5) <= '0';  -- TRACKBALL Y
+	GDB2(6) <= '0';  -- TRACKBALL Y
+	GDB2(7) <= '0';  -- TRACKBALL Y
+	
+	GDB3(0) <= '1';  -- TRACKBALL X
+	GDB3(1) <= '1';  -- TRACKBALL X
+	GDB3(2) <= '1';  -- TRACKBALL X
+	GDB3(3) <= '1';  -- TRACKBALL X
+	GDB3(4) <= '0';  -- TRACKBALL X
+	GDB3(5) <= '0';  -- TRACKBALL X
+	GDB3(6) <= '0';  -- TRACKBALL X
+	GDB3(7) <= '0';  -- TRACKBALL X	
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';

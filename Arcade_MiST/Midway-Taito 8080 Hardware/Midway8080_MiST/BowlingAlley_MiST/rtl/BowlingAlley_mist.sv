@@ -30,13 +30,14 @@ assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 
-wire clk_sys;
+wire clk_core, clk_sys;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
-	.c0(clk_sys)
+	.c0(clk_core),
+	.c1(clk_sys)
 );
 
 wire [31:0] status;
@@ -67,14 +68,15 @@ wire RWE_n;
 
 invaderst invaderst(
 	.Rst_n(~(status[0] | status[6] | buttons[1])),
-	.Clk(clk_sys),
+	.Clk(clk_core),
 	.ENA(),
 	.Coin(btn_coin),
-	.Sel1Player(~btn_one_player),
-	.Sel2Player(~btn_two_players),
-	.Fire(~m_fire),
-	.MoveLeft(~m_left),
-	.MoveRight(~m_right),
+	.Sel1Player(btn_one_player),
+	.Sel2Player(btn_two_players),
+	.Fire(m_fire),
+	.Fire2(m_bomb),
+	.MoveLeft(m_left),
+	.MoveRight(m_right),
 	.DIP("00000000"),
 	.RDB(RDB),
 	.IB(IB),
@@ -91,7 +93,7 @@ invaderst invaderst(
 	);
 		
 BowlingAlley_memory BowlingAlley_memory (
-	.Clock(clk_sys),
+	.Clock(clk_core),
 	.RW_n(RWE_n),
 	.Addr(AD),
 	.Ram_Addr(RAB),
@@ -101,7 +103,7 @@ BowlingAlley_memory BowlingAlley_memory (
 	);
 		
 invaders_audio invaders_audio (
-	.Clk(clk_sys),
+	.Clk(clk_core),
 	.S1(SoundCtrl3),
 	.S2(SoundCtrl5),
 	.Aud(audio)
@@ -125,7 +127,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
-	.ce_divider(1),
+	.ce_divider(0),
 	.ypbpr(ypbpr)
 	);
 

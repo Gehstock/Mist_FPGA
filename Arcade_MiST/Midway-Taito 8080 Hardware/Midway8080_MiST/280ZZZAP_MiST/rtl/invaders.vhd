@@ -138,7 +138,7 @@ begin
 
 	u_mw8080: entity work.mw8080
 		port map(
-			Rst_n => Rst_n_s_i,
+			Rst_n => Rst_n,--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -170,32 +170,32 @@ begin
 				GDB2 when "10",
 				S when others;
 --IN0
-	GDB0(0) <= DIP(8);
-	GDB0(1) <= DIP(7);
-	GDB0(2) <= DIP(6);
-	GDB0(3) <= '1';
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
-	GDB0(7) <= DIP(5);
+	GDB0(0) <= '0';	-- PEDAL
+	GDB0(1) <= '0';	-- PEDAL
+	GDB0(2) <= '0';	-- PEDAL
+	GDB0(3) <= '1';	-- PEDAL
+	GDB0(4) <= not Fire;	-- fire
+	GDB0(5) <= '1';	-- UNUSED
+	GDB0(6) <= not Coin;	-- coin
+	GDB0(7) <= not Sel1Player;	-- start
 --IN1
-	GDB1(0) <= not Coin;
-	GDB1(1) <= not Sel2Player;
-	GDB1(2) <= not Sel1Player;
-	GDB1(3) <= '1';
-	GDB1(4) <= not Fire;
-	GDB1(5) <= not MoveLeft;
-	GDB1(6) <= not MoveRight;
-	GDB1(7) <= '1';
+	GDB1(0) <= '0';	-- steering wheel 
+	GDB1(1) <= '0';	-- steering wheel 
+	GDB1(2) <= '0';	-- steering wheel 
+	GDB1(3) <= '0';	-- steering wheel 
+	GDB1(4) <= '0';	-- steering wheel 
+	GDB1(5) <= '0';	-- steering wheel 
+	GDB1(6) <= '0';	-- steering wheel 
+	GDB1(7) <= '1';	-- steering wheel 
 --IN2
-	GDB2(0) <= DIP(4);
-	GDB2(1) <= DIP(3);
-	GDB2(2) <= '1';-- Tilt ?
-	GDB2(3) <= '1';--STOP
-	GDB2(4) <= not Fire;
-	GDB2(5) <= not MoveLeft;
-	GDB2(6) <= not MoveRight;
-	GDB2(7) <= DIP(1);
+	GDB2(0) <= '0';--Coinage
+	GDB2(1) <= '0';--Coinage
+	GDB2(2) <= '1';--Game_Time
+	GDB2(3) <= '1';--Game_Time
+	GDB2(4) <= '1';--Extended Time At
+	GDB2(5) <= '1';--Extended Time At
+	GDB2(6) <= '0';--Language
+	GDB2(7) <= '0';--Language
 	
 
 

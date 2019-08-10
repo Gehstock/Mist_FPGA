@@ -1,3 +1,5 @@
+-- 2019 by Gehstock
+-- needs some cleanup i´m to Lazy for this
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;

@@ -54,7 +54,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity invaderst is
+entity invaders is
 	port(
 		Rst_n           : in  std_logic;
 		Clk             : in  std_logic;
@@ -72,16 +72,18 @@ entity invaderst is
 		RAB             : out std_logic_vector(12 downto 0);
 		AD              : out std_logic_vector(15 downto 0);
 		SoundCtrl3      : out std_logic_vector(5 downto 0);
+		SoundCtrl4      : out std_logic_vector(5 downto 0);
 		SoundCtrl5      : out std_logic_vector(5 downto 0);
+		SoundCtrl6      : out std_logic_vector(5 downto 0);
 		Rst_n_s         : out std_logic;
 		RWE_n           : out std_logic;
 		Video           : out std_logic;
 		HSync           : out std_logic;
 		VSync           : out std_logic
 		);
-end invaderst;
+end invaders;
 
-architecture rtl of invaderst is
+architecture rtl of invaders is
 
 	component mw8080
 	port(
@@ -120,7 +122,7 @@ architecture rtl of invaderst is
 	signal DB           : std_logic_vector(7 downto 0);
 	signal Sounds       : std_logic_vector(7 downto 0);
 	signal AD_i         : std_logic_vector(15 downto 0);
-	signal PortWr       : std_logic_vector(6 downto 2);
+	signal PortWr       : std_logic_vector(7 downto 0);
 	signal EA           : std_logic_vector(2 downto 0);
 	signal D5           : std_logic_vector(15 downto 0);
 	signal WD_Cnt       : unsigned(7 downto 0);
@@ -166,7 +168,7 @@ begin
 
 	u_mw8080: mw8080
 		port map(
-			Rst_n => Rst_n_s_i,
+			Rst_n => Rst_n,--Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -199,13 +201,13 @@ begin
 				S when others;
 
 	GDB0(0) <= '0';--
-	GDB0(1) <= '1';--
-	GDB0(2) <= '1';--
-	GDB0(3) <= '1';--
-	GDB0(4) <= '1';--
-	GDB0(5) <= '1';--
-	GDB0(6) <= '1';--
-	GDB0(7) <= '1';--
+	GDB0(1) <= '0';--
+	GDB0(2) <= '0';--
+	GDB0(3) <= '0';--
+	GDB0(4) <= '0';--
+	GDB0(5) <= '0';--
+	GDB0(6) <= '0';--
+	GDB0(7) <= '0';--
 
 	GDB1(0) <= '1';-- Unused ?
 	GDB1(1) <= '1';-- Unused ?
@@ -216,14 +218,14 @@ begin
 	GDB1(6) <= not Coin;
 	GDB1(7) <= '1';-- Unused ?
 
-	GDB2(0) <= '0';--RAM-ROM Test
-	GDB2(1) <= '0';--RAM-ROM Test
-	GDB2(2) <= '0';--Springboard Alignment
-	GDB2(3) <= '0';--Extended Time At
-	GDB2(4) <= '0';--Coinage
-	GDB2(5) <= '0';--Game_Time
-	GDB2(6) <= '0';--Game_Time
-	GDB2(7) <= '0';--Game_Time
+	GDB2(0) <= '0';--Game_Time
+	GDB2(1) <= '0';--Game_Time
+	GDB2(2) <= '0';--Coinage
+	GDB2(3) <= '0';--Coinage
+	GDB2(4) <= '0';--Extended Time At
+	GDB2(5) <= '0';--Extended Time At
+	GDB2(6) <= '0';--Springboard Alignment
+	GDB2(7) <= '0';--unused
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
@@ -238,21 +240,29 @@ begin
 			D5 <= (others => '0');
 			EA <= (others => '0');
 			SoundCtrl3 <= (others => '0');
+			SoundCtrl4 <= (others => '0');
 			SoundCtrl5 <= (others => '0');
+			SoundCtrl6 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
 			if PortWr(2) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
 			if PortWr(3) = '1' then
-				SoundCtrl3 <= DB(5 downto 0);
+				SoundCtrl3 <= DB(5 downto 0);--audio_1_w
 			end if;
-			if PortWr(4) = '1' and OldSample = '0' then
-				D5(15 downto 8) <= DB;
-				D5(7 downto 0) <= D5(15 downto 8);
-			end if;
+			--if PortWr(4) = '1' and OldSample = '0' then
+				--D5(15 downto 8) <= DB;
+				--D5(7 downto 0) <= D5(15 downto 8);
+			--end if;
 			if PortWr(5) = '1' then
-				SoundCtrl5 <= DB(5 downto 0);
+				SoundCtrl5 <= DB(5 downto 0);--tone_generator_lo_w
+			end if;
+			if PortWr(6) = '1' then
+				SoundCtrl6 <= DB(5 downto 0);--midway_tone_generator_hi_w
+			end if;	
+			if PortWr(7) = '1' then
+				SoundCtrl4 <= DB(5 downto 0);--audio_2_w
 			end if;
 			OldSample := Sample;
 		end if;

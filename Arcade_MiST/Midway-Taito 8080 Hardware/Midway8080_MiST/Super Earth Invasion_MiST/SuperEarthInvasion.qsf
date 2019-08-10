@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 18:55:39  June 08, 2019
+# Date created = 19:20:51  August 08, 2019
 #
 # -------------------------------------------------------------------------- #
 #
@@ -50,7 +50,6 @@ set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SuperEarthInvasion_memory.sv
 set_global_assignment -name VHDL_FILE rtl/SuperEarthInvasion_overlay.vhd
 set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
@@ -104,9 +103,9 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY SuperEarthInvasion_mist
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY SuperEarthInvasion_mist
 
 # Fitter Assignments
 # ==================

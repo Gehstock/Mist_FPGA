@@ -31,13 +31,14 @@ assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 
-wire clk_sys;
+wire clk_core, clk_sys;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
-	.c0(clk_sys)
+	.c0(clk_core),
+	.c1(clk_sys)
 );
 
 wire [31:0] status;
@@ -71,7 +72,7 @@ wire VSync;
 
 invaderst invaderst(
 	.Rst_n(~(status[0] | status[6] | buttons[1])),
-	.Clk(clk_sys),
+	.Clk(clk_core),
 	.ENA(),
 	.Coin(btn_coin),
 	.Sel1Player(~btn_one_player),
@@ -95,7 +96,7 @@ invaderst invaderst(
 	);
 		
 spacelaser_memory spacelaser_memory (
-	.Clock(clk_sys),
+	.Clock(clk_core),
 	.RW_n(RWE_n),
 	.Addr(AD),
 	.Ram_Addr(RAB),
@@ -105,7 +106,7 @@ spacelaser_memory spacelaser_memory (
 	);
 		
 invaders_audio invaders_audio (
-	.Clk(clk_sys),
+	.Clk(clk_core),
 	.S1(SoundCtrl3),
 	.S2(SoundCtrl5),
 	.Aud(audio)
@@ -114,7 +115,7 @@ invaders_audio invaders_audio (
 spacelaser_overlay spacelaser_overlay (
 	.Video(Video),
 	.Overlay(~status[5]),
-	.CLK(clk_sys),
+	.CLK(clk_core),
 	.Rst_n_s(Rst_n_s),
 	.HSync(HSync),
 	.VSync(VSync),
@@ -144,7 +145,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.rotate({1'b0,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
-	.ce_divider(1),
+	.ce_divider(0),
 	.ypbpr(ypbpr)
 	);
 
