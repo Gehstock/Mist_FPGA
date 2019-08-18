@@ -47,7 +47,7 @@ input		[7:0]	key_code,
 input		[9:0]	SWITCH,
 input				UART_RXD,
 output			UART_TXD
-);
+               
 
 reg		[3:0]		CLK;
 
@@ -56,45 +56,38 @@ reg					MEM_OP_WR;
 (*keep*)reg				GPIO_CPU_CLK;
 // Processor
 (*keep*)reg				CPU_CLK;
-(*keep*)wire	[15:0]	CPU_A;
-(*keep*)wire	[7:0]	CPU_DI;
-(*keep*)wire	[7:0]	CPU_DO;
+(*keep*)wire[15:0]	CPU_A;
+(*keep*)wire [7:0]	CPU_DI;
+(*keep*)wire [7:0]	CPU_DO;
 (*keep*)wire			CPU_RESET;
 (*keep*)wire			CPU_HALT;
-
 (*keep*)wire			CPU_MREQ;
 (*keep*)wire			CPU_RD;
 (*keep*)wire			CPU_WR;
 (*keep*)wire			CPU_IORQ;
 (*keep*)reg				CPU_INT;
-
 (*keep*)wire			CPU_M1;
-wire					CPU_BUSRQ;
-wire					CPU_BUSAK;
-wire					CPU_RFSH;
-
+wire						CPU_BUSRQ;
+wire						CPU_BUSAK;
+wire						CPU_RFSH;
 (*keep*)wire			CPU_RESET_N;
 (*keep*)wire			CPU_HALT_N;
-
 (*keep*)wire			CPU_MREQ_N;
 (*keep*)wire			CPU_RD_N;
 (*keep*)wire			CPU_WR_N;
 (*keep*)wire			CPU_IORQ_N;
 (*keep*)wire			CPU_INT_N;
-
 (*keep*)wire			CPU_M1_N;
-wire					CPU_BUSRQ_N;
-wire					CPU_BUSAK_N;
-wire					CPU_RFSH_N;
+wire						CPU_BUSRQ_N;
+wire						CPU_BUSAK_N;
+wire						CPU_RFSH_N;
 // VRAM
-(*keep*)wire	[12:0]	VRAM_ADDRESS;
+(*keep*)wire[12:0]	VRAM_ADDRESS;
 (*keep*)wire			VRAM_WR;
-(*keep*)wire	[7:0]	VRAM_DATA_OUT;
-
+(*keep*)wire [7:0]	VRAM_DATA_OUT;
 (*keep*)wire			VDG_RD;
-(*keep*)wire	[12:0]	VDG_ADDRESS;
-(*keep*)wire	[7:0]	VDG_DATA;
-
+(*keep*)wire[12:0]	VDG_ADDRESS;
+(*keep*)wire [7:0]	VDG_DATA;
 // ROM IO RAM
 reg					LATCHED_DOSROM_EN;
 reg					LATCHED_BOOTROM_EN;
@@ -1082,4 +1075,105 @@ assign	CASS_OUT = EMU_CASS_EN ? EMU_CASS_DAT : {LATCHED_IO_DATA_WR[2], 1'b0};
 (*keep*)wire trap = (CPU_RD|CPU_WR) && (CPU_A[15:12] == 4'h0);
 
 assign AUD_ADCDAT = {LATCHED_IO_DATA_WR[0],LATCHED_IO_DATA_WR[5]};
+
+
+// floppy
+wire				ADDRESS_IO_FDC;
+wire				ADDRESS_IO_FDC_CT;
+wire				ADDRESS_IO_FDC_DATA;
+wire				ADDRESS_IO_FDC_POLL;
+wire				ADDRESS_IO_FDC_WP;
+reg		[7:0]		LATCHED_IO_FDC;
+reg		[7:0]		LATCHED_IO_FDC_CT;
+reg		[7:0]		LATCHED_RAM_DATA_FDC;
+
+// floppy
+(*keep*)wire					FDC_RAM_R;
+(*keep*)wire					FDC_RAM_W;
+(*keep*)wire		[17:0]		FDC_RAM_ADDR_R;
+(*keep*)wire		[17:0]		FDC_RAM_ADDR_W;
+reg			[7:0]		LAST_WRITE_DATA;
+(*keep*)wire		[7:0]		FDC_RAM_DATA_W;
+
+(*keep*)wire	[7:0]		FLOPPY_RD_DATA;
+(*keep*)wire	[7:0]		FLOPPY_DATA;
+
+// FDC
+//				if({CPU_IORQ,CPU_RD,CPU_WR,ADDRESS_IO_FDC_CT}==4'b1011)
+//					LATCHED_IO_FDC_CT	<=	CPU_DO;
+
+//				if({CPU_IORQ,CPU_RD,CPU_WR}==3'b110)
+//					LATCHED_IO_FDC	<=	ADDRESS_IO_FDC_POLL	?	{FDC_POLL, 7'h7F}	:
+//										ADDRESS_IO_FDC_DATA	?	FDC_DATA			:
+//										ADDRESS_IO_FDC_WP	?	{FDC_WP, 7'h7F}		:
+//										8'hFF;
+wire FLOPPY_WP_READ	= 1'b0;
+wire RAM_ADDRESS_FD_R	=		FDC_RAM_ADDR_R;
+wire RAM_ADDRESS_FD_W	=		FDC_RAM_ADDR_W;
+
+assign ADDRESS_IO_FDC	=	(CPU_A[7:2] == 6'b000100)?1'b1:1'b0;
+
+assign ADDRESS_IO_FDC_CT	=	(CPU_A[7:0] == 8'h10)?1'b1:1'b0;
+assign ADDRESS_IO_FDC_DATA	=	(CPU_A[7:0] == 8'h11)?1'b1:1'b0;
+assign ADDRESS_IO_FDC_POLL	=	(CPU_A[7:0] == 8'h12)?1'b1:1'b0;
+assign ADDRESS_IO_FDC_WP	=	(CPU_A[7:0] == 8'h13)?1'b1:1'b0;
+
+
+wire	[7:0]		FDC_DATA;
+wire				FDC_POLL;
+wire				FDC_WP;
+
+wire	[7:0]		SECTOR_BYTE;
+wire	[7:0]		TRACK1_NO;
+wire	[7:0]		TRACK2_NO;
+wire				DRIVE1;
+wire				DRIVE2;
+wire				MOTOR;
+
+wire		FDC_IO_R;
+wire		FDC_IO_W;
+
+wire		FDC_SIG;
+wire		FDC_SIG_CLK;
+
+wire FDC_IO		=	(CPU_IORQ&ADDRESS_IO_FDC);
+wire FDC_IO_POLL	=	(CPU_IORQ&ADDRESS_IO_FDC_POLL);
+wire FDC_IO_DATA	=	(CPU_IORQ&ADDRESS_IO_FDC_DATA);
+wire FDC_IO_CT	=	(CPU_IORQ&ADDRESS_IO_FDC_CT);
+
+FDC_IF FDC_U (
+	.FDC_CLK(CPU_CLK),
+	.RESET_N(RESET_N),
+	.SW(SWITCH[3:2]),
+	.DBG(SWITCH[9:6]),
+
+	.FDC_RAM_R(FDC_RAM_R),
+	.FDC_RAM_W(FDC_RAM_W),
+	.FDC_RAM_ADDR_R(FDC_RAM_ADDR_R),
+	.FDC_RAM_ADDR_W(FDC_RAM_ADDR_W),
+	.FDC_RAM_DATA_R(LATCHED_RAM_DATA_FDC),
+	.FDC_RAM_DATA_W(FDC_RAM_DATA_W),
+
+	.FDC_IO(FDC_IO),
+	.FDC_IO_POLL(FDC_IO_POLL),
+	.FDC_IO_DATA(FDC_IO_DATA),
+	.FDC_IO_CT(FDC_IO_CT),
+
+	.FDC_SIG(FDC_SIG),
+	.FDC_SIG_CLK(FDC_SIG_CLK),
+
+	.FDC_CT(LATCHED_IO_FDC_CT),
+	.FDC_DATA(FDC_DATA),
+	.FDC_POLL(FDC_POLL),
+	.FDC_WP(FDC_WP),
+
+	.FLOPPY_SECTOR_BYTE(SECTOR_BYTE),
+	.TRACK1_NO(TRACK1_NO),
+	.TRACK2_NO(TRACK2_NO),
+	.DRIVE1(DRIVE1),
+	.DRIVE2(DRIVE2),
+	.MOTOR(MOTOR)
+);
+
+
 endmodule

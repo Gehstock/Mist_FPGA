@@ -23,24 +23,25 @@ library ieee;
 
 entity kingballoon is
 	port(
-		W_CLK_18M  : in  std_logic;
-		W_CLK_12M  : in  std_logic;
-		W_CLK_6M   : in  std_logic;
+		W_CLK_18M  	: in  std_logic;
+		W_CLK_12M  	: in  std_logic;
+		W_CLK_6M   	: in  std_logic;
 
-		P1_CSJUDLR : in  std_logic_vector(6 downto 0);
-		P2_CSJUDLR : in  std_logic_vector(6 downto 0);
-		I_RESET    : in  std_logic;
+		P1_CSJUDLR 	: in  std_logic_vector(6 downto 0);
+		P2_CSJUDLR 	: in  std_logic_vector(6 downto 0);
+		I_RESET    	: in  std_logic;
 
-		W_R        : out std_logic_vector(2 downto 0);
-		W_G        : out std_logic_vector(2 downto 0);
-		W_B        : out std_logic_vector(2 downto 0);
-		HBLANK     : out std_logic;
-		VBLANK     : out std_logic;
-		W_H_SYNC   : out std_logic;
-		W_V_SYNC   : out std_logic;
-		W_SDAT_A   : out std_logic_vector( 7 downto 0);
-		W_SDAT_B   : out std_logic_vector( 7 downto 0);
-		O_CMPBL    : out std_logic
+		W_R        	: out std_logic_vector(2 downto 0);
+		W_G        	: out std_logic_vector(2 downto 0);
+		W_B        	: out std_logic_vector(2 downto 0);
+		HBLANK     	: out std_logic;
+		VBLANK     	: out std_logic;
+		W_H_SYNC   	: out std_logic;
+		W_V_SYNC   	: out std_logic;
+		W_SDAT_A   	: out std_logic_vector( 7 downto 0);
+		W_SDAT_B   	: out std_logic_vector( 7 downto 0);
+		W_SDAT_C   	: out std_logic_vector( 7 downto 0);
+		O_CMPBL    	: out std_logic
 	);
 end;
 
@@ -140,15 +141,6 @@ architecture RTL of kingballoon is
 	signal W_WAV_D1           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_WAV_D2           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_DAC              : std_logic_vector( 3 downto 0) := (others => '0');
-	
-	COMPONENT SoundBoard
-    PORT(
-         reset_n : in std_logic;
-			clk : in std_logic;
-			audio : out  std_logic_vector(7 downto 0)
-        );
-    END COMPONENT;
-
 
 begin
 	mc_vid : entity work.MC_VIDEO
@@ -311,7 +303,7 @@ begin
 		I_256HnX      => W_256HnX,
 		I_1VF         => W_1VF,
 		I_2V          => W_V_CNT(1),
-		I_STARS_ON    => W_STARS_ON,
+		I_STARS_ON    => '0',--No Stars on this Game
 		I_STARS_OFFn  => W_STARS_OFFn,
 		O_R           => W_STARS_R,
 		O_G           => W_STARS_G,
@@ -333,7 +325,7 @@ begin
 	);
 
 	vmc_sound_b : entity work.MC_SOUND_B
-port map(
+	port map(
 		I_CLK1        => W_CLK_6M,
 		I_RSTn        => rst_count(3),
 		I_SW          => new_sw,
@@ -341,16 +333,23 @@ port map(
 		I_FS          => W_FS,
 		O_SDAT        => W_SDAT_B
 	);
-
-	mc_roms : entity work.sprom
-	generic map (
-		init_file  => "./ROM/prog.hex",
-		widthad_a  => 14,
-		width_a  => 8)
+	
+	speech : entity work.kb_synth
+	port map(
+		reset_n        => W_RESETn,
+		clk        		=> W_CLK_6M,
+		in0        		=> '0',--DIP
+		in1        		=> '0',--DIP
+		in2        		=> '0',--DIP
+		in3        		=> '0',--DIP
+		speech_out     => W_SDAT_C
+	);
+	
+	mc_roms : entity work.prog
 	port map (
-		address => W_A(13 downto 0),
-		clock  => W_CLK_12M,
-		q => W_CPU_ROM_DO
+		clk  => W_CLK_12M,
+		addr => W_A(13 downto 0),
+		data => W_CPU_ROM_DO
 	);
 
 -------- VIDEO  -----------------------------

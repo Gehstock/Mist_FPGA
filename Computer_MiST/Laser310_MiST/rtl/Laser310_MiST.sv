@@ -96,7 +96,7 @@ mist_video #(.COLOR_DEPTH(6)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoublerD),
+	.scandoubler_disable(1'b1),//scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
 	);

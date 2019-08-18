@@ -219,27 +219,19 @@ begin
 		O_DB    => W_VID_RAM_DOB
 	);
 
-	k_rom : entity work.sprom
-	generic map (
-		init_file  => "./ROM/k.hex",
-		widthad_a  => 11,
-		width_a  => 8)
+	k_rom : entity work.rom_k
 	port map (
-		address => W_O_OBJ_ROM_A,
-		clock  => I_CLK_12M,
-		q => W_1K_D
+		clk  => I_CLK_12M,
+		addr => '0' & W_O_OBJ_ROM_A,
+		data => W_1K_D
 	);
-	
-	h_rom : entity work.sprom
-	generic map (
-		init_file  => "./ROM/h.hex",
-		widthad_a  => 11,
-		width_a  => 8)
+
+	h_rom : entity work.rom_h
 	port map (
-		address => W_O_OBJ_ROM_A,
-		clock  => I_CLK_12M,
-		q => W_1H_D
-	);	
+		clk  => I_CLK_12M,
+		addr => '0' & W_O_OBJ_ROM_A,
+		data => W_1H_D
+	);
 
 -----------------------------------------------------------------------------------
 
