@@ -1,0 +1,6 @@
+{ "" "" "" "Verilog HDL or VHDL warning at cpu.v(148): object \"brk\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at cpu.v(720): truncated value with size 32 to match size of target (1)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at cpu.v(717): truncated value with size 32 to match size of target (1)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at cpu.v(661): truncated value with size 32 to match size of target (8)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at ALU.v(50): truncated value with size 32 to match size of target (1)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL assignment warning at ALU.v(73): truncated value with size 9 to match size of target (8)" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
