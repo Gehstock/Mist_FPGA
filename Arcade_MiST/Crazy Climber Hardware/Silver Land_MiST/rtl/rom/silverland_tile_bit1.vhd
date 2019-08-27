@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity cclimber_tile_bit1 is
+entity silverland_tile_bit1 is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(11 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of cclimber_tile_bit1 is
+architecture prom of silverland_tile_bit1 is
 	type rom is array(0 to  4095) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"1C",X"26",X"63",X"63",X"63",X"32",X"1C",X"00",X"0C",X"1C",X"0C",X"0C",X"0C",X"0C",X"3F",X"00",

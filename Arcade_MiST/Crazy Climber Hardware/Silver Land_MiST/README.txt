@@ -1,11 +1,13 @@
 
 Silver Land Port to Mist FPGA by Gehstock
 
-WIP!! GFX Problems i Have no Idea at this Time
+Colors are wrong, missing Schematics
 
 
 SPACE / FIRE = Accelerate
 ARROW KEYS / JOYSTICK = CONTROL
+
+
 
 
 -------------------------------------------------

@@ -10,17 +10,14 @@ entity crazy_climber is
 port(
   clock_12  : in std_logic;
   reset        : in std_logic;
-  tv15Khz_mode : in std_logic;
-
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
   video_b      : out std_logic_vector(1 downto 0);
+  video_hb 		: out std_logic;
+  video_vb 		: out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
-  video_hb     : out std_logic;
-  video_vb     : out std_logic;
-  audio_out    : out std_logic_vector(15 downto 0);
-  
+  audio_out    : out std_logic_vector(7 downto 0);
   start2       : in std_logic;
   start1       : in std_logic;
   coin1        : in std_logic;
@@ -30,6 +27,7 @@ port(
   right2     : in std_logic;
   left2      : in std_logic;
   fire2      : in std_logic
+
 );
 end crazy_climber;
 
@@ -38,6 +36,13 @@ architecture struct of crazy_climber is
 -- clocks 
 signal clock_12n : std_logic;
 signal reset_n   : std_logic;
+
+-- video syncs
+signal hsync       : std_logic;
+signal vsync       : std_logic;
+signal hblank       : std_logic;
+signal vblank       : std_logic;
+
 
 -- global synchronisation
 signal ena_pixel  : std_logic := '0';
@@ -86,8 +91,8 @@ signal do_palette          : std_logic_vector(7 downto 0);
 signal addr_ram_sprite : std_logic_vector(8 downto 0);
 signal is_sprite_r     : std_logic;
 
-type ram_256x6 is array(0 to 255) of std_logic_vector(5 downto 0);
-signal ram_sprite : ram_256x6;
+type ram_512x6 is array(0 to 511) of std_logic_vector(5 downto 0);-- changed to fit to "addr_ram_sprite" unclear? Gehstock
+signal ram_sprite : ram_512x6;
 
 -- big sprite tiles and graphics
 signal x_big_sprite           : std_logic_vector(7 downto 0);
@@ -118,7 +123,6 @@ signal cpu_addr   : std_logic_vector(15 downto 0);
 signal cpu_do     : std_logic_vector(7 downto 0);
 signal cpu_di     : std_logic_vector(7 downto 0);
 signal cpu_mreq_n : std_logic;
-signal cpu_m1_n   : std_logic;
 signal cpu_int_n  : std_logic;
 signal cpu_iorq_n : std_logic;
 signal cpu_di_mem   : std_logic_vector(7 downto 0);
@@ -133,6 +137,8 @@ signal raz_int_n  : std_logic;
 signal prog_do    : std_logic_vector(7 downto 0);
 signal wram1_do   : std_logic_vector(7 downto 0);
 signal wram1_we   : std_logic;
+--signal wram2_do   : std_logic_vector(7 downto 0);
+--signal wram2_we   : std_logic;
 
 signal tile_ram_addr : std_logic_vector(9 downto 0);
 signal tile_ram_do   : std_logic_vector(7 downto 0);
@@ -152,11 +158,14 @@ signal big_sprite_ram_cs   : std_logic;
 -- data bus from AY-3-8910
 signal ym_8910_data : std_logic_vector(7 downto 0);
 
+
+signal video_i : std_logic_vector (7 downto 0);
+
+
 -- player I/O 
 signal player1  : std_logic_vector(7 downto 0);
 signal player2  : std_logic_vector(7 downto 0);
 signal coins    : std_logic_vector(7 downto 0);
-
 
 begin
 
@@ -177,9 +186,27 @@ end process;
 -- video output
 ------------------
 video_mux <= do_palette when is_big_sprite_on = '0' else do_big_sprite_palette;
-video_r     <= video_mux(2 downto 0);
-video_g     <= video_mux(5 downto 3);
-video_b     <= video_mux(7 downto 6);
+
+process(clock_12)
+begin
+	if rising_edge(clock_12) then
+		if ena_pixel = '1' then
+			if hblank = '0' then
+				video_i <= video_mux;			
+			else
+				video_i <= (others => '0');
+			end if;
+		end if;
+	end if;
+end process;
+
+video_r     <= video_i(2 downto 0);
+video_g     <= video_i(5 downto 3);
+video_b     <= video_i(7 downto 6);
+video_hb <= hblank;
+video_vb <= vblank;
+video_hs    <= hsync;
+video_vs    <= vsync;
 
 ------------------
 -- player controls
@@ -191,8 +218,9 @@ coins <=  ("0001" & start2 & start1 & '0' & coin1); -- upright cabinet
 -----------------------
 -- cpu write addressing
 -----------------------
-
 wram1_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "10000" else '0'; -- 8000-87ff (cclimber)
+--wram2_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 8) = "10001001" else '0'; -- 8900-8bff (not used but initialized)
+
 tile_ram_cs       <= '1' when cpu_addr(15 downto 11) = "10010"    else '0'; -- 9000-93ff mirror 9400-97ff
 color_ram_cs      <= '1' when cpu_addr(15 downto 11) = "10011"    else '0'; -- 9800-9bff 
 big_sprite_ram_cs <= '1' when cpu_addr(15 downto  8) = "10001000" else '0'; -- 8800-88ff
@@ -229,6 +257,9 @@ begin
 	end if;
 end process;
 
+------------------------------------
+-- mux cpu data mem read and io read
+------------------------------------
 with cpu_addr(15 downto 11) select 
 	cpu_di_mem <=
 		prog_do when "00000", -- 0000-07ff
@@ -243,7 +274,9 @@ with cpu_addr(15 downto 11) select
 		prog_do when "01001", -- 4800-4fff
 		prog_do when "01010", -- 5000-57ff
 		prog_do when "01011", -- 5800-5fff
-		wram1_do          when "10000", -- 8000-87ff (ram only at 8000-83ff) cclimber only		
+		
+		wram1_do          when "10000", -- 8000-83ff (ram only at 8000-83ff)
+--		wram2_do          when "10001", -- 8900-8bff not used but should be initalized
 		big_sprite_ram_do when "10001", -- 8800-8fff (ram only at 8800-88ff)
  		tile_ram_do       when "10010", -- 9000-97ff (ram only at 9000-93ff)
 		color_ram_do      when "10011", -- 9800-9fff (ram only at 9800-9bff)		
@@ -575,25 +608,25 @@ end process;
 -- Sync and video counters
 video : entity work.video_gen
 port map (
-  clock_12  => clock_12,
-  ena_pixel => ena_pixel,
-  hsync     => video_hs,
-  vsync     => video_vs,
-  csync     => open,
-  hblank     => video_hb,
-  vblank     => video_vb,
+  clock_12   => clock_12,
+  ena_pixel  => ena_pixel,
+  hsync      => hsync,
+  vsync      => vsync,
+  csync      => open,
+  hblank     => hblank,
+  vblank     => vblank,
   is_sprite  => is_sprite,
   sprite     => sprite,
   x_tile     => x_tile,
   y_tile     => y_tile,
   x_pixel    => x_pixel,
   y_pixel    => y_pixel,
-	
   cpu_clock  => cpu_clock
 );
 
+
 -- sprite palette rom
-palette : entity work.cclimber_palette
+palette : entity work.silverland_palette
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,
@@ -601,7 +634,7 @@ port map (
 );
 
 -- big sprite palette rom
-big_sprite_palette : entity work.cclimber_big_sprite_palette
+big_sprite_palette : entity work.silverland_big_sprite_palette
 port map (
 	addr  => big_sprite_pixel_color_r,
 	clk   => clock_12,
@@ -618,7 +651,6 @@ port map(
   INT_n   => '1',
   NMI_n   => cpu_int_n,
   BUSRQ_n => '1',
-  M1_n    => cpu_m1_n,
   MREQ_n  => cpu_mreq_n,
   IORQ_n  => cpu_iorq_n,
   RD_n    => open,
@@ -633,15 +665,14 @@ port map(
 
 
 -- program rom 
-program : entity work.cclimber_program
+program : entity work.silverland_program
 port map (
 	addr  => cpu_addr(14 downto 0),
 	clk   => clock_12n,
 	data  => prog_do
 );
 
--- working ram1 - 6800-6bff (ckong)
--- working ram1 - 8000-83ff (cclimber)
+-- working ram1 - 8000-83ff
 wram1 : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 10)
 port map(
@@ -652,13 +683,13 @@ port map(
  q    => wram1_do
 );
 
----- working ram2 - 6000-67ff (ckong only)
+-- working ram2 - 8900-bbff
 --wram2 : entity work.gen_ram
---generic map( dWidth => 8, aWidth => 11)
+--generic map( dWidth => 8, aWidth => 10)
 --port map(
 -- clk  => clock_12n,
 -- we   => wram2_we,
--- addr => cpu_addr( 10 downto 0),
+-- addr => cpu_addr( 9 downto 0),
 -- d    => cpu_do,
 -- q    => wram2_do
 --);
@@ -699,7 +730,7 @@ port map(
 -- sprite and background graphics rom
 tile_graph_rom_addr_mod <=  tile_graph_rom_addr(12) & tile_graph_rom_addr(10 downto 0); 
 
-tile_bit0 : entity work.cclimber_tile_bit0
+tile_bit0 : entity work.silverland_tile_bit0
 port map (
 	addr  => tile_graph_rom_addr_mod,
 	clk   => clock_12n,
@@ -707,7 +738,7 @@ port map (
 );
 
 -- sprite and background graphics rom 
-tile_bit1 : entity work.cclimber_tile_bit1
+tile_bit1 : entity work.silverland_tile_bit1
 port map (
 	addr  => tile_graph_rom_addr_mod,
 	clk   => clock_12n,
@@ -715,7 +746,7 @@ port map (
 );
 
 -- big sprite graphics rom 
-big_sprite_tile_bit0 : entity work.cclimber_big_sprite_tile_bit0
+big_sprite_tile_bit0 : entity work.silverland_big_sprite_tile_bit0
 port map (
 	addr  => big_sprite_tile_rom_addr,
 	clk   => clock_12n,
@@ -723,7 +754,7 @@ port map (
 );
 
 -- big sprite graphics rom 
-big_sprite_tile_bit1 : entity work.cclimber_big_sprite_tile_bit1
+big_sprite_tile_bit1 : entity work.silverland_big_sprite_tile_bit1
 port map (
 	addr  => big_sprite_tile_rom_addr,
 	clk   => clock_12n,
@@ -731,7 +762,7 @@ port map (
 );
 
 -- sound
-cclimber_sound : entity work.crazy_climber_sound
+cclimber_sound : entity work.silverland_sound
 port map(
   cpu_clock    => cpu_clock,
   cpu_addr     => cpu_addr,

@@ -16,10 +16,10 @@ module SilverLand_mist (
 	input         CLOCK_27
 );
 
-`include "rtl\build_id.v" 
+`include "rtl\build_id.sv" 
 
 localparam CONF_STR = {
-	"SilverLand;;",
+	"Silver Land;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
@@ -45,7 +45,7 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [10:0] ps2_key;
-wire [15:0] audio;
+wire [7:0] audio;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);
@@ -126,7 +126,7 @@ dac #(
 dac(
 	.CLK(clock_24),
 	.RESET(0),
-	.DACin(audio),
+	.DACin({audio,audio}),
 	.DACout(AUDIO_L)
 	);
 
@@ -141,11 +141,7 @@ reg btn_one_player = 0;
 reg btn_two_players = 0;
 reg btn_left = 0;
 reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
 reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       pressed = ps2_key[9];
 wire [7:0] code    = ps2_key[7:0];	
@@ -155,15 +151,11 @@ always @(posedge clock_24) begin
 	old_state <= ps2_key[10];
 	if(old_state != ps2_key[10]) begin
 		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
 			'h6B: btn_left      		<= pressed; // left
 			'h74: btn_right       	<= pressed; // right
 			'h76: btn_coin				<= pressed; // ESC
 			'h05: btn_one_player   	<= pressed; // F1
 			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire3 			<= pressed; // ctrl
-			'h11: btn_fire2 			<= pressed; // alt
 			'h29: btn_fire1   		<= pressed; // Space
 		endcase
 	end

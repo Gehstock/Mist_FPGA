@@ -202,11 +202,12 @@ signal dail : std_logic_vector(4 downto 0);
 
 begin
 
-process(cpu_clock)
-begin
+--process(cpu_clock)
+--begin
 --dail <= "01111";
-	if (cleft = '1') then dail <= dail-1; elsif (cright = '1') then dail <= dail+1; end if;
-end process;
+--	if (cleft = '1') then dail <= dail-1; end if;
+--	if (cright = '1') then dail <= dail+1; end if;
+--end process;
 
 audio_out <= ("00"&speech_out&"00")+('0'&sound_out&"000");
 clock_10n <= not clock_10;
@@ -373,6 +374,14 @@ with cpu_addr(2 downto 0) select
 ------------------
 -- player controls
 ------------------
+dail1 : entity work.moonwar_dail
+port map(
+	clk      		=> clock_10,
+	moveleft      	=> cleft,
+	moveright      => cright,
+	btn      		=> fire1 & fire2 & fire3,
+	dailout      	=> dail
+);
 
 player1 <= not(fire1 & fire2 & fire3 & dail);--todo dail
 player2 <= not(fire1 & fire2 & fire3 & dail);--todo dail
