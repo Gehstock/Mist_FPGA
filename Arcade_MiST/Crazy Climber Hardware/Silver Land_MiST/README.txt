@@ -2,7 +2,7 @@
 Silver Land Port to Mist FPGA by Gehstock
 
 Colors are wrong, missing Schematics
-using Patched Palette now!!!
+using Patched Palettes now!!!
 
 
 SPACE / FIRE = Accelerate

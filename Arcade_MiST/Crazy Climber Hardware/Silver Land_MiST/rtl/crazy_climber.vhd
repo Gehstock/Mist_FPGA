@@ -620,7 +620,7 @@ port map (
 );
 
 -- big sprite palette rom
-big_sprite_palette : entity work.silverland_big_sprite_palette
+big_sprite_palette : entity work.silverland_big_sprite_palette--PATCHED!!!
 port map (
 	addr  => big_sprite_pixel_color_r,
 	clk   => clock_12,
