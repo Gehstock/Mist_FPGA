@@ -185,35 +185,21 @@ end process;
 ------------------
 -- video output
 ------------------
-video_mux <= do_palette when is_big_sprite_on = '0' else do_big_sprite_palette;
-
-process(clock_12)
-begin
-	if rising_edge(clock_12) then
-		if ena_pixel = '1' then
-			if hblank = '0' then
-				video_i <= video_mux;			
-			else
-				video_i <= (others => '0');
-			end if;
-		end if;
-	end if;
-end process;
-
-video_r     <= video_i(2 downto 0);
-video_g     <= video_i(5 downto 3);
-video_b     <= video_i(7 downto 6);
-video_hb <= hblank;
-video_vb <= vblank;
+video_mux 	<= do_palette when is_big_sprite_on = '0' else do_big_sprite_palette;
+video_r     <= video_mux(2 downto 0);
+video_g     <= video_mux(5 downto 3);
+video_b     <= video_mux(7 downto 6);
+video_hb 	<= hblank;
+video_vb 	<= vblank;
 video_hs    <= hsync;
 video_vs    <= vsync;
 
 ------------------
 -- player controls
 ------------------
-player1 <= right1 & left1 & "00000" & fire1;
-player2 <= right2 & left2 & "00000" & fire2;
-coins <=  ("0001" & start2 & start1 & '0' & coin1); -- upright cabinet
+player1 		<= right1 & left1 & "00000" & fire1;
+player2 		<= right2 & left2 & "00000" & fire2;
+coins 		<=  ("0001" & start2 & start1 & '0' & coin1); -- upright cabinet
 
 -----------------------
 -- cpu write addressing
@@ -626,7 +612,7 @@ port map (
 
 
 -- sprite palette rom
-palette : entity work.silverland_palette
+palette : entity work.silverland_palette--PATCHED!!!
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,

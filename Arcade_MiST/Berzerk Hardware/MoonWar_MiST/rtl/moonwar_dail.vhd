@@ -65,6 +65,6 @@ port map (
 	Q     	=> count
 );
 
-count2 <= count +
-dailout <= direction or count or btn; 
+--count2 <= count +
+dailout <= direction or '0' & count or "00" & btn; 
 end struct;
