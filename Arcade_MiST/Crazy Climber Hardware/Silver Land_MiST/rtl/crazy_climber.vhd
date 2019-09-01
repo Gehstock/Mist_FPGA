@@ -8,7 +8,8 @@ use ieee.numeric_std.all;
 
 entity crazy_climber is
 port(
-  clock_12  : in std_logic;
+  clock_12  	: in std_logic;
+  pause  		: in std_logic;
   reset        : in std_logic;
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
@@ -21,13 +22,12 @@ port(
   start2       : in std_logic;
   start1       : in std_logic;
   coin1        : in std_logic;
-  right1     : in std_logic;
-  left1      : in std_logic;
-  fire1      : in std_logic;
-  right2     : in std_logic;
-  left2      : in std_logic;
-  fire2      : in std_logic
-
+  right1     	: in std_logic;
+  left1      	: in std_logic;
+  fire1      	: in std_logic;
+  right2     	: in std_logic;
+  left2      	: in std_logic;
+  fire2      	: in std_logic
 );
 end crazy_climber;
 
@@ -118,6 +118,7 @@ signal video_mux              : std_logic_vector(7 downto 0);
 
 -- Z80 interface 
 signal cpu_clock  : std_logic;
+signal cpu_clk  : std_logic;
 signal cpu_wr_n   : std_logic;
 signal cpu_addr   : std_logic_vector(15 downto 0);
 signal cpu_do     : std_logic_vector(7 downto 0);
@@ -627,12 +628,13 @@ port map (
 	data  => do_big_sprite_palette 
 );
 
+cpu_clk <= cpu_clock when pause = '0';
 -- Z80
 Z80 : entity work.T80s
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clock,
+  CLK_n   => cpu_clk,
   WAIT_n  => '1',
   INT_n   => '1',
   NMI_n   => cpu_int_n,

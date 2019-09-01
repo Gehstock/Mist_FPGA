@@ -201,7 +201,7 @@ inst_ram : entity work.ram48k
 		do   			=> SRAM_DO
 );
 
-inst_rom : entity work.BASIC11
+inst_rom : entity work.BASIC22
 	port map (
 		clk  			=> CLK_IN,
 		addr 			=> cpu_ad(13 downto 0),

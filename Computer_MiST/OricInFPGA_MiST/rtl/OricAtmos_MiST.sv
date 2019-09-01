@@ -37,8 +37,8 @@ wire			ypbpr;
 wire        scandoublerD;
 wire [31:0] status;
 wire [15:0] audio;
-assign LED = 1'b1;
-assign AUDIO_R = AUDIO_L;
+assign 		LED = 1'b1;
+assign 		AUDIO_R = AUDIO_L;
 
 pll pll (
 	.inclk0				(CLOCK_27			),
@@ -105,11 +105,12 @@ oricatmos oricatmos(
 	
 dac #(
    .c_bits				(16					))
-dac(
+audiodac(
    .clk_i				(clk_24				),
    .res_n_i				(1						),
    .dac_i				(audio				),
    .dac_o				(AUDIO_L				)
-  );	
+  );
+
 
 endmodule

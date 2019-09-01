@@ -21,6 +21,7 @@ module SilverLand_mist (
 localparam CONF_STR = {
 	"Silver Land;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Pause,Off,On;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -54,6 +55,7 @@ wire [1:0] b;
 
 crazy_climber crazy_climber (
 	.clock_12(clock_12),
+	.pause(status[5]),
 	.reset(status[0] | status[6] | buttons[1]),
 	.video_r(r),
 	.video_g(g),
