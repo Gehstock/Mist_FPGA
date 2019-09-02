@@ -662,7 +662,7 @@ port map (
 );
 
 -- sprite palette rom
-palette : entity work.cclimber_palette
+palette : entity work.cclimber_palette--Patched
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,

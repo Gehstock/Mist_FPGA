@@ -2,6 +2,10 @@
 River Patrol Port to Mist FPGA by Gehstock
 
 
+Colors are wrong, missing Schematics
+using Patched Palettes now!!!
+
+
 SPACE / FIRE = Accelerate
 ARROW KEYS / JOYSTICK = CONTROL
 
