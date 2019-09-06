@@ -29,10 +29,11 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clock_12;
+wire clock_12, clock_24;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_12)
+	.c0(clock_12),
+	.c1(clock_24)
 	);
 
 
@@ -77,7 +78,7 @@ ckong ckong(
 	);
 	
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
-	.clk_sys(clock_12),
+	.clk_sys(clock_24),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -91,7 +92,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.ce_divider(1'b1),
+	.ce_divider(1'b0),
 	.rotate({1'b1,status[2]}),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
 	.scandoubler_disable(scandoublerD),
@@ -101,7 +102,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clock_12       ),
+	.clk_sys        (clock_24       ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -122,7 +123,7 @@ user_io(
 dac #(
 	.C_bits(15))
 dac(
-	.clk_i(clock_12),
+	.clk_i(clock_24),
 	.res_n_i(1),
 	.dac_i({~audio[15],audio[14:0]}),
 	.dac_o(AUDIO_L)
@@ -148,7 +149,7 @@ wire       key_pressed;
 wire [7:0] key_code;
 wire       key_strobe;
 
-always @(posedge clock_12) begin
+always @(posedge clock_24) begin
 	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
