@@ -1,7 +1,8 @@
 Super Bagman Port to Mist FPGA by Gehstock
 
-Lack of BRAM
-deactivate Tile Bit1 and Speech
+ToDO: CleanUp
+
+SBAGMAN.ROM is required at the root of the SD-Card.
 
 -------------------------------------------------
 Bagman (STERN) FPGA - (darfpga@aol.fr)

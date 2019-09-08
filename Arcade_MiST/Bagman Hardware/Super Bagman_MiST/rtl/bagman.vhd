@@ -21,7 +21,9 @@ port(
   video_hs     : out std_logic;
   video_vs     : out std_logic;
   audio_out    : out std_logic_vector(12 downto 0);
-  
+  roms_addr    : out std_logic_vector(14 downto 0);
+  roms_do   	: in std_logic_vector(7 downto 0);
+  roms_rd 		: out std_logic;
   start2       : in std_logic;
   start1       : in std_logic;
   coin1        : in std_logic;
@@ -535,7 +537,7 @@ port map (
 );
 
 -- sprite palette rom
-palette : entity work.bagman_palette
+palette : entity work.sbagman_palette
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,
@@ -594,15 +596,15 @@ port map (
 );
 
 -- bagman_speech
---bagman_speech : entity work.bagman_speech
---port map(
---	Clk1MHz      => clock_1mhz,
---	hclkn        => cpu_clock,
---	adrCpu       => cpu_addr(2 downto 0),
---	doCpu        => cpu_do(0),
---	weSelSpeech  => speech_we_n,
---	SpeechSample => speech_sample
---); 
+bagman_speech : entity work.bagman_speech
+port map(
+	Clk1MHz      => clock_1mhz,
+	hclkn        => cpu_clock,
+	adrCpu       => cpu_addr(2 downto 0),
+	doCpu        => cpu_do(0),
+	weSelSpeech  => speech_we_n,
+	SpeechSample => speech_sample
+); 
 
 -- random generator
 pal16r6 : entity work.bagman_pal16r6
@@ -612,13 +614,17 @@ port map(
 	data => pal16r6_data
 );
 
+roms_addr <= cpu_addr(14 downto 0);
+prog_do <= roms_do;
+roms_rd <= '1';
+  
 -- program rom 
-program : entity work.sbagman_program
-port map (
-	addr  => cpu_addr(14 downto 0),
-	clk   => clock_12n,
-	data  => prog_do
-);
+--program : entity work.sbagman_program
+--port map (
+--	addr  => cpu_addr(14 downto 0),
+--	clk   => clock_12n,
+--	data  => prog_do
+--);
 
 program2 : entity work.sbagman_program2
 port map (
@@ -669,11 +675,11 @@ port map (
 );
 
 -- sprite and background graphics rom 
---tile_bit1 : entity work.sbagman_tile_bit1
---port map (
---	addr  => tile_graph_rom_addr,
---	clk   => clock_12n,
---	data  => tile_graph_rom_bit1_do
---);
+tile_bit1 : entity work.sbagman_tile_bit1
+port map (
+	addr  => tile_graph_rom_addr,
+	clk   => clock_12n,
+	data  => tile_graph_rom_bit1_do
+);
 ------------------------------------------
 end architecture;

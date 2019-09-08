@@ -13,7 +13,19 @@ module bagman_mist (
 	input         SPI_SS2,
 	input         SPI_SS3,
 	input         CONF_DATA0,
-	input         CLOCK_27
+	input         CLOCK_27,
+	output [12:0] SDRAM_A,
+	inout  [15:0] SDRAM_DQ,
+	output        SDRAM_DQML,
+	output        SDRAM_DQMH,
+	output        SDRAM_nWE,
+	output        SDRAM_nCAS,
+	output        SDRAM_nRAS,
+	output        SDRAM_nCS,
+	output  [1:0] SDRAM_BA,
+	output        SDRAM_CLK,
+	output        SDRAM_CKE
+
 );
 
 `include "rtl\build_id.sv" 
@@ -28,13 +40,16 @@ localparam CONF_STR = {
 
 assign 		LED = 1;
 assign 		AUDIO_R = AUDIO_L;
+assign SDRAM_CLK = clock_96;
 
-wire clock_24, clock_12, clock_6;
+wire clock_24, clock_12, clock_6, clock_96, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clock_24),
 	.c1(clock_12),
-	.c2(clock_6)
+	.c2(clock_6),
+	.c3(clock_96),
+	.locked(pll_locked)
 	);
 
 wire [31:0] status;
@@ -52,6 +67,41 @@ wire 			hb, vb;
 wire 			blankn = ~(hb | vb);
 wire [2:0] 	r, g;
 wire [1:0] 	b;
+wire [14:0] rom_addr;
+wire [15:0] rom_do;
+wire        rom_rd;
+wire        ioctl_downl;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
+
+data_io data_io (
+	.clk_sys       ( clock_96      ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
+	.ioctl_download( ioctl_downl  ),
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
+);
+		
+sdram cart
+(
+	.*,
+	.init          ( ~pll_locked  ),
+	.clk           ( clock_96      ),
+	.wtbt          ( 2'b00        ),
+	.dout          ( rom_do     ),
+	.din           ( {ioctl_dout, ioctl_dout} ),
+	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
+	.we            ( ioctl_downl & ioctl_wr ),
+	.rd            ( !ioctl_downl),
+	.ready()
+);
+
 
 bagman bagman(
 	.clock_12(clock_12),
@@ -64,6 +114,9 @@ bagman bagman(
 	.video_hs(hs),
 	.video_vs(vs),
 	.audio_out(audio),
+	.roms_addr 			( rom_addr       	),
+	.roms_do   			( rom_do[7:0]   	),
+	.roms_rd				( rom_rd				),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	.coin1(btn_coin),
@@ -108,7 +161,7 @@ video_mixer video_mixer(
 mist_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 mist_io(
-	.clk_sys        (clock_24       ),
+	.clk_sys        (clock_96       ),
 	.conf_str       (CONF_STR       ),
 	.SPI_SCK        (SPI_SCK        ),
 	.CONF_DATA0     (CONF_DATA0     ),

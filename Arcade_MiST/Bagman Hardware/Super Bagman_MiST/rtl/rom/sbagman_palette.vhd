@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity bagman_palette is
+entity sbagman_palette is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(5 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of bagman_palette is
+architecture prom of sbagman_palette is
 	type rom is array(0 to  63) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"00",X"07",X"3F",X"C0",X"00",X"07",X"3F",X"C0",X"00",X"07",X"38",X"EA",X"00",X"FB",X"C7",X"3E",
