@@ -59,11 +59,13 @@ localparam CONF_STR = {
 	"O7,Game name,Traverse USA,Zippyrace;",
 	"O8,Demo mode,Off,On;",
 	"O9,Test mode,Off,On;",
-	"T0,Reset;",
+	"T1,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
 
 assign LED = 1;
+assign AUDIO_R = AUDIO_L;
+assign SDRAM_CLK = clk_sys;
 
 wire clk_sys, clk_aud;
 wire pll_locked;
@@ -109,8 +111,6 @@ data_io data_io (
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-
-assign SDRAM_CLK = clk_sys;
 		
 sdram cart
 (
@@ -133,7 +133,7 @@ always @(posedge clk_sys) begin
 	ioctl_downlD <= ioctl_downl;
 
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | buttons[1] | ~rom_loaded;
+	reset <= status[0] | status[1] | buttons[1] | ~rom_loaded;
 end
 
 //Coinage_B(7-4) / Cont. play(3) / Fuel consumption(2) / Fuel lost when collision (1-0)
@@ -145,7 +145,7 @@ wire [7:0] dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 
 traverse_usa traverse_usa (
 	.clock_36     ( clk_sys         ),
 	.clock_0p895  ( clk_aud         ),
-	.reset        ( status[0] | buttons[1] ),
+	.reset        ( reset 				),
 
 	.video_r      ( r               ),
 	.video_g      ( g               ),
@@ -220,17 +220,13 @@ user_io(
 	.status         (status         )
 	);
 
-wire dac_o;
-assign AUDIO_L = dac_o;
-assign AUDIO_R = dac_o;
-
 dac #(
 	.C_bits(11))
 dac(
 	.clk_i(clk_aud),
 	.res_n_i(1),
 	.dac_i(audio),
-	.dac_o(dac_o)
+	.dac_o(AUDIO_L)
 	);
 
 //											Rotated														Normal

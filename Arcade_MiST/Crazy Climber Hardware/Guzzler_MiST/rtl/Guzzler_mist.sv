@@ -32,6 +32,7 @@ module Guzzler_mist (
 
 localparam CONF_STR = {
 	"GUZZLER;;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
@@ -160,6 +161,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.ce_divider		 ( 0					  ),
+	.rotate			 ({1'b1,status[2]}  ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
@@ -196,10 +198,16 @@ dac(
 	);
 
 
-wire m_up     = btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
+//wire m_up     = btn_up | joystick_0[3] | joystick_1[3];
+//wire m_down   = btn_down | joystick_0[2] | joystick_1[2];
+//wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
+//wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
+
+wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+
 wire m_fire   = btn_fire | joystick_0[4] | joystick_1[4];
 
 

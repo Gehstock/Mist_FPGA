@@ -149,11 +149,13 @@ signal cpu_addr_mod : std_logic_vector(9 downto 0);
 signal reg4_we_n  : std_logic;
 signal reg5_we_n  : std_logic;
 signal reg6_we_n  : std_logic;
-signal raz_int_n   : std_logic_vector(7 downto 0);
+signal raz_int_n   : std_logic_vector(7 downto 0);                                                         
 
---signal prog_do    : std_logic_vector(7 downto 0);
+signal cpu_rom2_do : std_logic_vector (7 downto 0);
 signal wram1_do   : std_logic_vector(7 downto 0);
 signal wram1_we   : std_logic;
+signal wram2_do   : std_logic_vector(7 downto 0);
+signal wram2_we   : std_logic;
 
 signal tile_ram_addr : std_logic_vector(9 downto 0);
 signal tile_ram_do   : std_logic_vector(7 downto 0);
@@ -182,8 +184,7 @@ signal coins    : std_logic_vector(7 downto 0);
 signal video_i : std_logic_vector (7 downto 0);
 signal sidebg_en   : std_logic;
 signal palette_bank   : std_logic;
-signal cpu_rom2_do : std_logic_vector (7 downto 0);
-
+signal ban : std_logic_vector (1 downto 0);
 begin
 
 clock_12n <= not clock_12;
@@ -240,7 +241,7 @@ hlp <=  ("0000" & start2 & start1 & '0' & coin1);
 -- cpu write addressing
 -----------------------
 wram1_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "10000" else '0'; -- 8000-87ff (cclimber)
-
+wram2_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "11000" else '0'; -- c000-c7ff (guzzler)
 tile_ram_cs       <= '1' when cpu_addr(15 downto 11) = "10010"    else '0'; -- 9000-93ff mirror 9400-97ff
 color_ram_cs      <= '1' when cpu_addr(15 downto 11) = "10011"    else '0'; -- 9800-9bff
 big_sprite_ram_cs <= '1' when cpu_addr(15 downto  8) = "10001000" else '0'; -- 8800-88ff
@@ -266,7 +267,7 @@ end process;
 -------------------------------
 process(clock_12, raz_int_n)
 begin
-	if raz_int_n(0) = '0' then
+	if raz_int_n(0) = '0' then--NMI
 		cpu_int_n <= '1';
 	else
 		if rising_edge(clock_12) then
@@ -312,10 +313,6 @@ with cpu_addr(15 downto 11) select
 		cpu_rom_do when "01101", -- 6800-6fff
 		cpu_rom_do when "01110", -- 7000-77ff
 		cpu_rom_do when "01111", -- 7800-7fff
-		cpu_rom2_do when "11100", -- e000-e7ff
-		cpu_rom2_do when "11101", -- e800-efff
-		cpu_rom2_do when "11110", -- f000-f7ff
-		cpu_rom2_do when "11111", -- f800-ffff
 		wram1_do          when "10000", -- 8000-87ff (ram only at 8000-83ff) scratchpad RAM.	
 		big_sprite_ram_do when "10001", -- 8800-8fff (ram only at 8800-88ff) 256 bytes Bigsprite RAM.
  		tile_ram_do       when "10010", -- 9000-97ff (ram only at 9000-93ff) 1k screen RAM.
@@ -324,6 +321,11 @@ with cpu_addr(15 downto 11) select
 		player2           when "10101", -- a800
 		"00000000"        when "10110", -- b000 - dip switch (upright cabinet)
 		hlp        			when "10111", -- b800 --dip2
+		wram2_do          when "11000", -- c000-c7ff
+		cpu_rom2_do when "11100", -- e000-e7ff
+		cpu_rom2_do when "11101", -- e800-efff
+		cpu_rom2_do when "11110", -- f000-f7ff
+		cpu_rom2_do when "11111", -- f800-ffff
 		"00000000"        when others;
 
 cpu_di <= ym_8910_data when cpu_iorq_n = '0' else cpu_di_mem;
@@ -549,7 +551,7 @@ end process;
 -----------------------------------------------------------------
 -- serialize background/sprite graph to pixel + concatenate color
 -----------------------------------------------------------------
-pixel_color <=	'0' & tile_color_r & 
+pixel_color <=	'0' & tile_color_r & --palette_bank
 	tile_graph1_r(to_integer(unsigned(not x_pixel))) &
 	tile_graph2_r(to_integer(unsigned(not x_pixel))) &
 	tile_graph3_r(to_integer(unsigned(not x_pixel)));
@@ -567,8 +569,8 @@ xy_big_sprite <=    y_line_big_sprite_shift(6 downto 3)  & not(x_big_sprite_coun
 -- select big sprite graphic rom address
 ----------------------------------------
 with attr_big_sprite(5) select
-big_sprite_tile_rom_addr <= '0' & big_sprite_tile_code_r &      y_line_big_sprite_shift(2 downto 0) when '0',
-                            '0' & big_sprite_tile_code_r & not (y_line_big_sprite_shift(2 downto 0)) when others;
+big_sprite_tile_rom_addr <= ban(0) & big_sprite_tile_code_r &      y_line_big_sprite_shift(2 downto 0) when '0',
+                            ban(0) & big_sprite_tile_code_r & not (y_line_big_sprite_shift(2 downto 0)) when others;
  
 -------------------------------------
 -- big sprite ram addressing scheme 
@@ -752,6 +754,15 @@ port map(
  q    => wram1_do
 );
 
+wram2 : entity work.gen_ram
+generic map( dWidth => 8, aWidth => 11)
+port map(
+ clk  => clock_12n,
+ we   => wram2_we,
+ addr => cpu_addr( 10 downto 0),
+ d    => cpu_do,
+ q    => wram2_do
+);
 
 tile_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 10)
