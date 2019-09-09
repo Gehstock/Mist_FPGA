@@ -1,7 +1,5 @@
 Super Bagman Port to Mist FPGA by Gehstock
 
-ToDO: CleanUp
-
 SBAGMAN.ROM is required at the root of the SD-Card.
 
 -------------------------------------------------

@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Bagman (stern) - Dar - Feb 2014
+-- Super Bagman  - Dar - Feb 2014
 --
 -- Remove sram multiplexing - Dar -June 2018
 ---------------------------------------------------------------------------------
@@ -8,7 +8,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity bagman is
+entity sbagman is
 port(
   clock_12  : in std_logic;
   reset        : in std_logic;
@@ -40,9 +40,9 @@ port(
   down2        : in std_logic;
   up2          : in std_logic
 );
-end bagman;
+end sbagman;
 
-architecture struct of bagman is
+architecture struct of sbagman is
 
 -- clocks 
 signal clock_12n : std_logic;
