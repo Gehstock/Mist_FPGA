@@ -117,7 +117,7 @@ begin
 			end if;    
 
 			if    hcnt = (127+8+1) then hblank <= '1'; -- +8 = retard du shift_register + 1 pixel--
-			elsif hcnt = (255+8+1) then hblank <= '0'; -- +8 = retard du shift_register + 1 pixel--
+			elsif hcnt = (255+8+2) then hblank <= '0'; -- +8 = retard du shift_register + 1 pixel--
 			end if;    
 
 			if    vcnt = (495+1+0) then vblank <= '1';

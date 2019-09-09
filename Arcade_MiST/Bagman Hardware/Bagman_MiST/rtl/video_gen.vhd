@@ -121,7 +121,7 @@ begin
 			end if;    
 
 			if    vcnt = (495+1+0) then vblank <= '1';
-			elsif vcnt = (271+1+1) then vblank <= '0';
+			elsif vcnt = (271+1+0) then vblank <= '0';
 			end if;   
 
 		end if;

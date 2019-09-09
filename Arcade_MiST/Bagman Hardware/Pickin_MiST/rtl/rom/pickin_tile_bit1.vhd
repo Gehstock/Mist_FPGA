@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity bagman_tile_bit1 is
+entity pickin_tile_bit1 is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(12 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of bagman_tile_bit1 is
+architecture prom of pickin_tile_bit1 is
 	type rom is array(0 to  8191) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"00",X"3E",X"41",X"41",X"41",X"41",X"41",X"3E",X"00",X"00",X"00",X"7F",X"20",X"10",X"00",X"00",

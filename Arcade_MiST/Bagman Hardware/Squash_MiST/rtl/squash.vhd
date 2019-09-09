@@ -8,7 +8,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity Pickin is
+entity squash is
 port(
   clock_12  : in std_logic;
   reset        : in std_logic;
@@ -38,9 +38,9 @@ port(
   down2        : in std_logic;
   up2          : in std_logic
 );
-end Pickin;
+end squash;
 
-architecture struct of Pickin is
+architecture struct of squash is
 
 -- clocks 
 signal clock_12n : std_logic;
@@ -152,6 +152,20 @@ signal video_s : std_logic_vector (7 downto 0);
 signal hsync_o : std_logic;
 signal vsync_o : std_logic;
 
+signal dail1 : std_logic_vector(1 downto 0);
+signal dail2 : std_logic_vector(1 downto 0);
+
+COMPONENT joy2quad
+	PORT
+	(
+		CLK		:	 IN STD_LOGIC;
+		clkdiv		:	 IN STD_LOGIC_VECTOR(11 DOWNTO 0);
+		rightc		:	 IN STD_LOGIC;
+		leftc		:	 IN STD_LOGIC;
+		steer		:	 OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
+	);
+END COMPONENT;
+
 begin
 
 clock_12n <= not clock_12;
@@ -215,8 +229,26 @@ video_s  <= video_i;
 ------------------
 -- player controls
 ------------------
-player1 <= not(fire1 & down1 & up1 & right1 & left1 & start1 & '0' & coin1);
-player2 <= not(fire2 & down2 & up2 & right2 & left2 & start2 & "00");
+dailP1 : joy2quad
+port map (
+	CLK   => clock_12,
+	clkdiv   => X"265",
+	rightc   => up1,
+	leftc   => down1,
+	steer   => dail1
+	);
+	
+dailP2 : joy2quad
+port map (
+	CLK   => clock_12,
+	clkdiv   => X"265",
+	rightc   => up2,
+	leftc   => down2,
+	steer   => dail2
+	);	
+	
+player1 <= not(fire1 & dail1 & right1 & left1 & start1 & '0' & coin1);
+player2 <= not(fire2 & dail2 & right2 & left2 & start2 & "00");
 
 -----------------------
 -- cpu write addressing
@@ -289,7 +321,7 @@ with cpu_addr(15 downto 11) select
 		wram2_do          when "01110", -- 7000-77ff
  		tile_ram_do       when "10001", -- 8800-8bff
 		color_ram_do      when "10011", -- 9800-9fff (ram only at 9800-9bff) 
-		not("00010001")   when "10101", -- a800 	DIP SWITCH
+		not("11111110")   when "10101", -- a800 	DIP SWITCH
 		"00000000"        when others;
 
 
@@ -525,7 +557,7 @@ port map (
 );
 
 -- sprite palette rom
-palette : entity work.bagman_palette
+palette : entity work.squash_palette
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,
@@ -613,9 +645,9 @@ port map (
 
 
 -- program rom 
-program : entity work.bagman_program
+program : entity work.squash_program
 port map (
-	addr  => cpu_addr(14 downto 0),
+	addr  => cpu_addr(13 downto 0),
 	clk   => clock_12n,
 	data  => prog_do
 );
@@ -654,7 +686,7 @@ port map(
 );
 
 -- sprite and background graphics rom 
-tile_bit0 : entity work.bagman_tile_bit0
+tile_bit0 : entity work.squash_tile_bit0
 port map (
 	addr  => tile_graph_rom_addr,
 	clk   => clock_12n,
@@ -662,7 +694,7 @@ port map (
 );
 
 -- sprite and background graphics rom 
-tile_bit1 : entity work.bagman_tile_bit1
+tile_bit1 : entity work.squash_tile_bit1
 port map (
 	addr  => tile_graph_rom_addr,
 	clk   => clock_12n,

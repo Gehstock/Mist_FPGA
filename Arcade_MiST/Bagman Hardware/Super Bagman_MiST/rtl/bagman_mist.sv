@@ -35,7 +35,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.25.",`BUILD_DATE
 };
 
 assign 		LED = 1;
@@ -58,7 +58,6 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
 wire [12:0] audio;
 wire 			hs, vs;
 wire 			hb, vb;
@@ -156,7 +155,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b0,status[2]} ),
+	.rotate         ( {1'b1,status[2]} ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )

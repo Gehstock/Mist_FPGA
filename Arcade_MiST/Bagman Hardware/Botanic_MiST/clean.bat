@@ -34,5 +34,6 @@ del /s *.xml
 del /s new_rtl_netlist
 del /s old_rtl_netlist
 del /s PLLJ_PLLSPE_INFO.txt
+del  /s build_id.v
 
 pause

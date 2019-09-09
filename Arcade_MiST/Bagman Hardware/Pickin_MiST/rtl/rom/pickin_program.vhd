@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity bagman_program is
+entity pickin_program is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(14 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of bagman_program is
+architecture prom of pickin_program is
 	type rom is array(0 to  24575) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"C3",X"D0",X"0E",X"3A",X"FE",X"70",X"FE",X"01",X"3E",X"50",X"32",X"F7",X"71",X"C8",X"3A",X"FE",

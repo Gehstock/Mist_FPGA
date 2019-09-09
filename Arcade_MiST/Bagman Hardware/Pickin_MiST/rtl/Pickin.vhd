@@ -147,9 +147,7 @@ signal player2  : std_logic_vector(7 downto 0);
 signal coins    : std_logic_vector(7 downto 0);
 
 -- line doubler I/O
-signal video_i : std_logic_vector (7 downto 0);
 signal video_o : std_logic_vector (7 downto 0);
-signal video_s : std_logic_vector (7 downto 0);
 signal hsync_o : std_logic;
 signal vsync_o : std_logic;
 
@@ -184,26 +182,10 @@ begin
 		ena_pixel <= not ena_pixel;
 	end if;
 end process;
-	
-------------------
--- video output
-------------------
-process(clock_12)
-begin
-	if rising_edge(clock_12) then
-		if ena_pixel = '1' then
-			if hblank = '0' then
-				video_i <= do_palette;			
-			else
-				video_i <= (others => '0');
-			end if;
-		end if;
-	end if;
-end process;
 
-video_r  <= video_s(2 downto 0);				
-video_g  <= video_s(5 downto 3);				
-video_b  <= video_s(7 downto 6);
+video_r  <= do_palette(2 downto 0);				
+video_g  <= do_palette(5 downto 3);				
+video_b  <= do_palette(7 downto 6);
 
 
 video_hblank <= hblank;
@@ -211,7 +193,6 @@ video_vblank <= vblank;
 
 video_hs    <= hsync;
 video_vs    <= vsync;
-video_s  <= video_i;
 
 ------------------
 -- player controls
@@ -307,14 +288,13 @@ with cpu_addr(15 downto 11) select
 --   cabinet      0 = upright, 1 = cocktail (NA)
   
 		
-cpu_di <= 	ym_8910_data  when 	cpu_iorq_n 	= '0' else
-				ym_8910_data2 when 	ym2_we_n 	= '0' else--1011100000000000
-				cpu_di_mem;
+cpu_di <= ym_8910_data when cpu_iorq_n = '0' else cpu_di_mem;
 
 -----------------------
 -- mux sound and music
 -----------------------
 audio_out <= ym_8910_audio & ym_8910_audio2;
+
 
 -------------------------------------
 -- color ram addressing scheme 
@@ -528,7 +508,7 @@ port map (
 );
 
 -- sprite palette rom
-palette : entity work.bagman_palette
+palette : entity work.pickin_palette
 port map (
 	addr => pixel_color_r,
 	clk  => clock_12,
@@ -616,7 +596,7 @@ port map (
 
 
 -- program rom 
-program : entity work.bagman_program
+program : entity work.pickin_program
 port map (
 	addr  => cpu_addr(14 downto 0),
 	clk   => clock_12n,
@@ -657,7 +637,7 @@ port map(
 );
 
 -- sprite and background graphics rom 
-tile_bit0 : entity work.bagman_tile_bit0
+tile_bit0 : entity work.pickin_tile_bit0
 port map (
 	addr  => tile_graph_rom_addr,
 	clk   => clock_12n,
@@ -665,7 +645,7 @@ port map (
 );
 
 -- sprite and background graphics rom 
-tile_bit1 : entity work.bagman_tile_bit1
+tile_bit1 : entity work.pickin_tile_bit1
 port map (
 	addr  => tile_graph_rom_addr,
 	clk   => clock_12n,
