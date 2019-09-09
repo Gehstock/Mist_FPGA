@@ -19,6 +19,7 @@ Aviable Arcade Cores
 	Botanic
 	Pickin
 	Squash
+	Super Bagman
 
 #Berzerk Hardware
 	Berzerk
