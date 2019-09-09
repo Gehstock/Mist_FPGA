@@ -1,10 +1,5 @@
-Arcade: Pooyan port to MiST by Gehstock
-
-POOYAN.ROM is required at the root of the SD-Card.
-
-
 ---------------------------------------------------------------------------------
--- POOYAN by Dar (darfpga@aol.fr) (29/10/2017)
+-- Time pilot by Dar (darfpga@aol.fr) (29/10/2017)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -33,7 +28,7 @@ POOYAN.ROM is required at the root of the SD-Card.
 
 --  Use with MAME roms from timeplt.zip
 --
---  Use make_pooyan_proms.bat to build vhd file from binaries
+--  Use make_time_pilot_proms.bat to build vhd file from binaries
 
 --  Time Pilot Hardware caracteristics :
 --
@@ -86,10 +81,10 @@ POOYAN.ROM is required at the root of the SD-Card.
 --   UP    arrow : rotate up 
 --   DOWN  arrow : rotate down
 --
--- Other details : see pooyan.vhd
+-- Other details : see time_pilot.vhd
 
 ---------------------------------------------------------------------------------
--- Use pooyan_lite.sdc to compile (Timequest constraints)
+-- Use time_pilot_lite.sdc to compile (Timequest constraints)
 -- /!\
 -- Don't forget to set device configuration mode with memory initialization 
 --  (Assignments/Device/Pin options/Configuration mode)
@@ -100,8 +95,8 @@ POOYAN.ROM is required at the root of the SD-Card.
 +------------------------------------+---------------------------------------------+
 ; Fitter Status                      ; Successful - Sun Nov 05 10:17:02 2017       ;
 ; Quartus Prime Version              ; 16.1.0 Build 196 10/24/2016 SJ Lite Edition ;
-; Revision Name                      ; pooyan_de10_lite                        ;
-; Top-level Entity Name              ; pooyan_de10_lite                        ;
+; Revision Name                      ; time_pilot_de10_lite                        ;
+; Top-level Entity Name              ; time_pilot_de10_lite                        ;
 ; Family                             ; MAX 10                                      ;
 ; Device                             ; 10M50DAF484C6GES                            ;
 ; Timing Models                      ; Preliminary                                 ;
@@ -124,9 +119,9 @@ VHDL File list
 
 de_10/max10_pll_12M_14M.vhd        Pll 12MHz and 14 MHz from 50MHz altera mf
 
-rtl_dar/pooyan_de10_lite.vhd   Top level for de10_lite board
-rtl_dar/pooyan.vhd             Main video board logic
-rtl_dar/pooyan_sound_board.vhd Main sound board logic
+rtl_dar/time_pilot_de10_lite.vhd   Top level for de10_lite board
+rtl_dar/time_pilot.vhd             Main video board logic
+rtl_dar/time_pilot_sound_board.vhd Main sound board logic
 
 rtl_mikej/YM2149_linmix_sep.vhd    Copyright (c) MikeJ - Jan 2005
 
@@ -142,22 +137,22 @@ rtl_dar/io_ps2_keyboard.vhd        Copyright 2005-2008 by Peter Wendrich (pwsoft
 rtl_dar/gen_ram.vhd                Generic RAM (Peter Wendrich + DAR Modification)
 rtl_dar/decodeur_7_seg.vhd         7 segments display decoder
 
-rtl_dar/pooyan_prog.vhd        Time pilot video board PROMs
-rtl_dar/pooyan_char_grphx.vhd
-rtl_dar/pooyan_char_color_lut.vhd
-rtl_dar/pooyan_sprite_grphx.vhd
-rtl_dar/pooyan_sprite_color_lut.vhd
-rtl_dar/pooyan_palette_green_red.vhd
-rtl_dar/pooyan_palette_blue_green.vhd
+rtl_dar/time_pilot_prog.vhd        Time pilot video board PROMs
+rtl_dar/time_pilot_char_grphx.vhd
+rtl_dar/time_pilot_char_color_lut.vhd
+rtl_dar/time_pilot_sprite_grphx.vhd
+rtl_dar/time_pilot_sprite_color_lut.vhd
+rtl_dar/time_pilot_palette_green_red.vhd
+rtl_dar/time_pilot_palette_blue_green.vhd
 
-rtl_dar/pooyan_sound_prog.vhd  Time pilot sound board PROM
+rtl_dar/time_pilot_sound_prog.vhd  Time pilot sound board PROM
 
 ----------------------
 Quartus project files
 ----------------------
-de10_lite/pooyan_de10_lite.sdc   Timequest constraints file
-de10_lite/pooyan_de10_lite.qsf   de10_lite settings (files,pins...) 
-de10_lite/pooyan_de10_lite.qpf   de10_lite project
+de10_lite/time_pilot_de10_lite.sdc   Timequest constraints file
+de10_lite/time_pilot_de10_lite.qsf   de10_lite settings (files,pins...) 
+de10_lite/time_pilot_de10_lite.qpf   de10_lite project
 
 -----------------------------
 Required ROMs (Not included)
@@ -174,24 +169,24 @@ timeplt.e12
 Tools 
 ------
 You need to build vhdl files from the binary file :
- - Unzip the roms file in the tools/pooyan_unzip directory
- - Double click (execute) the script tools/make_pooyan_proms.bat to get the following files
+ - Unzip the roms file in the tools/time_pilot_unzip directory
+ - Double click (execute) the script tools/make_time_pilot_proms.bat to get the following files
 
-pooyan_prog.vhd               : tm1, tm2,tm3
-pooyan_sprite_grphx.vhd       : tm4, tm5
-pooyan_char_grphx.vhd         : tm6 
-pooyan_sound_prog.vhd         : tm7 
-pooyan_palette_blue_green.vhd : timeplt.b4  
-pooyan_palette_green_red.vhd  : timeplt.b5  
-pooyan_sprite_color_lut.vhd   : timeplt.e9  
-pooyan_char_color_lut.vhd     : timeplt.e12 
+time_pilot_prog.vhd               : tm1, tm2,tm3
+time_pilot_sprite_grphx.vhd       : tm4, tm5
+time_pilot_char_grphx.vhd         : tm6 
+time_pilot_sound_prog.vhd         : tm7 
+time_pilot_palette_blue_green.vhd : timeplt.b4  
+time_pilot_palette_green_red.vhd  : timeplt.b5  
+time_pilot_sprite_color_lut.vhd   : timeplt.e9  
+time_pilot_char_color_lut.vhd     : timeplt.e12 
 
 
 *DO NOT REDISTRIBUTE THESE FILES*
 
 VHDL files are needed to compile and include roms into the project 
 
-The script make_pooyan_proms.bat uses make_vhdl_prom executables delivered both in linux and windows version. The script itself is delivered only in windows version (.bat) but should be easily ported to linux.
+The script make_time_pilot_proms.bat uses make_vhdl_prom executables delivered both in linux and windows version. The script itself is delivered only in windows version (.bat) but should be easily ported to linux.
 
 Source code of make_vhdl_prom.c is also delivered.
 
@@ -204,8 +199,8 @@ You can build the project with ROM image embeded in the sof file.
 3 steps
 
  - put the VHDL ROM files (.vhd) into the rtl_dar directory
- - build pooyan_de10_lite
- - program pooyan_de10_lite.sof
+ - build time_pilot_de10_lite
+ - program time_pilot_de10_lite.sof
 
 ------------------------
 ------------------------
