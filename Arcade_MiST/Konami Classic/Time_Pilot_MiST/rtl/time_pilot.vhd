@@ -93,7 +93,9 @@ port(
 	video_hs       : out std_logic;
 	video_vs       : out std_logic;
 	audio_out      : out std_logic_vector(10 downto 0);
-
+	roms_addr      : out std_logic_vector(14 downto 0);
+	roms_do   		: in std_logic_vector(7 downto 0);
+	roms_rd       	: out std_logic;
 	dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B / Coinage_A
 	dip_switch_2   : in std_logic_vector(7 downto 0); -- Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
 
@@ -662,13 +664,18 @@ port map(
   DO      => cpu_do
 );
 
+roms_addr <= cpu_addr(14 downto 0);
+cpu_rom_do <= roms_do;
+roms_rd <= '1';
+
+
 -- cpu1 program ROM
-rom_cpu1 : entity work.time_pilot_prog
-port map(
- clk  => clock_6n,
- addr => cpu_addr(14 downto 0),
- data => cpu_rom_do
-);
+--rom_cpu1 : entity work.time_pilot_prog
+--port map(
+-- clk  => clock_6n,
+-- addr => cpu_addr(14 downto 0),
+-- data => cpu_rom_do
+--);
 
 -- working/char RAM   0xA000-0xAFFF
 wram : entity work.gen_ram

@@ -1,3 +1,9 @@
+Arcade: Time Pilot port to MiST by Gehstock
+
+TIMEPLT.ROM is required at the root of the SD-Card.
+
+
+
 ---------------------------------------------------------------------------------
 -- Time pilot by Dar (darfpga@aol.fr) (29/10/2017)
 -- http://darfpga.blogspot.fr

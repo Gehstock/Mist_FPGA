@@ -63,7 +63,7 @@ wire [10:0] audio;
 wire 			hs, vs;
 wire 			hb, vb;
 wire 			blankn = ~(hb | vb);
-wire [2:0] 	r, g;
+wire [2:0] 	r,g;
 wire [1:0] 	b;
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
@@ -146,14 +146,14 @@ pooyan pooyan(
 	);
 
 	
-mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(//Wrong Colors have no Idea
 	.clk_sys        ( clock_48         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? r : 0   ),
-	.G              ( blankn ? g : 0   ),
-	.B              ( blankn ? {b,1'b0} : 0   ),
+	.R              ( blankn ? {r,r} : 0   ),
+	.G              ( blankn ? {g,g} : 0   ),
+	.B              ( blankn ? {b,b,b} : 0   ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),

@@ -594,9 +594,6 @@ rgb_palette_addr <=
 	'1' & ch_palette_do(3 downto 0) when (sp_read_out = "0000" ) else 
 	'0' & sp_read_out; 
 	
-
-
-
 -- register and assign rbg palette output
 process (clock_6)
 begin
@@ -680,17 +677,9 @@ port map(
   DO      => cpu_do
 );
 
- roms_addr <= cpu_addr(14 downto 0);
+roms_addr <= cpu_addr(14 downto 0);
 cpu_rom_do <= roms_do;
- roms_rd <= '1';
-
--- cpu1 program ROM
---rom_cpu1 : entity work.pooyan_prog
---port map(
--- clk  => clock_6n,
--- addr => cpu_addr(14 downto 0),
--- data => cpu_rom_do
---);
+roms_rd <= '1';
 
 -- working/char RAM   0x8000-0x8FFF
 wram : entity work.gen_ram

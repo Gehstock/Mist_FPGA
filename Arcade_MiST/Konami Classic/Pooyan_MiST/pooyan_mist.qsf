@@ -55,7 +55,6 @@ set_global_assignment -name VHDL_FILE rtl/rom/pooyan_sprite_grphx2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_sprite_grphx1.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_sprite_color_lut.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_sound_prog.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/pooyan_prog.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_palette.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_char_grphx2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/pooyan_char_grphx1.vhd
@@ -66,7 +65,6 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -210,4 +208,5 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
 # end ENTITY(pooyan_mist)
 # -----------------------
 set_location_assignment PIN_127 -to SPI_SS2
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
