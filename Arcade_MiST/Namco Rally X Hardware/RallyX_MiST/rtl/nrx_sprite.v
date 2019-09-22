@@ -129,10 +129,22 @@ end
 
 reg  [9:0] radr0=0,radr1=1;
 wire [8:0] SPCOLi;
-
-LINEBUF1024_9 linedbuf(VCLKx2,{SIDE,HPOS},(radr0==radr1),SPCOLi, VCLKx2,{~SIDE,HPOSW},(SPWCL[0]|SPWCL[1]),SPWCL);
-//GLINEBUF #(10,9) linedbuf(VCLKx2,{SIDE,HPOS},(radr0==radr1),SPCOLi, VCLKx2,{~SIDE,HPOSW},(SPWCL[0]|SPWCL[1]),SPWCL);
-
+dpram #(
+	.widthad_a(10),
+	.width_a(9))
+linebuffer(
+	.address_a({SIDE,HPOS}),
+	.address_b({~SIDE,HPOSW}),
+	.clock_a(VCLKx2),
+	.clock_b(VCLKx2),
+	.data_a(9'h0),
+	.data_b(SPWCL),
+	.wren_a(radr0==radr1),
+	.wren_b((SPWCL[0]|SPWCL[1])),
+	.q_a(SPCOLi),
+	.q_b()
+	);
+	
 always @(posedge VCLK) radr0 <= {SIDE,HPOS};
 always @(negedge VCLK) begin 
 	if (radr0!=radr1) SPCOL <= SPCOLi;

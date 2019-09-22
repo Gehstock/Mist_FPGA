@@ -5,7 +5,7 @@
 -- From: https://github.com/MrX-8B/MiSTer-Arcade-RallyX
 -- 
 
-Todo fix Sound
+Todo: wrong Music
 ---------------------------------------------------------------------------------
 -- FPGA New Rally-X for Spartan-3 Starter Board
 ------------------------------------------------

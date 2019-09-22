@@ -98,7 +98,7 @@ nrx_prg_rom nrx_prg_rom (
 	.clk(CCLK),
 	.addr(ad[13:0]),
 	.data(romdata)
-);
+	);
 
 // Work RAM (2KB)
 wire [7:0] ramdata;
@@ -157,8 +157,8 @@ wire 				PCLK;
 
 nrx_video video( 
 	.VCLKx4(CLK),  
-	.HPOS(HP+22), 
-	.VPOS(VP-5), 
+	.HPOS(HP+3), 
+	.VPOS(VP+1), 
 	.PCLK(PCLK), 
 	.POUT({b,g,r}), 
 	.CPUCLK(CCLK), 
@@ -188,7 +188,7 @@ nrx_sound sound(
 	.CLK24M(CLK), 
 	.CCLK(CCLK), 
 	.SND(SND),
-	.AD(ad[4:0]), 
+	.AD(ad), 
 	.DI(odt[3:0]),
 	.WR(snd_Wce),
 	.BANG(bang)

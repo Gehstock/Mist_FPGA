@@ -92,9 +92,55 @@ assign			CPUDO = DTV0 | DTV1;
 assign			CPUDT = ( ~CPUWE ) & ( CEV0 | CEV1 );
 
 GDPRAM #(11,8) vram0( VCLKx4, VRAMADRS, CHRC, CPUCLK, CPUADDR[10:0], ( CPUWE & CEV0 ), CPUDI, V0DO );  
-GDPRAM #(11,8)	vram1( VCLKx4, VRAMADRS, ATTR, CPUCLK, CPUADDR[10:0], ( CPUWE & CEV1 ), CPUDI, V1DO );  
+/*dpram #(
+	.widthad_a(11),
+	.width_a(8))
+vram0(
+	.address_a(VRAMADRS),
+	.address_b(CPUADDR[10:0]),
+	.clock_a(VCLKx4),
+	.clock_b(CPUCLK),
+	.data_a(),
+	.data_b(CPUDI),
+	.wren_a(),
+	.wren_b(( CPUWE & CEV0 )),
+	.q_a(CHRC),
+	.q_b(V0DO)
+	);*/
+	
+GDPRAM #(11,8)	vram1( VCLKx4, VRAMADRS, ATTR, CPUCLK, CPUADDR[10:0], ( CPUWE & CEV1 ), CPUDI, V1DO ); 
+/*dpram #(
+	.widthad_a(11),
+	.width_a(8))
+vram1(
+	.address_a(VRAMADRS),
+	.address_b(CPUADDR[10:0]),
+	.clock_a(VCLKx4),
+	.clock_b(CPUCLK),
+	.data_a(),
+	.data_b(CPUDI),
+	.wren_a(),
+	.wren_b(( CPUWE & CEV1 )),
+	.q_a(ATTR),
+	.q_b(V1DO)
+	); */
 GDPRAM #(4,8)	aram0( VCLKx4, ARAMADRS, ARDT, CPUCLK, CPUADDR[3:0],  ( CPUWE & CEAT ), CPUDI );
-
+/*dpram #(
+	.widthad_a(8),
+	.width_a(4))
+aram0(
+	.address_a(ARAMADRS),
+	.address_b(CPUADDR[3:0]),
+	.clock_a(VCLKx4),
+	.clock_b(CPUCLK),
+	.data_a(),
+	.data_b(CPUDI),
+	.wren_a(),
+	.wren_b(( CPUWE & CEAT )),
+	.q_a(ARDT),
+	.q_b()
+	); */
+	
 wire				BGF = ATTR[5];
 
 
@@ -123,7 +169,7 @@ nrx_dot_rom dotrom(
 	.clk(VCLKx4),
 	.addr(DROMAD), 
 	.data(DROMDT)
-);
+	);
 
 //----------------------------------------
 //  BG/FG scanline generator
@@ -145,7 +191,21 @@ end
 //  Sprite Engine
 //----------------------------------------
 wire [8:0] SPCOL;
-NRX_SPRITE speng( VCLKx4, oHB, HPOS, VPOS, SPRAADRS, { ATTR, CHRC }, ARAMADRS, ARDT, SPCHRADR, CHRO, DROMAD, DROMDT, SPCOL );
+NRX_SPRITE speng( 
+	.VCLKx4(VCLKx4), 
+	.HBLK(oHB), 
+	.HPOS(HPOS), 
+	.VPOS(VPOS), 
+	.SPRAADRS(SPRAADRS), 
+	.SPRADATA({ ATTR, CHRC }), 
+	.ARAMADRS(ARAMADRS), 
+	.ARAMDATA(ARDT), 
+	.SPCHRADR(SPCHRADR), 
+	.SPCHRDAT(CHRO), 
+	.DROMAD(DROMAD), 
+	.DROMDT(DROMDT), 
+	.SPCOL(SPCOL) 
+	);
 
 
 //----------------------------------------
@@ -160,7 +220,7 @@ nrx_col_rom colrom(
 	.clk(~VCLKx4),
 	.addr(OUTCOL), 
 	.data(CLUT)
-);
+	);
 
 wire	[4:0]		PALA = SPCOL[8] ? SPCOL[4:0] : { 1'b0, CLUT };
 wire	[7:0]		PALO;
@@ -169,7 +229,7 @@ nrx_pal_rom palrom(
 	.clk(VCLKx4),
 	.addr(PALA), 
 	.data(PALO)
-);
+	);
 
 //----------------------------------------
 //  Color output

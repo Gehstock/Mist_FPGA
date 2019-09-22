@@ -34,7 +34,7 @@ assign 		AUDIO_R = AUDIO_L;
 wire clock_24, clock_12;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_24)
+	.c0(clock_24)//24.576MHz
 	);
 
 wire [31:0] status;
@@ -63,7 +63,7 @@ wire  [7:0] iCTR2 = ~{ btn_coin, btn_two_players, m_up2, m_down2, m_right2, m_le
 
 fpga_nrx fpga_nrx(
 	.RESET(status[0] | status[6] | buttons[1]),
-	.CLK24M(clock_24),		// Clock 24.576MHz
+	.CLK24M(clock_24),
 	.hsync(hs),
 	.vsync(vs),
 	.hblank(hb),
@@ -71,15 +71,15 @@ fpga_nrx fpga_nrx(
 	.r(r),
 	.g(g),
 	.b(b),
-	.SND(audio),			// Sound (unsigned PCM)
-	.DSW(iDSW),			// DipSW
-	.CTR1(iCTR1),			// Controler (Negative logic)
+	.SND(audio),
+	.DSW(iDSW),
+	.CTR1(iCTR1),
 	.CTR2(iCTR2),
 	.LAMP()
-);
+	);
 
 	
-mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clock_24         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),

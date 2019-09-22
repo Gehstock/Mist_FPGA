@@ -58,7 +58,6 @@ set_global_assignment -name VHDL_FILE rtl/cpu09l_128.vhd
 set_global_assignment -name QIP_FILE rtl/pll_mist.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments

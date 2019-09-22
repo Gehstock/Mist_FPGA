@@ -2,7 +2,7 @@
 	FPGA New Rally-X (Sound Part)
 ***************************************************************/
 
-module nrx_wav2
+module nrx_namco
 (
 	input			clk,
 	input [7:0] a0,
@@ -18,10 +18,10 @@ reg  [1:0] ph=0;
 reg  [7:0] ad;
 wire [7:0] dt;
 nrx_nam_rom namrom(
-	.clk(clk),//todo enable signal
+	.clk(clk),
 	.addr(ad), 
 	.data(dt)
-);
+	);
 
 always @(negedge clk) begin
 	case (ph)

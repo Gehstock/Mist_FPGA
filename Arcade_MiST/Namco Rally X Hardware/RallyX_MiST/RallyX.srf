@@ -23,6 +23,7 @@
 { "" "" "" "*" {  } {  } 0 10230 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "*" {  } {  } 0 10235 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "*" {  } {  } 0 332060 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 10296 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "alt_vip_cvo_mode_banks" {  } {  } 0 9999 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "hps_sdram_pll.sv" {  } {  } 0 9999 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "alt_vip_common_frame_counter.v" {  } {  } 0 9999 "" 0 0 "Quartus II" 0 -1 0 ""}
