@@ -1,3 +1,11 @@
+Arcade: Power Surge port to MiST by Gehstock
+
+PSURGE.ROM is required at the root of the SD-Card.
+
+Todo:  Sound
+
+
+
 ---------------------------------------------------------------------------------
 -- Time pilot by Dar (darfpga@aol.fr) (29/10/2017)
 -- http://darfpga.blogspot.fr

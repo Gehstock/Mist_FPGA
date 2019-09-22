@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity time_pilot_prog is
+entity power_surge_prog is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(14 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of time_pilot_prog is
+architecture prom of power_surge_prog is
 	type rom is array(0 to  24575) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"F3",X"C3",X"00",X"30",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",X"FF",

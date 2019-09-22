@@ -79,7 +79,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity time_pilot is
+entity power_surge is
 port(
 	clock_12     : in std_logic;
 	clock_14     : in std_logic;
@@ -93,7 +93,9 @@ port(
 	video_hs       : out std_logic;
 	video_vs       : out std_logic;
 	audio_out      : out std_logic_vector(10 downto 0);
-
+	roms_addr      : out std_logic_vector(14 downto 0);
+	roms_do   		: in std_logic_vector(7 downto 0);
+	roms_rd       	: out std_logic;
 	dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B / Coinage_A
 	dip_switch_2   : in std_logic_vector(7 downto 0); -- Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
 
@@ -111,13 +113,11 @@ port(
 	right2         : in std_logic;
 	left2          : in std_logic; 
 	down2          : in std_logic;
-	up2            : in std_logic;
-
-	dbg_cpu_addr : out std_logic_vector(15 downto 0)
+	up2            : in std_logic
 );
-end time_pilot;
+end power_surge;
 
-architecture struct of time_pilot is
+architecture struct of power_surge is
 
  signal reset_n: std_logic;
  signal clock_12n : std_logic;
@@ -160,7 +160,7 @@ architecture struct of time_pilot is
  signal ch_pixel_bit2   : std_logic;
  signal ch_color_set    : std_logic_vector(4 downto 0);
  signal ch_palette_addr : std_logic_vector(7 downto 0);
- signal ch_palette_do   : std_logic_vector(3 downto 0); 
+ signal ch_palette_do   : std_logic_vector(7 downto 0); 
 
  signal spram_addr      : std_logic_vector(7 downto 0);
  signal spram1_we       : std_logic;
@@ -178,7 +178,7 @@ architecture struct of time_pilot is
  signal sp_pixels    : std_logic_vector(7 downto 0);
  signal sp_color_set    : std_logic_vector(5 downto 0);
  signal sp_palette_addr : std_logic_vector(7 downto 0);
- signal sp_palette_do   : std_logic_vector(3 downto 0); 
+ signal sp_palette_do   : std_logic_vector(7 downto 0); 
  signal sp_read_out     : std_logic_vector(3 downto 0); 
  signal sp_blank   : std_logic;
  
@@ -219,14 +219,6 @@ video_clk <= clock_6n;
 clock_12n <= not clock_12;
 clock_6n  <= not clock_6;
 reset_n   <= not reset;
-
--- debug 
-process (reset, clock_12)
-begin
- if rising_edge(clock_12) and cpu_ena ='1' and cpu_mreq_n ='0' then
-   dbg_cpu_addr <= cpu_addr;
- end if;
-end process;
 
 -- make 6MHz clock from 12MHz
 process (clock_12)
@@ -299,12 +291,11 @@ input_1       <= "111" & not fire1  & not down1  & not up1 & not right1 & not le
 input_2       <= "111" & not fire2  & not down2  & not up2 & not right2 & not left2; --   ?/2FL/2SR/2SL/2DW/2UP/2RI/2LE
 
 -- cpu input address decoding (mirror mostly from Mame)
-cpu_di <= cpu_rom_do   when cpu_addr(15 downto 0) < X"6" else      -- 0000-5FFF						011000 00000 00000
+cpu_di <= cpu_rom_do   when cpu_addr(15 downto 12) < X"6" else      -- 0000-5FFF
 
 									 
-			 X"80"    	  when cpu_addr(14 downto 0) = X"6" and
-									 cpu_addr(2 downto 0) = "100" else     	-- 6004 Protection 110000000000100
-									 
+			 X"80"    	  when cpu_addr(15 downto 0) = "0110000000000100" else     	-- 6004 Protection
+									 								 
 			 wram_do      when cpu_addr(15 downto 12) = X"A" else      					-- A000-AFFF
 			 
 			 spram1_do    when cpu_addr(15 downto 12) = X"B" and
@@ -352,14 +343,8 @@ spram_addr <= cpu_addr(7 downto 0) when cpu_ena = '1' else "00" & spcnt & pxcnt(
 wram_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"A" else '0';
 spram1_we <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"B" and cpu_addr(10) = '0' else '0';
 spram2_we <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"B" and cpu_addr(10) = '1' else '0';
-C0xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"C" and cpu_addr(9 downto 8) = "00" else '0';
+C0xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 8) = "11000000"  else '0';
 C3xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"C" and cpu_addr(9 downto 8) = "11" else '0';
-
--- Misc registers : interrupt enable/clear, cocktail flip, sound trigger
---	m_mainlatch->q_out_cb<0>().set_nop();
---	m_mainlatch->q_out_cb<4>().set_nop();
---	m_mainlatch->q_out_cb<5>().set_nop();
---	m_mainlatch->q_out_cb<6>().set_nop();
 
 process (clock_6)
 begin
@@ -369,12 +354,12 @@ begin
 		end if;
 
    	if C3xx_we = '1' then
---			if cpu_addr(3 downto 1) = "000" then itt_n <= cpu_do; end if;
+			if cpu_addr(3 downto 1) = "000" then itt_n <= cpu_do; end if;
 			if cpu_addr(3 downto 1) = "001" then flip  <= not cpu_do(0); end if;
 			if cpu_addr(3 downto 1) = "010" then sound_trig <= cpu_do(0); end if;
 		end if;
 		cpu_nmi_n <= vblank;
---cpu_int_n		
+cpu_int_n <= '1';		
 --		if itt_n(0) = '0' then
 --			cpu_nmi_n <= '1';
 --		else	-- lauch nmi and end of frame
@@ -476,7 +461,7 @@ begin
 end process;
 
 -- write colors to buffer when not transparent
-sp_buffer_write_we <= '0' when sp_palette_do = "0000" else '1';
+sp_buffer_write_we <= '0' when sp_palette_do(3 downto 0) = "0000" else '1';
 
 -- read sprite line buffer and erase after read
 process (clock_12)
@@ -511,8 +496,8 @@ end process;
 sp_buffer_ram1_addr <= sp_buffer_read_addr when sp_buffer_sel = '0' else sp_buffer_write_addr;
 sp_buffer_ram2_addr <= sp_buffer_read_addr when sp_buffer_sel = '1' else sp_buffer_write_addr;
 
-sp_buffer_ram1_di <= "0000" when sp_buffer_sel = '0' else sp_palette_do;
-sp_buffer_ram2_di <= "0000" when sp_buffer_sel = '1' else sp_palette_do;
+sp_buffer_ram1_di <= "0000" when sp_buffer_sel = '0' else sp_palette_do(3 downto 0);
+sp_buffer_ram2_di <= "0000" when sp_buffer_sel = '1' else sp_palette_do(3 downto 0);
 
 sp_buffer_ram1_we <= not clock_6 when sp_buffer_sel = '0' else sp_buffer_write_we;
 sp_buffer_ram2_we <= not clock_6 when sp_buffer_sel = '1' else sp_buffer_write_we;
@@ -583,7 +568,7 @@ end process;
 
 -- select rbg color and bank with respect to char/sprite selection
 rgb_palette_addr <= 
-	'1' & ch_palette_do when (sp_read_out = "0000" or sp_blank = '1') else 
+	'1' & ch_palette_do(3 downto 0) when (sp_read_out = "0000" or sp_blank = '1') else 
 	'0' & sp_read_out; 
 	
 -- register and assign rbg palette output
@@ -629,7 +614,7 @@ begin
 
 		if hcnt = hcnt_base-4 then
 			hblank <= '1';
-			if vcnt = 490 then
+			if vcnt = 496 then
 				vblank <= '1';   -- 492 ok
 			elsif vcnt = 262 then
 				vblank <= '0';   -- 262 ok 
@@ -675,13 +660,19 @@ port map(
   DO      => cpu_do
 );
 
+roms_addr <= cpu_addr(14 downto 0);
+cpu_rom_do <= roms_do;
+roms_rd <= '1';
+
+
 -- cpu1 program ROM
-rom_cpu1 : entity work.time_pilot_prog
-port map(
- clk  => clock_6n,
- addr => cpu_addr(14 downto 0),
- data => cpu_rom_do
-);
+--rom_cpu1 : entity work.power_surge_prog
+--port map(
+-- clk  => clock_6n,
+-- addr => cpu_addr(14 downto 0),
+-- data => cpu_rom_do
+--);
+
 
 -- working/char RAM   0xA000-0xAFFF
 wram : entity work.gen_ram
@@ -739,7 +730,7 @@ port map(
 );
 
 -- char graphics ROM
-char_graphics : entity work.time_pilot_char_grphx
+char_graphics : entity work.power_surge_char_grphx
 port map(
  clk  => clock_6,
  addr => ch_graphx_addr,
@@ -747,7 +738,7 @@ port map(
 );
 
 -- char palette ROM
-ch_palette : entity work.time_pilot_char_color_lut
+ch_palette : entity work.power_surge_char_color_lut
 port map(
  clk  => clock_6,
  addr => ch_palette_addr,
@@ -755,7 +746,7 @@ port map(
 );
 
 -- sprite graphics ROM
-sp_graphics : entity work.time_pilot_sprite_grphx
+sp_graphics : entity work.power_surge_sprite_grphx
 port map(
  clk  => clock_6,
  addr => sp_graphx_addr,
@@ -763,7 +754,7 @@ port map(
 );
 
 -- sprite palette ROM
-sp_palette : entity work.time_pilot_sprite_color_lut
+sp_palette : entity work.power_surge_sprite_color_lut
 port map(
  clk  => clock_6,
  addr => sp_palette_addr,
@@ -771,7 +762,7 @@ port map(
 );
 
 -- rgb palette ROM 1 
-rgb_palette_gb : entity work.time_pilot_palette_blue_green
+rgb_palette_gb : entity work.power_surge_palette_blue_green
 port map(
  clk  => clock_6,
  addr => rgb_palette_addr,
@@ -779,7 +770,7 @@ port map(
 );
 
 -- rgb palette ROM 2
-rgb_palette_br : entity work.time_pilot_palette_green_red
+rgb_palette_br : entity work.power_surge_palette_green_red
 port map(
  clk  => clock_6,
  addr => rgb_palette_addr,
@@ -787,17 +778,15 @@ port map(
 );
 
 -- sound board
---time_pilot_sound_board : entity work.time_pilot_sound_board
---port map(
---clock_14     => clock_14,
---reset        => reset,
+time_pilot_sound_board : entity work.time_pilot_sound_board
+port map(
+clock_14     => clock_14,
+reset        => reset,
 
---sound_trig   => sound_trig,
---sound_cmd    => sound_cmd,
+sound_trig   => sound_trig,
+sound_cmd    => sound_cmd,
  
---audio_out    => audio_out,
- 
---dbg_cpu_addr => open
---);
+audio_out    => audio_out
+);
 
 end struct;

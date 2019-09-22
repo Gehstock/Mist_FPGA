@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Time Pilot
+//  Arcade: Power Surge
 //
 //  Port to MiST
 //  Copyright (C) 2017 Gehstock
@@ -22,7 +22,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module TimePilot_MiST(
+module Power_Surge_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -55,16 +55,15 @@ module TimePilot_MiST(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-//   "SPACEPLT;;",
-	"TIMEPLT;;",
+	"PSURGE;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T6,Reset;",
-	"V,v1.15.",`BUILD_DATE
+	"V,v1.10.",`BUILD_DATE
 };
 
-assign LED = 1;
-assign AUDIO_R = AUDIO_L;
+assign 		LED = 1;
+assign 		AUDIO_R = AUDIO_L;
 assign 		SDRAM_CLK = clock_48;
 
 wire clock_48, clock_12, clock_14, pll_locked;
@@ -76,6 +75,7 @@ pll pll(
 	.locked(pll_locked)
 	);
 
+
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -86,6 +86,7 @@ wire        ypbpr;
 reg	[10:0] audio;
 wire 			hb, vb;
 wire        blankn = ~(hb | vb);
+wire 			ce_vid;
 wire 			hs, vs;
 wire  [4:0] r,g,b;
 wire [14:0] rom_addr;
@@ -130,13 +131,11 @@ reg rom_loaded = 0;
 always @(posedge clock_48) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
-
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
 	reset <= status[0] | buttons[1] | status[6] | ~rom_loaded;
 end
 
-
-time_pilot time_pilot(
+power_surge power_surge(
 	.clock_12(clock_12),
 	.clock_14(clock_14),
 	.reset(reset),
@@ -147,15 +146,16 @@ time_pilot time_pilot(
 	.video_vblank(vb),
 	.video_hs(hs),
 	.video_vs(vs),
-	.audio_out(audio), 
+	.audio_out(audio),
 	.roms_addr(rom_addr),
 	.roms_do(rom_do[7:0]),
 	.roms_rd(rom_rd),
-	.dip_switch_1("FF"), // Coinage_B / Coinage_A
-	.dip_switch_2("4B"), // Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
+	.dip_switch_1("01111000"), // Cabinet Unknown Lives Lives Initial_Energy Unknown Unknown Unknown
+	.dip_switch_2("11100000"), // Stop_at_Junctions, Unknown, Unknown, Cheat, Coin_B Coin_B Coin_A Coin_A
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	.coin1(btn_coin),
+	
 	.fire1(m_fire),
 	.right1(m_right),
 	.left1(m_left),
@@ -165,7 +165,8 @@ time_pilot time_pilot(
 	.right2(m_right),
 	.left2(m_left),
 	.down2(m_down),
-	.up2(m_up)	);
+	.up2(m_up)
+	);
 	
 mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(//Wrong Colors have no Idea
 	.clk_sys        ( clock_48         ),
@@ -183,7 +184,7 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(//Wrong Colors have
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 //	.ce_divider(0),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( {1'b0,status[2]} ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
@@ -215,11 +216,10 @@ dac #(.C_bits(16))dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_up     = ~status[2] ? btn_right | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_left | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_up | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_down | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
 //wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
@@ -246,8 +246,8 @@ always @(posedge clock_48) begin
 			'h76: btn_coin				<= key_pressed; // ESC
 			'h05: btn_one_player   	<= key_pressed; // F1
 			'h06: btn_two_players  	<= key_pressed; // F2
-			//'h14: btn_fire3 			<= key_pressed; // ctrl
-			//'h11: btn_fire2 			<= key_pressed; // alt
+//			'h14: btn_fire3 			<= key_pressed; // ctrl
+//			'h11: btn_fire2 			<= key_pressed; // alt
 			'h29: btn_fire1   		<= key_pressed; // Space
 		endcase
 	end

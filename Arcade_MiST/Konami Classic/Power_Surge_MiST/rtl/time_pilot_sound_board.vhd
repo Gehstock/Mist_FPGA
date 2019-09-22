@@ -34,9 +34,7 @@ port(
  sound_cmd    : in std_logic_vector(7 downto 0);
  sound_trig   : in std_logic;
  
- audio_out    : out std_logic_vector(10 downto 0);
- 
- dbg_cpu_addr : out std_logic_vector(15 downto 0)
+ audio_out    : out std_logic_vector(10 downto 0)
  );
 end time_pilot_sound_board;
 
@@ -116,14 +114,6 @@ begin
 
 clock_14n <= not clock_14;
 reset_n   <= not reset;
-
--- debug 
-process (reset, clock_14)
-begin
- if rising_edge(clock_14) and cpu_mreq_n ='0' then
-   dbg_cpu_addr <= cpu_addr;
- end if;
-end process;
 
 --------------------------------------------------------
 -- RC filters equation
@@ -340,10 +330,10 @@ port map(
 );
 
 -- cpu1 program ROM
-rom_cpu1 : entity work.time_pilot_sound_prog2
+rom_cpu1 : entity work.power_surge_sound_prog
 port map(
  clk  => clock_14n,
- addr => cpu_addr(11 downto 0),
+ addr => cpu_addr(12 downto 0),
  data => cpu_rom_do
 );
 
