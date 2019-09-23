@@ -81,7 +81,6 @@ assign 		FGSCAD = VSAD;
 
 wire [10:0]	FGCHAD = {1'b0,FGSCDT[6:0],PV[2:0]};
 wire  [7:0]	FGCHDT;
-//DLROM #(11,8) fgchip(~VCLKx2,FGCHAD,FGCHDT, ROMCL,ROMAD[10:0],ROMDT,ROMEN & (ROMAD[15:11]=={4'hD,1'b0}));
 fgchip_rom fgchip(
 	.clk(~VCLKx2),
 	.addr(FGCHAD),
@@ -89,9 +88,7 @@ fgchip_rom fgchip(
 );
 
 wire  [7:0] FGCHPX = FGCHDT >> (PH[2:0]);
-
 wire  [3:0] FGCLUT = FG_CLMODE ? FGSCDT[3:0] : ({FGSCDT[7:5],1'b0}|{2'b00,FGSCDT[4],1'b0});
-
 always @( posedge VCLKx2 ) FGCOL <= {FGCHPX[0],FGCLUT};
 
 
@@ -102,7 +99,6 @@ wire  [3:0] BGCOL;
 
 wire [11:0] BGSCAD = {BG_SELECT,VSAD};
 wire  [7:0] BGSCDT;
-//DLROM #(12,8) bgscrn(VCLKx2,BGSCAD,BGSCDT, ROMCL,ROMAD[11:0],ROMDT,ROMEN & (ROMAD[15:12]==4'hB));
 bgscrn_rom bgscrn(
 	.clk(VCLKx2),
 	.addr(BGSCAD),
@@ -111,7 +107,6 @@ bgscrn_rom bgscrn(
 
 wire [11:0] BGCHAD = {BGSCDT,~PH[2],PV[2:0]};
 wire  [7:0] BGCHDT;
-//DLROM #(12,8) bgchip(~VCLKx2,BGCHAD,BGCHDT, ROMCL,ROMAD[11:0],ROMDT,ROMEN & (ROMAD[15:12]==4'hC));
 bgchip_rom bgchip(
 	.clk(~VCLKx2),
 	.addr(BGCHAD),
@@ -122,7 +117,6 @@ wire  [7:0] BGCHPI = BGCHDT << (PH[1:0]);
 wire  [1:0] BGCHPX = {BGCHPI[7],BGCHPI[3]};
 
 wire  [7:0] BGCLAD = BG_CUTOFF ? {6'h0F,BGCHPX} : {BG_COLBNK,BGSCDT[7:4],BGCHPX};
-//DLROM #(8,4) bgclut(VCLKx2,BGCLAD,BGCOL, ROMCL,ROMAD[7:0],ROMDT,ROMEN & (ROMAD[15:8]==8'hDA));
 bgclut_rom bgclut(
 	.clk(VCLKx2),
 	.addr(BGCLAD),
@@ -133,8 +127,6 @@ bgclut_rom bgclut(
 //  Color Mixer & Pixel Output
 //---------------------------------------
 wire [4:0] CMIX = SPCOL[4] ? {1'b1,SPCOL[3:0]} : FGCOL[4] ? {1'b0,FGCOL[3:0]} : {1'b0,BGCOL};
-
-//DLROM #(5,8) palet( VCLK, CMIX, POUT, ROMCL,ROMAD[4:0],ROMDT,ROMEN & (ROMAD[15:5]=={8'hDB,3'b000}) );
 palette_rom palet(
 	.clk(VCLK),
 	.addr(CMIX),
@@ -142,7 +134,7 @@ palette_rom palet(
 );
 
 assign PCLK = ~VCLK;
-assign VBLK = (PH<16)&(PV==224);
+assign VBLK = (PH<64)&(PV==224);
 
 endmodule
 

@@ -1,8 +1,12 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: DigDug  port to MiSTer by MiSTer-X
--- 21 September 2019
+-- Arcade: DigDug  port to MiST by Gehstock-- 23 September 2019
 -- 
+
+
+
+DIGDUG.ROM is required at the root of the SD-Card.
+
 ---------------------------------------------------------------------------------
 -- FPGA DigDug for XILINX Spartan-6
 ------------------------------------------------

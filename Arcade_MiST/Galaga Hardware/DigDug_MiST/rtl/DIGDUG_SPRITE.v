@@ -79,7 +79,6 @@ always @( posedge RCLK ) begin
 end
 
 wire [7:0] CHRD;
-//DLROMe #(14,8) spchip((PHASE==5),~RCLK,{SN,SV[3],SU[3:2],SV[2:0]},CHRD, ROMCL,ROMAD[14:0],ROMDT,ROMEN & (ROMAD[15:14]==2'b01));
 spchip_rom spchip(
 	.clk(~RCLK),
 	.addr({SN,SV[3],SU[3:2],SV[2:0]}),
@@ -89,7 +88,6 @@ spchip_rom spchip(
 wire [7:0] PIX = CHRD << (SU[1:0]);
 
 wire [7:0] WDT;
-//DLROMe #(8,8)  spclut((PHASE==5), RCLK,{SC,PIX[7],PIX[3]},WDT, ROMCL,ROMAD[7:0],ROMDT,ROMEN & (ROMAD[15:8]==8'hD9));
 spclut_rom spclut(
 	.clk(RCLK),
 	.addr({SC,PIX[7],PIX[3]}),

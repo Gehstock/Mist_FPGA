@@ -7,6 +7,8 @@ module FPGA_DIGDUG
 (
 	input          RESET,      // RESET
 	input          MCLK,       // Master Clock (48.0MHz) = VCLKx8
+	output [13:0]	rom_addr,
+	input   [7:0]	rom_do,
 	input   [7:0]	INP0,			// Control Panel
 	input   [7:0]	INP1,
 	input   [7:0]	DSW0,
@@ -39,6 +41,8 @@ DIGDUG_CORES cores
 (
 	.MCLK(MCLK),
 	.RSTS(RSTS),
+	.rom_addr(rom_addr),
+	.rom_do(rom_do),
 	.IRQS(IRQS),
 	.NMIS(NMIS),
 	.DEV_CL(DEV_CL),
@@ -57,8 +61,6 @@ DIGDUG_CORES cores
 wire 			WAVECL;
 wire [7:0]	WAVEAD;
 wire [7:0]	WAVEDT;
-
-//DLROM #(8,4) wave(WAVECL,WAVEAD,WAVEDT, ROMCL,ROMAD[7:0],ROMDT,ROMEN & (ROMAD[15:8]==8'hD8));
 wave_rom wave(
 	.clk(WAVECL),
 	.addr(WAVEAD),

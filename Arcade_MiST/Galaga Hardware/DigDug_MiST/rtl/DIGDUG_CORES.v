@@ -7,6 +7,8 @@ module DIGDUG_CORES
 (
 	input				MCLK,			// Clock (48.0MHz)
 	input  [2:0]	RSTS,			// RESET [2:0]
+	output [13:0]	rom_addr,
+	input   [7:0]	rom_do,
 	input  [2:0]	IRQS,			//   IRQ [2:0]
 	input  [2:0]	NMIS,			//   NMI [2:0]
 
@@ -31,12 +33,14 @@ wire			CPU0WR;
 wire	[7:0]	CPU0DO;
 
 wire  [7:0] CPU0IR;
-//DLROM #(14,8) rom0( DEV_CL, CPU0AD[13:0], CPU0IR, ROMCL,ROMAD[13:0],ROMDT,ROMEN & (ROMAD[15:14]==2'b00) ); 
-cpu0_rom rom0(
+/*cpu0_rom rom0(
 	.clk(DEV_CL),
 	.addr(CPU0AD[13:0]),
 	.data(CPU0IR)
-);
+);*/
+
+assign rom_addr = CPU0AD[13:0];
+assign CPU0IR = rom_do;
 
 wire NMI0;
 CPUNMIACK n0( RSTS[0], CPU0CL, CPU0AD, NMIS[0], NMI0 );
@@ -62,10 +66,9 @@ wire			CPU1WR;
 wire	[7:0]	CPU1DO;
 
 wire  [7:0] CPU1IR;
-//DLROM #(13,8) rom1( DEV_CL, CPU1AD[12:0], CPU1IR, ROMCL,ROMAD[12:0],ROMDT,ROMEN & (ROMAD[15:13]==3'b100) );
 cpu1_rom rom1(
 	.clk(DEV_CL),
-	.addr(CPU0AD[12:0]),
+	.addr(CPU1AD[12:0]),
 	.data(CPU1IR)
 );
 
@@ -90,10 +93,9 @@ wire			CPU2WR;
 wire	[7:0]	CPU2DO;
 
 wire  [7:0] CPU2IR;
-//DLROM #(12,8) rom2( DEV_CL, CPU2AD[11:0], CPU2IR, ROMCL,ROMAD[11:0],ROMDT,ROMEN & (ROMAD[15:12]==4'hA) ); 
 cpu2_rom rom2(
 	.clk(DEV_CL),
-	.addr(CPU0AD[11:0]),
+	.addr(CPU2AD[11:0]),
 	.data(CPU2IR)
 );
 

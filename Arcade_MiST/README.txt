@@ -39,6 +39,7 @@ Aviable Arcade Cores
 	Dottori Kun / Dottori-Man Jr / Mine Sweeper   (3in1Game)
 
 #Galaga Hardware
+	Digdug
 	Galaga
 
 #Galaxian Hardware

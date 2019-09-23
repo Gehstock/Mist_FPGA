@@ -70,7 +70,6 @@ set_global_assignment -name VHDL_FILE rtl/roms/palette_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/fgchip_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/cpu2_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/cpu1_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/cpu0_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/bgscrn_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/bgclut_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/bgchip_rom.vhd
