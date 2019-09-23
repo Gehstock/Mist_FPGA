@@ -70,6 +70,7 @@ Aviable Arcade Cores
 
 #Konami Classic
 	Pooyan
+	Power Surge
 	Time Pilot
 
 #Midway / Taito 8080 Hardware
@@ -81,6 +82,9 @@ Aviable Arcade Cores
 	Space Invaders II(Deluxe)
 	Space Laser
 	Super Earth Invasion
+
+#Namco Rally X Hardware
+	Rally X
 
 #Non Arcade
 	2048

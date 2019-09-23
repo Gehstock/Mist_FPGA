@@ -96,8 +96,8 @@ port(
 	roms_addr      : out std_logic_vector(14 downto 0);
 	roms_do   		: in std_logic_vector(7 downto 0);
 	roms_rd       	: out std_logic;
-	dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B / Coinage_A
-	dip_switch_2   : in std_logic_vector(7 downto 0); -- Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
+	dip_switch_1   : in std_logic_vector(7 downto 0);--Cabinet Unknown Lives Lives Initial_Energy Unknown Unknown Unknown
+	dip_switch_2   : in std_logic_vector(7 downto 0);--Stop_at_Junctions, Unknown, Unknown, Cheat, Coin_B Coin_B Coin_A Coin_A
 
 	start2         : in std_logic;
 	start1         : in std_logic;
@@ -343,7 +343,7 @@ spram_addr <= cpu_addr(7 downto 0) when cpu_ena = '1' else "00" & spcnt & pxcnt(
 wram_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"A" else '0';
 spram1_we <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"B" and cpu_addr(10) = '0' else '0';
 spram2_we <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"B" and cpu_addr(10) = '1' else '0';
-C0xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 8) = "11000000"  else '0';
+C0xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 8) = "11000000"  else '0';--
 C3xx_we   <= '1' when cpu_wr_n = '0' and cpu_ena = '1' and cpu_addr(15 downto 12) = X"C" and cpu_addr(9 downto 8) = "11" else '0';
 
 process (clock_6)
