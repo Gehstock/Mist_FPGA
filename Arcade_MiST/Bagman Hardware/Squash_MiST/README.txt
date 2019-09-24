@@ -1,7 +1,7 @@
 Squash Port to Mist FPGA by Gehstock
 
-Work in Progress
---Joystick to Wheel Encoder
+Left, Right moving Player
+Up, Down moving Racket
 
 
 

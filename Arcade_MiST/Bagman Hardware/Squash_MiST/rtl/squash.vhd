@@ -155,16 +155,6 @@ signal vsync_o : std_logic;
 signal dail1 : std_logic_vector(1 downto 0);
 signal dail2 : std_logic_vector(1 downto 0);
 
-COMPONENT joy2quad
-	PORT
-	(
-		CLK		:	 IN STD_LOGIC;
-		clkdiv		:	 IN STD_LOGIC_VECTOR(11 DOWNTO 0);
-		rightc		:	 IN STD_LOGIC;
-		leftc		:	 IN STD_LOGIC;
-		steer		:	 OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
-	);
-END COMPONENT;
 
 begin
 
@@ -229,23 +219,29 @@ video_s  <= video_i;
 ------------------
 -- player controls
 ------------------
-dailP1 : joy2quad
-port map (
-	CLK   => clock_12,
-	clkdiv   => X"265",
-	rightc   => up1,
-	leftc   => down1,
-	steer   => dail1
-	);
-	
-dailP2 : joy2quad
-port map (
-	CLK   => clock_12,
-	clkdiv   => X"265",
-	rightc   => up2,
-	leftc   => down2,
-	steer   => dail2
-	);	
+process (up1,down1,clock_1mhz) begin
+		if dail1 /= "11" then
+			dail1 <= "11";
+		elsif up1 = '1' then
+			dail1 <= "01";
+		elsif down1 = '1' then
+			dail1 <= "10";
+		else
+			dail1<="11";
+		end if;
+end process;
+
+process (up2,down2,clock_1mhz) begin
+		if dail2 /= "11" then
+			dail2 <= "11";
+		elsif up2 = '1' then
+			dail2 <= "01";
+		elsif down2 = '1' then
+			dail2 <= "10";
+		else
+			dail2<="11";
+		end if;
+end process;
 	
 player1 <= not(fire1 & dail1 & right1 & left1 & start1 & '0' & coin1);
 player2 <= not(fire2 & dail2 & right2 & left2 & start2 & "00");
