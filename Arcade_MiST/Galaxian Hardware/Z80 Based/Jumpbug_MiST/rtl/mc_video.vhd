@@ -41,7 +41,7 @@ entity MC_VIDEO is
 		I_V_BLn       : in  std_logic;
 		I_C_BLn       : in  std_logic;
 
-		I_A           : in  std_logic_vector(10 downto 0);
+		I_A           : in  std_logic_vector(9 downto 0);
 		I_BD          : in  std_logic_vector(7 downto 0);
 		I_OBJ_SUB_A   : in  std_logic_vector(2 downto 0);
 		I_OBJ_RAM_RQ  : in  std_logic;
@@ -204,14 +204,14 @@ begin
 	vid_ram : entity work.MC_VID_RAM
 	port map (
 		I_CLKA  => I_CLK_12M,
-		I_ADDRA => I_A(10 downto 0),
+		I_ADDRA => I_A(9 downto 0),
 		I_DA    => W_VID_RAM_DI,
 		I_WEA   => I_VID_RAM_WR,
 		I_CEA   => W_VID_RAM_CS,
 		O_DA    => W_VID_RAM_DOA,
 
 		I_CLKB  => I_CLK_12M,
-		I_ADDRB => W_VID_RAM_A(10 downto 0),
+		I_ADDRB => W_VID_RAM_A(9 downto 0),
 		I_DB    => x"00",
 		I_WEB   => '0',
 		I_CEB   => '1',

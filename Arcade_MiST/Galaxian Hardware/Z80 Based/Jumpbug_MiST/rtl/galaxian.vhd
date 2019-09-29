@@ -134,6 +134,19 @@ architecture RTL of galaxian is
 	signal PSG_A,PSG_B,PSG_C  : std_logic_vector(7 downto 0);
 	signal sel          : std_logic_vector( 3 downto 0) := (others => '0');
 	
+	
+	signal W_SPRITE_CS      : std_logic;
+	signal bank_wr				: std_logic;
+	signal newTileAddr		: std_logic_vector(12 downto 0);
+	signal tile0datao			: std_logic_vector(tilemap_o.tile_d'range);
+	signal tile1datao			: std_logic_vector(tilemap_o.tile_d'range);
+	signal sprite0data 		: std_logic_vector(sprite_o.d'range);
+	signal sprite1data 		: std_logic_vector(sprite_o.d'range);
+
+	signal decoded_tileaddr		: std_logic_vector(12 downto 0);
+	signal decoded_spriteaddr	: std_logic_vector(10 downto 0);
+
+	
 component ym2149
 	port (
 		CLK       : in  std_logic;
@@ -162,7 +175,7 @@ begin
 		I_V_FLIP      => W_V_FLIP,
 		I_V_BLn       => W_V_BLn,
 		I_C_BLn       => W_C_BLn,
-		I_A           => W_A(10 downto 0),
+		I_A           => W_A(9 downto 0),
 		I_OBJ_SUB_A   => "000",
 		I_BD          => W_BDI,
 		I_OBJ_RAM_RQ  => W_OBJ_RAM_RQ,
@@ -392,8 +405,12 @@ W_OBJ_RAM_WR <= '1' when W_CPU_WR = '1' and (W_A(15 downto 11) = "01010") else '
 	W_RESETn  <= not I_RESET;
 	W_BDO     <= W_SW_DO  or W_VID_DO or W_CPU_RAM_DO or W_CPU_ROM_DOB or W_PROT_DOB;
 	W_CPU_WR  <= not W_CPU_WRn;
-	W_GFX_BANK_WR <= '1' when W_CPU_WR = '1' and (W_A(15 downto 4) = X"600") else '0';
+	W_GFX_BANK_WR <= W_CPU_WR when (W_A(15 downto 4) = X"600") else '0';
+	W_SRITE_CS <= '1' when W_A(15 downto 6) = X"50"&"01" else '0';
+	
+	newtileaddr <= decoded_tileAddr(12 downto 6) & decoded_tileAddr(4 downto 1) & not decoded_tileAddr(5) & decoded_tileAddr(0);
 
+									
 sel <= W_A(3 downto 0);	
 	
 process(W_CLK_18M, W_GFX_BANK_WR, W_BDI) begin
@@ -428,8 +445,7 @@ end process;
 --	map(0x5800, 0x5800).mirror(0x00ff).w("8910.0", FUNC(ay8910_device::data_w));
 --	map(0x5900, 0x5900).mirror(0x00ff).w("8910.0", FUNC(ay8910_device::address_w));
 
-	PSG_EN <= '1' when (W_A(15 downto 11) = "01011" and W_A(7 downto 0) = X"00") else '0';
-
+	PSG_EN <= '1' when (W_A(15 downto 9) = X"5"&"100" and W_A(7 downto 0) = X"00") else '0';
 	process(W_CPU_CLK)
 	begin
 		if rising_edge(W_CPU_CLK) then
