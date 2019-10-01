@@ -53,7 +53,6 @@ pll pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [11:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
