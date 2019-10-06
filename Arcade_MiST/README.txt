@@ -122,8 +122,11 @@ Aviable Arcade Cores
 
 #Scramble Hardware
 	Amidar
+	Amored Car
 	Frogger
 	Scramble
+	Super Cobra
+	Tazz Mania
 	The End	
 
 #Williams 6809 rev.1 Hardware
