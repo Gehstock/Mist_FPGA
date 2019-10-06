@@ -28,13 +28,15 @@ port(
   start1       : in std_logic;
   coin1        : in std_logic;
   
-  fire1        : in std_logic;
+  fire11        : in std_logic;
+  fire12        : in std_logic;
   right1       : in std_logic;
   left1        : in std_logic;
   down1        : in std_logic;
   up1          : in std_logic;
 
-  fire2        : in std_logic;
+  fire21        : in std_logic;
+  fire22        : in std_logic;
   right2       : in std_logic;
   left2        : in std_logic;
   down2        : in std_logic;
@@ -221,8 +223,8 @@ video_s  <= video_i;
 ------------------
 -- player controls
 ------------------
-player1 <= not(fire1 & down1 & up1 & right1 & left1 & start1 & '0' & coin1);
-player2 <= not(fire2 & down2 & up2 & right2 & left2 & start2 & "00");
+player1 <= not(fire11 & down1 & up1 & right1 & left1 & (start1 or fire12) & '0' & coin1);
+player2 <= not(fire21 & down2 & up2 & right2 & left2 & (start2 or fire22) & "00");
 
 -----------------------
 -- cpu write addressing

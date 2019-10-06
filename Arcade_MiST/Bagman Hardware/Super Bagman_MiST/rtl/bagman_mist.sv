@@ -124,19 +124,21 @@ sbagman sbagman(
 	.roms_addr 			( rom_addr       	),
 	.roms_do   			( rom_do[7:0]   	),
 	.roms_rd				( rom_rd				),
-	.start2(btn_two_players | m_bomb),//double-function button, start and shoot
-	.start1(btn_one_player | m_bomb),//double-function button, start and shoot
+	.start2(btn_two_players),//double-function button, start and shoot
+	.start1(btn_one_player),//double-function button, start and shoot
 	.coin1(btn_coin),
-	.fire1(m_fire),
-	.right1(m_right),
-	.left1(m_left),
-	.down1(m_down),
-	.up1(m_up),
-	.fire2(m_fire),
-	.right2(m_right),
-	.left2(m_left),
-	.down2(m_down),
-	.up2(m_up)
+	.fire11(m_fire1),
+	.fire12(m_bomb1),
+	.right1(m_right1),
+	.left1(m_left1),
+	.down1(m_down1),
+	.up1(m_up1),
+	.fire21(m_fire2),
+	.fire22(m_bomb2),
+	.right2(m_right2),
+	.left2(m_left2),
+	.down2(m_down2),
+	.up2(m_up2)
 	);
 	
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
@@ -186,12 +188,19 @@ dac #(.C_bits(16))dac(
 	.dac_o(AUDIO_L)
 	);
 //											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up1     = ~status[2] ? btn_left | joystick_0[1] : btn_up | joystick_0[3];
+wire m_down1   = ~status[2] ? btn_right | joystick_0[0] : btn_down | joystick_0[2];
+wire m_left1   = ~status[2] ? btn_down | joystick_0[2] : btn_left | joystick_0[1];
+wire m_right1  = ~status[2] ? btn_up | joystick_0[3] : btn_right | joystick_0[0];
+wire m_fire1   = btn_fire1 | joystick_0[4];
+wire m_bomb1   = btn_fire2 | joystick_0[5];
+
+wire m_up2     = ~status[2] ? joystick_1[1] : joystick_1[3];
+wire m_down2   = ~status[2] ? joystick_1[0] : joystick_1[2];
+wire m_left2   = ~status[2] ? joystick_1[2] : joystick_1[1];
+wire m_right2  = ~status[2] ? joystick_1[3] : joystick_1[0];
+wire m_fire2   = joystick_1[4];
+wire m_bomb2   = joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;

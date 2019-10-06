@@ -18,7 +18,7 @@ port(
   video_vblank : out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
-  audio_out    : out std_logic_vector(15 downto 0);
+  audio_out    : out std_logic_vector(10 downto 0);
   cpu_rom_addr   : out std_logic_vector(14 downto 0);
   cpu_rom_do     : in  std_logic_vector( 7 downto 0);
   cpu_rom_rd     : out std_logic;
@@ -182,7 +182,7 @@ signal coins    : std_logic_vector(7 downto 0);
 signal video_i : std_logic_vector (7 downto 0);
 signal sidebg_en   : std_logic;
 signal palette_bank   : std_logic;
-
+signal sound_cmd   : std_logic_vector(7 downto 0);
 begin
 
 clock_12n <= not clock_12;
@@ -818,28 +818,28 @@ port map (
 );
 
 -- sound
-swimmer_sound : entity work.swimmer_sound
-port map (
-	RESETn => reset_n,
-	cpu_clock    => cpu_clock,
-	clock_1_5mhz    => clock_1p5,
-	audio => audio_out,
-	WR5n => reg5_we_n,
-	dat_i => cpu_do,
-	dat_o => ym_8910_data
-);
-
---cclimber_sound : entity work.crazy_climber_sound
---port map(
---  cpu_clock    => cpu_clock,
---  cpu_addr     => cpu_addr,
---  cpu_data     => cpu_do,
---  cpu_iorq_n   => cpu_iorq_n,
---  reg4_we_n    => reg4_we_n,
---  reg5_we_n    => reg5_we_n,
---  reg6_we_n    => reg6_we_n,
---  ym_2149_data => ym_8910_data,
---  sound_sample => audio_out
+--swimmer_sound : entity work.swimmer_sound
+--port map (
+--	RESETn => reset_n,
+--	cpu_clock    => cpu_clock,
+--	clock_1_5mhz    => clock_1p5,
+--	audio => audio_out,
+--	WR5n => reg5_we_n,
+--	dat_i => cpu_do,
+--	dat_o => ym_8910_data
 --);
+
+-- sound board
+sound_cmd <= cpu_do when (reg5_we_n = '1') else x"FF";
+time_pilot_sound_board : entity work.time_pilot_sound_board
+port map(
+ clock_14     => clock_12,
+ reset        => reset,
+ sound_trig   => '1',
+ sound_cmd    => sound_cmd,
+ audio_out    => audio_out
+ );
+
+
 ------------------------------------------
 end architecture;

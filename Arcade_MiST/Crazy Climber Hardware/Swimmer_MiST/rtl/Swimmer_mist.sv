@@ -61,7 +61,7 @@ wire        ypbpr;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-wire [15:0] audio;
+wire [10:0] audio;
 wire hs, vs;
 wire hb, vb;
 wire blankn = ~(hb | vb);

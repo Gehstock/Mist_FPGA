@@ -1,3 +1,4 @@
+-- changes for seperate audio outputs and enable now enables cpu access as well
 --
 -- A simulation model of YM2149 (AY-3-8910 with bells on)
 
@@ -74,6 +75,7 @@ entity YM2149 is
   I_SEL_L             : in  std_logic;
 
   O_AUDIO             : out std_logic_vector(7 downto 0);
+  O_CHAN              : out std_logic_vector(1 downto 0);
   -- port a
   I_IOA               : in  std_logic_vector(7 downto 0);
   O_IOA               : out std_logic_vector(7 downto 0);
@@ -90,10 +92,11 @@ entity YM2149 is
 end;
 
 architecture RTL of YM2149 is
-  type  array_16x8   is array (0 to 15) of std_logic_vector(7 downto 0);
-  type  array_3x12   is array (1 to 3) of std_logic_vector(11 downto 0);
+  type  array_16x8   is array (0 to 15) of std_logic_vector( 7 downto 0);
+  type  array_3x12   is array (1 to  3) of std_logic_vector(11 downto 0);
 
   signal cnt_div              : std_logic_vector(3 downto 0) := (others => '0');
+  signal cnt_div_t1           : std_logic_vector(3 downto 0);
   signal noise_div            : std_logic := '0';
   signal ena_div              : std_logic;
   signal ena_div_noise        : std_logic;
@@ -105,25 +108,7 @@ architecture RTL of YM2149 is
   signal busctrl_we           : std_logic;
   signal busctrl_re           : std_logic;
 
-  signal reg                  : array_16x8 ; --:= (
--- "00000000", -- R0  Period Tone A 8bits lsb
--- "00000100", -- R1  Period Tone A 4bits msb
--- "00000000", -- R2  Period Tone B 8bits lsb
--- "00000010", -- R3  Period Tone B 4bits msb
--- "00000000", -- R4  Period Tone C 8bits lsb
--- "00000001", -- R5  Period Tone C 4bits msb
--- "00001000", -- R6  Period Noise  5bits 
--- "00111000", -- R7  Mixer Noise CBA 3bits, Tone CBA  3bits
--- "00000111", -- R8  Amplitude A Mode 1bit, Level 4bits 
--- "00000111", -- R9  Amplitude B Mode 1bit, Level 4bits 
--- "00000111", -- R10 Amplitude C Mode 1bit, Level 4bits 
--- "00000000", -- R11 Period Enveloppe 8bits lsb
--- "00000000", -- R12 Period Enveloppe 8bits msb
--- "00000000", -- R13 Shape Enveloppe 4bits
--- "00000000", -- R14 Port A
--- "00000000"  -- R15 Port B
--- );
- 
+  signal reg                  : array_16x8;
   signal env_reset            : std_logic;
   signal ioa_inreg            : std_logic_vector(7 downto 0);
   signal iob_inreg            : std_logic_vector(7 downto 0);
@@ -145,8 +130,6 @@ architecture RTL of YM2149 is
   signal chan_vol             : std_logic_vector(4 downto 0);
 
   signal dac_amp              : std_logic_vector(7 downto 0);
-  signal audio_mix            : std_logic_vector(9 downto 0);
-  signal audio_final          : std_logic_vector(9 downto 0);
 begin
   -- cpu i/f
   p_busdecode            : process(I_BDIR, I_BC2, I_BC1, addr, I_A9_L, I_A8)
@@ -194,105 +177,54 @@ begin
   --
   -- CLOCKED
   --
-  p_waddr                : process
+  p_waddr                : process(RESET_L, CLK)
   begin
-    ---- looks like registers are latches in real chip, but the address is caught at the end of the address state.
-    wait until rising_edge(CLK);
-
+    -- looks like registers are latches in real chip, but the address is caught at the end of the address state.
     if (RESET_L = '0') then
       addr <= (others => '0');
-    else
-      if (busctrl_addr = '1') then
-        addr <= I_DA;
+    elsif rising_edge(CLK) then
+      if (ENA = '1') then
+        if (busctrl_addr = '1') then
+          addr <= I_DA;
+        end if;
       end if;
     end if;
   end process;
 
-  p_wdata                : process
+  p_wdata                : process(RESET_L, CLK)
   begin
-    ---- looks like registers are latches in real chip, but the address is caught at the end of the address state.
-    wait until rising_edge(CLK);
-    env_reset <= '0';
-
     if (RESET_L = '0') then
       reg <= (others => (others => '0'));
       env_reset <= '1';
-    else
-      env_reset <= '0';
-      if (busctrl_we = '1') then
-        case addr(3 downto 0) is
-          when x"0" => reg(0)  <= I_DA;
-          when x"1" => reg(1)  <= I_DA;
-          when x"2" => reg(2)  <= I_DA;
-          when x"3" => reg(3)  <= I_DA;
-          when x"4" => reg(4)  <= I_DA;
-          when x"5" => reg(5)  <= I_DA;
-          when x"6" => reg(6)  <= I_DA;
-          when x"7" => reg(7)  <= I_DA;
-          when x"8" => reg(8)  <= I_DA;
-          when x"9" => reg(9)  <= I_DA;
-          when x"A" => reg(10) <= I_DA;
-          when x"B" => reg(11) <= I_DA;
-          when x"C" => reg(12) <= I_DA;
-          when x"D" => reg(13) <= I_DA; env_reset <= '1';
-          when x"E" => reg(14) <= I_DA;
-          when x"F" => reg(15) <= I_DA;
-          when others => null;
-        end case;
+    elsif rising_edge(CLK) then
+      if (ENA = '1') then
+        env_reset <= '0';
+        if (busctrl_we = '1') then
+          case addr(3 downto 0) is
+            when x"0" => reg(0)  <= I_DA;
+            when x"1" => reg(1)  <= I_DA;
+            when x"2" => reg(2)  <= I_DA;
+            when x"3" => reg(3)  <= I_DA;
+            when x"4" => reg(4)  <= I_DA;
+            when x"5" => reg(5)  <= I_DA;
+            when x"6" => reg(6)  <= I_DA;
+            when x"7" => reg(7)  <= I_DA;
+            when x"8" => reg(8)  <= I_DA;
+            when x"9" => reg(9)  <= I_DA;
+            when x"A" => reg(10) <= I_DA;
+            when x"B" => reg(11) <= I_DA;
+            when x"C" => reg(12) <= I_DA;
+            when x"D" => reg(13) <= I_DA; env_reset <= '1';
+            when x"E" => reg(14) <= I_DA;
+            when x"F" => reg(15) <= I_DA;
+            when others => null;
+          end case;
+        end if;
       end if;
     end if;
   end process;
 
-  --
-  -- LATCHED, useful when emulating a real chip in circuit. Nasty as gated clock.
-  --
---  p_waddr                : process(reset_l, busctrl_addr)
---  begin
---    -- looks like registers are latches in real chip, but the address is caught at the end of the address state.
---    if (RESET_L = '0') then
---      addr <= (others => '0');
---    elsif falling_edge(busctrl_addr) then -- yuk
---      addr <= I_DA;
---    end if;
---  end process;
---
---  p_wdata                : process(reset_l, busctrl_we, addr)
---  begin
---    if (RESET_L = '0') then
---      reg <= (others => (others => '0'));
---    elsif falling_edge(busctrl_we) then
---        case addr(3 downto 0) is
---          when x"0" => reg(0)  <= I_DA;
---          when x"1" => reg(1)  <= I_DA;
---          when x"2" => reg(2)  <= I_DA;
---          when x"3" => reg(3)  <= I_DA;
---          when x"4" => reg(4)  <= I_DA;
---          when x"5" => reg(5)  <= I_DA;
---          when x"6" => reg(6)  <= I_DA;
---          when x"7" => reg(7)  <= I_DA;
---          when x"8" => reg(8)  <= I_DA;
---          when x"9" => reg(9)  <= I_DA;
---          when x"A" => reg(10) <= I_DA;
---          when x"B" => reg(11) <= I_DA;
---          when x"C" => reg(12) <= I_DA;
---          when x"D" => reg(13) <= I_DA;
---          when x"E" => reg(14) <= I_DA;
---          when x"F" => reg(15) <= I_DA;
---          when others => null;
---        end case;
---    end if;
---
---    env_reset <= '0';
---    if (busctrl_we = '1') and (addr(3 downto 0) = x"D") then
---      env_reset <= '1';
---    end if;
---  end process;
-
- --
- -- END LATCHED
- --
-  
-  p_rdata                : process(busctrl_re, addr, reg, ioa_inreg)
+  p_rdata                : process(busctrl_re, addr, reg, ioa_inreg, iob_inreg)
   begin
     O_DA <= (others => '0'); -- 'X'
     if (busctrl_re = '1') then -- not necessary, but useful for putting 'X's in the simulator
@@ -352,7 +284,6 @@ begin
     variable poly17_zero : std_logic;
   begin
     wait until rising_edge(CLK);
-
     if (reg(6)(4 downto 0) = "00000") then
       noise_gen_comp := "00000";
     else
@@ -363,7 +294,6 @@ begin
     if (poly17 = "00000000000000000") then poly17_zero := '1'; end if;
 
     if (ENA = '1') then
-
       if (ena_div_noise = '1') then -- divider ena
 
         if (noise_gen_cnt >= noise_gen_comp) then
@@ -382,7 +312,6 @@ begin
     variable tone_gen_comp : array_3x12;
   begin
     wait until rising_edge(CLK);
-
     -- looks like real chips count up - we need to get the Exact behaviour ..
     tone_gen_freq(1) := reg(1)(3 downto 0) & reg(0);
     tone_gen_freq(2) := reg(3)(3 downto 0) & reg(2);
@@ -437,7 +366,7 @@ begin
     end if;
   end process;
 
-  p_envelope_shape       : process(env_reset, CLK, reg)
+  p_envelope_shape       : process(env_reset, reg, CLK)
     variable is_bot    : boolean;
     variable is_bot_p1 : boolean;
     variable is_top_m1 : boolean;
@@ -536,10 +465,10 @@ begin
     noise_ena_l <= '1'; chan_vol <= "00000";
     case cnt_div(1 downto 0) is
       when "00" =>
-        tone_ena_l  <= reg(7)(0); tone_src <= tone_gen_op(1); chan_vol <=  reg(8)(4 downto 0);
+        tone_ena_l  <= reg(7)(0); tone_src <= tone_gen_op(1); chan_vol <= reg(8)(4 downto 0);
         noise_ena_l <= reg(7)(3);
       when "01" =>
-        tone_ena_l  <= reg(7)(1); tone_src <= tone_gen_op(2); chan_vol <=  reg(9)(4 downto 0);
+        tone_ena_l  <= reg(7)(1); tone_src <= tone_gen_op(2); chan_vol <= reg(9)(4 downto 0);
         noise_ena_l <= reg(7)(4);
       when "10" =>
         tone_ena_l  <= reg(7)(2); tone_src <= tone_gen_op(3); chan_vol <= reg(10)(4 downto 0);
@@ -608,38 +537,38 @@ begin
         when others => null;
       end case;
 
-      if (cnt_div(1 downto 0) = "10") then
-        audio_mix   <= (others => '0');
-        audio_final <= audio_mix;
-      else
-        audio_mix   <= audio_mix + ("00" & dac_amp);
-      end if;
+      cnt_div_t1 <= cnt_div;
+    end if;
+  end process;
 
-      if (RESET_L = '0') then
-        O_AUDIO(7 downto 0) <= "00000000";
-      else
-        if (audio_final(9) = '0') then
-          O_AUDIO(7 downto 0) <= audio_final(8 downto 1);
-        else -- clip
-          O_AUDIO(7 downto 0) <= x"FF";
-        end if;
+  p_audio_output         : process(RESET_L, CLK)
+  begin
+    if (RESET_L = '0') then
+      O_AUDIO <= (others => '0');
+      O_CHAN  <= (others => '0');
+    elsif rising_edge(CLK) then
+
+      if (ENA = '1') then
+        O_AUDIO <= dac_amp(7 downto 0);
+        O_CHAN  <= cnt_div_t1(1 downto 0);
       end if;
     end if;
   end process;
 
   p_io_ports             : process(reg)
   begin
-    O_IOA <= reg(14);
-
+    O_IOA      <= reg(14);
     O_IOA_OE_L <= not reg(7)(6);
-    O_IOB <= reg(15);
+    O_IOB      <= reg(15);
     O_IOB_OE_L <= not reg(7)(7);
   end process;
 
   p_io_ports_inreg       : process
   begin
     wait until rising_edge(CLK);
-    ioa_inreg <= I_IOA;
-    iob_inreg <= I_IOB;
+    if (ENA = '1') then -- resync
+      ioa_inreg <= I_IOA;
+      iob_inreg <= I_IOB;
+    end if;
   end process;
 end architecture RTL;
