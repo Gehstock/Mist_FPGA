@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 13:34:18  October 06, 2019
+# Date created = 21:38:42  October 11, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		SCobra_assignment_defaults.qdf
+#		Calipso_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -45,6 +45,30 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Calipso_Mist.sv
+set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_PGM.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_0.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_2.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_0.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_LUT.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
+set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -90,7 +114,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name TOP_LEVEL_ENTITY SCobra_Mist
+set_global_assignment -name TOP_LEVEL_ENTITY Calipso_Mist
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 
 # Fitter Assignments
@@ -126,8 +150,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(SCobra_Mist)
+# --------------------------
+# start ENTITY(Calypso_Mist)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -141,30 +165,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(SCobra_Mist)
-# -----------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SCobra_Mist.sv
-set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_PGM.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_0.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_0.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_LUT.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
-set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+# end ENTITY(Calypso_Mist)
+# ------------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

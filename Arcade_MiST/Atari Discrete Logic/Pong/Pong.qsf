@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 13:34:18  October 06, 2019
+# Date created = 15:43:32  October 09, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		SCobra_assignment_defaults.qdf
+#		Pong_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -45,6 +45,53 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Pong_Mist.sv
+set_global_assignment -name VERILOG_FILE rtl/pong.v
+set_global_assignment -name VERILOG_FILE rtl/vsync.v
+set_global_assignment -name VERILOG_FILE rtl/video.v
+set_global_assignment -name VERILOG_FILE rtl/vcounter.v
+set_global_assignment -name VERILOG_FILE rtl/timer.v
+set_global_assignment -name VERILOG_FILE rtl/srlatch.v
+set_global_assignment -name VERILOG_FILE rtl/sound.v
+set_global_assignment -name VERILOG_FILE rtl/score_segments_to_video.v
+set_global_assignment -name VERILOG_FILE rtl/score_counters_to_segments.v
+set_global_assignment -name VERILOG_FILE rtl/score_counters.v
+set_global_assignment -name VERILOG_FILE rtl/score.v
+set_global_assignment -name VERILOG_FILE rtl/png_jkff.v
+set_global_assignment -name VERILOG_FILE rtl/png_dff.v
+set_global_assignment -name VERILOG_FILE rtl/paddles.v
+set_global_assignment -name VERILOG_FILE rtl/paddle.v
+set_global_assignment -name VERILOG_FILE rtl/net.v
+set_global_assignment -name VERILOG_FILE rtl/hsync.v
+set_global_assignment -name VERILOG_FILE rtl/hcounter.v
+set_global_assignment -name VERILOG_FILE rtl/game_control.v
+set_global_assignment -name VERILOG_FILE rtl/dm9316.v
+set_global_assignment -name VERILOG_FILE rtl/ball_vertical_move.v
+set_global_assignment -name VERILOG_FILE rtl/ball_vertical_counter.v
+set_global_assignment -name VERILOG_FILE rtl/ball_vertical.v
+set_global_assignment -name VERILOG_FILE rtl/ball_horizontal_video.v
+set_global_assignment -name VERILOG_FILE rtl/ball_horizontal_move.v
+set_global_assignment -name VERILOG_FILE rtl/ball_horizontal_direction.v
+set_global_assignment -name VERILOG_FILE rtl/ball_horizontal.v
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls153.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls107.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls93.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls90.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls86.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls83.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls74.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls50.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls48.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls30.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls27.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls25.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls20.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls10.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls04.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls02.v
+set_global_assignment -name VERILOG_FILE rtl/ttl/ls00.v
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -90,7 +137,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name TOP_LEVEL_ENTITY SCobra_Mist
+set_global_assignment -name TOP_LEVEL_ENTITY Pong_Mist
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 
 # Fitter Assignments
@@ -126,45 +173,21 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(SCobra_Mist)
+# ------------------
+# start ENTITY(pong)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(SCobra_Mist)
-# -----------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SCobra_Mist.sv
-set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_PGM.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_OBJ_0.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_SND_0.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/ROM_LUT.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
-set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+# end ENTITY(pong)
+# ----------------
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

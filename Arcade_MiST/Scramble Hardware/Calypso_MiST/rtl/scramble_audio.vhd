@@ -179,8 +179,7 @@ architecture RTL of scramble_audio is
   signal audio_mult_3D      : std_logic_vector(35 downto 0);
 
   signal rom0_cs, rom1_cs, rom2_cs : std_logic;
-  signal  I_1P_DAIL          : std_logic_vector(4 downto 0) := (others => '0');
-  signal  I_2P_DAIL          : std_logic_vector(4 downto 0) := (others => '0');
+
 
 
   type array_4of17 is array (3 downto 0) of std_logic_vector(16 downto 0);
@@ -264,46 +263,48 @@ begin
   p_mem_decode_comb : process(cpu_rfsh_l, cpu_wr_l, cpu_rd_l, cpu_mreq_l, cpu_addr)
     variable decode : std_logic;
   begin
-    decode := '0';
-    if (cpu_rfsh_l = '1') and (cpu_mreq_l = '0') and (cpu_addr(15) = '1') then
-      decode := '1';
-    end if;
-
-    filter_load <= decode and cpu_addr(12) and (not cpu_wr_l);
-    ram_cs      <= decode and (not cpu_addr(12));
-
+      decode := '0';
+      if (cpu_rfsh_l = '1') and (cpu_mreq_l = '0') and (cpu_addr(15) = '1') then
+        decode := '1';
+      end if;
+      filter_load <= decode and cpu_addr(12) and (not cpu_wr_l);
+      ram_cs      <= decode and (not cpu_addr(12));
     rom_oe <= '0';
-    if (cpu_addr(15) = '0') and (cpu_mreq_l = '0') and (cpu_rd_l = '0') then
-      rom_oe <= '1';
-    end if;
-
+      if (cpu_addr(15) = '0') and (cpu_mreq_l = '0') and (cpu_rd_l = '0') then
+        rom_oe <= '1';
+      end if;
   end process;
-  
-	u_rom_5c : entity work.ROM_SND_0
-	port map(
-		clk   	=> CLK,
-		addr 		=> cpu_addr(10 downto 0),
-		data     => cpu_rom0_dout
-	);
-	
-	u_rom_5d : entity work.ROM_SND_1
-	port map(
-		clk   	=> CLK,
-		addr 		=> cpu_addr(10 downto 0),
-		data     => cpu_rom1_dout
-	);
 
+  u_rom_5c : entity work.ROM_SND_0
+    port map (
+      CLK         => CLK,
+      ADDR        => cpu_addr(10 downto 0),
+      DATA        => cpu_rom0_dout
+      );
+
+  u_rom_5d : entity work.ROM_SND_1
+    port map (
+      CLK         => CLK,
+      ADDR        => cpu_addr(10 downto 0),
+      DATA        => cpu_rom1_dout
+      );
+		
   p_rom_mux : process(cpu_rom0_dout, cpu_rom1_dout, cpu_rom2_dout, cpu_addr, rom_oe)
     variable rom_oe_decode : std_logic;
     variable cpu_rom0_dout_s : std_logic_vector(7 downto 0);
   begin
-    cpu_rom0_dout_s := cpu_rom0_dout;
+--    if not I_HWSEL_FROGGER then
+      cpu_rom0_dout_s := cpu_rom0_dout;
+ --   else -- swap bits 0 and 1
+--      cpu_rom0_dout_s := cpu_rom0_dout(7 downto 2) & cpu_rom0_dout(0) & cpu_rom0_dout(1);
+--   end if;
 
     rom_dout <= (others => '0');
     rom_oe_decode := '0';
     case cpu_addr(13 downto 11) is
       when "000" => rom_dout <= cpu_rom0_dout_s; rom_oe_decode := '1';
       when "001" => rom_dout <= cpu_rom1_dout;   rom_oe_decode := '1';
+ --     when "010" => rom_dout <= cpu_rom2_dout;   rom_oe_decode := '1';
       when others => null;
     end case;
 
@@ -411,47 +412,32 @@ begin
 
   end process;
   
-  dail1 : entity work.moonwar_dail
-port map(
-	clk      		=> CLK,
-	moveleft      	=> I_1P_CTRL(1),
-	moveright      => I_1P_CTRL(0),
-	btn      		=> I_1P_CTRL(3) & I_1P_CTRL(2) & I_1P_CTRL(1) & I_1P_CTRL(0),
-	dailout      	=> I_1P_DAIL
-);
-
-  dail2 : entity work.moonwar_dail
-port map(
-	clk      		=> CLK,
-	moveleft      	=> I_2P_CTRL(1),
-	moveright      => I_2P_CTRL(0),
-	btn      		=> I_2P_CTRL(3) & I_2P_CTRL(2) & I_2P_CTRL(1) & I_2P_CTRL(0),
-	dailout      	=> I_2P_DAIL
-);
+  i8255_1E_pa(7) <= I_COIN2;--coin1
+  i8255_1E_pa(6) <= I_COIN1;--coin2
+  i8255_1E_pa(5) <= I_1P_CTRL(3); -- left1
+  i8255_1E_pa(4) <= I_1P_CTRL(2); -- right1
+  i8255_1E_pa(3) <= I_1P_CTRL(4); -- down1
+  i8255_1E_pa(2) <= I_1P_CTRL(1); -- up1
+  i8255_1E_pa(1) <= '1';--unused
+  i8255_1E_pa(0) <= I_SERVICE;--unused Test Retract        
   
-  i8255_1E_pa(7) <= I_COIN1;--coin1
-  i8255_1E_pa(6) <= I_COIN2;--coin2
-  i8255_1E_pa(5) <= I_2P_CTRL(4); -- button 3 shield
-  i8255_1E_pa(4 downto 0) <= not I_1P_DAIL(4 downto 0);-- or I_2P_DAIL; -- controls
-  
-  i8255_1E_pb(7) <= I_1P_CTRL(2); -- button 1 fire
-  i8255_1E_pb(6) <= I_1P_CTRL(3); -- button 2 thrust
-  i8255_1E_pb(5) <= I_1P_CTRL(4); -- button 3 shield
-  i8255_1E_pb(4) <= I_1P_CTRL(5) or I_2P_CTRL(5); -- button 4 hyperflip - both player
-  i8255_1E_pb(3) <= I_2P_CTRL(6); -- start2
-  i8255_1E_pb(2) <= I_1P_CTRL(6); -- start1
-  i8255_1E_pb(1) <= I_DIP(0);--Lives
-  i8255_1E_pb(0) <= I_DIP(1);--Lives
+  i8255_1E_pb(7) <= '1';--unused
+  i8255_1E_pb(6) <= '1';--unused
+  i8255_1E_pb(5) <= I_2P_CTRL(3); -- left2
+  i8255_1E_pb(4) <= I_2P_CTRL(2); -- right2
+  i8255_1E_pb(3) <= I_2P_CTRL(0); -- down2
+  i8255_1E_pb(2) <= I_2P_CTRL(1); -- up2
+  i8255_1E_pb(1) <= I_DIP(0);--Table
+  i8255_1E_pb(0) <= I_DIP(1);--Rocket Number
   
   i8255_1E_pc(7) <= '1';--unused
-  i8255_1E_pc(6) <= '1';--unused
+  i8255_1E_pc(6) <= I_2P_CTRL(6); -- 2 Start
   i8255_1E_pc(5) <= '1';--unused
-  i8255_1E_pc(4) <= '1';--unused 
-  i8255_1E_pc(3) <= I_DIP(2);--cabinet
-  i8255_1E_pc(2) <= I_DIP(3);--coin
-  i8255_1E_pc(1) <= I_DIP(4);--coin
-  i8255_1E_pc(0) <= I_2P_CTRL(2); -- button 1 fire
-
+  i8255_1E_pc(4) <= '1';--unused
+  i8255_1E_pc(3) <= I_DIP(4);--coining
+  i8255_1E_pc(2) <= I_DIP(3);--coining
+  i8255_1E_pc(1) <= I_DIP(2);--Free Play
+  i8255_1E_pc(0) <= I_1P_CTRL(6); -- start1       
   
   --O_COIN_COUNTER <= not I_IOPC7; -- open drain actually
 

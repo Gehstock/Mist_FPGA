@@ -263,46 +263,55 @@ begin
   p_mem_decode_comb : process(cpu_rfsh_l, cpu_wr_l, cpu_rd_l, cpu_mreq_l, cpu_addr)
     variable decode : std_logic;
   begin
-    decode := '0';
-    if (cpu_rfsh_l = '1') and (cpu_mreq_l = '0') and (cpu_addr(15) = '1') then
-      decode := '1';
-    end if;
-
-    filter_load <= decode and cpu_addr(12) and (not cpu_wr_l);
-    ram_cs      <= decode and (not cpu_addr(12));
-
+      decode := '0';
+      if (cpu_rfsh_l = '1') and (cpu_mreq_l = '0') and (cpu_addr(15) = '1') then
+        decode := '1';
+      end if;
+      filter_load <= decode and cpu_addr(12) and (not cpu_wr_l);
+      ram_cs      <= decode and (not cpu_addr(12));
     rom_oe <= '0';
-    if (cpu_addr(15) = '0') and (cpu_mreq_l = '0') and (cpu_rd_l = '0') then
-      rom_oe <= '1';
-    end if;
-
+      if (cpu_addr(15) = '0') and (cpu_mreq_l = '0') and (cpu_rd_l = '0') then
+        rom_oe <= '1';
+      end if;
   end process;
-  
-	u_rom_5c : entity work.ROM_SND_0
-	port map(
-		clk   	=> CLK,
-		addr 		=> cpu_addr(10 downto 0),
-		data     => cpu_rom0_dout
-	);
-	
-	u_rom_5d : entity work.ROM_SND_1
-	port map(
-		clk   	=> CLK,
-		addr 		=> cpu_addr(10 downto 0),
-		data     => cpu_rom1_dout
-	);
+
+  u_rom_5c : entity work.ROM_SND_0
+    port map (
+      CLK         => CLK,
+      ADDR        => cpu_addr(10 downto 0),
+      DATA        => cpu_rom0_dout
+      );
+
+  u_rom_5d : entity work.ROM_SND_1
+    port map (
+      CLK         => CLK,
+      ADDR        => cpu_addr(10 downto 0),
+      DATA        => cpu_rom1_dout
+      );
+
+  u_rom_5e : entity work.ROM_SND_2
+    port map (
+      CLK         => CLK,
+      ADDR        => cpu_addr(10 downto 0),
+      DATA        => cpu_rom2_dout
+      );
 
   p_rom_mux : process(cpu_rom0_dout, cpu_rom1_dout, cpu_rom2_dout, cpu_addr, rom_oe)
     variable rom_oe_decode : std_logic;
     variable cpu_rom0_dout_s : std_logic_vector(7 downto 0);
   begin
-    cpu_rom0_dout_s := cpu_rom0_dout;
+--    if not I_HWSEL_FROGGER then
+      cpu_rom0_dout_s := cpu_rom0_dout;
+ --   else -- swap bits 0 and 1
+--      cpu_rom0_dout_s := cpu_rom0_dout(7 downto 2) & cpu_rom0_dout(0) & cpu_rom0_dout(1);
+--   end if;
 
     rom_dout <= (others => '0');
     rom_oe_decode := '0';
     case cpu_addr(13 downto 11) is
       when "000" => rom_dout <= cpu_rom0_dout_s; rom_oe_decode := '1';
       when "001" => rom_dout <= cpu_rom1_dout;   rom_oe_decode := '1';
+      when "010" => rom_dout <= cpu_rom2_dout;   rom_oe_decode := '1';
       when others => null;
     end case;
 

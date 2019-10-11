@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Super Cobra
+//  Arcade: Calypso
 //
 //  Port to MiSTer
 //  Copyright (C) 2017 Sorgelig
@@ -19,7 +19,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module SCobra_Mist
+module Calipso_Mist
 (
 	output        LED,						
 	output  [5:0] VGA_R,
@@ -41,9 +41,10 @@ module SCobra_Mist
 `include "rtl\build_id.v"
 
 localparam CONF_STR = {
-	"SCobra;;",
+	"Calipso;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+//	"O5,Service,Off,On;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -99,10 +100,10 @@ scramble_top scramble (
    .O_HBLANK(hb),
    .O_VBLANK(vb),
 	.O_AUDIO(audio),
-	.ip_dip_switch({1'b1,1'b1,"00",1'b1}),//Lives, Allow_Continue, coin, coin,Cabinet
+	.ip_dip_switch({5'd1}),//Coining, Coining, Free Play, Rocket,Cabinet
 	.ip_1p(~{btn_one_player, m_bomb, m_fire, m_left, m_right, m_up, m_down}),
    .ip_2p(~{btn_two_players, m_bomb, m_fire, m_left,m_right, m_up, m_down}),
-   .ip_service(1'b1),
+   .ip_service(status[5]),
    .ip_coin1(~btn_coin),
    .ip_coin2(1'b1),
 	.RESET(status[0] | status[6] | buttons[1]),
