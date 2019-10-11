@@ -1,26 +1,24 @@
 Games that should work on this hardware
 
-Nibbler
+Anteater
+Calipso
+Dark Planet
 Fantasy
+Nibbler
 Pioneer Balloon
-Vanguard
-Zarzon
-Eggor
 Piranha
-Titan
+Rescue
 The Glob/Beastie
+Titan
+Vanguard
+Video Hustler
+Zarzon
 
-
-to Confirm
+#to Confirm
 600 
 800 Fathoms / Mariner 
-Anteater 
-Armoured Car 
 Battle Of Atlantis 
-Calipso 
-Cavelon 
-Crazy Kong 
-Dark Planet 
+Cavelon
 Devil Fish 
 Frog 
 Hot Shocker 
@@ -29,18 +27,13 @@ Knock Out !!
 Lost Tomb 
 Mars 
 Minefield 
-Moon War 
-New Sinbad 7 
-Rescue 
+New Sinbad 7  
 Speed Coin 
 Strategy X 
 Strategy X (Stern) 
 Super Bond 
-Super Cobra 
-Tazz-Mania 
 The Billiards (Bootleg) 
 Triple Punch 
 Turpin 
 Turtles 
-Ultra Dome 
-Video Hustler 
+Ultra Dome  
