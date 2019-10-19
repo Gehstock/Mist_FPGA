@@ -47,6 +47,7 @@ Aviable Arcade Cores
 	Black Hole
 	Catacomb
 	Chewing Gum
+	Devil Fish
 	Galaxian
 	King & Balloon
 	Moon Cresta
@@ -55,6 +56,7 @@ Aviable Arcade Cores
 	Orbitron
 	Pisces
 	Triple Draw Poker
+	Uniwars
 	Victory
 	War of Bugs
 	Zig Zag
@@ -123,8 +125,10 @@ Aviable Arcade Cores
 #Scramble Hardware
 	Amidar
 	Amored Car
+	Calipso
 	Frogger
 	Scramble
+	Speed Coin
 	Super Cobra
 	Tazz Mania
 	The End	
