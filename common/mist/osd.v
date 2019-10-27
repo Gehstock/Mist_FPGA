@@ -5,6 +5,7 @@ module osd (
 	// OSDs pixel clock, should be synchronous to cores pixel clock to
 	// avoid jitter.
 	input        clk_sys,
+	input        ce,
 
 	// SPI interface
 	input        SPI_SCK,
@@ -29,6 +30,7 @@ module osd (
 parameter OSD_X_OFFSET = 10'd0;
 parameter OSD_Y_OFFSET = 10'd0;
 parameter OSD_COLOR    = 3'd0;
+parameter OSD_AUTO_CE  = 1'b1;
 
 localparam OSD_WIDTH   = 10'd256;
 localparam OSD_HEIGHT  = 10'd128;
@@ -95,7 +97,7 @@ wire [9:0] dsp_height = vs_pol ? vs_low : vs_high;
 
 wire doublescan = (dsp_height>350);
 
-reg ce_pix;
+reg auto_ce_pix;
 always @(posedge clk_sys) begin
 	integer cnt = 0;
 	integer pixsz, pixcnt;
@@ -106,34 +108,35 @@ always @(posedge clk_sys) begin
 
 	pixcnt <= pixcnt + 1;
 	if(pixcnt == pixsz) pixcnt <= 0;
-	ce_pix <= !pixcnt;
+	auto_ce_pix <= !pixcnt;
 
 	if(hs && ~HSync) begin
 		cnt    <= 0;
 		if (cnt <= 512) pixsz = 0;
 		else pixsz  <= (cnt >> 9) - 1;
 		pixcnt <= 0;
-		ce_pix <= 1;
+		auto_ce_pix <= 1;
 	end
 end
 
+wire ce_pix = OSD_AUTO_CE ? auto_ce_pix : ce;
+
 always @(posedge clk_sys) begin
-	reg hsD, hsD2;
-	reg vsD, vsD2;
+	reg hsD;
+	reg vsD;
 
 	if(ce_pix) begin
 		// bring hsync into local clock domain
 		hsD <= HSync;
-		hsD2 <= hsD;
 
 		// falling edge of HSync
-		if(!hsD && hsD2) begin
+		if(!HSync && hsD) begin
 			h_cnt <= 0;
 			hs_high <= h_cnt;
 		end
 
 		// rising edge of HSync
-		else if(hsD && !hsD2) begin
+		else if(HSync && !hsD) begin
 			h_cnt <= 0;
 			hs_low <= h_cnt;
 			v_cnt <= v_cnt + 1'd1;
@@ -142,16 +145,15 @@ always @(posedge clk_sys) begin
 		end
 
 		vsD <= VSync;
-		vsD2 <= vsD;
 
 		// falling edge of VSync
-		if(!vsD && vsD2) begin
+		if(!VSync && vsD) begin
 			v_cnt <= 0;
 			vs_high <= v_cnt;
 		end
 
 		// rising edge of VSync
-		else if(vsD && !vsD2) begin
+		else if(VSync && !vsD) begin
 			v_cnt <= 0;
 			vs_low <= v_cnt;
 		end

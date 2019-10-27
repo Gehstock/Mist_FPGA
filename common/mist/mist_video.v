@@ -24,6 +24,8 @@ module mist_video
 	input        ypbpr,
 	// Rotate OSD [0] - rotate [1] - left or right
 	input  [1:0] rotate,
+	// composite-like blending
+	input        blend,
 
 	// video in
 	input  [COLOR_DEPTH-1:0] R,
@@ -46,6 +48,7 @@ parameter OSD_X_OFFSET = 10'd0;
 parameter OSD_Y_OFFSET = 10'd0;
 parameter SD_HCNT_WIDTH = 9;
 parameter COLOR_DEPTH = 6; // 1-6
+parameter OSD_AUTO_CE = 1'b1;
 
 wire [5:0] SD_R_O;
 wire [5:0] SD_G_O;
@@ -77,11 +80,35 @@ always @(*) begin
 	end
 end
 
+reg [1:0] i_div;
+reg ce_x1, ce_x2;
+
+always @(posedge clk_sys) begin
+	reg last_hs_in;
+	last_hs_in <= HSync;
+	if(last_hs_in & !HSync) begin
+		i_div <= 2'b00;
+	end else begin
+		i_div <= i_div + 2'd1;
+	end
+end
+
+always @(*) begin
+	if (!ce_divider) begin
+		ce_x1 = (i_div == 2'b01);
+		ce_x2 = i_div[0];
+	end else begin
+		ce_x1 = i_div[0];
+		ce_x2 = 1'b1;
+	end
+end
+
 scandoubler #(SD_HCNT_WIDTH, COLOR_DEPTH) scandoubler
 (
 	.clk_sys    ( clk_sys    ),
 	.scanlines  ( scanlines  ),
-	.ce_divider ( ce_divider ),
+	.ce_x1      ( ce_x1      ),
+	.ce_x2      ( ce_x2      ),
 	.hs_in      ( HSync      ),
 	.vs_in      ( VSync      ),
 	.r_in       ( R          ),
@@ -98,10 +125,11 @@ wire [5:0] osd_r_o;
 wire [5:0] osd_g_o;
 wire [5:0] osd_b_o;
 
-osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR) osd
+osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR, OSD_AUTO_CE) osd
 (
 	.clk_sys ( clk_sys ),
 	.rotate  ( rotate  ),
+	.ce      ( scandoubler_disable ? ce_x1 : ce_x2 ),
 	.SPI_DI  ( SPI_DI  ),
 	.SPI_SCK ( SPI_SCK ),
 	.SPI_SS3 ( SPI_SS3 ),
@@ -115,25 +143,45 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR) osd
 	.B_out   ( osd_b_o )
 );
 
+wire [5:0] cofi_r, cofi_g, cofi_b;
+wire       cofi_hs, cofi_vs;
+
+cofi cofi (
+	.clk     ( clk_sys ),
+	.pix_ce  ( scandoubler_disable ? ce_x1 : ce_x2 ),
+	.enable  ( blend   ),
+	.hblank  ( ~(scandoubler_disable ? HSync : SD_HS_O) ),
+	.hs      ( scandoubler_disable ? HSync : SD_HS_O ),
+	.vs      ( scandoubler_disable ? VSync : SD_VS_O ),
+	.red     ( osd_r_o ),
+	.green   ( osd_g_o ),
+	.blue    ( osd_b_o ),
+	.hs_out  ( cofi_hs ),
+	.vs_out  ( cofi_vs ),
+	.red_out ( cofi_r  ),
+	.green_out( cofi_g ),
+	.blue_out( cofi_b  )
+);
+
 wire [5:0] y, pb, pr;
 
 rgb2ypbpr rgb2ypbpr
 (
-	.red   ( osd_r_o ),
-	.green ( osd_g_o ),
-	.blue  ( osd_b_o ),
+	.red   ( cofi_r  ),
+	.green ( cofi_g  ),
+	.blue  ( cofi_b  ),
 	.y     ( y       ),
 	.pb    ( pb      ),
 	.pr    ( pr      )
 );
 
-assign VGA_R = ypbpr?pr:osd_r_o;
-assign VGA_G = ypbpr? y:osd_g_o;
-assign VGA_B = ypbpr?pb:osd_b_o;
+assign VGA_R = ypbpr?pr:cofi_r;
+assign VGA_G = ypbpr? y:cofi_g;
+assign VGA_B = ypbpr?pb:cofi_b;
 
-wire   cs = scandoubler_disable ? ~(HSync ^ VSync) : ~(SD_HS_O ^ SD_VS_O);
-wire   hs = scandoubler_disable ? HSync : SD_HS_O;
-wire   vs = scandoubler_disable ? VSync : SD_VS_O;
+wire   cs = ~(cofi_hs ^ cofi_vs);
+wire   hs = cofi_hs;
+wire   vs = cofi_vs;
 
 // a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
 // and VCC on VGA_VS (to switch into rgb mode)
