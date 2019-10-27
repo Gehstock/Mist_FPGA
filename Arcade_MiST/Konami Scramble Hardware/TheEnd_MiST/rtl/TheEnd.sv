@@ -44,6 +44,7 @@ localparam CONF_STR = {
 	"TheEnd;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blending,Off,On;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -61,19 +62,21 @@ pll pll(
 	);
 
 reg ce_6p, ce_star, ce_1p79;
+
 always @(negedge clk_sys) begin
-reg [2:0] div = 0;
-reg [4:0] div179 = 0;	
+	reg [1:0] div = 0;
+	reg [3:0] div179 = 0;
+
 	div <= div + 1'd1;
-	if(div == 5) div <= 0;
-	ce_6p    <= (div == 0);
-	ce_star <= ((div == 3) | (div == 5));
-   ce_1p79 <= 0;
-   div179 <= div179 + 1'd1;
-   if(div179 == 19) begin
-		div179 <= 0;
+	ce_star <= div[0];
+	ce_6p <= div[0] & ~div[1];
+
+	ce_1p79 <= 0;
+	div179 <= div179 - 1'd1;
+	if(!div179) begin
+		div179 <= 13;
 		ce_1p79 <= 1;
-   end
+	end
 end
 
 wire [31:0] status;
@@ -124,6 +127,8 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b1,status[2]}),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
@@ -150,7 +155,7 @@ user_io(
 	.status         (status         )
 	);
 
-dac dac(
+dac #(10) dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio),

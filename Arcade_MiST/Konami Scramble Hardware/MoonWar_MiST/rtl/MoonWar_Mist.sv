@@ -44,6 +44,7 @@ localparam CONF_STR = {
 	"Moon War;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blending,Off,On;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -113,7 +114,7 @@ scramble_top scramble (
 	.ena_1_79(ce_1p79)
 	);
 
-mist_video #(.COLOR_DEPTH(4)) mist_video(
+mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
@@ -129,6 +130,8 @@ mist_video #(.COLOR_DEPTH(4)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b1,status[2]}),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
@@ -164,8 +167,8 @@ dac #(10)dac(
 //											Rotated														Normal
 //wire m_up1     = ~status[2] ? btn_left | joystick_0[1] : btn_up | joystick_0[3];
 //wire m_down1   = ~status[2] ? btn_right | joystick_0[0] : btn_down | joystick_0[2];
-wire m_left1   = ~status[2] ? btn_down | joystick_0[2] : btn_left | joystick_0[1];
-wire m_right1  = ~status[2] ? btn_up | joystick_0[3] : btn_right | joystick_0[0];
+wire m_left1   = btn_left | joystick_0[1];
+wire m_right1  = btn_right | joystick_0[0];
 
 wire m_fire11   = btn_fire1 | joystick_0[4];
 wire m_fire12   = btn_fire2 | joystick_0[5];
