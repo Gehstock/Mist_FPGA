@@ -155,10 +155,10 @@ user_io(
 	.status         (status         )
 	);
 
-dac #(16)dac(
+dac #(10)dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({audio, audio[9:5]}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 //											Rotated														Normal

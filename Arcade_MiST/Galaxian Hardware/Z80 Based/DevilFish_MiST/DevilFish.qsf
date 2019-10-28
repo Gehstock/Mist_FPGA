@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 11:54:39  October 19, 2019
+# Date created = 01:03:05  October 23, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		MoonCresta_assignment_defaults.qdf
+#		DevilFish_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #

@@ -14,6 +14,7 @@ architecture prom of ROM_LUT is
 	signal rom_data: rom := (
 		X"00",X"F6",X"07",X"F0",X"00",X"80",X"3F",X"C7",X"00",X"FF",X"07",X"27",X"00",X"FF",X"C9",X"39",
 		X"00",X"3C",X"17",X"F0",X"00",X"27",X"29",X"FF",X"00",X"C7",X"17",X"F6",X"00",X"C7",X"39",X"3F");
+		
 begin
 process(clk)
 begin

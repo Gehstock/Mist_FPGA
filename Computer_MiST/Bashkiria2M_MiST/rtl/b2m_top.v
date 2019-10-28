@@ -107,11 +107,10 @@ reg[7:0] mem_o;
 always @(negedge memvidbusy) vid_data <= dramout;
 always @(negedge memcpubusy) mem_o <= dramout[7:0];
 
-
 bios rom(
-	.address(addrbus[12:0]), 
-	.clock(clk50mhz), 
-	.q(rom_o)
+	.addr(addrbus[12:0]), 
+	.clk(clk50mhz), 
+	.data(rom_o)
 	);
 
 ////////////////////   CPU   ////////////////////
@@ -161,7 +160,7 @@ wire cpu_ce = cpu_ce2;
 
 always @(posedge clk50mhz) begin
 	vidce2<=vidce;
-	cpu_cnt <= cpu_cnt + 1;
+	cpu_cnt <= cpu_cnt + 1'b1;
 	if (cpu_sync) sysctl <= cpu_o;
 	if (addrbus[0]&~sio_we_n) sound_on <= ~cpu_o[5];
 	if(turbo==1 && {vidce2,vidce}==2'b01 && cpu_cnt>3){cpu_cnt,cpu_ce2}<={10'b0,~memcpubusy&~memvidbusy};
@@ -333,7 +332,7 @@ always @(posedge clk50mhz) begin
 	if (line6bit > 32) tapein <= 1'b1;
 end*/
 
-//I2C_AV_Config sndcfg(.iCLK(clk50mhz), .iRST_N(reset_n), .I2C_SCLK(I2C_SCLK), .I2C_SDAT(I2C_SDAT));
+
 
 ////////////////////   SD CARD   ////////////////////
 reg sdcs;

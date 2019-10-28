@@ -7,7 +7,7 @@ module SDRAM_Controller(
 	input			clk100,				//  Clock 100MHz
 	input			reset,					//  System reset
 	inout	[15:0]	DRAM_DQ,				//	SDRAM Data bus 16 Bits
-	output	reg[11:0]	DRAM_ADDR,			//	SDRAM Address bus 12 Bits
+	output	reg[12:0]	DRAM_ADDR,			//	SDRAM Address bus 12 Bits
 	output	reg		DRAM_LDQM,				//	SDRAM Low-byte Data Mask 
 	output	reg		DRAM_UDQM,				//	SDRAM High-byte Data Mask
 	output	reg		DRAM_WE_N,				//	SDRAM Write Enable
@@ -17,7 +17,7 @@ module SDRAM_Controller(
 	output			DRAM_BA_0,				//	SDRAM Bank Address 0
 	output			DRAM_BA_1,				//	SDRAM Bank Address 0
 	input	[21:0]	iaddr,
-	input	[7:0]	idata,
+	input	[15:0]	idata,
 	input			rd,
 	input			we_n,
 	output	reg [15:0]	odata,
@@ -50,17 +50,17 @@ reg[15:0] data;
 reg exrd,exwen;
 reg ubn,lbn,rdvid;
 
-assign DRAM_DQ[7:0] = (state==ST_WRITE0) ? data : 8'bZZZZZZZZ;
-assign DRAM_DQ[15:8] = (state == ST_WRITE0) ? data : 8'bZZZZZZZZ;
+assign DRAM_DQ[7:0] = (state==ST_WRITE0) ? data[7:0] : 8'bZZZZZZZZ;
+assign DRAM_DQ[15:8] = (state == ST_WRITE0) ? data[7:0] : 8'bZZZZZZZZ;
 assign DRAM_CS_N = 1'b0;
 assign DRAM_BA_0 = addr[20];
 assign DRAM_BA_1 = addr[21];
 
 always @(*) begin
 	case (state)
-	ST_RESET0: DRAM_ADDR = 12'b100000;
-	ST_RAS0:   DRAM_ADDR = addr[19:8];
-	default:   DRAM_ADDR = {4'b0100,addr[7:0]};
+	ST_RESET0: DRAM_ADDR = 13'b100000;
+	ST_RAS0:   DRAM_ADDR = addr[20:8];
+	default:   DRAM_ADDR = {5'b00100,addr[7:0]};
 	endcase
 	case (state)
 	ST_RESET0:   {DRAM_RAS_N,DRAM_CAS_N,DRAM_WE_N} = 3'b000;
