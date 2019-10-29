@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Amored Car
+//  Arcade: Armored Car
 //
 //  Port to MiSTer
 //  Copyright (C) 2017 Sorgelig
@@ -19,7 +19,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module AmoredCar_Mist
+module ArmoredCar_Mist
 (
 	output        LED,						
 	output  [5:0] VGA_R,
@@ -41,9 +41,10 @@ module AmoredCar_Mist
 `include "rtl\build_id.v"
 
 localparam CONF_STR = {
-	"Amored Car;;",
+	"ArmCar;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blending,Off,On;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -113,7 +114,7 @@ scramble_top scramble (
 	.ena_1_79(ce_1p79)
 	);
 
-mist_video #(.COLOR_DEPTH(4)) mist_video(
+mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
@@ -129,6 +130,8 @@ mist_video #(.COLOR_DEPTH(4)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b1,status[2]}),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)

@@ -412,23 +412,21 @@ begin
   end process;
   
   dail1 : entity work.moonwar_dail
-port map(
-	clk      		=> CLK,
-	moveleft      	=> I_1P_CTRL(1),
-	moveright      => I_1P_CTRL(0),
-	btn      		=> I_1P_CTRL(3) & I_1P_CTRL(2) & I_1P_CTRL(1) & I_1P_CTRL(0),
-	dailout      	=> I_1P_DAIL
+  port map(
+    clk             => CLK,
+    moveleft        => not I_1P_CTRL(1),
+    moveright       => not I_1P_CTRL(0),
+    dailout      	=> I_1P_DAIL
 );
 
   dail2 : entity work.moonwar_dail
-port map(
-	clk      		=> CLK,
-	moveleft      	=> I_2P_CTRL(1),
-	moveright      => I_2P_CTRL(0),
-	btn      		=> I_2P_CTRL(3) & I_2P_CTRL(2) & I_2P_CTRL(1) & I_2P_CTRL(0),
-	dailout      	=> I_2P_DAIL
-);
-  
+  port map(
+    clk      		=> CLK,
+    moveleft        => not I_2P_CTRL(1),
+    moveright       => not I_2P_CTRL(0),
+    dailout      	=> I_2P_DAIL
+  );
+
   i8255_1E_pa(7) <= I_COIN1;--coin1
   i8255_1E_pa(6) <= I_COIN2;--coin2
   i8255_1E_pa(5) <= I_2P_CTRL(4); -- button 3 shield

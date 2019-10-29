@@ -45,6 +45,7 @@ localparam CONF_STR = {
 //	"O1,Service ,On,Off;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blending,Off,On;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -113,7 +114,7 @@ scramble_top scramble(
 	.ena_1_79(ce_1p79)
 	);
 
-mist_video #(.COLOR_DEPTH(4)) mist_video(
+mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
@@ -129,6 +130,8 @@ mist_video #(.COLOR_DEPTH(4)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.rotate({1'b1,status[2]}),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
@@ -155,7 +158,7 @@ user_io(
 	.status         (status         )
 	);
 
-dac dac(
+dac #(10) dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio),
