@@ -124,7 +124,7 @@ Aviable Arcade Cores
 
 #Scramble Hardware
 	Amidar
-	Amored Car
+	Armored Car
 	Calipso
 	Frogger
 	Scramble

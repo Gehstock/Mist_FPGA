@@ -3,8 +3,6 @@ module dkong_soundboard(
 	input					W_CLK_24576M,
 	input					W_CLK_12288M,
 	input					WB_CLK_06144M,
-	input		[15:0]	W_CNF_AD,
-	input		[7:0]		VID_ROM2_DO,
 	input					W_W0_WE,
 	input					W_W1_WE,
 	input					W_CNF_EN,
@@ -70,13 +68,6 @@ dkong_sound Digtal_sound
 	.I8035_INTn(I8035_INTn),
 	.I8035_T0(I8035_T0),
 	.I8035_T1(I8035_T1),
-
-//	.I_CNF_A(W_CNF_AD[10:0]),
-//	.I_CNF_D(VID_ROM2_DO),
-//	.I_WE0(W_W0_WE),
-//	.I_WE1(W_W1_WE),
-//	.I_CNF_EN(W_CNF_EN),
-
 	.I_SOUND_DAT(W_3D_Q), 
 	.I_SOUND_CNT({W_6H_Q[5:3],W_5H_Q}),
 	.O_SOUND_DAT(W_D_S_DAT)

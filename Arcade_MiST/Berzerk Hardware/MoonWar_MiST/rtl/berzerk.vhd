@@ -379,7 +379,6 @@ port map(
 	clk      		=> clock_10,
 	moveleft      	=> cleft,
 	moveright      => cright,
-	btn      		=> fire1 & fire2 & fire3,
 	dailout      	=> dail
 );
 
