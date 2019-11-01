@@ -24,6 +24,7 @@ Aviable Arcade Cores
 #Berzerk Hardware
 	Berzerk
 	Frenzy
+	Moonwar
 
 #Crazy Climber Hardware
 	Crazy Climber
@@ -76,6 +77,18 @@ Aviable Arcade Cores
 	Power Surge
 	Time Pilot
 
+#Konami Scramble Hardware
+	Amidar
+	Armored Car
+	Calipso
+	Frogger
+	Moonwar
+	Scramble
+	Speed Coin
+	Super Cobra
+	Tazz Mania
+	The End	
+
 #Midway / Taito 8080 Hardware
 	Galaxy Wars
 	Lunar Rescue
@@ -121,17 +134,6 @@ Aviable Arcade Cores
 	Capitol
 	Phoenix
 	Pleiads
-
-#Scramble Hardware
-	Amidar
-	Armored Car
-	Calipso
-	Frogger
-	Scramble
-	Speed Coin
-	Super Cobra
-	Tazz Mania
-	The End	
 
 #Williams 6809 rev.1 Hardware
 	Colony 7

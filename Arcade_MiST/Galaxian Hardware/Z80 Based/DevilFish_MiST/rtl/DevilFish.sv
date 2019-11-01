@@ -145,11 +145,11 @@ dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+//											Normal														Rotated
+wire m_up     = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
 //wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
