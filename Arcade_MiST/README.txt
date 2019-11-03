@@ -99,6 +99,9 @@ Aviable Arcade Cores
 	Space Laser
 	Super Earth Invasion
 
+#Midway MCR 1
+	Kickman
+
 #Namco Rally X Hardware
 	Rally X
 
