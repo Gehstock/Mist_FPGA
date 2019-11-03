@@ -85,7 +85,6 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
 wire [9:0] audio;
 wire hs, vs;
 wire blankn = ~(hb | vb);
