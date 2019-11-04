@@ -438,7 +438,7 @@ ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 ----------------------
 --- sprite machine ---
 ----------------------
-vflip <= 480-vcnt; -- apply mirror flip
+vflip <= 512+vcnt;-- apply mirror flip
 
 process (clock_vid)
 begin
