@@ -1,4 +1,4 @@
-## Generated SDC file "vectrex_MiST.out.sdc"
+## Generated SDC file "SolarFox.out.sdc"
 
 ## Copyright (C) 1991-2013 Altera Corporation
 ## Your use of Altera Corporation's design tools, logic functions 

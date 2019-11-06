@@ -400,7 +400,7 @@ begin
 				if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
 																			 -- back porch  33 
 																		 
-				if hcnt = 512+13-8 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
+				if hcnt = 512+15 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
 				if hcnt = 512+90-8 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
 																				  -- back porch  48/25*20 = 38
 				video_blankn <= '0';
@@ -744,6 +744,7 @@ port map(
 );
 
 cpu_rom_addr <= cpu_addr(14 downto 0);
+cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else '0';
 
 -- working RAM   0x7000-0x77FF
 wram : entity work.gen_ram

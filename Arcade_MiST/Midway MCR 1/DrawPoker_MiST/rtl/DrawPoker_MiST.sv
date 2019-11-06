@@ -110,7 +110,7 @@ sdram cart(
 	.din           ( {ioctl_dout, ioctl_dout} ),
 	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
 	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl ),
+	.rd            ( !ioctl_downl & rom_rd ),
 	.ready()
 );
 
@@ -217,6 +217,7 @@ dac_r(
 	
 reg btn_gamble_in = 0;
 reg btn_gamble_out = 0;
+reg btn_stand = 0;
 reg btn_cancel = 0;
 reg btn_deal = 0;
 reg btn_hold1 = 0;

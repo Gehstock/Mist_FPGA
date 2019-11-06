@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Kickman by DarFPGA
+//  Arcade: Solar Fox by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Kickman_MiST(
+module SolarFox_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -32,6 +32,7 @@ module Kickman_MiST(
 	input         SPI_SS3,
 	input         CONF_DATA0,
 	input         CLOCK_27,
+
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
@@ -48,7 +49,7 @@ module Kickman_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"KICKMAN;;",
+	"SOLARFOX;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
@@ -110,7 +111,7 @@ sdram cart(
 	.din           ( {ioctl_dout, ioctl_dout} ),
 	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
 	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl & rom_rd),
+	.rd            ( !ioctl_downl ),
 	.ready()
 );
 
@@ -140,15 +141,21 @@ kick kick(
 	.coin2(1'b0),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
-	.kick(m_down),
 	.service_toggle(status[6]),
-	.btn_acc(m_fire),
-	.btn_left(m_left),
-	.btn_right(m_right), 
+	.fire1(m_fire),
+	.fire2(m_fire),
+	.left1(m_left),
+	.right1(m_right),
+	.up1(m_up),
+	.down1(m_down),
+	.left2(m_left),
+	.right2(m_right),
+	.up2(m_up),
+	.down2(m_down),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_do[7:0]     ),
 	.cpu_rom_rd   ( rom_rd          )
-);
+ );
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -166,8 +173,8 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( {1'b1,status[2]} ),
-//	.ce_divider     ( 1                ),
-	.blend          ( status[5]        ),
+//	.ce_divider(1),
+	.blend(status[5]),
 	.scandoubler_disable(1),//scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
@@ -213,7 +220,7 @@ dac_r(
 	);	
 
 //											Rotated														Normal
-//wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
 wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
 wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
 wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
