@@ -59,6 +59,7 @@ localparam CONF_STR = {
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sys;
+assign SDRAM_CKE = 1;
 
 wire clk_sys;
 wire pll_locked;
@@ -83,6 +84,9 @@ wire  [3:0] g, r, b;
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
+wire [13:0] snd_addr;
+wire [15:0] snd_do;
+wire        snd_rd;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -100,19 +104,56 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
-sdram cart(
+
+reg port1_req, port2_req;
+sdram sdram(
 	.*,
-	.init          ( ~pll_locked  ),
+	.init_n        ( pll_locked   ),
 	.clk           ( clk_sys      ),
-	.wtbt          ( 2'b00        ),
-	.dout          ( rom_do     ),
-	.din           ( {ioctl_dout, ioctl_dout} ),
-	.addr          ( ioctl_downl ? ioctl_addr : rom_addr ),
-	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl & rom_rd),
-	.ready()
+
+	// port1 used for main CPU
+	.port1_req     ( port1_req    ),
+	.port1_ack     (),
+	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[14:1] ),
+	.port1_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port1_we      ( ioctl_downl ),
+	.port1_d       ( {ioctl_dout, ioctl_dout} ),
+	.port1_q       ( rom_do ),
+
+	// port2 for sound board
+	.port2_req     ( port2_req ),
+	.port2_ack     (),
+	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h3000 : snd_addr[13:1] ),
+	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port2_we      ( ioctl_downl ),
+	.port2_d       ( {ioctl_dout, ioctl_dout} ),
+	.port2_q       ( snd_do )
 );
+
+always @(posedge clk_sys) begin
+	reg [14:1] rom_addr_last;
+	reg [13:1] snd_addr_last;
+	reg        ioctl_wr_last = 0;
+
+	ioctl_wr_last <= ioctl_wr;
+	if (ioctl_downl) begin
+		snd_addr_last <= 13'h1fff;
+		rom_addr_last <= 14'h3fff;
+		if (~ioctl_wr_last && ioctl_wr) begin
+			port1_req <= ~port1_req;
+			port2_req <= ~port2_req;
+		end
+	end else begin
+		if (rom_rd && rom_addr_last != rom_addr[14:1]) begin
+			rom_addr_last <= rom_addr[14:1];
+			port1_req <= ~port1_req;
+		end
+		if (snd_rd && snd_addr_last != snd_addr[13:1]) begin
+			snd_addr_last <= snd_addr[13:1];
+			port2_req <= ~port2_req;
+		end
+	end
+end
 
 reg reset = 1;
 reg rom_loaded = 0;
@@ -146,8 +187,11 @@ kick kick(
 	.btn_left(m_left),
 	.btn_right(m_right), 
 	.cpu_rom_addr ( rom_addr        ),
-	.cpu_rom_do   ( rom_do[7:0]     ),
-	.cpu_rom_rd   ( rom_rd          )
+	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
+	.cpu_rom_rd   ( rom_rd          ),
+	.snd_rom_addr ( snd_addr        ),
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_rd   ( snd_rd          )
 );
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(

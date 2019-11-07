@@ -4,6 +4,10 @@
 -- 3 November 2019
 -- 
 -- VGA Only
+-- KICKMAN.ROM file : Main ROM + Sound ROM
+-- 1200-a-ur.b3 + 1300-b-ur.b4 + 1400-c-ur.b5 + 1500-d-ur.d4 + 1600-e-ur.d5 + 1700-f-ur.d6 +
+-- 4200-a.a7 + 4300-b.a8 + 4400-c.a9 + 4500-d.a10
+
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr
