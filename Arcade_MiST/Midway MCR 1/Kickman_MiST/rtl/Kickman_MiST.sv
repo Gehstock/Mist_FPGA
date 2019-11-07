@@ -210,7 +210,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( {1'b1,status[2]} ),
-//	.ce_divider     ( 1                ),
+	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
 	.scanlines      ( status[4:3]      ),
