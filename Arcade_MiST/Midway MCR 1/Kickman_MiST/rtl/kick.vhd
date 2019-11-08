@@ -171,7 +171,11 @@ port(
  dbg_cpu_addr 		: out std_logic_vector(15 downto 0);
  cpu_rom_addr 		: out std_logic_vector(14 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
- cpu_rom_rd   		: out std_logic
+ cpu_rom_rd   		: out std_logic;
+
+ snd_rom_addr 		: out std_logic_vector(13 downto 0);
+ snd_rom_do     	: in std_logic_vector(7 downto 0);
+ snd_rom_rd   		: out std_logic
  );
 end kick;
 
@@ -744,7 +748,7 @@ port map(
 );
 
 cpu_rom_addr <= cpu_addr(14 downto 0);
-cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else '0';
+cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) < X"7" else '0';
 
 -- working RAM   0x7000-0x77FF
 wram : entity work.gen_ram
@@ -880,6 +884,10 @@ port map(
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,
  
+ cpu_rom_addr   => snd_rom_addr,
+ cpu_rom_do     => snd_rom_do,
+ cpu_rom_rd     => snd_rom_rd,
+
  dbg_cpu_addr => open --dbg_cpu_addr
 );
  
