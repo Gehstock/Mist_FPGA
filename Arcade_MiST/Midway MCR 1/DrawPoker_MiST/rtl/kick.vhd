@@ -706,7 +706,7 @@ cpu_rom_addr <= cpu_addr(14 downto 0);
 cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else '0'; 
 
 -- working RAM   0x7000-0x77FF
-wram : entity work.gen_ram
+wram : entity work.cmos_ram
 generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_vidn,
@@ -714,7 +714,7 @@ port map(
  addr => cpu_addr(10 downto 0),
  d    => cpu_do,
  q    => wram_do
-);
+); 
 
 -- meter ram, 0x8000 - 0x81ff
 meter_ram : entity work.gen_ram

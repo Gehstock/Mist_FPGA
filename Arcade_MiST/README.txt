@@ -101,6 +101,7 @@ Aviable Arcade Cores
 
 #Midway MCR 1
 	Kickman
+	Solar fox
 
 #Namco Rally X Hardware
 	Rally X

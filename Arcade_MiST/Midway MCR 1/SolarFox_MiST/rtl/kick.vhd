@@ -326,9 +326,7 @@ architecture struct of kick is
  
  signal service_toggle_r : std_logic;
  signal service          : std_logic;
- 
- signal flip0       : std_logic_vector(7 downto 0);
- signal flip1       : std_logic_vector(7 downto 0);
+
 
 begin
 
@@ -398,8 +396,6 @@ end process;
 --------------------
 -- players inputs --
 -------------------- 
-flip0  <= x"08";-- when sp_hflip = '1' else
-flip1  <= x"f0"; 
 input_0 <= ('1' & not service & '1' & not fire1 & not start2 & not start1 & not coin2 & not coin1);-- or flip0;
 input_1 <= (not up2 & not down2 & not left2 & not right2 & not up1 & not down1 & not left1 & not right1);-- or flip1;
 input_2 <= "1111111" & not fire2;
@@ -730,9 +726,10 @@ port map(
 );
 
 cpu_rom_addr <= cpu_addr(14 downto 0);
+cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) < X"7" else '0';
 
 -- working RAM   0x7000-0x77FF
-wram : entity work.gen_ram
+wram : entity work.cmos_ram
 generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_vidn,
@@ -741,6 +738,7 @@ port map(
  d    => cpu_do,
  q    => wram_do
 );
+
 
 -- video RAM   0xFC00-0xFFFF
 video_ram : entity work.gen_ram
@@ -865,7 +863,7 @@ port map(
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,
- 
+
  dbg_cpu_addr => open --dbg_cpu_addr
 );
  

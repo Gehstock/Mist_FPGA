@@ -1,10 +1,9 @@
 ---------------------------------------------------------------------------------
 -- 
 -- Arcade: Solar Fox port to MiST by Gehstock
--- x November 2019
+-- 8 November 2019
 -- 
 -- VGA Only
--- WIP some graphical Glitches
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr
