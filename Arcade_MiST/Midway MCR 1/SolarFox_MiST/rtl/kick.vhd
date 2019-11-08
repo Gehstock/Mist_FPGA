@@ -297,7 +297,7 @@ architecture struct of kick is
  signal sp_buffer_ram2_do_r : std_logic_vector(7 downto 0);
  
  signal sp_vid              : std_logic_vector(3 downto 0);
- 
+ signal sp_vid_a            : std_logic_vector(3 downto 0);
  signal palette_addr        : std_logic_vector(3 downto 0);
  signal palette_F4_we       : std_logic; 
  signal palette_F8_we       : std_logic;
@@ -396,10 +396,10 @@ end process;
 --------------------
 -- players inputs --
 -------------------- 
-input_0 <= ('1' & not service & '1' & not fire1 & not start2 & not start1 & not coin2 & not coin1);-- or flip0;
-input_1 <= (not up2 & not down2 & not left2 & not right2 & not up1 & not down1 & not left1 & not right1);-- or flip1;
+input_0 <= (not service & '1' & '1' & not fire1 & not start2 & not start1 & not coin2 & not coin1);
+input_1 <= (not up2 & not down2 & not left2 & not right2 & not up1 & not down1 & not left1 & not right1);
 input_2 <= "1111111" & not fire2;
-input_3 <= "11111111" ;-- Cabinet, Ignore Hardware Failure, UNKNOWN, Demo_Sounds, UNKNOWN, Bonus, Bonus
+input_3 <= x"FF";-- Cabinet, Ignore Hardware Failure, UNKNOWN, Demo_Sounds, UNKNOWN, Bonus, Bonus
 
 process (clock_vid, reset)
 begin
@@ -510,6 +510,8 @@ begin
 		sp_on_line_r <= sp_on_line;
 		
 		pix_ena_r <= pix_ena;
+		
+		sp_vid <= sp_vid_a;
 
 	end if;
 
@@ -542,17 +544,17 @@ sp_graphx_flip <= sp_graphx_mux when sp_hflip(0) = '0' else
 						sp_graphx_mux(3 downto 0) & sp_graphx_mux(7 downto 4);		
 
 sp_buffer_ram1_di   <= sp_buffer_ram1_do or sp_graphx_flip       when vflip(0) = '1' else "00000000";
-sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '1' else hcnt(8 downto 1) + X"03";
+sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '1' else hcnt(8 downto 1) - X"03";
 sp_buffer_ram1_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '1' else hcnt(0);
 
 sp_buffer_ram2_di   <= sp_buffer_ram2_do or sp_graphx_flip       when vflip(0) = '0' else "00000000";
-sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '0' else hcnt(8 downto 1) + X"03";
+sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '0' else hcnt(8 downto 1) - X"03";
 sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '0' else hcnt(0);
 
-sp_vid <= sp_buffer_ram1_do_r(7 downto 4) when (vflip(0) = '0') and (hcnt(0) = '1') else
-		    sp_buffer_ram1_do_r(3 downto 0) when (vflip(0) = '0') and (hcnt(0) = '0') else
-		    sp_buffer_ram2_do_r(7 downto 4) when (vflip(0) = '1') and (hcnt(0) = '1') else
-			 sp_buffer_ram2_do_r(3 downto 0) when (vflip(0) = '1') and (hcnt(0) = '0');			  
+sp_vid_a <= sp_buffer_ram1_do_r(7 downto 4) when (vflip(0) = '0') and (hcnt(0) = '1') else
+		      sp_buffer_ram1_do_r(3 downto 0) when (vflip(0) = '0') and (hcnt(0) = '0') else
+		      sp_buffer_ram2_do_r(7 downto 4) when (vflip(0) = '1') and (hcnt(0) = '1') else
+			   sp_buffer_ram2_do_r(3 downto 0) when (vflip(0) = '1') and (hcnt(0) = '0');			  
 
 --------------------
 --- char machine ---

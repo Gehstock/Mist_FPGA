@@ -55,7 +55,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v1.1.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;
@@ -173,8 +173,8 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( {1'b1,status[2]} ),
-//	.ce_divider(1),
-	.blend(status[5]),
+	.ce_divider     ( 1                ),
+	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
