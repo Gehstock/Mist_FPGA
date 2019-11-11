@@ -52,7 +52,7 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
-	"O7,Allow Continue,Off,On;",
+	//"O7,Spinner Speed,Low,High;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -179,18 +179,21 @@ satans_hollow satans_hollow(
 	.audio_out_r(audio_r),
 	.coin1(btn_coin),
 	.coin2(1'b0),
-	.start3(),//dogfight
+	.start3(btn_dogfight),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	
-	.up(m_up), 
-	.down(m_down),
-	.fire(m_fire),
-	.bomb(m_bomb),
-	.speed(1),
-	.cont(status[7]),
-	.cocktail(0),
-	.coin_meters(1),
+	.up1(m_up1), 
+	.down1(m_down1),
+	.fire1(m_fire1),
+	.bomb1(m_bomb1),
+	
+	.up2(m_up2), 
+	.down2(m_down2),
+	.fire2(m_fire2),
+	.bomb2(m_bomb2),
+	
+	.speed(status[7]),
 	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
@@ -261,22 +264,21 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-wire m_up     = btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = btn_down | joystick_0[2] | joystick_1[2];
-//wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
-//wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up1     = btn_up | joystick_0[3];
+wire m_down1   = btn_down | joystick_0[2];
+wire m_fire1   = btn_fire1 | joystick_0[4];
+wire m_bomb1   = btn_fire2 | joystick_0[5];
+
+wire m_up2     = joystick_1[3];
+wire m_down2   = joystick_1[2];
+wire m_fire2   = joystick_1[4];
+wire m_bomb2   = joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
+reg btn_dogfight = 0;
 reg btn_down = 0;
 reg btn_up = 0;
-reg btn_f = 0;
-reg btn_g = 0;
-reg btn_t = 0;
 reg btn_fire1 = 0;
 reg btn_fire2 = 0;
 //reg btn_fire3 = 0;
@@ -290,12 +292,10 @@ always @(posedge clk_sys) begin
 		case(key_code)		
 			'h75: btn_up          <= key_pressed; // up
 			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
 			'h76: btn_coin        <= key_pressed; // ESC
 			'h05: btn_one_player  <= key_pressed; // F1
 			'h06: btn_two_players <= key_pressed; // F2
-//			'h14: btn_fire3       <= key_pressed; // ctrl
+			'h04: btn_dogfight    <= key_pressed; // F3
 			'h11: btn_fire2       <= key_pressed; // alt
 			'h29: btn_fire1       <= key_pressed; // Space
 		endcase

@@ -11,6 +11,9 @@
    Down : Down
    Fire : Space
    Bomb : ALT
+
+Player 1 Keyboard or Joystick1
+Player 2 Joystick2
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

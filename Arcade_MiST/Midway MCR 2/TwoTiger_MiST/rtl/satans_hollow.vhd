@@ -148,17 +148,18 @@ port(
  start1         : in std_logic; 
  start2         : in std_logic; 
  start3         : in std_logic;
- up             : in std_logic; 
- down           : in std_logic; 
  speed          : in std_logic; 
- fire           : in std_logic;
- bomb        	 : in std_logic;
  
+ up1             : in std_logic; 
+ down1           : in std_logic; 
+ fire1           : in std_logic;
+ bomb1        	 : in std_logic;
+ 
+ up2             : in std_logic; 
+ down2           : in std_logic; 
+ fire2           : in std_logic;
+ bomb2        	 : in std_logic;
 
-
- coin_meters    : in std_logic;
- cocktail       : in std_logic;
- cont           : in std_logic;
  service        : in std_logic;
   
  dbg_cpu_addr : out std_logic_vector(15 downto 0);
@@ -306,10 +307,11 @@ architecture struct of satans_hollow is
  signal input_4   : std_logic_vector(7 downto 0);
  
  signal vga_s_r        : std_logic;
- signal spin_count     : std_logic_vector(9 downto 0);
+ signal spin_count1     : std_logic_vector(9 downto 0);
+ signal spin_count2     : std_logic_vector(9 downto 0);
  signal vga_vs         : std_logic;
- signal angle     : std_logic_vector(6 downto 0);
- signal angle_c     : std_logic_vector(6 downto 0);
+ signal angle1     : std_logic_vector(6 downto 0);
+ signal angle2     : std_logic_vector(6 downto 0);
 begin
 
 clock_vid  <= clock_40;
@@ -324,19 +326,25 @@ begin
 		
 		if vga_s_r ='0' and vga_vs = '1' then	
 			if speed = '0' then
-				if down = '1' then spin_count <= spin_count - 30; end if;
-				if up = '1' then spin_count <= spin_count + 30; end if;
+				if down1 = '1' then spin_count1 <= spin_count1 - 30; end if;
+				if up1 = '1' then spin_count1 <= spin_count1 + 30; end if;
+				
+				if down2 = '1' then spin_count2 <= spin_count2 - 30; end if;
+				if up2 = '1' then spin_count2 <= spin_count2 + 30; end if;
 			else
-				if down = '1' then spin_count <= spin_count - 40; end if;
-				if up = '1' then spin_count <= spin_count + 40; end if;
+				if down1 = '1' then spin_count1 <= spin_count1 - 40; end if;
+				if up1 = '1' then spin_count1 <= spin_count1 + 40; end if;
+				
+				if down2 = '1' then spin_count2 <= spin_count2 - 40; end if;
+				if up2 = '1' then spin_count2 <= spin_count2 + 40; end if;
 			end if;	
 		end if;								
 	end if;
 end process;
 
 
-angle <= spin_count(9 downto 3);	
-angle_c <= spin_count(9 downto 3);		
+angle1 <= spin_count1(9 downto 3);	
+angle2 <= spin_count2(9 downto 3);		
 -- make enables clock from clock_vid
 process (clock_vid, reset)
 begin
@@ -426,10 +434,10 @@ end process;
 --------------------
 -- "11" for test & tilt & unused
 input_0 <= not service & "11" & not start3 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= '1' & angle;
-input_2 <= "1111" & not bomb & not fire & not bomb & not fire; 
+input_1 <= '1' & angle1;
+input_2 <= "1111" & not bomb2 & not fire2 & not bomb1 & not fire1; 
 input_3 <= x"ff";
-input_4 <= '1' & angle;
+input_4 <= '1' & angle2;
 
 
 ------------------------------------------
