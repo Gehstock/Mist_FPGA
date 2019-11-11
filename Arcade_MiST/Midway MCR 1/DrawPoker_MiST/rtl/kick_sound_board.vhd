@@ -69,7 +69,10 @@ port(
  input_3 : in std_logic_vector(7 downto 0);
  input_4 : in std_logic_vector(7 downto 0);
  separate_audio : in std_logic;
- 
+ cpu_rom_addr : out std_logic_vector(13 downto 0);
+ cpu_rom_do   : in std_logic_vector(7 downto 0);
+ cpu_rom_rd   : out std_logic;
+
  audio_out_l : out std_logic_vector(15 downto 0);
  audio_out_r : out std_logic_vector(15 downto 0);
   
@@ -98,8 +101,6 @@ architecture struct of kick_sound_board is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
- 
- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
  
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
@@ -431,12 +432,9 @@ port map(
 );
 
 -- cpu program ROM 0x0000-0x3FFF
-rom_cpu : entity work.draw_sound_cpu
-port map(
- clk  => clock_sndn,
- addr => cpu_addr(12 downto 0),
- data => cpu_rom_do
-);
+cpu_rom_addr <= cpu_addr(13 downto 0);
+cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 14) = "00" else '0'; -- 0x0000-0x3FFF
+
 
 -- working RAM   0x8000-0x83FF
 wram : entity work.gen_ram

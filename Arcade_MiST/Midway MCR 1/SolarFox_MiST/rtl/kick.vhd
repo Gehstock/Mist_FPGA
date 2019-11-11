@@ -180,7 +180,12 @@ port(
  dbg_cpu_addr 		: out std_logic_vector(15 downto 0);
  cpu_rom_addr 		: out std_logic_vector(14 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
- cpu_rom_rd   		: out std_logic
+ cpu_rom_rd   		: out std_logic;
+
+ snd_rom_addr 		: out std_logic_vector(13 downto 0);
+ snd_rom_do     	: in std_logic_vector(7 downto 0);
+ snd_rom_rd   		: out std_logic
+
  );
 end kick;
 
@@ -861,7 +866,10 @@ port map(
  input_1 => input_1,
  input_2 => input_2,
  input_3 => input_3,
- 
+ cpu_rom_addr   => snd_rom_addr,
+ cpu_rom_do     => snd_rom_do,
+ cpu_rom_rd     => snd_rom_rd,
+
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,

@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Solar Fox by DarFPGA
+//  Arcade: Two Tigers Tron-Conversation by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module SolarFox_MiST(
+module TwoTigers_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -32,7 +32,6 @@ module SolarFox_MiST(
 	input         SPI_SS3,
 	input         CONF_DATA0,
 	input         CLOCK_27,
-
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
@@ -49,18 +48,18 @@ module SolarFox_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"SOLARFOX;;",
-	"O2,Rotate Controls,Off,On;",
+	"TWOTIGER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
+	"O7,Allow Continue,Off,On;",
 	"T0,Reset;",
-	"V,v1.1.",`BUILD_DATE
+	"V,v1.0.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sys;
-assign SDRAM_CKE= 1;
+assign SDRAM_CKE = 1;
 
 wire clk_sys;
 wire pll_locked;
@@ -105,7 +104,7 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
+
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
@@ -139,7 +138,7 @@ always @(posedge clk_sys) begin
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
 		snd_addr_last <= 14'h2fff;
-		rom_addr_last <= 15'h6fff;
+		rom_addr_last <= 15'h7fff;//111 1111 1111 1111
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
@@ -166,7 +165,7 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-kick kick(
+satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -180,26 +179,26 @@ kick kick(
 	.audio_out_r(audio_r),
 	.coin1(btn_coin),
 	.coin2(1'b0),
+	.start3(),//dogfight
 	.start2(btn_two_players),
 	.start1(btn_one_player),
-	.service_toggle(status[6]),
-	.fire1(m_fire),
-	.fire2(m_fire),
-	.left1(m_left),
-	.right1(m_right),
-	.up1(m_up),
-	.down1(m_down),
-	.left2(m_left),
-	.right2(m_right),
-	.up2(m_up),
-	.down2(m_down),
+	
+	.up(m_up), 
+	.down(m_down),
+	.fire(m_fire),
+	.bomb(m_bomb),
+	.speed(1),
+	.cont(status[7]),
+	.cocktail(0),
+	.coin_meters(1),
+	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.cpu_rom_rd   ( rom_rd          ),
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_rom_rd   ( snd_rd          )
- );
+);
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -216,7 +215,6 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b1,status[2]} ),
 	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
@@ -263,13 +261,12 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_up     = btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = btn_down | joystick_0[2] | joystick_1[2];
+//wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
+//wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-//wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
@@ -277,8 +274,11 @@ reg btn_left = 0;
 reg btn_right = 0;
 reg btn_down = 0;
 reg btn_up = 0;
+reg btn_f = 0;
+reg btn_g = 0;
+reg btn_t = 0;
 reg btn_fire1 = 0;
-//reg btn_fire2 = 0;
+reg btn_fire2 = 0;
 //reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       key_pressed;
@@ -287,7 +287,7 @@ wire       key_strobe;
 
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
-		case(key_code)
+		case(key_code)		
 			'h75: btn_up          <= key_pressed; // up
 			'h72: btn_down        <= key_pressed; // down
 			'h6B: btn_left        <= key_pressed; // left
@@ -296,7 +296,7 @@ always @(posedge clk_sys) begin
 			'h05: btn_one_player  <= key_pressed; // F1
 			'h06: btn_two_players <= key_pressed; // F2
 //			'h14: btn_fire3       <= key_pressed; // ctrl
-//			'h11: btn_fire2       <= key_pressed; // alt
+			'h11: btn_fire2       <= key_pressed; // alt
 			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end
