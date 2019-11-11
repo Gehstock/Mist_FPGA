@@ -7,6 +7,7 @@
    Coin : ESC
    Start 1 Player : F1
    Start 2 Player : F2
+   Dogfight : F3
    Up : Up
    Down : Down
    Fire : Space
