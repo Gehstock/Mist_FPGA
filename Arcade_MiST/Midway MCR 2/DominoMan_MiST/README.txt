@@ -1,20 +1,10 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Two Tigers port to MiST by Gehstock
+-- Arcade: Domino Man port to MiST by Gehstock
 -- 11 November 2019
 -- 
 -- VGA Only
-   Coin : ESC
-   Start 1 Player : F1
-   Start 2 Player : F2
-   Dogfight : F3
-   Up : Up
-   Down : Down
-   Fire : Space
-   Bomb : ALT
 
-Player 1 Keyboard or Joystick1
-Player 2 Joystick2
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

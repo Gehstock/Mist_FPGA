@@ -104,6 +104,7 @@ Aviable Arcade Cores
 	Solar fox
 
 #Midway MCR 2
+	Domino Man
 	Two Tigers(Tron Conversation)
 
 #Namco Rally X Hardware
