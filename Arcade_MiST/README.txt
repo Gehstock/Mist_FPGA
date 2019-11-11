@@ -103,6 +103,9 @@ Aviable Arcade Cores
 	Kickman
 	Solar fox
 
+#Midway MCR 2
+	Two Tigers(Tron Conversation)
+
 #Namco Rally X Hardware
 	Rally X
 
