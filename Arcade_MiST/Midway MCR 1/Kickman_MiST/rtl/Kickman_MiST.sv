@@ -131,14 +131,14 @@ sdram sdram(
 );
 
 always @(posedge clk_sys) begin
-	reg [14:1] rom_addr_last;
-	reg [13:1] snd_addr_last;
+	reg [16:1] rom_addr_last;
+	reg [15:1] snd_addr_last;
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		snd_addr_last <= 13'h1fff;
-		rom_addr_last <= 14'h3fff;
+		snd_addr_last <= 14'h3fff;
+		rom_addr_last <= 15'h5fff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;

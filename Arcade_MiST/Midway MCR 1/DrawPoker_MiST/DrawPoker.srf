@@ -1,0 +1,3 @@
+{ "" "" "" "Node: kick:kick\|kick_sound_board:sound_board\|YM2149:ay_3_8910_1\|env_reset was determined to be a clock but was found without an associated clock assignment." {  } {  } 0 332060 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 14026 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "*" {  } {  } 0 332060 "" 0 0 "Quartus II" 0 -1 0 ""}

@@ -138,7 +138,7 @@ always @(posedge clk_sys) begin
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
 		snd_addr_last <= 14'h2fff;
-		rom_addr_last <= 15'h7fff;//111 1111 1111 1111
+		rom_addr_last <= 15'h7fff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;

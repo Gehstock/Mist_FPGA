@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Draw Poker by DarFPGA
+//  Arcade: Kickman by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module DrawPoker_MiST(
+module Tron_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -32,7 +32,6 @@ module DrawPoker_MiST(
 	input         SPI_SS3,
 	input         CONF_DATA0,
 	input         CLOCK_27,
-
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
@@ -49,10 +48,12 @@ module DrawPoker_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"DPOKER;;",
+	"TRON;;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"O5,Blend,Off,On;",//ugly, Frequency?
-	"O6,BG Color ,Green,Blue;",
+	"O5,Blend,Off,On;",
+	"O6,Service,Off,On;",
+	"O7,Allow Continue,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -81,7 +82,7 @@ wire [15:0] audio_l, audio_r;
 wire        hs, vs;
 wire        blankn;
 wire  [3:0] g, r, b;
-wire [14:0] rom_addr;
+wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
 wire [13:0] snd_addr;
@@ -104,7 +105,7 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
+
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
@@ -114,7 +115,7 @@ sdram sdram(
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
 	.port1_ack     (),
-	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[14:1] ),
+	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[15:1] ),
 	.port1_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
@@ -123,7 +124,7 @@ sdram sdram(
 	// port2 for sound board
 	.port2_req     ( port2_req ),
 	.port2_ack     (),
-	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h4000 : snd_addr[13:1] ),
+	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'hC000 : snd_addr[13:1] ),
 	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
@@ -131,21 +132,21 @@ sdram sdram(
 );
 
 always @(posedge clk_sys) begin
-	reg [16:1] rom_addr_last;
+	reg [17:1] rom_addr_last;
 	reg [15:1] snd_addr_last;
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		snd_addr_last <= 13'h1fff;
-		rom_addr_last <= 15'h6fff;
+		snd_addr_last <= 14'h2fff;
+		rom_addr_last <= 16'hbfff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
 	end else begin
-		if (rom_rd && rom_addr_last != rom_addr[14:1]) begin
-			rom_addr_last <= rom_addr[14:1];
+		if (rom_rd && rom_addr_last != rom_addr[15:1]) begin
+			rom_addr_last <= rom_addr[15:1];
 			port1_req <= ~port1_req;
 		end
 		if (snd_rd && snd_addr_last != snd_addr[13:1]) begin
@@ -165,7 +166,7 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-kick kick(
+satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -177,26 +178,37 @@ kick kick(
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
-	.bgcolor(status[6]),
-	.STAND(btn_stand), 
-	.CANCEL(btn_cancel), 
-	.DEAL(btn_deal), 
-	.HOLD5(btn_hold5), 
-	.HOLD4(btn_hold4), 
-	.HOLD3(btn_hold3), 
-	.HOLD2(btn_hold2),
-	.HOLD1(btn_hold1),
-	.COIN1(btn_coin),
-	.COIN2(1'b0),
-	.GAMBLE_IN(btn_gamble_in),
-	.GAMBLE_OUT(btn_gamble_out),
+	.coin1(btn_coin),
+	.coin2(1'b0),
+	.start2(btn_two_players),
+	.start1(btn_one_player),
+	
+	.left(m_left), 
+	.right(m_right),
+	.up(m_up),
+	.down(m_down), 
+	.fire(m_fire),
+	
+	.left_c(0),
+	.right_c(0),
+	.up_c(0),
+	.down_c(0),
+	.fire_c(0),
+
+	.buttonf(btn_f),
+	.buttong(btn_g),
+	.buttont(btn_t),
+	.cont(status[7]),
+	.cocktail(0),
+	.coin_meters(1),
+	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.cpu_rom_rd   ( rom_rd          ),
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_rom_rd   ( snd_rd          )
- );
+);
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -213,9 +225,10 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.ce_divider		 ( 1					  ),
-	.blend			 (	status[5]		  ),
-	.scandoubler_disable(1				  ),
+	.rotate         ( {1'b1,status[2]} ),
+	.ce_divider     ( 1                ),
+	.blend          ( status[5]        ),
+	.scandoubler_disable(1),//scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);
@@ -259,17 +272,26 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-	
-reg btn_gamble_in = 0;
-reg btn_gamble_out = 0;
-reg btn_stand = 0;
-reg btn_cancel = 0;
-reg btn_deal = 0;
-reg btn_hold1 = 0;
-reg btn_hold2 = 0;
-reg btn_hold3 = 0;
-reg btn_hold4 = 0;
-reg btn_hold5 = 0;
+//											Rotated														Normal
+wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
+//wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+
+reg btn_one_player = 0;
+reg btn_two_players = 0;
+reg btn_left = 0;
+reg btn_right = 0;
+reg btn_down = 0;
+reg btn_up = 0;
+reg btn_f = 0;
+reg btn_g = 0;
+reg btn_t = 0;
+reg btn_fire1 = 0;
+//reg btn_fire2 = 0;
+//reg btn_fire3 = 0;
 reg btn_coin  = 0;
 wire       key_pressed;
 wire [7:0] key_code;
@@ -277,19 +299,21 @@ wire       key_strobe;
 
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
-		case(key_code)			
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h11: btn_stand       <= key_pressed; // left ALT			
-			'h14: btn_cancel      <= key_pressed; // left ctrl
-			'h29: btn_deal        <= key_pressed; // Space
-			'h2E: btn_hold5       <= key_pressed; // 5
-			'h25: btn_hold4       <= key_pressed; // 4
-			'h26: btn_hold3       <= key_pressed; // 3
-			'h1E: btn_hold2       <= key_pressed; // 2
-			'h16: btn_hold1       <= key_pressed; // 1
+		case(key_code)
+			'h2B: btn_f          <= key_pressed; // f
+			'h34: btn_g          <= key_pressed; // g
+			'h2C: btn_t          <= key_pressed; // t
 			
-			'h75: btn_gamble_in       <= key_pressed; // Up
-			'h72: btn_gamble_out      <= key_pressed; // Down
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
+			'h6B: btn_left        <= key_pressed; // left
+			'h74: btn_right       <= key_pressed; // right
+			'h76: btn_coin        <= key_pressed; // ESC
+			'h05: btn_one_player  <= key_pressed; // F1
+			'h06: btn_two_players <= key_pressed; // F2
+//			'h14: btn_fire3       <= key_pressed; // ctrl
+//			'h11: btn_fire2       <= key_pressed; // alt
+			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end
 end
