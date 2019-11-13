@@ -105,6 +105,8 @@ Aviable Arcade Cores
 
 #Midway MCR 2
 	Domino Man
+	Satans Hollow
+	Tron
 	Two Tigers(Tron Conversation)
 
 #Namco Rally X Hardware
