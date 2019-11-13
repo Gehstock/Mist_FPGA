@@ -4,6 +4,12 @@
 -- 13 November 2019
 -- 
 -- VGA Only
+  Coin : ESC
+  Start : F1 or F2
+  Aim : Button F and G
+  Movement : Joystick or Arrow Keys
+  Fire :  Fire Button or Space
+	
 
 -- Some Controls needs a Fix
 ---------------------------------------------------------------------------------

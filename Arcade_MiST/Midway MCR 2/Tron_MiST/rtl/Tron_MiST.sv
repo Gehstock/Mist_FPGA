@@ -124,7 +124,7 @@ sdram sdram(
 	// port2 for sound board
 	.port2_req     ( port2_req ),
 	.port2_ack     (),
-	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'hC000 : snd_addr[13:1] ),
+	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h8000 : snd_addr[13:1] ),//8000 C000
 	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),

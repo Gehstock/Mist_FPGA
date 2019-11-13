@@ -391,7 +391,7 @@ begin
 				if vcnt = 492-1 then vga_vs <= '1'; end if; -- sync pulse   2
 																			 -- back porch  33 
 																		 
-				if hcnt = 512+35 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
+				if hcnt = 512+40 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
 				if hcnt = 512+90+9 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
 																				  -- back porch  48/25*20 = 38
 				video_blankn <= '0';
