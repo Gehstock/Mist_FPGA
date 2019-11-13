@@ -1,17 +1,18 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: SatansHollow port to MiST by Gehstock
+-- Arcade: Tron port to MiST by Gehstock
 -- 13 November 2019
 -- 
 -- VGA Only
+
+Controls 
+
   Coin : ESC
   Start : F1 or F2
   Aim : Button F and G
   Movement : Joystick or Arrow Keys
   Fire :  Fire Button or Space
-	
 
--- Some Controls needs a Fix
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

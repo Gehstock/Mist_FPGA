@@ -161,7 +161,7 @@ port(
  cocktail       : in std_logic;
  coin_meters    : in std_logic;
 
- service_toggle : in std_logic;
+ service 		 : in std_logic;
   
  dbg_cpu_addr : out std_logic_vector(15 downto 0);
  cpu_rom_addr 		: out std_logic_vector(15 downto 0);
@@ -238,12 +238,10 @@ architecture struct of satans_hollow is
  signal bg_code         : std_logic_vector(7 downto 0); 
  signal bg_code_r       : std_logic_vector(7 downto 0); 
  signal bg_attr         : std_logic_vector(7 downto 0);
- --signal bg_attr_r       : std_logic_vector(7 downto 0);
 
  signal bg_code_line    : std_logic_vector(12 downto 0);
  signal bg_graphx1_do   : std_logic_vector( 7 downto 0);
  signal bg_graphx2_do   : std_logic_vector( 7 downto 0);
- --signal bg_vid          : std_logic_vector( 3 downto 0);
  signal bg_palette_addr : std_logic_vector( 5 downto 0);
  
  signal sp_ram_cache_addr       : std_logic_vector(8 downto 0);
@@ -305,9 +303,6 @@ architecture struct of satans_hollow is
  signal input_1       : std_logic_vector(7 downto 0);
  signal input_2       : std_logic_vector(7 downto 0);
  signal input_3       : std_logic_vector(7 downto 0);
- 
- signal service_toggle_r : std_logic;
- signal service          : std_logic;
    
 begin
 
@@ -315,13 +310,6 @@ clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
 
--- debug 
-process (reset, clock_vid)
-begin
- if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
-   dbg_cpu_addr<= "000000000000000"&service; --cpu_addr;
- end if;
-end process;
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -376,32 +364,6 @@ begin
 				video_blankn <= '0';
 				if hcnt >= 2+16 and  hcnt < 514+16 and
 					vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
-				
---			   -- test pattern
---
---				video_blankn <= '1';
---
---				video_r <= "0000";
---				video_g <= "0000";
---				video_b <= "0000";
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_b <= "0100"; end if;
---
---				if hcnt >= 1 and  hcnt < 511 and
---					vcnt >= 1 and  vcnt < 479 then video_r <= "0100"; end if;
---			
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_g <= "0100"; end if;
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 and 
---					hcnt(5 downto 0) = vcnt(5 downto 0) then 
---						video_r <= "1100";
---						video_g <= "1100";
---						video_b <= "1100";
---				end if;
-		
 			end if;
 		end if;
 	end if;
@@ -417,36 +379,21 @@ input_1 <= not fire1_c & not fire2_c & not right_c & not left_c & not fire1 & no
 input_2 <= x"FF";
 input_3 <= "111111" & cocktail & coin_meters;
 
-process (clock_vid, reset)
-begin
-	if reset = '1' then
-		service <= '0';
-	else
-		if rising_edge(clock_vid) then
-			service_toggle_r <= service_toggle;
-		
-			if service_toggle_r = '0' and service_toggle ='1' then 
-				service <= not service;
-			end if;
-			
-		end if;
-	end if;
-end process;
 
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
-			 wram_do     		when cpu_mreq_n = '0' and cpu_addr(15 downto 13) = "110"   else -- C000-C7FF/C800-CFFF/D000-D7FF/D800-DFFF
-			 sp_ram_cache_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 11) = "11110" else -- sprite ram  F000-F1FF + mirroring adresses
-			 bg_ram_do_r      when cpu_mreq_n = '0' and cpu_addr(15 downto 11) = "11111" else -- video ram   F800-FFFF + mirroring adresses
-			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
-			 ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = X"0"  else
- 			 ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
-   		 X"FF";
+cpu_di <= cpu_rom_do       when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
+          wram_do          when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"C000" else -- C000-C7FF + mirroring 1800
+          sp_ram_cache_do  when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E000" else -- sprite ram  E000-E1FF + mirroring 1600
+          bg_ram_do_r      when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E800" else -- video ram   E800-EFFF + mirroring 1000
+          ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
+          ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000" else  -- 0x00-0x1F
+          ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
+          ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
+          ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
+          ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
+          X"FF";
 		 
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
@@ -462,10 +409,10 @@ ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
 ------------------------------------------
 -- write enable / ram access from CPU --
 ------------------------------------------
-wram_we                 <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"C"    else '0';
-sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "11110" else '0';
-sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11110" else '0';
-bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11111" and hcnt(0) = '0' else '0';
+wram_we                 <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E000") = x"C000" else '0';
+sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E800") = x"E000" else '0';
+sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E000" else '0';
+bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E800" and hcnt(0) = '0' else '0';
 bg_ram_we               <= '1' when bg_ram_cpu_access = '1' and cpu_wr_n = '0' else '0';
 
 ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
@@ -586,26 +533,15 @@ begin
 	
 		if hcnt(0) = '0' then bg_ram_do_r <= bg_ram_do; end if;
 
-		if pix_ena = '1' then
-				
---			if hcnt(3 downto 0) = "1101" then 
---				bg_code <= bg_ram_do;
---			end if;
---		
---			if hcnt(3 downto 0) = "1111" then 
---				bg_code_r <= bg_code;
---				bg_attr <= bg_ram_do;		
---			end if;
-		
+		if pix_ena = '1' then	
 			if hcnt(0) = '1' then
 				case hcnt(3 downto 1) is
 					when "110" =>  bg_code   <= bg_ram_do;
 					when "111" =>  bg_attr   <= bg_ram_do;		
 										bg_code_r <= bg_code;	
 					when others => null;
-				end case;			
-				
-				case hcnt(2 downto 1) is
+				end case;				
+				case hcnt(2 downto 1) xor (bg_attr(1) & bg_attr(1)) is
 					when "00"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
 					when "01"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
 					when "10"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
@@ -883,6 +819,7 @@ port map(
  input_1 => input_1,
  input_2 => input_2,
  input_3 => input_3,
+ input_4 => x"FF",
  
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,

@@ -54,7 +54,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v1.1.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;
@@ -194,7 +194,7 @@ satans_hollow satans_hollow(
 
 	.cocktail(0),
 	.coin_meters(),
-	.service_toggle(status[6]),
+	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.cpu_rom_rd   ( rom_rd          ),

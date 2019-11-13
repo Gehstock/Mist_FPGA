@@ -2,6 +2,13 @@
 -- Tron by Dar (darfpga@aol.fr) (09/11/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
+--
+--  release 01 : improve ssio read input (fix mirror addressing)
+--               improve memory access (fix mirror addressing)
+--
+--  release 00 : initial release
+--
+---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
 -------------------------------- 
 -- Copyright 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -26,12 +33,12 @@
 --   Coctail mode : NO
 --   Sound        : OK
 
---  Use with MAME roms from shollow.zip
+--  Use with MAME roms from tron.zip
 --
---  Use make_satans_hollow_proms.bat to build vhd file from binaries
+--  Use make_tron_hollow_proms.bat to build vhd file from binaries
 --  (CRC list included)
 
---  Satans hollow (midway mcr) Hardware caracteristics :
+--  Tron (midway mcr) Hardware caracteristics :
 --
 --  VIDEO : 1xZ80@3MHz CPU accessing its program rom, working ram,
 --    sprite data ram, I/O, sound board register and trigger.
@@ -51,7 +58,7 @@
 
 --    Sprites line buffer rams : 1 scan line delay flip/flop 2x256x8bits
 --
---  SOUND : see satans_hollow_sound_board.vhd
+--  SOUND : see tron_hollow_sound_board.vhd
 
 ---------------------------------------------------------------------------------
 --  Schematics remarks :
@@ -120,6 +127,7 @@
 --
 ---------------------------------------------------------------------------------
 
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
@@ -156,6 +164,7 @@ port(
  buttonf        : in std_logic;
  buttong        : in std_logic;
  buttont        : in std_logic;
+ 
  left_c         : in std_logic; 
  right_c        : in std_logic; 
  up_c           : in std_logic;
@@ -243,12 +252,10 @@ architecture struct of satans_hollow is
  signal bg_code         : std_logic_vector(7 downto 0); 
  signal bg_code_r       : std_logic_vector(7 downto 0); 
  signal bg_attr         : std_logic_vector(7 downto 0);
- --signal bg_attr_r       : std_logic_vector(7 downto 0);
 
  signal bg_code_line    : std_logic_vector(12 downto 0);
  signal bg_graphx1_do   : std_logic_vector( 7 downto 0);
  signal bg_graphx2_do   : std_logic_vector( 7 downto 0);
- --signal bg_vid          : std_logic_vector( 3 downto 0);
  signal bg_palette_addr : std_logic_vector( 5 downto 0);
  
  signal sp_ram_cache_addr       : std_logic_vector(8 downto 0);
@@ -397,32 +404,6 @@ begin
 				video_blankn <= '0';
 				if hcnt >= 2+16 and  hcnt < 514+16 and
 					vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
-				
---			   -- test pattern
---
---				video_blankn <= '1';
---
---				video_r <= "0000";
---				video_g <= "0000";
---				video_b <= "0000";
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_b <= "0100"; end if;
---
---				if hcnt >= 1 and  hcnt < 511 and
---					vcnt >= 1 and  vcnt < 479 then video_r <= "0100"; end if;
---			
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_g <= "0100"; end if;
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 and 
---					hcnt(5 downto 0) = vcnt(5 downto 0) then 
---						video_r <= "1100";
---						video_g <= "1100";
---						video_b <= "1100";
---				end if;
-		
 			end if;
 		end if;
 	end if;
@@ -441,17 +422,17 @@ input_4 <= '1' & angle_c;
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
-			 wram_do     		when cpu_mreq_n = '0' and cpu_addr(15 downto 13) = "110"   else -- C000-C7FF/C800-CFFF/D000-D7FF/D800-DFFF
-			 sp_ram_cache_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 11) = "11110" else -- sprite ram  F000-F1FF + mirroring adresses
-			 bg_ram_do_r      when cpu_mreq_n = '0' and cpu_addr(15 downto 11) = "11111" else -- video ram   F800-FFFF + mirroring adresses
-			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
-			 ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = X"0"  else
- 			 ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
-   		 X"FF";
+cpu_di <= cpu_rom_do       when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
+          wram_do          when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"C000" else -- C000-C7FF + mirroring 1800
+          sp_ram_cache_do  when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E000" else -- sprite ram  E000-E1FF + mirroring 1600
+          bg_ram_do_r      when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E800" else -- video ram   E800-EFFF + mirroring 1000
+          ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
+          ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000" else  -- 0x00-0x1F
+          ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
+          ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
+          ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
+          ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
+          X"FF";
 		 
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
@@ -467,10 +448,10 @@ ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
 ------------------------------------------
 -- write enable / ram access from CPU --
 ------------------------------------------
-wram_we                 <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"C"    else '0';
-sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "11110" else '0';
-sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11110" else '0';
-bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11111" and hcnt(0) = '0' else '0';
+wram_we                 <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E000") = x"C000" else '0';
+sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E800") = x"E000" else '0';
+sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E000" else '0';
+bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E800" and hcnt(0) = '0' else '0';
 bg_ram_we               <= '1' when bg_ram_cpu_access = '1' and cpu_wr_n = '0' else '0';
 
 ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
