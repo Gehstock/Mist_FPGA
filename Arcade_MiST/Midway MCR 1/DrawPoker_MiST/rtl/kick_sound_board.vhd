@@ -238,13 +238,14 @@ ay1_bc1  <= not (not ay1_cs or cpu_addr(1) );
 ay2_bdir <= not (not ay2_cs or cpu_addr(0) );
 ay2_bc1  <= not (not ay2_cs or cpu_addr(1) );
 
-ssio_do <= input_0     when main_cpu_addr = X"00" else -- Input 0 -- players, coins, ...
-           input_1     when main_cpu_addr = X"01" else -- Input 1
-			  input_2     when main_cpu_addr = X"02" else -- Input 2 
-			  input_3     when main_cpu_addr = X"03" else -- Input 3 -- sw1 dip 
-			  input_4       when main_cpu_addr = X"04" else -- Input 4 -- sw2 dip 
-			  ssio_status when main_cpu_addr = X"07" else -- ssio status
-			  x"FF";
+ssio_do <= input_0     when main_cpu_addr(2 downto 0) = "000" else -- Input 0 -- players, coins, ...
+           input_1     when main_cpu_addr(2 downto 0) = "001" else -- Input 1 
+           input_2     when main_cpu_addr(2 downto 0) = "010" else -- Input 2
+		     input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
+		     input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
+		     ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
+		     x"FF";
+
 		
 process (clock_snd)
 begin

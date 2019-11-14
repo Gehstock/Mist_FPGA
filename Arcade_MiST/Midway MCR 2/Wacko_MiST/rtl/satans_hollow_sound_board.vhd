@@ -66,8 +66,10 @@ port(
  input_0 : in std_logic_vector(7 downto 0);
  input_1 : in std_logic_vector(7 downto 0);
  input_2 : in std_logic_vector(7 downto 0);
+ input_1_alt : in std_logic_vector(7 downto 0);
+ input_2_alt : in std_logic_vector(7 downto 0);
  input_3 : in std_logic_vector(7 downto 0);
- input_4 : in std_logic_vector(7 downto 0); 
+ input_4 : in std_logic_vector(7 downto 0);
  separate_audio : in std_logic;
  
  audio_out_l : out std_logic_vector(15 downto 0);
@@ -226,9 +228,6 @@ cpu_di <= cpu_rom_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 14) = "00" el
 
 ------------------------------------------
 -- write enable to working ram from CPU --
--- clear interrupt, cs for AY3-8910     --
--- ssio output to main cpu (read input) --
--- ssio status to main cpu              --
 ------------------------------------------
 wram_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"8" else '0'; -- 0x8000-0x83FF
 clr_int   <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) = X"E" else '0'; -- 0xE000-0xEFFF
@@ -244,10 +243,10 @@ ay2_bc1  <= not (not ay2_cs or cpu_addr(1) );
 ssio_do <= input_0     when main_cpu_addr(2 downto 0) = "000" else -- Input 0 -- players, coins, ...
            input_1     when main_cpu_addr(2 downto 0) = "001" else -- Input 1 
            input_2     when main_cpu_addr(2 downto 0) = "010" else -- Input 2
-			  input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
-		     input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
-		     ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
-		     x"FF";
+		   input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
+		   input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
+		   ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
+		   x"FF";
 		
 process (clock_snd)
 begin

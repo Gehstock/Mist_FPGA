@@ -1,11 +1,9 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Domino Man port to MiST by Gehstock
--- 11 November 2019
+-- Arcade: SatansHollow port to MiST by Gehstock
+-- 10 November 2019
 -- 
 -- VGA Only
-
-- minor Graphic Problems
 
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)

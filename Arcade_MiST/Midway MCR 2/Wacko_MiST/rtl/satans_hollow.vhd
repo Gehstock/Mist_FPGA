@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Two Tigers by Dar (darfpga@aol.fr) (09/11/2019)
+-- Satans Hollow by Dar (darfpga@aol.fr) (09/11/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -136,8 +136,8 @@ port(
  video_clk      : out std_logic;
  --video_csync    : out std_logic;
  video_blankn   : out std_logic;
- video_vs       : out std_logic;
  video_hs       : out std_logic;
+ video_vs       : out std_logic;
  
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
@@ -146,24 +146,28 @@ port(
  coin1          : in std_logic;
  coin2          : in std_logic;
  start1         : in std_logic; 
- start2         : in std_logic; 
- start3         : in std_logic;
- speed          : in std_logic; 
- 
- up1             : in std_logic; 
- down1           : in std_logic; 
- fire1           : in std_logic;
- bomb1        	 : in std_logic;
- 
- up2             : in std_logic; 
- down2           : in std_logic; 
- fire2           : in std_logic;
- bomb2        	 : in std_logic;
+ start2         : in std_logic;  
+ trackX1         : in std_logic_vector(7 downto 0);
+ trackY1         : in std_logic_vector(7 downto 0);
+ trackX2         : in std_logic_vector(7 downto 0);
+ trackY2         : in std_logic_vector(7 downto 0);
+ up2         : in std_logic; 
+ down2         : in std_logic; 
+ left2         : in std_logic; 
+ right2         : in std_logic; 
+ up1         : in std_logic; 
+ down1         : in std_logic; 
+ left1         : in std_logic; 
+ right1         : in std_logic; 
+ tilt           : in std_logic; 
 
- service        : in std_logic;
+ cocktail       : in std_logic;
+ coin_meters    : in std_logic;
+
+ service : in std_logic;
   
  dbg_cpu_addr : out std_logic_vector(15 downto 0);
- cpu_rom_addr 		: out std_logic_vector(15 downto 0);
+ cpu_rom_addr 		: out std_logic_vector(14 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
  cpu_rom_rd   		: out std_logic;
 
@@ -300,51 +304,28 @@ architecture struct of satans_hollow is
  signal ssio_iowe    : std_logic;
  signal ssio_do      : std_logic_vector(7 downto 0);
  
- signal input_0   : std_logic_vector(7 downto 0);
- signal input_1   : std_logic_vector(7 downto 0);
- signal input_2   : std_logic_vector(7 downto 0);
- signal input_3   : std_logic_vector(7 downto 0);
- signal input_4   : std_logic_vector(7 downto 0);
- 
- signal vga_s_r        : std_logic;
- signal spin_count1     : std_logic_vector(9 downto 0);
- signal spin_count2     : std_logic_vector(9 downto 0);
- signal vga_vs         : std_logic;
- signal angle1     : std_logic_vector(6 downto 0);
- signal angle2     : std_logic_vector(6 downto 0);
+ signal input_0       : std_logic_vector(7 downto 0);
+ signal input_1       : std_logic_vector(7 downto 0);
+ signal input_2       : std_logic_vector(7 downto 0);
+ signal input_1_alt       : std_logic_vector(7 downto 0);
+ signal input_2_alt       : std_logic_vector(7 downto 0);
+ signal input_3       : std_logic_vector(7 downto 0);
+ signal input_4       : std_logic_vector(7 downto 0); 
+   
 begin
 
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
-video_vs <= vga_vs;
 
-process (clock_40)
+-- debug 
+process (reset, clock_vid)
 begin
-	if rising_edge(clock_40) then
-		vga_s_r <= vga_vs;
-		
-		if vga_s_r ='0' and vga_vs = '1' then	
-			if speed = '0' then
-				if down1 = '1' then spin_count1 <= spin_count1 - 30; end if;
-				if up1 = '1' then spin_count1 <= spin_count1 + 30; end if;
-				
-				if down2 = '1' then spin_count2 <= spin_count2 - 30; end if;
-				if up2 = '1' then spin_count2 <= spin_count2 + 30; end if;
-			else
-				if down1 = '1' then spin_count1 <= spin_count1 - 40; end if;
-				if up1 = '1' then spin_count1 <= spin_count1 + 40; end if;
-				
-				if down2 = '1' then spin_count2 <= spin_count2 - 40; end if;
-				if up2 = '1' then spin_count2 <= spin_count2 + 40; end if;
-			end if;	
-		end if;								
-	end if;
+ if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
+   dbg_cpu_addr<= "000000000000000"&service; --cpu_addr;
+ end if;
 end process;
 
-
-angle1 <= spin_count1(9 downto 3);	
-angle2 <= spin_count2(9 downto 3);		
 -- make enables clock from clock_vid
 process (clock_vid, reset)
 begin
@@ -388,8 +369,8 @@ begin
 					end if;
 				end if;
 			
-				if vcnt = 490-1 then vga_vs <= '0'; end if; -- front porch 10
-				if vcnt = 492-1 then vga_vs <= '1'; end if; -- sync pulse   2
+				if vcnt = 490-1 then video_vs <= '0'; end if; -- front porch 10
+				if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
 																			 -- back porch  33 
 																		 
 				if hcnt = 512+35 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
@@ -406,13 +387,15 @@ end process;
 --------------------
 -- players inputs --
 --------------------
--- "11" for test & tilt & unused
-input_0 <= not service & "11" & not start3 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= '1' & angle1;
-input_2 <= "1111" & not bomb2 & not fire2 & not bomb1 & not fire1; 
-input_3 <= x"ff";
-input_4 <= '1' & angle2;
 
+  
+input_0 <= not service & "111" & not start2 & not start1 & not coin2 & not coin1;
+input_1 <= trackX1;--Trackball
+input_2 <= trackY1;--Trackball
+input_3 <= coin_meters & cocktail & "111111";
+input_4 <= not up2 & not down2  & not left2 & not right2 & not up1 & not down1  & not left1 & not right1;--zap
+input_1_alt <= trackX2;--Trackball
+input_2_alt <= trackY2;--Trackball
 
 ------------------------------------------
 -- cpu data input with address decoding --
@@ -428,6 +411,7 @@ cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C"
  			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
  			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
    		 X"FF";
+
 		 
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
@@ -443,18 +427,18 @@ ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
 ------------------------------------------
 -- write enable / ram access from CPU --
 ------------------------------------------
-wram_we                 <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E000") = x"C000" else '0';
-sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and  cpu_wr_n = '0'                    and (cpu_addr and x"E800") = x"E000" else '0';
-sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E000" else '0';
-bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and (cpu_addr and x"E800") = x"E800" and hcnt(0) = '0' else '0';
+wram_we                 <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"C"    else '0';
+sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 11) = "11110" else '0';
+sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11110" else '0';
+bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto 11) = "11111" and hcnt(0) = '0' else '0';
 bg_ram_we               <= '1' when bg_ram_cpu_access = '1' and cpu_wr_n = '0' else '0';
 
 ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 
-
 ----------------------
 --- sprite machine ---
 ----------------------
+--vflip <= 480-vcnt; -- apply mirror flip
 vflip <= vcnt; -- do not apply mirror flip
 
 process (clock_vid)
@@ -542,11 +526,11 @@ sp_graphx_flip <= sp_graphx_mux when sp_hflip(0) = '0' else
 						sp_graphx_mux(3 downto 0) & sp_graphx_mux(7 downto 4);		
 
 sp_buffer_ram1_di   <= sp_buffer_ram1_do or sp_graphx_flip       when vflip(0) = '1' else "00000000";
-sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '1' else hcnt(8 downto 1) - X"04";
+sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '1' else hcnt(8 downto 1) - X"05";
 sp_buffer_ram1_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '1' else hcnt(0);
 
 sp_buffer_ram2_di   <= sp_buffer_ram2_do or sp_graphx_flip       when vflip(0) = '0' else "00000000";
-sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '0' else hcnt(8 downto 1) - X"04";
+sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '0' else hcnt(8 downto 1) - X"05";
 sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '0' else hcnt(0);
 
 sp_vid_a <= sp_buffer_ram1_do_r(7 downto 4) when (vflip(0) = '0') and (hcnt(0) = '1') else
@@ -568,7 +552,6 @@ begin
 		if hcnt(0) = '0' then bg_ram_do_r <= bg_ram_do; end if;
 
 		if pix_ena = '1' then
-
 			if hcnt(0) = '1' then
 				case hcnt(3 downto 1) is
 					when "110" =>  bg_code   <= bg_ram_do;
@@ -576,13 +559,14 @@ begin
 										bg_code_r <= bg_code;	
 					when others => null;
 				end case;			
-				
 				case hcnt(2 downto 1) xor (bg_attr(1) & bg_attr(1)) is
 					when "00"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
 					when "01"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
 					when "10"   => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
 					when others => bg_palette_addr <= bg_attr(4 downto 3) & bg_graphx2_do(1 downto 0) & bg_graphx1_do(1 downto 0);
 				end case;
+				
+				
 			end if;
 		
 		end if;
@@ -722,7 +706,7 @@ port map(
  
 );
 
-cpu_rom_addr <= cpu_addr(15 downto 0);
+cpu_rom_addr <= cpu_addr(14 downto 0);
 cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) < X"C" else '0';
 
 -- working RAM   0xC000-0xC7FF + mirroring adresses
@@ -792,7 +776,7 @@ port map(
 );
 
 -- background graphics ROM G3
-bg_graphics_1 : entity work.twotiger_bg_bits_1
+bg_graphics_1 : entity work.wacko_bg_bits_1
 port map(
  clk  => clock_vidn,
  addr => bg_code_line,
@@ -800,7 +784,7 @@ port map(
 );
 
 -- background graphics ROM G4
-bg_graphics_2 : entity work.twotiger_bg_bits_2
+bg_graphics_2 : entity work.wacko_bg_bits_2
 port map(
  clk  => clock_vidn,
  addr => bg_code_line,
@@ -808,7 +792,7 @@ port map(
 );
 
 --sprite graphics ROM 1E
-sprite_graphics_1 : entity work.twotiger_sp_bits_1
+sprite_graphics_1 : entity work.wacko_sp_bits_1
 port map(
  clk  => clock_vidn,
  addr => sp_code_line,
@@ -816,7 +800,7 @@ port map(
 );
 
 -- sprite graphics ROM 1D
-sprite_graphics_2 : entity work.twotiger_sp_bits_2
+sprite_graphics_2 : entity work.wacko_sp_bits_2
 port map(
  clk  => clock_vidn,
  addr => sp_code_line,
@@ -824,7 +808,7 @@ port map(
 );
 
 -- sprite graphics ROM 1B
-sprite_graphics_3 : entity work.twotiger_sp_bits_3
+sprite_graphics_3 : entity work.wacko_sp_bits_3
 port map(
  clk  => clock_vidn,
  addr => sp_code_line,
@@ -832,7 +816,7 @@ port map(
 );
 
 -- sprite graphics ROM 1A
-sprite_graphics_4 : entity work.twotiger_sp_bits_4
+sprite_graphics_4 : entity work.wacko_sp_bits_4
 port map(
  clk  => clock_vidn,
  addr => sp_code_line,
@@ -854,9 +838,11 @@ port map(
  input_0 => input_0,
  input_1 => input_1,
  input_2 => input_2,
+ input_1_alt => input_1_alt,
+ input_2_alt => input_2_alt,
  input_3 => input_3,
  input_4 => input_4,
-
+ 
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,

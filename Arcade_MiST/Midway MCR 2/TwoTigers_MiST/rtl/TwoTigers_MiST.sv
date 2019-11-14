@@ -48,13 +48,13 @@ module TwoTigers_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"TWOTIGER;;",
+	"TWOTIGERS;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	//"O7,Spinner Speed,Low,High;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v1.1.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;

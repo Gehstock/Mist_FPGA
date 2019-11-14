@@ -51,7 +51,7 @@ module DrawPoker_MiST(
 localparam CONF_STR = {
 	"DPOKER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"O5,Blend,Off,On;",//ugly, Frequency?
+	"O5,Blend,Off,On;",
 	"O6,BG Color ,Green,Blue;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE

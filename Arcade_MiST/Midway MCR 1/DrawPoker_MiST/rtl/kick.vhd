@@ -170,7 +170,8 @@ port(
  COIN2          : in std_logic;
  GAMBLE_IN      : in std_logic;
  GAMBLE_OUT     : in std_logic;
- bgcolor 		: in std_logic;
+ SERVICE        : in std_logic;
+ bgcolor 		 : in std_logic;
  cpu_rom_addr 		: out std_logic_vector(14 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
  cpu_rom_rd   		: out std_logic;
@@ -323,6 +324,7 @@ architecture struct of kick is
  signal P2C       		: std_logic_vector(7 downto 0);	
  signal mram_we    		: std_logic;
  signal mram_do         : std_logic_vector(7 downto 0);
+ signal p0      			: std_logic_vector(7 downto 0);
 begin
 
 clock_vid  <= clock_40;
@@ -390,7 +392,18 @@ end process;
 --------------------
 -- players inputs --
 --------------------
- 
+--READ8_MEMBER(mcr_dpoker_state::ip0_r){
+--	// d0: Coin-in Hit
+--	// d1: Coin-in Release
+--	// d2: Coin-out Up
+--	// d3: Coin-out Down
+--	// d6: Coin-drop Hit
+--	// d7: Coin-drop Release
+--	uint8_t p0 = ioport("ssio:IP0")->read();
+--	p0 |= (m_coin_status >> 1 & 1);
+--	p0 ^= (p0 << 1 & 0x80) | m_coin_status;
+--	return p0;}
+p0 <= input_0;
 input_0 <= '1' & not COIN2 & not GAMBLE_OUT & not GAMBLE_IN & "111" & not COIN1;
 input_1 <= not STAND & not CANCEL & not DEAL & not HOLD5 & not HOLD4 & not HOLD3 & not HOLD2 & not HOLD1;
 input_2 <= x"FF";								-- only in test mode input test
@@ -441,8 +454,7 @@ ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 ----------------------
 --- sprite machine ---
 ----------------------
-vflip <= 512+vcnt;-- apply mirror flip
-
+vflip <= vcnt; -- do not apply mirror flip
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
