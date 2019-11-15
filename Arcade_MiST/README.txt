@@ -145,6 +145,10 @@ Aviable Arcade Cores
 	Phoenix
 	Pleiads
 
+#Radar Scope Hardware
+	Donkey Kong
+	Donkey Kong Jr.
+
 #Williams 6809 rev.1 Hardware
 	Colony 7
 	Defender
