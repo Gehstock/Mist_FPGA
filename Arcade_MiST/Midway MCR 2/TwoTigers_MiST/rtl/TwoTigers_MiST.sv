@@ -48,7 +48,7 @@ module TwoTigers_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"TWOTIGERS;;",
+	"TWOTIGER;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
