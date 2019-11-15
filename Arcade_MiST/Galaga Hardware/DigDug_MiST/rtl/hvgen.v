@@ -20,12 +20,12 @@ assign VPOS = vcnt;
 
 always @(posedge PCLK) begin
 	case (hcnt)
-		289: begin HBLK <= 1; HSYN <= 0; hcnt <= hcnt+1; end
+		307: begin HBLK <= 1; HSYN <= 0; hcnt <= hcnt+1; end
 		311: begin HSYN <= 1; hcnt <= hcnt+1; end
 		383: begin
 			HBLK <= 0; HSYN <= 1; hcnt <= 0;
 			case (vcnt)
-				223: begin VBLK <= 1; vcnt <= vcnt+1; end
+				225: begin VBLK <= 1; vcnt <= vcnt+1; end
 				226: begin VSYN <= 0; vcnt <= vcnt+1; end
 				233: begin VSYN <= 1; vcnt <= vcnt+1; end
 				262: begin VBLK <= 0; vcnt <= 0; end

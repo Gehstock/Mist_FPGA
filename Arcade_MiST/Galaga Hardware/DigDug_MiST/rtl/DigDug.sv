@@ -38,9 +38,10 @@ localparam CONF_STR = {
 	"OF,Allow Continue,No,Yes;",
 	"OG,Demo Sound,Off,On;",
 	"OH,Service Mode,Off,On;",
+	"O7,Blend ,Off,On;",
 	"O34,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
-	"V,v1.00.",`BUILD_DATE
+	"V,v1.01.",`BUILD_DATE
 };
 
 assign 		LED = ~ioctl_downl;
@@ -51,7 +52,6 @@ wire clock_48, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clock_48),
-//	.c1(SDRAM_CLK),
 	.locked (pll_locked)
 	);
 
@@ -174,6 +174,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
+	.blend    		 ( status[7]        ),
 	.rotate			 ({1'b1,status[2]}  ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),

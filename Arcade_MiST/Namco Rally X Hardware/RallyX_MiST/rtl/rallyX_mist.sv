@@ -24,6 +24,7 @@ localparam CONF_STR = {
 	"OBC,Bonus Life,M1,M2,M3,Nothing;",
 	"OF,Service Mode,Off,On;",
 	"O34,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
+	"O5,Blend ,Off,On;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -94,6 +95,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
+	.blend          ( status[5]        ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
