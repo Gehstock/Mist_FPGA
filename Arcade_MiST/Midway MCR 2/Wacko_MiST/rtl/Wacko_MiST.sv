@@ -53,7 +53,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v1.1.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;
@@ -72,14 +72,14 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire  [15:0]   joystick_analog_0;
+wire  [15:0]   joystick_analog_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
 wire        hs, vs;
 wire        blankn;
-wire  [3:0] g, r, b;
+wire  [2:0] g, r, b;
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
@@ -91,8 +91,7 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire  [15:0]   joystick_analog_0;
-wire  [15:0]   joystick_analog_1;
+
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -187,10 +186,10 @@ satans_hollow satans_hollow(
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	//Controls
-	.trackX1(),
-	.trackY1(),
-	.trackX2(),
-	.trackY2(),
+	.trackX1(joystick_analog_0[7:0] | joystick_analog_1[7:0]),
+	.trackY1(joystick_analog_0[15:8] | joystick_analog_1[15:8]),
+	.trackX2(joystick_analog_1[7:0] | joystick_analog_1[7:0]),
+	.trackY2(joystick_analog_1[15:8] | joystick_analog_1[15:8]),
 	//ZAP
 	.up2(btn_w), 
 	.down2(btn_s), 
@@ -201,7 +200,7 @@ satans_hollow satans_hollow(
 	.left1(btn_a),
 	.right1(btn_d), 
 	.cocktail(0),
-	.coin_meters(),
+	.coin_meters(1),
 	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
@@ -211,7 +210,7 @@ satans_hollow satans_hollow(
 	.snd_rom_rd   ( snd_rd          )
 );
 
-mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(3    ), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
@@ -249,8 +248,6 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
 	.joystick_analog_0(joystick_analog_0),
 	.joystick_analog_1(joystick_analog_1),
 	.status         (status         )
@@ -274,25 +271,25 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-wire [7:0] m_up1     = btn_up | joystick_analog_0[3];
-wire [7:0] m_down1   = btn_down | joystick_analog_0[2];
-wire [7:0] m_left1   = btn_left | joystick_analog_0[1];
-wire [7:0] m_right1  = btn_right | joystick_analog_0[0];
+//wire [7:0] m_up1     = btn_up | joystick_analog_0[3];
+//wire [7:0] m_down1   = btn_down | joystick_analog_0[2];
+//wire [7:0] m_left1   = btn_left | joystick_analog_0[1];
+//wire [7:0] m_right1  = btn_right | joystick_analog_0[0];
 
-wire [7:0] m_up2     = btn_up | joystick_analog_1[3];
-wire [7:0] m_down2   = btn_down | joystick_analog_1[2];
-wire [7:0] m_left2   = btn_left | joystick_analog_1[1];
-wire [7:0] m_right2  = btn_right | joystick_analog_1[0];
+//wire [7:0] m_up2     = btn_up | joystick_analog_1[3];
+//wire [7:0] m_down2   = btn_down | joystick_analog_1[2];
+//wire [7:0] m_left2   = btn_left | joystick_analog_1[1];
+//wire [7:0] m_right2  = btn_right | joystick_analog_1[0];
 
 //wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
 //wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
+//reg btn_left = 0;
+//reg btn_right = 0;
+//reg btn_down = 0;
+//reg btn_up = 0;
 reg btn_w = 0;
 reg btn_a = 0;
 reg btn_s = 0;
@@ -308,10 +305,10 @@ wire       key_strobe;
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
-			'h75: btn_up          <= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
+//			'h75: btn_up          <= key_pressed; // up
+//			'h72: btn_down        <= key_pressed; // down
+//			'h6B: btn_left        <= key_pressed; // left
+//			'h74: btn_right       <= key_pressed; // right
 			
 			'h1D: btn_w       <= key_pressed; // shot up
 			'h1C: btn_a       <= key_pressed; // shot left

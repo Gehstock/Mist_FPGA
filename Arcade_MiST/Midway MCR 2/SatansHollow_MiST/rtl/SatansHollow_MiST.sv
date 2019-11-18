@@ -80,7 +80,7 @@ wire        ypbpr;
 wire [15:0] audio_l, audio_r;
 wire        hs, vs;
 wire        blankn;
-wire  [3:0] g, r, b;
+wire  [2:0] g, r, b;
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
@@ -203,7 +203,7 @@ satans_hollow satans_hollow(
 	.snd_rom_rd   ( snd_rd          )
 );
 
-mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),

@@ -55,8 +55,6 @@ set_global_assignment -name VHDL_FILE rtl/rom/wacko_sp_bits_4.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/wacko_sp_bits_3.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/wacko_sp_bits_2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/wacko_sp_bits_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/wacko_sound_cpu.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/wacko_cpu.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/wacko_bg_bits_2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/wacko_bg_bits_1.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/midssio_82s123.vhd
@@ -69,7 +67,6 @@ set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================

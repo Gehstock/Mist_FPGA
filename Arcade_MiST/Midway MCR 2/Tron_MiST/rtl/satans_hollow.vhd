@@ -176,8 +176,6 @@ port(
  cocktail       : in std_logic;
  cont           : in std_logic;
  service        : in std_logic;
-  
- dbg_cpu_addr : out std_logic_vector(15 downto 0);
  cpu_rom_addr 		: out std_logic_vector(15 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
  cpu_rom_rd   		: out std_logic;

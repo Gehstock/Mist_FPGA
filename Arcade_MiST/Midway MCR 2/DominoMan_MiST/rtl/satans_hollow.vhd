@@ -240,12 +240,10 @@ architecture struct of satans_hollow is
  signal bg_code         : std_logic_vector(7 downto 0); 
  signal bg_code_r       : std_logic_vector(7 downto 0); 
  signal bg_attr         : std_logic_vector(7 downto 0);
- --signal bg_attr_r       : std_logic_vector(7 downto 0);
 
  signal bg_code_line    : std_logic_vector(12 downto 0);
  signal bg_graphx1_do   : std_logic_vector( 7 downto 0);
  signal bg_graphx2_do   : std_logic_vector( 7 downto 0);
- --signal bg_vid          : std_logic_vector( 3 downto 0);
  signal bg_palette_addr : std_logic_vector( 5 downto 0);
  
  signal sp_ram_cache_addr       : std_logic_vector(8 downto 0);
@@ -380,14 +378,14 @@ end process;
 input_0 <= not service & "11" & not fire1 & not start2 & not start1 & not coin2 & not coin1;
 input_1 <= "1111" & not down1 & not up1  & not right1 & not left1;
 input_2 <= "111" & not fire2 & not down2 & not up2  & not right2 & not left2;
-input_3 <= coin_meters & cocktail & "111111";
+input_3 <= coin_meters & cocktail & "111111";--"111111" & cocktail & coin_meters;
 input_4 <= x"FF";
 
 
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
+cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- 0000-7FFF
 			 wram_do     		when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"C000" else -- C000-C7FF + mirroring 1800
 			 sp_ram_cache_do  when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E000" else -- sprite ram  E000-E1FF + mirroring 1600
 			 bg_ram_do_r      when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E800" else -- video ram   E800-EFFF + mirroring 1000
@@ -398,6 +396,7 @@ cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C"
  			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
  			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
    		 X"FF";
+		 
 		 
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
