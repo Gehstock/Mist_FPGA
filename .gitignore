@@ -1,11 +1,23 @@
-PLLJ_PLLSPE_INFO.txt
-db/
-incremental_db/
-output_files/
-greybox_tmp/
+
 build_id.v
+db
+greybox_tmp
+incremental_db
+output_files
+simulation
+PLLJ_PLLSPE_INFO.txt
 *.bak
+*.orig
+*.rej
+*.qdf
+*.rpt
+*.smsg
+*.summary
+*.done
+*.jdi
+*.pin
+*.sof
 *.qws
-Robotron - Z1013_MiST/Z1013_Mist.pti_db_list.ddb
-Robotron - Z1013_MiST/Z1013_Mist.tis_db_list.ddb
-Robotron - Z1013_MiST/Z1013_Mist.vhd
+*.ppf
+*.qip
+*.ddb
