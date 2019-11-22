@@ -79,7 +79,7 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
-wire        hs, vs;
+wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
 wire [15:0] rom_addr;
@@ -166,7 +166,19 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-satans_hollow satans_hollow(
+wire [6:0] spin_angle;
+
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(btn_f),
+	.btn_left(btn_g),
+	.btn_right(btn_t),
+	.ctc_zc_to_2(vs),
+	.spin_angle(spin_angle)
+);
+
+tron tron (
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -175,6 +187,8 @@ satans_hollow satans_hollow(
 	.video_blankn(blankn),
 	.video_hs(hs),
 	.video_vs(vs),
+	.video_csync(cs),
+	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
@@ -182,26 +196,26 @@ satans_hollow satans_hollow(
 	.coin2(1'b0),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
-	
+
 	.left(m_left), 
 	.right(m_right),
 	.up(m_up),
 	.down(m_down), 
 	.fire(m_fire),
-	
+	.angle(spin_angle),
+
 	.left_c(0),
 	.right_c(0),
 	.up_c(0),
 	.down_c(0),
 	.fire_c(0),
+	.angle_c(spin_angle),
 
-	.buttonf(btn_f),
-	.buttong(btn_g),
-	.buttont(btn_t),
 	.cont(status[7]),
 	.cocktail(0),
 	.coin_meters(1),
 	.service(status[6]),
+
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.cpu_rom_rd   ( rom_rd          ),
@@ -209,6 +223,11 @@ satans_hollow satans_hollow(
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_rom_rd   ( snd_rd          )
 );
+
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -223,12 +242,13 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.rotate         ( {1'b1,status[2]} ),
 	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
+	.no_csync       ( 1'b1             ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);

@@ -52,7 +52,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity satans_hollow_sound_board is
+entity tron_sound_board is
 port(
  clock_40     : in std_logic;
  reset        : in std_logic;
@@ -67,19 +67,22 @@ port(
  input_1 : in std_logic_vector(7 downto 0);
  input_2 : in std_logic_vector(7 downto 0);
  input_3 : in std_logic_vector(7 downto 0);
- input_4 : in std_logic_vector(7 downto 0); 
+ input_4 : in std_logic_vector(7 downto 0);
+ 
  separate_audio : in std_logic;
  
  audio_out_l : out std_logic_vector(15 downto 0);
  audio_out_r : out std_logic_vector(15 downto 0);
+
  cpu_rom_addr : out std_logic_vector(13 downto 0);
  cpu_rom_do   : in std_logic_vector(7 downto 0);
  cpu_rom_rd   : out std_logic;
+
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
-end satans_hollow_sound_board;
+end tron_sound_board;
 
-architecture struct of satans_hollow_sound_board is
+architecture struct of tron_sound_board is
 
  signal reset_n   : std_logic;
  signal clock_snd : std_logic;
@@ -100,7 +103,8 @@ architecture struct of satans_hollow_sound_board is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
-
+ 
+-- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
  
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
@@ -226,6 +230,9 @@ cpu_di <= cpu_rom_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 14) = "00" el
 
 ------------------------------------------
 -- write enable to working ram from CPU --
+-- clear interrupt, cs for AY3-8910     --
+-- ssio output to main cpu (read input) --
+-- ssio status to main cpu              --
 ------------------------------------------
 wram_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"8" else '0'; -- 0x8000-0x83FF
 clr_int   <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) = X"E" else '0'; -- 0xE000-0xEFFF
@@ -239,13 +246,13 @@ ay2_bdir <= not (not ay2_cs or cpu_addr(0) );
 ay2_bc1  <= not (not ay2_cs or cpu_addr(1) );
 
 ssio_do <= input_0     when main_cpu_addr(2 downto 0) = "000" else -- Input 0 -- players, coins, ...
-           input_1     when main_cpu_addr(2 downto 0) = "001" else -- Input 1
+           input_1     when main_cpu_addr(2 downto 0) = "001" else -- Input 1 
            input_2     when main_cpu_addr(2 downto 0) = "010" else -- Input 2
-           input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip
-           input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4
-           ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
-			  x"FF";
-			  
+		   input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
+		   input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
+		   ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
+		   x"FF";
+		
 process (clock_snd)
 begin
 	if rising_edge(clock_snd) then
@@ -431,8 +438,16 @@ port map(
   DO      => cpu_do
 );
 
+-- cpu program ROM 0x0000-0x3FFF
 cpu_rom_addr <= cpu_addr(13 downto 0);
 cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 14) = "00" else '0'; -- 0x0000-0x2FFF
+
+--rom_cpu : entity work.tron_sound_cpu
+--port map(
+-- clk  => clock_sndn,
+-- addr => cpu_addr(13 downto 0),
+-- data => cpu_rom_do
+--);
 
 -- working RAM   0x8000-0x83FF
 wram : entity work.gen_ram
