@@ -20,6 +20,8 @@ module mist_video
 
 	// 0 = HVSync 31KHz, 1 = CSync 15KHz
 	input        scandoubler_disable,
+	// disable csync without scandoubler
+	input        no_csync,
 	// YPbPr always uses composite sync
 	input        ypbpr,
 	// Rotate OSD [0] - rotate [1] - left or right
@@ -185,7 +187,7 @@ wire   vs = cofi_vs;
 
 // a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
 // and VCC on VGA_VS (to switch into rgb mode)
-assign VGA_HS = (scandoubler_disable || ypbpr)? cs : hs;
-assign VGA_VS = (scandoubler_disable || ypbpr)? 1'b1 : vs;
+assign VGA_HS = ((~no_csync & scandoubler_disable) || ypbpr)? cs : hs;
+assign VGA_VS = ((~no_csync & scandoubler_disable) || ypbpr)? 1'b1 : vs;
 
 endmodule
