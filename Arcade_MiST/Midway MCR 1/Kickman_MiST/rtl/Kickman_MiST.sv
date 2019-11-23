@@ -78,7 +78,7 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
-wire        hs, vs;
+wire        hs, vs, cs;
 wire        blankn;
 wire  [3:0] g, r, b;
 wire [14:0] rom_addr;
@@ -165,6 +165,19 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
+wire       ctc_zc_to2;
+wire [3:0] spin_angle;
+
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(m_fire),
+	.btn_left(m_left),
+	.btn_right(m_right),
+	.ctc_zc_to_2(ctc_zc_to2),
+	.spin_angle(spin_angle)
+);
+
 kick kick(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -174,6 +187,8 @@ kick kick(
 	.video_blankn(blankn),
 	.video_hs(hs),
 	.video_vs(vs),
+	.video_csync(cs),
+	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
@@ -182,10 +197,9 @@ kick kick(
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	.kick(m_down),
-	.service_toggle(status[6]),
-	.btn_acc(m_fire),
-	.btn_left(m_left),
-	.btn_right(m_right), 
+	.ctc_zc_to_2(ctc_zc_to2),
+	.spin_angle(spin_angle),
+	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.cpu_rom_rd   ( rom_rd          ),
@@ -193,6 +207,11 @@ kick kick(
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_rom_rd   ( snd_rd          )
 );
+
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -207,12 +226,13 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.rotate         ( {1'b1,status[2]} ),
-	.ce_divider     ( 1                ),
+	.ce_divider     ( 1'b1             ),
 	.blend          ( status[5]        ),
-	.scandoubler_disable(1),//scandoublerD ),
+	.scandoubler_disable( 1'b1         ),
+	.no_csync       ( 1'b1             ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);

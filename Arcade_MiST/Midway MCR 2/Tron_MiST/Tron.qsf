@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 
 # Pin & Location Assignments
@@ -181,17 +181,15 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Tron_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/satans_hollow.vhd
-set_global_assignment -name VHDL_FILE rtl/satans_hollow_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/spinner.vhd
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_counter.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_controler.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/cmos_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/tron_sp_bits_4.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/tron_sp_bits_3.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/tron_sp_bits_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/tron_sp_bits_1.vhd
+set_global_assignment -name VHDL_FILE rtl/tron.vhd
+set_global_assignment -name VHDL_FILE rtl/tron_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/tron_sp_bits.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/tron_bg_bits_2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/tron_bg_bits_1.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/midssio_82s123.vhd
