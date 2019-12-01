@@ -35,6 +35,7 @@ localparam CONF_STR = {
 	"XEVIOUS;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -223,6 +224,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.ce_divider(1'b1),
 	.rotate({1'b1,status[2]}),
 	.scanlines(status[4:3]),
+	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.ypbpr(ypbpr)
 	);
