@@ -72,12 +72,12 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [15:0]   joystick_analog_0;
-wire  [15:0]   joystick_analog_1;
+wire [15:0] joystick_analog_0;
+wire [15:0] joystick_analog_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
-wire        hs, vs;
+wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
 wire [14:0] rom_addr;
@@ -113,43 +113,36 @@ sdram sdram(
 
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
-	.port1_ack     (),
-	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[14:1] ),
-	.port1_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
-	.port1_q       ( rom_do ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {1'b0, rom_addr[14:1]} ),
+	.cpu1_q        ( rom_do ),
 
 	// port2 for sound board
 	.port2_req     ( port2_req ),
-	.port2_ack     (),
-	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h4000 : snd_addr[13:1] ),
-	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port2_ack     ( ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h4000 ),
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
-	.port2_q       ( snd_do )
+	.port2_q       ( ),
+
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {2'b00, snd_addr[13:1]} ),
+	.snd_q         ( snd_do )
 );
 
 always @(posedge clk_sys) begin
-	reg [16:1] rom_addr_last;
-	reg [15:1] snd_addr_last;
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		snd_addr_last <= 14'h2fff;
-		rom_addr_last <= 15'h7fff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
-		end
-	end else begin
-		if (rom_rd && rom_addr_last != rom_addr[14:1]) begin
-			rom_addr_last <= rom_addr[14:1];
-			port1_req <= ~port1_req;
-		end
-		if (snd_rd && snd_addr_last != snd_addr[13:1]) begin
-			snd_addr_last <= snd_addr[13:1];
 			port2_req <= ~port2_req;
 		end
 	end
@@ -178,6 +171,8 @@ satans_hollow satans_hollow(
 	.video_blankn(blankn),
 	.video_hs(hs),
 	.video_vs(vs),
+	.video_csync(cs),
+	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
@@ -210,6 +205,11 @@ satans_hollow satans_hollow(
 	.snd_rom_rd   ( snd_rd          )
 );
 
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
+
 mist_video #(.COLOR_DEPTH(3    ), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
 	.SPI_SCK        ( SPI_SCK          ),
@@ -223,11 +223,12 @@ mist_video #(.COLOR_DEPTH(3    ), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
-	.scandoubler_disable(1),//scandoublerD ),
+	.scandoubler_disable( 1'b1         ),
+	.no_csync       ( 1'b1             ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);

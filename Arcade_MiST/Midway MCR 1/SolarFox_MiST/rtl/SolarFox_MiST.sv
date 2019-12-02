@@ -79,15 +79,13 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
-wire        hs, vs;
+wire        hs, vs, cs;
 wire        blankn;
 wire  [3:0] g, r, b;
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
-wire        rom_rd;
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
-wire        snd_rd;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -105,7 +103,7 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
+
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
@@ -114,43 +112,36 @@ sdram sdram(
 
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
-	.port1_ack     (),
-	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[14:1] ),
-	.port1_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
-	.port1_q       ( rom_do ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {1'b0, rom_addr[14:1]} ),
+	.cpu1_q        ( rom_do ),
 
 	// port2 for sound board
 	.port2_req     ( port2_req ),
-	.port2_ack     (),
-	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h4000 : snd_addr[13:1] ),
-	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port2_ack     ( ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h4000 ),
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
-	.port2_q       ( snd_do )
+	.port2_q       ( ),
+
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {2'b00, snd_addr[13:1]} ),
+	.snd_q         ( snd_do )
 );
 
 always @(posedge clk_sys) begin
-	reg [16:1] rom_addr_last;
-	reg [15:1] snd_addr_last;
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		snd_addr_last <= 14'h2fff;
-		rom_addr_last <= 15'h6fff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
-		end
-	end else begin
-		if (rom_rd && rom_addr_last != rom_addr[14:1]) begin
-			rom_addr_last <= rom_addr[14:1];
-			port1_req <= ~port1_req;
-		end
-		if (snd_rd && snd_addr_last != snd_addr[13:1]) begin
-			snd_addr_last <= snd_addr[13:1];
 			port2_req <= ~port2_req;
 		end
 	end
@@ -166,7 +157,7 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-kick kick(
+solarfox solarfox(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -175,14 +166,16 @@ kick kick(
 	.video_blankn(blankn),
 	.video_hs(hs),
 	.video_vs(vs),
+	.video_csync(cs),
+	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
 	.coin1(btn_coin),
 	.coin2(1'b0),
-	.start2(btn_two_players),
-	.start1(btn_one_player),
-	.service_toggle(status[6]),
+	.fast1(btn_one_player),
+	.fast2(btn_two_players),
+	.service(status[6]),
 	.fire1(m_fire),
 	.fire2(m_fire),
 	.left1(m_left),
@@ -195,11 +188,14 @@ kick kick(
 	.down2(m_down),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.cpu_rom_rd   ( rom_rd          ),
 	.snd_rom_addr ( snd_addr        ),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
-	.snd_rom_rd   ( snd_rd          )
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] )
  );
+
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -214,12 +210,13 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.rotate         ( {1'b1,status[2]} ),
 	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
-	.scandoubler_disable(1),//scandoublerD ),
+	.scandoubler_disable( 1'b1         ),
+	.no_csync       ( 1'b1             ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);

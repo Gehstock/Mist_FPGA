@@ -84,10 +84,8 @@ wire        blankn;
 wire  [2:0] g, r, b;
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
-wire        rom_rd;
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
-wire        snd_rd;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -114,43 +112,36 @@ sdram sdram(
 
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
-	.port1_ack     (),
-	.port1_a       ( ioctl_downl ? ioctl_addr[23:1] : rom_addr[15:1] ),
-	.port1_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
-	.port1_q       ( rom_do ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : rom_addr[15:1] ),
+	.cpu1_q        ( rom_do ),
 
 	// port2 for sound board
 	.port2_req     ( port2_req ),
-	.port2_ack     (),
-	.port2_a       ( ioctl_downl ? ioctl_addr[23:1] - 16'h8000 : snd_addr[13:1] ),//8000 C000
-	.port2_ds      ( ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11 ),
+	.port2_ack     ( ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h8000 ),//8000 C000
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
-	.port2_q       ( snd_do )
+	.port2_q       ( ),
+
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {2'b00, snd_addr[13:1]} ),
+	.snd_q         ( snd_do )
 );
 
 always @(posedge clk_sys) begin
-	reg [17:1] rom_addr_last;
-	reg [15:1] snd_addr_last;
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		snd_addr_last <= 14'h2fff;
-		rom_addr_last <= 16'hbfff;
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
-		end
-	end else begin
-		if (rom_rd && rom_addr_last != rom_addr[15:1]) begin
-			rom_addr_last <= rom_addr[15:1];
-			port1_req <= ~port1_req;
-		end
-		if (snd_rd && snd_addr_last != snd_addr[13:1]) begin
-			snd_addr_last <= snd_addr[13:1];
 			port2_req <= ~port2_req;
 		end
 	end
@@ -218,10 +209,8 @@ tron tron (
 
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.cpu_rom_rd   ( rom_rd          ),
 	.snd_rom_addr ( snd_addr        ),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
-	.snd_rom_rd   ( snd_rd          )
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] )
 );
 
 wire vs_out;
