@@ -46,13 +46,19 @@ module sdram (
 	input      [15:0] port1_d,
 	output     [15:0] port1_q,
 
+	input      [15:1] cpu1_addr,
+	output reg [15:0] cpu1_q,
+
 	input             port2_req,
 	output reg        port2_ack,
 	input             port2_we,
 	input      [23:1] port2_a,
 	input       [1:0] port2_ds,
 	input      [15:0] port2_d,
-	output     [15:0] port2_q
+	output     [15:0] port2_q,
+
+	input      [15:1] snd_addr,
+	output reg [15:0] snd_q
 );
 
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
@@ -87,8 +93,8 @@ localparam STATE_RAS0      = 3'd0;   // first state in cycle
 localparam STATE_RAS1      = 3'd3;   // Second ACTIVE command after RAS0 + tRRD (15ns)
 localparam STATE_CAS0      = STATE_RAS0 + RASCAS_DELAY; // CAS phase - 3
 localparam STATE_CAS1      = STATE_RAS1 + RASCAS_DELAY; // CAS phase - 5
-localparam STATE_READ0     = STATE_CAS0 + CAS_LATENCY + 1'd1; // 7
-localparam STATE_READ1     = 3'd2;
+localparam STATE_READ0     = 3'd0; //STATE_CAS0 + CAS_LATENCY + 1'd1; // 7
+localparam STATE_READ1     = 3'd3;
 localparam STATE_LAST      = 3'd5;
 
 reg [2:0] t;
@@ -131,8 +137,8 @@ localparam CMD_PRECHARGE       = 4'b0010;
 localparam CMD_AUTO_REFRESH    = 4'b0001;
 localparam CMD_LOAD_MODE       = 4'b0000;
 
-reg [3:0] sd_cmd;   // current command sent to sd ram
-
+reg  [3:0] sd_cmd;   // current command sent to sd ram
+reg [15:0] sd_din;
 // drive control signals according to current command
 assign SDRAM_nCS  = sd_cmd[3];
 assign SDRAM_nRAS = sd_cmd[2];
@@ -141,15 +147,21 @@ assign SDRAM_nWE  = sd_cmd[0];
 
 reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
+reg [15:1] addr_last[2];
+reg [15:1] addr_last2[2];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
 reg  [1:0] ds[2];
 
-localparam PORT_NONE  = 1'b0;
-localparam PORT_REQ   = 1'b1;
+localparam PORT_NONE  = 2'd0;
+localparam PORT_CPU1  = 2'd1;
+localparam PORT_REQ   = 2'd2;
 
-reg        next_port[2];
+localparam PORT_SND   = 2'd1;
+
+reg  [2:0] next_port[2];
+reg  [2:0] port[2];
 
 reg        refresh;
 reg [10:0] refresh_cnt;
@@ -157,20 +169,29 @@ wire       need_refresh = (refresh_cnt >= RFRSH_CYCLES);
 
 // PORT1: bank 0,1
 always @(*) begin
-	if (port1_req ^ port1_ack) begin
+	if (refresh) begin
+		next_port[0] = PORT_NONE;
+		addr_latch_next[0] = addr_latch[0];
+	end else if (port1_req ^ port1_ack) begin
 		next_port[0] = PORT_REQ;
 		addr_latch_next[0] = { 1'b0, port1_a };
+	end else if (cpu1_addr != addr_last[PORT_CPU1]) begin
+		next_port[0] = PORT_CPU1;
+		addr_latch_next[0] = { 9'd0, cpu1_addr };
 	end else begin
 		next_port[0] = PORT_NONE;
 		addr_latch_next[0] = addr_latch[0];
 	end
 end
 
-// PORT1: bank 2,3
+// PORT2: bank 2,3
 always @(*) begin
-	if ((port2_req ^ port2_ack) && !refresh) begin
+	if (port2_req ^ port2_ack) begin
 		next_port[1] = PORT_REQ;
 		addr_latch_next[1] = { 1'b1, port2_a };
+	end else if (snd_addr != addr_last2[PORT_SND]) begin
+		next_port[1] = PORT_SND;
+		addr_latch_next[1] = { 1'b1, 8'd0, snd_addr };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -180,6 +201,7 @@ end
 always @(posedge clk) begin
 
 	// permanently latch ram data to reduce delays
+	sd_din <= SDRAM_DQ;
 	SDRAM_DQ <= 16'bZZZZZZZZZZZZZZZZ;
 	{ SDRAM_DQMH, SDRAM_DQML } <= 2'b11;
 	sd_cmd <= CMD_NOP;  // default: idle
@@ -209,14 +231,22 @@ always @(posedge clk) begin
 		// bank 0,1
 		if(t == STATE_RAS0) begin
 			addr_latch[0] <= addr_latch_next[0];
+			port[0] <= next_port[0];
 			{ oe_latch[0], we_latch[0] } <= 2'b00;
+
 			if (next_port[0] != PORT_NONE) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[0][22:10];
 				SDRAM_BA <= addr_latch_next[0][24:23];
-				{ oe_latch[0], we_latch[0] } <= { ~port1_we, port1_we };
-				ds[0] <= port1_ds;
-				din_latch[0] <= port1_d;
+				addr_last[next_port[0]] <= addr_latch_next[0][15:1];
+				if (next_port[0] == PORT_REQ) begin
+					{ oe_latch[0], we_latch[0] } <= { ~port1_we, port1_we };
+					ds[0] <= port1_ds;
+					din_latch[0] <= port1_d;
+				end else begin
+					{ oe_latch[0], we_latch[0] } <= 2'b10;
+					ds[0] <= 2'b11;
+				end
 			end
 		end
 
@@ -225,13 +255,21 @@ always @(posedge clk) begin
 			refresh <= 1'b0;
 			addr_latch[1] <= addr_latch_next[1];
 			{ oe_latch[1], we_latch[1] } <= 2'b00;
+			port[1] <= next_port[1];
+
 			if (next_port[1] != PORT_NONE) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[1][22:10];
 				SDRAM_BA <= addr_latch_next[1][24:23];
-				{ oe_latch[1], we_latch[1] } <= { ~port1_we, port1_we };
-				ds[1] <= port2_ds;
-				din_latch[1] <= port2_d;
+				addr_last2[next_port[1]] <= addr_latch_next[1][15:1];
+				if (next_port[1] == PORT_REQ) begin
+					{ oe_latch[1], we_latch[1] } <= { ~port2_we, port2_we };
+					ds[1] <= port2_ds;
+					din_latch[1] <= port2_d;
+				end else begin
+					{ oe_latch[1], we_latch[1] } <= 2'b10;
+					ds[1] <= 2'b11;
+				end
 			end
 
 			if (next_port[1] == PORT_NONE && need_refresh && !we_latch[0] && !oe_latch[0]) begin
@@ -266,12 +304,18 @@ always @(posedge clk) begin
 
 		// Data returned
 		if(t == STATE_READ0 && oe_latch[0]) begin
-			port1_q <= SDRAM_DQ;
-			port1_ack <= port1_req;
+			case(port[0])
+				PORT_REQ:  begin port1_q <= sd_din; port1_ack <= port1_req; end
+				PORT_CPU1: begin cpu1_q  <= sd_din; end
+				default: ;
+			endcase;
 		end
 		if(t == STATE_READ1 && oe_latch[1]) begin
-			port2_q <= SDRAM_DQ;
-			port2_ack <= port2_req;
+			case(port[1])
+				PORT_REQ:  begin port2_q <= sd_din; port2_ack <= port2_req; end
+				PORT_SND:  begin snd_q   <= sd_din; end
+				default: ;
+			endcase;
 		end
 	end
 end

@@ -597,8 +597,8 @@ sp_code_line_mux <= "00" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms 
 												(sp_hflip(0) = '1' and sp_mux_roms = "11") else
 					     "10" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "11") or
 												(sp_hflip(0) = '1' and sp_mux_roms = "10") else
-					     "11" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
-												(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
+					     "11" & sp_code_line;-- when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
+												--(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
 												
 sp_graphx_flip <= sp_graphx_do when sp_hflip(0) = '0' else
 						sp_graphx_do(3 downto 0) & sp_graphx_do(7 downto 4);		
@@ -614,7 +614,7 @@ sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when sp_buffer_
 sp_vid <= sp_buffer_ram1_do_r(7 downto 4) when (sp_buffer_sel = '0') and (hcnt(0) = '1') else
 		    sp_buffer_ram1_do_r(3 downto 0) when (sp_buffer_sel = '0') and (hcnt(0) = '0') else
 		    sp_buffer_ram2_do_r(7 downto 4) when (sp_buffer_sel = '1') and (hcnt(0) = '1') else
-			 sp_buffer_ram2_do_r(3 downto 0) when (sp_buffer_sel = '1') and (hcnt(0) = '0');			  
+			 sp_buffer_ram2_do_r(3 downto 0);-- when (sp_buffer_sel = '1') and (hcnt(0) = '0');			  
 
 --------------------
 --- char machine ---

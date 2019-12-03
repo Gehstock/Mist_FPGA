@@ -1,9 +1,10 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: SatansHollow port to MiST by Gehstock
+-- Arcade: Wacko(SatansHollow) port to MiST by Gehstock
 -- 10 November 2019
 -- 
--- VGA Only
+-- VGA/TV
+-- Control Wacko with the mouse, shot with the joystick
 
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)

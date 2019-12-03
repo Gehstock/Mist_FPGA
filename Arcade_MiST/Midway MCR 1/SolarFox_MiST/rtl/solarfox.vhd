@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Kick by Dar (darfpga@aol.fr) (19/10/2019)
+-- Solar Fox by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -20,18 +20,24 @@
 -- Do not redistribute roms whatever the form
 -- Use at your own risk
 ---------------------------------------------------------------------------------
-
+--
+-- release rev 01 : add TV 15kHz mode
+--  (22/11/2019)    use merged sprite 8bits roms (make it easier to externalize)
+--
+-- release rev 00 : initial release
+--
+--
 --  Features :
---   Video        : 31Khz/60Hz
+--   Video        : VGA 31Khz/60Hz and TV 15kHz
 --   Coctail mode : NO
 --   Sound        : OK
 
---  Use with MAME roms from kick.zip
+--  Use with MAME roms from solarfox.zip
 --
---  Use make_kick_proms.bat to build vhd file from binaries
+--  Use make_solar_fox_proms.bat to build vhd file from binaries
 --  (CRC list included)
 
---  Kick/Kickman (midway mcr) Hardware caracteristics :
+--  Solar Fox (midway mcr) Hardware caracteristics :
 --
 --  VIDEO : 1xZ80@3MHz CPU accessing its program rom, working ram,
 --    sprite data ram, I/O, sound board register and trigger.
@@ -51,7 +57,7 @@
 
 --    Sprites line buffer rams : 1 scan line delay flip/flop 2x256x8bits
 --
---  SOUND : see Kick_sound_board.vhd
+--  SOUND : see solarfox_sound_board.vhd
 
 ---------------------------------------------------------------------------------
 --  Schematics remarks :
@@ -140,16 +146,16 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity kick is
+entity solarfox is
 port(
  clock_40     : in std_logic;
  reset        : in std_logic;
- --tv15Khz_mode : in std_logic;
+ tv15Khz_mode   : in std_logic;
  video_r        : out std_logic_vector(3 downto 0);
  video_g        : out std_logic_vector(3 downto 0);
  video_b        : out std_logic_vector(3 downto 0);
  video_clk      : out std_logic;
- --video_csync    : out std_logic;
+ video_csync    : out std_logic;
  video_blankn   : out std_logic;
  video_hs       : out std_logic;
  video_vs       : out std_logic;
@@ -157,39 +163,36 @@ port(
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
+  
  coin1          : in std_logic;
  coin2          : in std_logic;
- start2         : in std_logic;
- start1         : in std_logic;
- fire1           : in std_logic;
- fire2           : in std_logic;
- 
- left1           : in std_logic;
- right1           : in std_logic;
- up1           : in std_logic;
- down1           : in std_logic;
- 
- left2           : in std_logic;
- right2           : in std_logic;
- up2           : in std_logic;
- down2           : in std_logic;
- 
- service_toggle : in std_logic;
+ fast1          : in std_logic;
+ fast2          : in std_logic;
+ fire1          : in std_logic;
+ fire2          : in std_logic;
+ up1            : in std_logic;
+ down1          : in std_logic;
+ left1          : in std_logic;
+ right1         : in std_logic;
+ up2            : in std_logic;
+ down2          : in std_logic;
+ left2          : in std_logic;
+ right2         : in std_logic;
 
- 
- dbg_cpu_addr 		: out std_logic_vector(15 downto 0);
- cpu_rom_addr 		: out std_logic_vector(14 downto 0);
- cpu_rom_do     	: in std_logic_vector(7 downto 0);
- cpu_rom_rd   		: out std_logic;
+ service        : in std_logic;
 
- snd_rom_addr 		: out std_logic_vector(13 downto 0);
- snd_rom_do     	: in std_logic_vector(7 downto 0);
- snd_rom_rd   		: out std_logic
+ dbg_cpu_addr : out std_logic_vector(15 downto 0);
 
- );
-end kick;
+ cpu_rom_addr   : out std_logic_vector(14 downto 0);
+ cpu_rom_do     : in std_logic_vector(7 downto 0);
 
-architecture struct of kick is
+ snd_rom_addr   : out std_logic_vector(13 downto 0);
+ snd_rom_do     : in std_logic_vector(7 downto 0)
+
+);
+end solarfox;
+
+architecture struct of solarfox is
 
  signal reset_n   : std_logic;
  signal clock_vid : std_logic;
@@ -200,10 +203,11 @@ architecture struct of kick is
  signal vcnt    : std_logic_vector(9 downto 0) := (others=>'0'); -- vertical counter
  signal vflip   : std_logic_vector(9 downto 0) := (others=>'0'); -- vertical counter flip
  
- signal frame   : std_logic_vector(9 downto 0) := (others=>'0'); -- frame counter dbg
+ signal hs_cnt, vs_cnt :std_logic_vector(9 downto 0) ;
+ signal hsync0, hsync1, hsync2, hsync3, hsync4 : std_logic;
+ signal top_frame : std_logic := '0';
  
  signal pix_ena     : std_logic;
- signal pix_ena_r   : std_logic;
  signal cpu_ena     : std_logic;
 
  signal cpu_addr    : std_logic_vector(15 downto 0);
@@ -240,7 +244,7 @@ architecture struct of kick is
  signal ctc_counter_3_do  : std_logic_vector(7 downto 0);
  signal ctc_counter_3_int : std_logic;
  
- --signal cpu_rom_do : std_logic_vector( 7 downto 0);
+-- signal cpu_rom_do : std_logic_vector( 7 downto 0);
  
  signal wram_we    : std_logic;
  signal wram_do    : std_logic_vector( 7 downto 0);
@@ -278,15 +282,12 @@ architecture struct of kick is
  signal sp_on_line_r    : std_logic;
  signal sp_byte_cnt     : std_logic_vector( 1 downto 0);
  signal sp_code_line    : std_logic_vector(12 downto 0);
+ signal sp_code_line_mux: std_logic_vector(14 downto 0);
  signal sp_hflip        : std_logic_vector( 1 downto 0);
  signal sp_vflip        : std_logic_vector( 4 downto 0);
  
- signal sp_graphx1_do   : std_logic_vector( 7 downto 0);
- signal sp_graphx2_do   : std_logic_vector( 7 downto 0);
- signal sp_graphx3_do   : std_logic_vector( 7 downto 0);
- signal sp_graphx4_do   : std_logic_vector( 7 downto 0);
+ signal sp_graphx_do    : std_logic_vector( 7 downto 0); 
  signal sp_mux_roms     : std_logic_vector( 1 downto 0);
- signal sp_graphx_mux   : std_logic_vector( 7 downto 0);
  signal sp_graphx_flip  : std_logic_vector( 7 downto 0);
  
  signal sp_buffer_ram1_addr : std_logic_vector(7 downto 0);
@@ -301,8 +302,10 @@ architecture struct of kick is
  signal sp_buffer_ram2_do   : std_logic_vector(7 downto 0);
  signal sp_buffer_ram2_do_r : std_logic_vector(7 downto 0);
  
+ signal sp_buffer_sel       : std_logic;
+ 
  signal sp_vid              : std_logic_vector(3 downto 0);
- signal sp_vid_a            : std_logic_vector(3 downto 0);
+ 
  signal palette_addr        : std_logic_vector(3 downto 0);
  signal palette_F4_we       : std_logic; 
  signal palette_F8_we       : std_logic;
@@ -329,16 +332,19 @@ architecture struct of kick is
  signal input_2       : std_logic_vector(7 downto 0);
  signal input_3       : std_logic_vector(7 downto 0);
  
- signal service_toggle_r : std_logic;
- signal service          : std_logic;
-
-
 begin
 
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
 
+-- debug 
+process (reset, clock_vid)
+begin
+ if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
+   dbg_cpu_addr<= "000000000000000"&service; --cpu_addr;
+ end if;
+end process;
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -357,10 +363,11 @@ begin
 end process;
 --
 cpu_ena <= '1' when clock_cnt = "1111" else '0'; -- (2.5MHz)
-pix_ena <= clock_cnt(0); -- (20MHz)
+pix_ena <= '1' when (clock_cnt(1 downto 0) = "11" and tv15Khz_mode = '1') or         -- (10MHz)
+						  (clock_cnt(0) = '1'           and tv15Khz_mode = '0') else '0';  -- (20MHz)
 
 -----------------------------------
--- Video scanner  635x525 @20Mhz --
+-- Video scanner  634x525 @20Mhz --
 -- display 512x480               --
 -----------------------------------
 process (reset, clock_vid)
@@ -368,31 +375,102 @@ begin
 	if reset='1' then
 		hcnt  <= (others=>'0');
 		vcnt  <= (others=>'0');
-		frame <= (others=>'0');
+		top_frame <= '0';
 	else 
 		if rising_edge(clock_vid) then
 			if pix_ena = '1' then
 		
 				hcnt <= hcnt + 1;
-				if hcnt = 634 then
+				if hcnt = 633 then
 					hcnt <= (others=>'0');
 					vcnt <= vcnt + 1;
-					if vcnt = 524 then
+					if (vcnt = 524 and tv15Khz_mode = '0') or (vcnt = 263 and tv15Khz_mode = '1') then
 						vcnt <= (others=>'0');
-						frame <= frame + 1;
+						top_frame <= not top_frame;
 					end if;
 				end if;
 			
+				if tv15Khz_mode = '0' then 
+							--	progessive mode
+				
 				if vcnt = 490-1 then video_vs <= '0'; end if; -- front porch 10
 				if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
 																			 -- back porch  33 
 																		 
-				if hcnt = 512+15 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
-				if hcnt = 512+90 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
+				if hcnt = 512+13-8 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
+				if hcnt = 512+90-8 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
 																				  -- back porch  48/25*20 = 38
 				video_blankn <= '0';
 				if hcnt >= 2 and  hcnt < 514 and
-					vcnt >= 1 and  vcnt < 481 then video_blankn <= '1';end if;
+					vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
+				
+				else    -- interlaced mode
+				 
+				if hcnt = 530 then 
+					hs_cnt <= (others => '0');
+					if (vcnt = 242) then
+						vs_cnt <= (others => '0');
+					else
+						vs_cnt <= vs_cnt +1;
+					end if;
+				else 
+					hs_cnt <= hs_cnt + 1;
+				end if;
+				
+				video_blankn <= '0';				
+				if hcnt >= 2 and  hcnt < 514 and
+					vcnt >= 1 and  vcnt < 241 then video_blankn <= '1';end if;
+				
+				
+				if    hs_cnt =  0 then hsync0 <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1';
+				end if;
+
+				if    hs_cnt =      0  then hsync1 <= '0';
+				elsif hs_cnt =     23  then hsync1 <= '1';
+				elsif hs_cnt = 317+ 0  then hsync1 <= '0';
+				elsif hs_cnt = 317+23  then hsync1 <= '1';
+				end if;
+		
+				if    hs_cnt =      0  then hsync2 <= '0';
+				elsif hs_cnt = 317-47  then hsync2 <= '1';
+				elsif hs_cnt = 317     then hsync2 <= '0';
+				elsif hs_cnt = 634-47  then hsync2 <= '1';
+				end if;
+
+				
+				if    hs_cnt =      0  then hsync3 <= '0';
+				elsif hs_cnt =     23  then hsync3 <= '1';
+				elsif hs_cnt = 317     then hsync3 <= '0';
+				elsif hs_cnt = 634-47  then hsync3 <= '1';
+				end if;
+
+				if    hs_cnt =      0  then hsync4 <= '0';
+				elsif hs_cnt = 317-47  then hsync4 <= '1';
+				elsif hs_cnt = 317     then hsync4 <= '0';
+				elsif hs_cnt = 317+23  then hsync4 <= '1';
+				end if;
+				
+				
+				if     vs_cnt =  1 then video_csync <= hsync1;
+				elsif  vs_cnt =  2 then video_csync <= hsync1;
+				elsif  vs_cnt =  3 then video_csync <= hsync1;
+				elsif  vs_cnt =  4 and top_frame = '1' then video_csync <= hsync3;
+				elsif  vs_cnt =  4 and top_frame = '0' then video_csync <= hsync1;
+				elsif  vs_cnt =  5 then video_csync <= hsync2;
+				elsif  vs_cnt =  6 then video_csync <= hsync2;
+				elsif  vs_cnt =  7 and  top_frame = '1' then video_csync <= hsync4;
+				elsif  vs_cnt =  7 and  top_frame = '0' then video_csync <= hsync2;
+				elsif  vs_cnt =  8 then video_csync <= hsync1;
+				elsif  vs_cnt =  9 then video_csync <= hsync1;
+				elsif  vs_cnt = 10 then video_csync <= hsync1;
+				elsif  vs_cnt = 11 then video_csync <= hsync0;
+				else                    video_csync <= hsync0;
+				end if;
+				
+				
+				end if;
+				
 			end if;
 		end if;
 	end if;
@@ -400,27 +478,12 @@ end process;
 
 --------------------
 -- players inputs --
--------------------- 
-input_0 <= (not service & '1' & '1' & not fire1 & not start2 & not start1 & not coin2 & not coin1);
-input_1 <= (not up2 & not down2 & not left2 & not right2 & not up1 & not down1 & not left1 & not right1);
-input_2 <= "1111111" & not fire2;
-input_3 <= x"FF";-- Cabinet, Ignore Hardware Failure, UNKNOWN, Demo_Sounds, UNKNOWN, Bonus, Bonus
-
-process (clock_vid, reset)
-begin
-	if reset = '1' then
-		service <= '0';
-	else
-		if rising_edge(clock_vid) then
-			service_toggle_r <= service_toggle;
-		
-			if service_toggle_r = '0' and service_toggle ='1' then 
-				service <= not service;
-			end if;
-			
-		end if;
-	end if;
-end process;
+--------------------
+-- '1' for test & tilt  
+input_0 <= not service & '1' &  '1' & not fire1 & not fast2 & not fast1 & not coin2 & not coin1;
+input_1 <= not up2 & not down2 & not left2 & not right2 & not up1 & not down1 & not left1 & not right1; 
+input_2 <= "1111111" & not fire2; 
+input_3 <= x"FF";
 
 ------------------------------------------
 -- cpu data input with address decoding --
@@ -440,12 +503,12 @@ cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7"
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
 ------------------------------------------------------------------------
-ctc_counter_3_trg <= '1' when vcnt = 493 else '0';
+ctc_counter_3_trg <= '1' when (vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')else '0';
 ctc_counter_3_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else '0';
 ctc_counter_2_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else '0';
 ctc_counter_1_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else '0';
 ctc_counter_0_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';
-ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';--          "111100" else '0'; -- F0-F3
+ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0'; -- only channel 0 receive int vector
 ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
 
 ------------------------------------------
@@ -462,7 +525,10 @@ ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 ----------------------
 --- sprite machine ---
 ----------------------
-vflip <= 480-vcnt; -- apply mirror flip
+
+vflip <= (240-vcnt(8 downto 0)) & top_frame when tv15Khz_mode = '1' else 480-vcnt; -- apply mirror flip
+
+sp_buffer_sel <= vflip(1) when tv15Khz_mode = '1' else vflip(0);
 
 process (clock_vid)
 begin
@@ -511,12 +577,6 @@ begin
 			sp_buffer_ram1_do_r <= sp_buffer_ram1_do;
 			sp_buffer_ram2_do_r <= sp_buffer_ram2_do;
 		end if;
-		
-		sp_on_line_r <= sp_on_line;
-		
-		pix_ena_r <= pix_ena;
-		
-		sp_vid <= sp_vid_a;
 
 	end if;
 
@@ -525,7 +585,9 @@ end process;
 
 sp_ram_cache_addr <= cpu_addr(8 downto 0) when sp_ram_cache_cpu_access = '1' else sp_ram_addr;
 
-move_buf    <= '1' when vcnt(8 downto 1) = 250 else '0'; -- line 500-501
+
+move_buf    <= '1' when (vcnt(8 downto 1) = 250 and tv15Khz_mode = '0') or (vcnt(7 downto 1) = 125 and tv15Khz_mode = '1') else '0'; -- line 500-501
+
 sp_ram_addr <= vcnt(0) & hcnt(8 downto 1) when move_buf = '1' else sp_cnt & sp_input_phase(1 downto 0);
 sp_ram_we   <= hcnt(0) when move_buf = '1' else '0';
 
@@ -536,30 +598,30 @@ sp_vflip <= (others => sp_code(7));
 
 sp_code_line <= sp_code(5 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt xor sp_hflip); -- sprite graphics roms addr
 
-sp_graphx_mux <= sp_graphx1_do when (sp_hflip(0) = '0' and sp_mux_roms = "01") or 
+sp_code_line_mux <= "00" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "01") or
 												(sp_hflip(0) = '1' and sp_mux_roms = "00") else
-					  sp_graphx2_do when (sp_hflip(0) = '0' and sp_mux_roms = "10") or
+					     "01" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "10") or
 												(sp_hflip(0) = '1' and sp_mux_roms = "11") else
-					  sp_graphx3_do when (sp_hflip(0) = '0' and sp_mux_roms = "11") or
+					     "10" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "11") or
 												(sp_hflip(0) = '1' and sp_mux_roms = "10") else
-					  sp_graphx4_do when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
-												(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
+					     "11" & sp_code_line;-- when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
+												--(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
 												
-sp_graphx_flip <= sp_graphx_mux when sp_hflip(0) = '0' else
-						sp_graphx_mux(3 downto 0) & sp_graphx_mux(7 downto 4);		
+sp_graphx_flip <= sp_graphx_do when sp_hflip(0) = '0' else
+						sp_graphx_do(3 downto 0) & sp_graphx_do(7 downto 4);		
 
-sp_buffer_ram1_di   <= sp_buffer_ram1_do or sp_graphx_flip       when vflip(0) = '1' else "00000000";
-sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '1' else hcnt(8 downto 1) - X"03";
-sp_buffer_ram1_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '1' else hcnt(0);
+sp_buffer_ram1_di   <= sp_buffer_ram1_do or sp_graphx_flip       when sp_buffer_sel = '1' else "00000000";
+sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '1' else hcnt(8 downto 1) - X"03";
+sp_buffer_ram1_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when sp_buffer_sel = '1' else hcnt(0);
 
-sp_buffer_ram2_di   <= sp_buffer_ram2_do or sp_graphx_flip       when vflip(0) = '0' else "00000000";
-sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when vflip(0) = '0' else hcnt(8 downto 1) - X"03";
-sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when vflip(0) = '0' else hcnt(0);
+sp_buffer_ram2_di   <= sp_buffer_ram2_do or sp_graphx_flip       when sp_buffer_sel = '0' else "00000000";
+sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '0' else hcnt(8 downto 1) - X"03";
+sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when sp_buffer_sel = '0' else hcnt(0);
 
-sp_vid_a <= sp_buffer_ram1_do_r(7 downto 4) when (vflip(0) = '0') and (hcnt(0) = '1') else
-		      sp_buffer_ram1_do_r(3 downto 0) when (vflip(0) = '0') and (hcnt(0) = '0') else
-		      sp_buffer_ram2_do_r(7 downto 4) when (vflip(0) = '1') and (hcnt(0) = '1') else
-			   sp_buffer_ram2_do_r(3 downto 0) when (vflip(0) = '1') and (hcnt(0) = '0');			  
+sp_vid <= sp_buffer_ram1_do_r(7 downto 4) when (sp_buffer_sel = '0') and (hcnt(0) = '1') else
+		    sp_buffer_ram1_do_r(3 downto 0) when (sp_buffer_sel = '0') and (hcnt(0) = '0') else
+		    sp_buffer_ram2_do_r(7 downto 4) when (sp_buffer_sel = '1') and (hcnt(0) = '1') else
+			 sp_buffer_ram2_do_r(3 downto 0);-- when (sp_buffer_sel = '1') and (hcnt(0) = '0');			  
 
 --------------------
 --- char machine ---
@@ -710,7 +772,7 @@ port map(
  clk_trg   => '0',
  
  d_out     => ctc_counter_2_do,
- zc_to     => open, -- used for spin angle decoder simulation
+ zc_to     => open,
  int_pulse => ctc_counter_2_int
  
 );
@@ -732,8 +794,16 @@ port map(
  
 );
 
+-- cpu program ROM 0x0000-0x6FFF
+--rom_cpu : entity work.solar_fox_cpu
+--port map(
+-- clk  => clock_vidn,
+-- addr => cpu_addr(14 downto 0),
+-- data => cpu_rom_do
+--);
+
 cpu_rom_addr <= cpu_addr(14 downto 0);
-cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) < X"7" else '0';
+
 
 -- working RAM   0x7000-0x77FF
 wram : entity work.cmos_ram
@@ -745,7 +815,6 @@ port map(
  d    => cpu_do,
  q    => wram_do
 );
-
 
 -- video RAM   0xFC00-0xFFFF
 video_ram : entity work.gen_ram
@@ -818,40 +887,16 @@ port map(
  data => bg_graphx2_do
 );
 
---sprite graphics ROM 1E
-sprite_graphics_1 : entity work.sol_sp_bits_1
+-- sprite graphics ROM 1A/1B/1D/1E
+sprite_graphics : entity work.sol_sp_bits
 port map(
  clk  => clock_vidn,
- addr => sp_code_line,
- data => sp_graphx1_do
-);
-
--- sprite graphics ROM 1D
-sprite_graphics_2 : entity work.sol_sp_bits_2
-port map(
- clk  => clock_vidn,
- addr => sp_code_line,
- data => sp_graphx2_do
-);
-
--- sprite graphics ROM 1B
-sprite_graphics_3 : entity work.sol_sp_bits_3
-port map(
- clk  => clock_vidn,
- addr => sp_code_line,
- data => sp_graphx3_do
-);
-
--- sprite graphics ROM 1A
-sprite_graphics_4 : entity work.sol_sp_bits_4
-port map(
- clk  => clock_vidn,
- addr => sp_code_line,
- data => sp_graphx4_do
+ addr => sp_code_line_mux,
+ data => sp_graphx_do
 );
 
 --kick_sound_board 
-sound_board : entity work.kick_sound_board
+sound_board : entity work.solarfox_sound_board
 port map(
  clock_40    => clock_40,
  reset       => reset,
@@ -866,13 +911,13 @@ port map(
  input_1 => input_1,
  input_2 => input_2,
  input_3 => input_3,
- cpu_rom_addr   => snd_rom_addr,
- cpu_rom_do     => snd_rom_do,
- cpu_rom_rd     => snd_rom_rd,
-
+ 
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,
+
+ cpu_rom_addr   => snd_rom_addr,
+ cpu_rom_do     => snd_rom_do,
 
  dbg_cpu_addr => open --dbg_cpu_addr
 );

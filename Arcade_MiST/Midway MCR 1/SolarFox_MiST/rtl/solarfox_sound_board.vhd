@@ -52,7 +52,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity kick_sound_board is
+entity solarfox_sound_board is
 port(
  clock_40     : in std_logic;
  reset        : in std_logic;
@@ -78,9 +78,9 @@ port(
   
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
-end kick_sound_board;
+end solarfox_sound_board;
 
-architecture struct of kick_sound_board is
+architecture struct of solarfox_sound_board is
 
  signal reset_n   : std_logic;
  signal clock_snd : std_logic;
