@@ -49,6 +49,7 @@ module Wacko_MiST(
 
 localparam CONF_STR = {
 	"WACKO;;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
@@ -59,6 +60,8 @@ localparam CONF_STR = {
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sys;
 assign SDRAM_CKE = 1;
+
+wire rotate = status[2];
 
 wire clk_sys;
 wire pll_locked;
@@ -72,8 +75,11 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [15:0] joystick_analog_0;
-wire [15:0] joystick_analog_1;
+wire  [5:0] joystick_0;
+wire  [5:0] joystick_1;
+wire signed [8:0] mouse_x;
+wire signed [8:0] mouse_y;
+wire        mouse_strobe;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
@@ -158,8 +164,19 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-always @(posedge clk_sys) begin
+reg signed [10:0] x_pos;
+reg signed [10:0] y_pos;
 
+always @(posedge clk_sys) begin
+	if (mouse_strobe) begin
+		if (rotate) begin
+			x_pos <= x_pos - mouse_y;
+			y_pos <= y_pos + mouse_x;
+		end else begin
+			x_pos <= x_pos + mouse_x;
+			y_pos <= y_pos + mouse_y;
+		end
+	end
 end
 
 satans_hollow satans_hollow(
@@ -181,19 +198,19 @@ satans_hollow satans_hollow(
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	//Controls
-	.trackX1(joystick_analog_0[7:0] | joystick_analog_1[7:0]),
-	.trackY1(joystick_analog_0[15:8] | joystick_analog_1[15:8]),
-	.trackX2(joystick_analog_1[7:0] | joystick_analog_1[7:0]),
-	.trackY2(joystick_analog_1[15:8] | joystick_analog_1[15:8]),
+	.trackX1(x_pos[10:3]),
+	.trackY1(y_pos[10:3]),
+	.trackX2(x_pos[10:3]),
+	.trackY2(y_pos[10:3]),
 	//ZAP
-	.up2(btn_w), 
-	.down2(btn_s), 
-	.left2(btn_a),
-	.right2(btn_d),
-	.up1(btn_w), 
-	.down1(btn_s),
-	.left1(btn_a),
-	.right1(btn_d), 
+	.up1(m_up),
+	.down1(m_down),
+	.left1(m_left),
+	.right1(m_right), 
+	.up2(m_up),
+	.down2(m_down),
+	.left2(m_left),
+	.right2(m_right), 
 	.cocktail(0),
 	.coin_meters(1),
 	.service(status[6]),
@@ -227,6 +244,7 @@ mist_video #(.COLOR_DEPTH(3    ), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_HS         ( hs_out           ),
 	.ce_divider     ( 1                ),
 	.blend          ( status[5]        ),
+	.rotate         ( {1'b1, rotate}   ),
 	.scandoubler_disable( 1'b1         ),
 	.no_csync       ( 1'b1             ),
 	.scanlines      ( status[4:3]      ),
@@ -246,11 +264,14 @@ user_io(
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_analog_0(joystick_analog_0),
-	.joystick_analog_1(joystick_analog_1),
+	.mouse_x        (mouse_x        ),
+	.mouse_y        (mouse_y        ),
+	.mouse_strobe   (mouse_strobe   ),
 	.status         (status         )
 	);
 
@@ -272,29 +293,18 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-//wire [7:0] m_up1     = btn_up | joystick_analog_0[3];
-//wire [7:0] m_down1   = btn_down | joystick_analog_0[2];
-//wire [7:0] m_left1   = btn_left | joystick_analog_0[1];
-//wire [7:0] m_right1  = btn_right | joystick_analog_0[0];
-
-//wire [7:0] m_up2     = btn_up | joystick_analog_1[3];
-//wire [7:0] m_down2   = btn_down | joystick_analog_1[2];
-//wire [7:0] m_left2   = btn_left | joystick_analog_1[1];
-//wire [7:0] m_right2  = btn_right | joystick_analog_1[0];
-
-//wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-//wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+//											Rotated														Normal
+wire m_up     = rotate ? btn_right | joystick_0[0] | joystick_1[0] : btn_up    | joystick_0[3] | joystick_1[3];
+wire m_down   = rotate ? btn_left  | joystick_0[1] | joystick_1[1] : btn_down  | joystick_0[2] | joystick_1[2];
+wire m_left   = rotate ? btn_up    | joystick_0[3] | joystick_1[3] : btn_left  | joystick_0[1] | joystick_1[1];
+wire m_right  = rotate ? btn_down  | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
-//reg btn_left = 0;
-//reg btn_right = 0;
-//reg btn_down = 0;
-//reg btn_up = 0;
-reg btn_w = 0;
-reg btn_a = 0;
-reg btn_s = 0;
-reg btn_d = 0;
+reg btn_left = 0;
+reg btn_right = 0;
+reg btn_down = 0;
+reg btn_up = 0;
 //reg btn_fire1 = 0;
 //reg btn_fire2 = 0;
 //reg btn_fire3 = 0;
@@ -306,15 +316,10 @@ wire       key_strobe;
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
-//			'h75: btn_up          <= key_pressed; // up
-//			'h72: btn_down        <= key_pressed; // down
-//			'h6B: btn_left        <= key_pressed; // left
-//			'h74: btn_right       <= key_pressed; // right
-			
-			'h1D: btn_w       <= key_pressed; // shot up
-			'h1C: btn_a       <= key_pressed; // shot left
-			'h1B: btn_s       <= key_pressed; // shot down
-			'h23: btn_d       <= key_pressed; // shot right
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
+			'h6B: btn_left        <= key_pressed; // left
+			'h74: btn_right       <= key_pressed; // right
 			
 			'h76: btn_coin        <= key_pressed; // ESC
 			'h05: btn_one_player  <= key_pressed; // F1
