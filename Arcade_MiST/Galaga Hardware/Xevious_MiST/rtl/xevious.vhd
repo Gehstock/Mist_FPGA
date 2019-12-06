@@ -163,7 +163,7 @@ port(
  sp_grphx_1_do  : in std_logic_vector(7 downto 0);
  sp_grphx_2_addr_o : out std_logic_vector(16 downto 0);
  sp_grphx_2_do  : in std_logic_vector(7 downto 0);
-
+ freeze         : in std_logic;
  b_test         : in std_logic;
  b_svce         : in std_logic;
  coin           : in std_logic;
@@ -433,7 +433,7 @@ clock_18n <= not clock_18;
 reset_n   <= not reset;
 
 dip_switch_a <= "11111111"; -- | cabinet(1) | lives(2)| bonus life(3) | coinage A(2) |
-dip_switch_b <= "1110001" & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
+dip_switch_b <= not freeze &"110001" & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
 dip_switch_do <= 	dip_switch_a(to_integer(unsigned(ram_bus_addr(3 downto 0)))) & 
 									dip_switch_b(to_integer(unsigned(ram_bus_addr(3 downto 0))));
 									

@@ -42,6 +42,7 @@ Aviable Arcade Cores
 #Galaga Hardware
 	Digdug
 	Galaga
+	Xevious
 
 #Galaxian Hardware
 	Azurian Attack
@@ -108,6 +109,7 @@ Aviable Arcade Cores
 	Satans Hollow
 	Tron
 	Two Tigers(Tron Conversation)
+	Wacko
 
 #Namco Rally X Hardware
 	Rally X

@@ -32,7 +32,8 @@ module xevious_mist
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"XEVIOUS;;",
+	"XEVIOUS;ROM;",
+	"O7,Game,Xevious,SXevious;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
@@ -170,7 +171,6 @@ end
 xevious xevious(
 	.clock_18          ( clk_sys ),
 	.reset             ( reset ),
-
 	.cpu1_addr_o       ( cpu1_addr ),
 	.cpu1_rom_do       ( cpu1_addr[0] ? cpu1_q[15:8] : cpu1_q[7:0] ),
 	.cpu2_addr_o       ( cpu2_addr ),
@@ -195,6 +195,7 @@ xevious xevious(
 	.video_vs(vs),
 	.video_blankn(blankn),
 	.audio(audio),
+	.freeze(status[7]),
 	.coin(btn_coin),
 	.start1(btn_one_player),
 	.left(m_left),

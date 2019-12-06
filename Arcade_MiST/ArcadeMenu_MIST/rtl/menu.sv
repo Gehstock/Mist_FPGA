@@ -71,8 +71,7 @@ user_io(
 	.ypbpr          (ypbpr          )
 	);
 
-sram ram
-(
+sram ram(
 	.*,
 	.init(~locked),
 	.clk(clk_ram),

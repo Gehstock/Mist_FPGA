@@ -6,9 +6,10 @@
 --
 -- Modified for external SDRAM controller as ROM storage for MiST by Slingshot
 -- 
--- Use xevious_cpu_gfx_8bits.bin as XEVIOUS.ROM
--- 
----------------------------------------------------------------------------------
+XEVIOUS.ROM is required at the root of the SD-Card.
+Menu Item for Super Xevious
+SXEVIOUS.ROM for Super Xevious (buggy for the First Game then it´s ok)
+--------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
 -------------------------------- 
 -- Copyright 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)

@@ -41,7 +41,7 @@ localparam CONF_STR = {
 	"O7,Blend ,Off,On;",
 	"O34,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
-	"V,v1.01.",`BUILD_DATE
+	"V,v1.10.",`BUILD_DATE
 };
 
 assign 		LED = ~ioctl_downl;
@@ -67,7 +67,9 @@ wire  [7:0] audio;
 wire 			hs, vs;
 wire 			hb, vb;
 wire 			blankn = ~(hb | vb);
-wire [3:0] 	r, g, b;
+wire [2:0] 	r = oPIX[2:0];
+wire [2:0] 	g = oPIX[5:3]; 
+wire [1:0] 	b = oPIX[7:6];
 wire 			key_strobe;
 wire 			key_pressed;
 wire  [7:0] key_code;
@@ -114,7 +116,7 @@ always @(posedge clock_48) begin
 end
 
 wire  [7:0] oPIX;
-assign POUT = {oPIX[7:6],2'b00,oPIX[5:3],1'b0,oPIX[2:0],1'b0};
+//assign POUT = {oPIX[7:6],2'b00,oPIX[5:3],1'b0,oPIX[2:0],1'b0};
 wire			PCLK;
 wire  [8:0] HPOS,VPOS;
 wire [11:0] POUT;
@@ -122,8 +124,6 @@ hvgen hvgen(
 	.HPOS(HPOS),
 	.VPOS(VPOS),
 	.PCLK(PCLK),
-	.iRGB(POUT),
-	.oRGB({b,g,r}),
 	.HBLK(hb),
 	.VBLK(vb),
 	.HSYN(hs),
@@ -159,14 +159,14 @@ FPGA_DIGDUG GameCore(
 	.SOUT(audio)
 );
 	
-mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clock_48         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
 	.R              ( blankn ? r : 0   ),
 	.G              ( blankn ? g : 0   ),
-	.B              ( blankn ? b : 0   ),
+	.B              ( blankn ? {b[1],b} : 0   ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),

@@ -1,0 +1,16 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: Rally-X  port to MiST
+-- 19 September 2019
+-- From: https://github.com/MrX-8B/MiSTer-Arcade-RallyX
+-- 
+
+---------------------------------------------------------------------------------
+-- FPGA New Rally-X for Spartan-3 Starter Board
+------------------------------------------------
+-- Copyright (c) 2005 MiSTer-X
+---------------------------------------------------------------------------------
+-- T80/T80s - Version : 0242
+-----------------------------
+-- Z80 compatible microprocessor core
+-- Copyright (c) 2001-2002 Daniel Wallner (jesus@opencores.org)

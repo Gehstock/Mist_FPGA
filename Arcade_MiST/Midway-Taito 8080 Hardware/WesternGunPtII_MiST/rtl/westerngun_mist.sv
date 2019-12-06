@@ -100,7 +100,7 @@ invaderst invaderst(
 	.VSync(VSync)
 	);
 		
-spaceinvaders_memory spaceinvaders_memory (
+westerngun_memory westerngun_memory (
 	.Clock(clk_sys),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -117,7 +117,7 @@ invaders_audio invaders_audio (
 	.Aud(audio)
 	);		
 	  
-spaceinvaders_overlay spaceinvaders_overlay (
+westerngun_overlay westerngun_overlay (
 	.Video(Video),
 	.Overlay(~status[5]),
 	.CLK(clk_sys),
