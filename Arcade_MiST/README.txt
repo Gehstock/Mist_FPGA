@@ -111,6 +111,11 @@ Aviable Arcade Cores
 	Two Tigers(Tron Conversation)
 	Wacko
 
+#Midway MCR 3
+	Discs of Tron
+	Tapper
+	Timber
+
 #Namco Rally X Hardware
 	Rally X
 
