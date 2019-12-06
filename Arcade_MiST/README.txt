@@ -156,6 +156,9 @@ Aviable Arcade Cores
 	Donkey Kong
 	Donkey Kong Jr.
 
+#Tehkan Bombjack Hardware
+	Bombjack
+
 #Williams 6809 rev.1 Hardware
 	Colony 7
 	Defender
