@@ -147,30 +147,26 @@ port(
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
-  
+ service        : in std_logic;
  coin1          : in std_logic;
  coin2          : in std_logic;
+ coin3          : in std_logic;
+ coin4          : in std_logic;
  start1         : in std_logic; 
  start2         : in std_logic; 
+ start3         : in std_logic; 
+ start4         : in std_logic;  
+ wheel1        : in std_logic_vector(5 downto 0);
+ wheel2        : in std_logic_vector(5 downto 0); 
  
- p1_left        : in std_logic; 
- p1_right       : in std_logic; 
- p1_up          : in std_logic; 
- p1_down        : in std_logic;
  p1_fire1       : in std_logic;
  p1_fire2       : in std_logic;
-
- p2_left        : in std_logic; 
- p2_right       : in std_logic; 
- p2_up          : in std_logic; 
- p2_down        : in std_logic;
  p2_fire1       : in std_logic;
  p2_fire2       : in std_logic;
- 
- coin_meters    : in std_logic;
- upright        : in std_logic;
- demo_sound     : in std_logic;
- service        : in std_logic;
+ p3_fire1       : in std_logic;
+ p3_fire2       : in std_logic;
+ p4_fire1       : in std_logic;
+ p4_fire2       : in std_logic;
 
  cpu_rom_addr   : out std_logic_vector(15 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -178,10 +174,7 @@ port(
  snd_rom_do     : in std_logic_vector(7 downto 0);
 
  sp_addr        : out std_logic_vector(14 downto 0);
--- sp_graphx_do   : in std_logic_vector(7 downto 0);
- sp_graphx32_do : in std_logic_vector(31 downto 0);
-
- dbg_cpu_addr : out std_logic_vector(15 downto 0)
+ sp_graphx32_do : in std_logic_vector(31 downto 0)
  );
 end dderby;
 
@@ -340,15 +333,6 @@ clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
 
--- debug 
-process (reset, clock_vid)
-begin
- if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
-   dbg_cpu_addr<= "000000000000000" & service; --cpu_addr;
---   dbg_cpu_addr<= max_sprite_rr & "0000000" & service; --cpu_addr;
- end if;
-end process;
-
 -- make enables clock from clock_vid
 process (clock_vid, reset)
 begin
@@ -486,12 +470,11 @@ end process;
 --------------------
 -- players inputs --
 --------------------
--- "111" for test & tilt & unused
-input_0 <= not service & "111" & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= "11" & not p1_fire2 & not p1_fire1 & not p1_up & not p1_down & not p1_left &  not p1_right;
-input_2 <= "11" & not p2_fire2 & not p2_fire1 & not p2_up & not p2_down & not p2_left &  not p2_right;
-input_3 <= coin_meters & upright & "111" & demo_sound & "11";
-input_4 <= x"FF";
+input_0 <= '1' & '1' & not service & '1' & not start2 & not start1 & not coin2 & not coin1;
+input_1 <= not wheel1 & not p1_fire2 & not p1_fire1;
+input_2 <= not wheel2 & not p2_fire2 & not p2_fire1;
+input_3 <= "11111111";
+input_4 <= not p4_fire2 & not p4_fire1 & not p3_fire2 & not p3_fire1 & not start4 & not start3 & not coin4 & not coin3;
 
 ------------------------------------------
 -- cpu data input with address decoding --
@@ -836,13 +819,6 @@ port map(
  
 );
 
--- cpu program ROM 0x0000-0xDFFF
---rom_cpu : entity work.timber_cpu
---port map(
--- clk  => clock_vidn,
--- addr => cpu_addr(15 downto 0),
--- data => cpu_rom_do
---);
 cpu_rom_addr <= cpu_addr(15 downto 0);
 
 -- working RAM   0xE000-0xE7FF
@@ -949,33 +925,6 @@ port map(
  data => bg_graphx2_do
 );
 
---sound_board : entity work.timber_sound_board
---port map(
--- clock_40    => clock_40,
--- reset       => reset,
- 
--- main_cpu_addr => cpu_addr(7 downto 0),
- 
--- ssio_iowe => ssio_iowe,
--- ssio_di   => cpu_do,
--- ssio_do   => ssio_do,
- 
--- input_0 => input_0,
--- input_1 => input_1,
--- input_2 => input_2,
--- input_3 => input_3,
--- input_4 => input_4,
- 
--- separate_audio => separate_audio,
--- audio_out_l    => audio_out_l,
--- audio_out_r    => audio_out_r,
-
--- cpu_rom_addr => snd_rom_addr,
--- cpu_rom_do => snd_rom_do,
-
--- dbg_cpu_addr => open --dbg_cpu_addr
---);
- 
 -- background & sprite palette
 palette : entity work.gen_ram
 generic map( dWidth => 9, aWidth => 6)

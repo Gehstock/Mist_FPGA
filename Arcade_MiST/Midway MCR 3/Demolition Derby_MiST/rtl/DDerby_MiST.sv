@@ -188,25 +188,26 @@ dderby dderby(
 	.audio_out_r(audio_r),
 	.coin1(btn_coin),
 	.coin2(1'b0),
+	.coin3(1'b0),
+	.coin4(1'b0),
+	
+	.start4(1'b0),
+	.start3(1'b0),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
-
-	.p1_left(m_left1), 
-	.p1_right(m_right1),
-	.p1_up(m_up1),
-	.p1_down(m_down1),
+	
 	.p1_fire1(m_fire1),
 	.p1_fire2(m_fire1b),
-
-	.p2_left(m_left2),
-	.p2_right(m_right2),
-	.p2_up(m_up2),
-	.p2_down(m_down2),
 	.p2_fire1(m_fire2),
 	.p2_fire2(m_fire2b),
-
-	.upright(1'b1),
-	.coin_meters(1),
+	.p3_fire1(m_fire1),
+	.p3_fire2(m_fire1b),
+	.p4_fire1(m_fire2),
+	.p4_fire2(m_fire2b),
+/*
+	.wheel1        : in std_logic_vector(5 downto 0);
+	.wheel2        : in std_logic_vector(5 downto 0); 
+*/
 	.service(status[6]),
 
 	.cpu_rom_addr ( rom_addr        ),
