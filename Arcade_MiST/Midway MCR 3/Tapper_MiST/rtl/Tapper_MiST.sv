@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Timber by DarFPGA
+//  Arcade: Tapper by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Timber_MiST(
+module Tapper_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -48,7 +48,7 @@ module Timber_MiST(
 `include "rtl/build_id.v"
 
 localparam CONF_STR = {
-	"TIMBER;;",
+	"TAPPER;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
@@ -107,7 +107,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h11000; //SP ROM offset: 0x11000
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h12000; //SP ROM offset: 0x12000
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -172,7 +172,7 @@ always @(posedge clk_sys) begin
 
 end
 
-timber timber (
+tapper tapper (
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),

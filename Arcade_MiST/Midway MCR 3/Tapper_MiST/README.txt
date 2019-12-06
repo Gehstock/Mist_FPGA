@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------
--- DE10_lite Top level for Timber (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)
+-- DE10_lite Top level for Tapper (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
+
 
 --
 -- release rev 00 : initial release

@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		DominoMan_assignment_defaults.qdf
+#		Tapper_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -158,7 +158,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY DominoMan_MiST
+set_global_assignment -name TOP_LEVEL_ENTITY Tapper_MiST
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
@@ -186,7 +186,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 
 # Power Estimation Assignments
 # ============================
-set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 
 # Advanced I/O Timing Assignments
@@ -213,18 +213,27 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/DominoMan_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/satans_hollow.vhd
-set_global_assignment -name VHDL_FILE rtl/satans_hollow_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/reset.stp
+set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name ALLOW_SYNCH_CTRL_USAGE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Tapper_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/tapper.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_counter.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_controler.vhd
+set_global_assignment -name VHDL_FILE rtl/tapper_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/cmos_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/tapper_bg_bits_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/tapper_bg_bits_2.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/midssio_82s123.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/domino_bg_bits_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/domino_bg_bits_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/domino_sp_bits.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
