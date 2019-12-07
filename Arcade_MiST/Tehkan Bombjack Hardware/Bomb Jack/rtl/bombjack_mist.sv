@@ -38,7 +38,7 @@ localparam CONF_STR = {
 	"V,v1.00.",`BUILD_DATE
 };
 
-assign 		LED = ~ioctl_dout;
+assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
 assign 		SDRAM_CLK = clock_48;
 assign 		SDRAM_CKE = 1;
@@ -122,7 +122,7 @@ sdram sdram(
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'hffff : bg_addr ),
+	.sp_addr       ( ioctl_downl ? 14'h3fff : {1'b0, bg_addr} ),
 	.sp_q          ( bg_do )
 );
 
