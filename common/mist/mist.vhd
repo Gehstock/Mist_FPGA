@@ -84,7 +84,7 @@ component mist_video
 	scandoubler_disable : in std_logic;
 	ypbpr       : in std_logic;
 	rotate      : in std_logic_vector(1 downto 0);
-	blend       : in std_logic;
+	blend       : in std_logic := '0';
 
 	HSync       : in std_logic;
 	VSync       : in std_logic;

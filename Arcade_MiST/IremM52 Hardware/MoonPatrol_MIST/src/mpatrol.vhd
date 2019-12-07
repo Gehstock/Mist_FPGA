@@ -233,6 +233,9 @@ moon_patrol_sound_board : entity work.moon_patrol_sound_board
 	);  
   
 dac : entity work.dac
+  generic map (
+		C_bits    => 12
+	)
 	port map (
 		clk_i     => clk_aud,
 		res_n_i   => not rst_aud,
@@ -265,12 +268,16 @@ pace_inst : entity work.pace
 	);
 
 mist_video: work.mist.mist_video
+	generic map (
+		SD_HCNT_WIDTH => 10
+	)
 	port map (
 		clk_sys     => clk_vid,
 		scanlines   => status(2 downto 1),
 		scandoubler_disable => scandoubler_disable,
 		ypbpr       => ypbpr,
 		rotate      => "00",
+		ce_divider  => '1',
 
 		SPI_SCK     => SPI_SCK,
 		SPI_SS3     => SPI_SS3,

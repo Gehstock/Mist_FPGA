@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "12.1 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "09:07:52  FEBRUARY 01, 2013"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY Output
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:src/build_id.tcl"
@@ -187,7 +187,6 @@ set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name VHDL_FILE src/bitmapctl_e.vhd
 set_global_assignment -name VHDL_FILE src/tilemapctl_e.vhd
 set_global_assignment -name VHDL_FILE src/target_pkg.vhd
@@ -207,15 +206,8 @@ set_global_assignment -name VHDL_FILE src/moon_patrol_sound_board.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_prog.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE src/YM2149.sv
 set_global_assignment -name VHDL_FILE src/cpu68.vhd
+set_global_assignment -name VHDL_FILE src/Z80.vhd
 set_global_assignment -name VHDL_FILE src/tilemapctl.vhd
-set_global_assignment -name VHDL_FILE src/t80/Z80.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80s.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE src/t80/T80.vhd
-set_global_assignment -name VHDL_FILE src/dac.vhd
 set_global_assignment -name VHDL_FILE src/sprom.vhd
 set_global_assignment -name VHDL_FILE src/spram.vhd
 set_global_assignment -name VHDL_FILE src/platform.vhd
@@ -235,4 +227,6 @@ set_global_assignment -name VERILOG_FILE src/keyboard.v
 set_global_assignment -name VHDL_FILE src/sprite_array.vhd
 set_global_assignment -name VHDL_FILE src/Clock.vhd
 set_global_assignment -name VHDL_FILE src/build_id.vhd
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
