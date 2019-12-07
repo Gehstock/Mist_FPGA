@@ -31,9 +31,9 @@ module bombjack_mist (
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"BOMBJACK;ROM;",
+	"BOMBJACK;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -100,7 +100,6 @@ sdram sdram(
 	.init_n        ( pll_locked   ),
 	.clk           ( clock_48      ),
 
-	// port1 used for main + sound CPU
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
 	.port1_a       ( ioctl_addr[23:1] ),
@@ -123,7 +122,7 @@ sdram sdram(
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'h7fff : bg_addr ),
+	.sp_addr       ( ioctl_downl ? 15'hffff : bg_addr ),
 	.sp_q          ( bg_do )
 );
 
@@ -139,7 +138,6 @@ always @(posedge clock_48) begin
 		end
 	end
 end
-
 
 reg reset = 1;
 reg rom_loaded = 0;
@@ -178,9 +176,9 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? r : 0   ),
-	.G              ( blankn ? g : 0   ),
-	.B              ( blankn ? b : 0   ),
+	.R              ( r),//blankn ? r : 0   ),
+	.G              ( g),//blankn ? g : 0   ),
+	.B              ( b),//blankn ? b : 0   ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
@@ -227,7 +225,6 @@ wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_dow
 wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
 wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-//wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;
@@ -236,8 +233,6 @@ reg btn_right = 0;
 reg btn_down = 0;
 reg btn_up = 0;
 reg btn_fire1 = 0;
-//reg btn_fire2 = 0;
-//reg btn_fire3 = 0;
 reg btn_coin  = 0;
 
 always @(posedge clock_48) begin
@@ -252,8 +247,6 @@ always @(posedge clock_48) begin
 			'h76: btn_coin				<= key_pressed; // ESC
 			'h05: btn_one_player   	<= key_pressed; // F1
 			'h06: btn_two_players  	<= key_pressed; // F2
-	//		'h14: btn_fire3 			<= key_pressed; // ctrl
-	//		'h11: btn_fire2 			<= key_pressed; // alt
 			'h29: btn_fire1   		<= key_pressed; // Space
 		endcase
 	end

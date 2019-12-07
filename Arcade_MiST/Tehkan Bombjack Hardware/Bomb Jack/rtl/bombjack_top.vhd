@@ -790,34 +790,6 @@ i_rom_8RNL_data <= bg_rom_data;
 			addr	=> o_rom_4P_addr(11 downto 0),
 			data	=> i_rom_4P_data
 		);
---
---	-- chip 8R page 7
---	ROM_8R : entity work.ROM_8R
---		port map (
---			CLK	=> clk_6M_en,
---			ENA   => o_rom_8RNL_ena,
---			ADDR	=> o_rom_8RNL_addr,
---			DATA  => i_rom_8RNL_data(23 downto 16)
---		);
---
---	-- chip 8N page 7
---	ROM_8N : entity work.ROM_8N
---		port map (
---			CLK	=> clk_6M_en,
---			ENA   => o_rom_8RNL_ena,
---			ADDR	=> o_rom_8RNL_addr,
---			DATA  => i_rom_8RNL_data(15 downto  8)
---		);
---
---	-- chip 8L page 7
---	ROM_8L : entity work.ROM_8L
---		port map (
---			CLK	=> clk_6M_en,
---			ENA   => o_rom_8RNL_ena,
---			ADDR	=> o_rom_8RNL_addr,
---			DATA  => i_rom_8RNL_data( 7 downto  0)
---		);
-
 
 	-- The following state machine implements all the 10 separate video ROMs (4P, 7J, 7L, 7M, 8K, 8H, 8E, 8R, 8N, 8L)
 	-- by reading the external SRAM on a 48Mhz clock and presenting the data just in time to the video circuitry which
