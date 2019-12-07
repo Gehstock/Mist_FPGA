@@ -54,6 +54,7 @@ localparam CONF_STR = {
 	"TRAVERSE;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"OA,Blending,Off,On;",
 	"O5,Units,MP,Km;",
 	"O6,Freeze,Disable,Enable;",
 	"O7,Game name,Traverse USA,Zippyrace;",
@@ -196,7 +197,9 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.rotate         ( {1'b1,status[2]} ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
-	.ypbpr          ( ypbpr            )
+	.ypbpr          ( ypbpr            ),
+	.ce_divider     ( 1'b0             ),
+	.blend          ( status[10]       )
 	);
 
 user_io #(

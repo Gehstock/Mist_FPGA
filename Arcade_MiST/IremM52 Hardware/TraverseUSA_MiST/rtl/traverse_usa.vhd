@@ -732,7 +732,7 @@ end process;
 ------------------------------
 
 -- microprocessor Z80
-cpu : entity work.T80se
+cpu : entity work.T80s
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
