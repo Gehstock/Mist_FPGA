@@ -936,4 +936,32 @@ port map(
  q    => palette_do
 );
 
+-- Midway Super Sound board
+sound_board : entity work.super_sound_board
+port map(
+ clock_40    => clock_40,
+ reset       => reset,
+
+ main_cpu_addr => cpu_addr(7 downto 0),
+
+ ssio_iowe => ssio_iowe,
+ ssio_di   => cpu_do,
+ ssio_do   => ssio_do,
+
+ input_0 => input_0,
+ input_1 => input_1,
+ input_2 => input_2,
+ input_3 => input_3,
+ input_4 => input_4,
+
+ separate_audio => separate_audio,
+ audio_out_l    => audio_out_l,
+ audio_out_r    => audio_out_r,
+
+ -- ROM sockets are unpopulated
+ cpu_rom_addr => open,
+ cpu_rom_do => x"FF",
+
+ dbg_cpu_addr => open --dbg_cpu_addr
+);
 end struct;
