@@ -172,6 +172,28 @@ always @(posedge clk_sys) begin
 
 end
 
+wire [5:0] wheel1;
+spinner spinner1 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(),
+	.btn_left(m_left1),
+	.btn_right(m_right1),
+	.ctc_zc_to_2(vs),
+	.spin_angle(wheel1)
+);
+
+wire [5:0] wheel2;
+spinner spinner2 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(),
+	.btn_left(m_left2),
+	.btn_right(m_right2),
+	.ctc_zc_to_2(vs),
+	.spin_angle(wheel2)
+);
+
 dderby dderby(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -204,10 +226,10 @@ dderby dderby(
 	.p3_fire2(m_fire1b),
 	.p4_fire1(m_fire2),
 	.p4_fire2(m_fire2b),
-/*
-	.wheel1        : in std_logic_vector(5 downto 0);
-	.wheel2        : in std_logic_vector(5 downto 0); 
-*/
+
+	.wheel1(wheel1),
+	.wheel2(wheel2),
+
 	.service(status[6]),
 
 	.cpu_rom_addr ( rom_addr        ),
@@ -290,17 +312,13 @@ wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
 wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
 
 //											Rotated														Normal
-wire m_up1     = status[2] ? btn_left  | joystick_0[1] : btn_up    | joystick_0[3];
-wire m_down1   = status[2] ? btn_right | joystick_0[0] : btn_down  | joystick_0[2];
-wire m_left1   = status[2] ? btn_down  | joystick_0[2] : btn_left  | joystick_0[1];
-wire m_right1  = status[2] ? btn_up    | joystick_0[3] : btn_right | joystick_0[0];
+wire m_left1   = btn_left  | joystick_0[1];
+wire m_right1  = btn_right | joystick_0[0];
 wire m_fire1   = btn_fire1 | joystick_0[4];
 wire m_fire1b  = btn_fire2 | joystick_0[5];
 
-wire m_up2     = status[2] ? joystick_1[1] : joystick_1[3];
-wire m_down2   = status[2] ? joystick_1[0] : joystick_1[2];
-wire m_left2   = status[2] ? joystick_1[2] : joystick_1[1];
-wire m_right2  = status[2] ? joystick_1[3] : joystick_1[0];
+wire m_left2   = joystick_1[1];
+wire m_right2  = joystick_1[0];
 wire m_fire2   = joystick_1[4];
 wire m_fire2b  = joystick_1[5];
 
@@ -308,8 +326,8 @@ reg btn_one_player = 0;
 reg btn_two_players = 0;
 reg btn_left = 0;
 reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
+//reg btn_down = 0;
+//reg btn_up = 0;
 reg btn_fire1 = 0;
 reg btn_fire2 = 0;
 //reg btn_fire3 = 0;
@@ -321,8 +339,8 @@ wire       key_strobe;
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
-			'h75: btn_up          <= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
+//			'h75: btn_up          <= key_pressed; // up
+//			'h72: btn_down        <= key_pressed; // down
 			'h6B: btn_left        <= key_pressed; // left
 			'h74: btn_right       <= key_pressed; // right
 			'h76: btn_coin        <= key_pressed; // ESC
