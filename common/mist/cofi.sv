@@ -36,8 +36,8 @@ reg [5:0] red_last;
 reg [5:0] green_last;
 reg [5:0] blue_last;
 
-always @(posedge clk) if (pix_ce) begin
-
+wire      ce = enable ? pix_ce : 1'b1;
+always @(posedge clk) if (ce) begin
     hblank_out <= hblank;
     vblank_out <= vblank;
     vs_out     <= vs;
@@ -50,7 +50,6 @@ always @(posedge clk) if (pix_ce) begin
     red_out    <= enable ? color_blend(red_last,   red,   hblank_out) : red;
     blue_out   <= enable ? color_blend(blue_last,  blue,  hblank_out) : blue;
     green_out  <= enable ? color_blend(green_last, green, hblank_out) : green;
-
 end
 
 endmodule
