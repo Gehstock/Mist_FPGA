@@ -36,7 +36,8 @@ reg [5:0] red_last;
 reg [5:0] green_last;
 reg [5:0] blue_last;
 
-always @(posedge clk) if (pix_ce) begin
+wire      ce = enable ? pix_ce : 1'b1;
+always @(posedge clk) if (ce) begin
 
     hblank_out <= hblank;
     vblank_out <= vblank;
