@@ -189,7 +189,8 @@ mist_video #(.COLOR_DEPTH(4)) mist_video
 	.SPI_DI(SPI_DI),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
-	.scandoubler_disable(1),
+	.scandoubler_disable(1'b1),
+	.ce_divider(1'b1),
 	.rotate(2'b00),
 	.ypbpr(ypbpr),
 	.HSync(hs),
@@ -198,7 +199,7 @@ mist_video #(.COLOR_DEPTH(4)) mist_video
 	.G(g),
 	.B(b),
 	.VGA_HS(VGA_HS),
-	.VGA_VS(VGS_VS),
+	.VGA_VS(VGA_VS),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
 	.VGA_B(VGA_B)
