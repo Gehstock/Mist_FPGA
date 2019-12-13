@@ -68,6 +68,7 @@ port(
  input_2 : in std_logic_vector(7 downto 0);
  input_3 : in std_logic_vector(7 downto 0);
  input_4 : in std_logic_vector(7 downto 0);
+ input_dail : in std_logic_vector(7 downto 0);
  separate_audio : in std_logic;
  
  audio_out_l : out std_logic_vector(15 downto 0);
@@ -233,6 +234,7 @@ ssio_do <= input_0     when main_cpu_addr(2 downto 0) = "000" else -- Input 0 --
            input_2     when main_cpu_addr(2 downto 0) = "010" else -- Input 2
 		   input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
 		   input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
+			input_dail     when main_cpu_addr(2 downto 0) = "110" else
 		   ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
 		   x"FF";
 		

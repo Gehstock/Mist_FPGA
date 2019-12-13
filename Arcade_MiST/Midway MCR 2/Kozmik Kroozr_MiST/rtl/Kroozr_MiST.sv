@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Wacko by DarFPGA
+//  Arcade: Kozmik Krooz`r by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -179,6 +179,18 @@ always @(posedge clk_sys) begin
 	end
 end
 
+wire [6:0] spin_angle;
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(1),
+	.btn_left(m_left),
+	.btn_right(m_right),
+	.ctc_zc_to_2(vs),
+	.spin_angle(spin_angle)
+);
+
+
 satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -200,8 +212,9 @@ satans_hollow satans_hollow(
 	//Controls
 	.analog_x(x_pos[10:3]),
 	.analog_y(y_pos[10:3]),
+	.spinner(spin_angle),//todo
 	.fire1(m_fire),
-	.fire2(m_bomb),
+	.fire2(m_bomb),//shield
 	.cocktail(0),
 //	.coin_meters(1),
 	.service(status[6]),
@@ -283,8 +296,8 @@ dac_r(
 	);	
 
 //											Rotated														Normal
-wire m_up     = rotate ? btn_right | joystick_0[0] | joystick_1[0] : btn_up    | joystick_0[3] | joystick_1[3];
-wire m_down   = rotate ? btn_left  | joystick_0[1] | joystick_1[1] : btn_down  | joystick_0[2] | joystick_1[2];
+//wire m_up     = rotate ? btn_right | joystick_0[0] | joystick_1[0] : btn_up    | joystick_0[3] | joystick_1[3];
+//wire m_down   = rotate ? btn_left  | joystick_0[1] | joystick_1[1] : btn_down  | joystick_0[2] | joystick_1[2];
 wire m_left   = rotate ? btn_up    | joystick_0[3] | joystick_1[3] : btn_left  | joystick_0[1] | joystick_1[1];
 wire m_right  = rotate ? btn_down  | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire  = btn_fire1  | joystick_0[4] | joystick_1[4];

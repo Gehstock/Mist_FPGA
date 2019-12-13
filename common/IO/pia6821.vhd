@@ -54,8 +54,8 @@ entity pia6821 is
     addr      : in    std_logic_vector(1 downto 0);
     data_in   : in    std_logic_vector(7 downto 0);
 	 	data_out  : out   std_logic_vector(7 downto 0);
-	 	irqa      : out   std_logic;
-	 	irqb      : out   std_logic;
+	 	irqa_n      : out   std_logic;
+	 	irqb_n      : out   std_logic;
 	 	pa_i      : in std_logic_vector(7 downto 0);
 	 	pa_o      : out std_logic_vector(7 downto 0);
 	 	pa_oe     : out std_logic_vector(7 downto 0);
@@ -545,8 +545,8 @@ end process;
 ---------------------------------
 pia_irq : process( irqa1, irqa2, irqb1, irqb2, porta_ctrl, portb_ctrl )
 begin
-  irqa <= (irqa1 and porta_ctrl(0)) or (irqa2 and porta_ctrl(3));
-  irqb <= (irqb1 and portb_ctrl(0)) or (irqb2 and portb_ctrl(3));
+  irqa_n <= not (irqa1 and porta_ctrl(0)) or not (irqa2 and porta_ctrl(3));
+  irqb_n <= not (irqb1 and portb_ctrl(0)) or not (irqb2 and portb_ctrl(3));
 end process;
 
 end pia_arch;

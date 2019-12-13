@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Satans Hollow by Dar (darfpga@aol.fr) (09/11/2019)
+-- Kozmik Krooz`r by Dar (darfpga@aol.fr) (09/11/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -156,10 +156,12 @@ port(
  coin2          : in std_logic;
  start1         : in std_logic;
  start2         : in std_logic;  
- fire1           : in std_logic;
- fire2           : in std_logic;
+ fire1          : in std_logic;
+ fire2          : in std_logic;
  analog_x       : in std_logic_vector(7 downto 0);
  analog_y       : in std_logic_vector(7 downto 0);
+ dail       	 : in std_logic_vector(7 downto 0);
+ spinner    	 : in std_logic_vector(6 downto 0);
  cocktail       : in std_logic;
  service        : in std_logic;
 
@@ -300,6 +302,7 @@ architecture struct of satans_hollow is
  signal input_2       : std_logic_vector(7 downto 0);
  signal input_3       : std_logic_vector(7 downto 0);
  signal input_4       : std_logic_vector(7 downto 0);
+signal input_dail     : std_logic_vector(7 downto 0);
    
 begin
 
@@ -441,10 +444,11 @@ end process;
 -- players inputs --
 --------------------
 input_0 <= not service & "11" & not fire1 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= not fire2 & "0000000";--spinner;
+input_1 <= not fire2 & spinner;
 input_2 <= analog_x;
 input_3 <= '1' & cocktail & "111111" ;
 input_4 <= analog_y;
+--input_dail <= dail;
 
 
 ------------------------------------------
@@ -866,6 +870,7 @@ port map(
  input_2 => input_2,
  input_3 => input_3,
  input_4 => input_4,
+ input_dail => input_dail,
 
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
