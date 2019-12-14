@@ -147,6 +147,7 @@ port(
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
+ audio_out      : out std_logic_vector(9 downto 0);
  service        : in std_logic;
  coin1          : in std_logic;
  coin2          : in std_logic;
@@ -314,6 +315,7 @@ architecture struct of dderby is
  signal palette_we          : std_logic;
  signal palette_do          : std_logic_vector(8 downto 0);
 
+ -- SSIO signals
  signal ssio_iowe : std_logic;
  signal ssio_do   : std_logic_vector(7 downto 0);
  
@@ -322,34 +324,11 @@ architecture struct of dderby is
  signal input_2   : std_logic_vector(7 downto 0);
  signal input_3   : std_logic_vector(7 downto 0);
  signal input_4   : std_logic_vector(7 downto 0);
+ signal output_4   : std_logic_vector(7 downto 0);
    
 -- signal max_sprite: std_logic_vector(7 downto 0); -- dbg
 -- signal max_sprite_r: std_logic_vector(7 downto 0); -- dbg
 -- signal max_sprite_rr: std_logic_vector(7 downto 0); -- dbg
-
- signal audio_out   : std_logic_vector(9 downto 0);
-
-COMPONENT TurboCheapSqueak
-	PORT
-	(
-		clock_snd		:	 IN STD_LOGIC;
-		reset_n		:	 IN STD_LOGIC;
-		main_cpu_addr		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		ssio_iowe		:	 IN STD_LOGIC;
-		ssio_di		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		ssio_do		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		input_0		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		input_1		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		input_2		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		input_3		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		input_4		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	--	st		:	 IN STD_LOGIC;
-	--	md		:	 IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-	--	stat		:	 IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-	--	key		:	 IN STD_LOGIC;
-		sound		:	 OUT STD_LOGIC_VECTOR(9 DOWNTO 0)
-	);
-END COMPONENT;
  
 begin
 
@@ -961,56 +940,44 @@ port map(
 );
 
 -- Midway Super Sound board
---sound_board : entity work.super_sound_board
---port map(
--- clock_40    => clock_40,
--- reset       => reset,
+sound_board : entity work.super_sound_board
+port map(
+ clock_40    => clock_40,
+ reset       => reset,
 
--- main_cpu_addr => cpu_addr(7 downto 0),
+ main_cpu_addr => cpu_addr(7 downto 0),
 
--- ssio_iowe => ssio_iowe,
--- ssio_di   => cpu_do,
--- ssio_do   => ssio_do,
+ ssio_iowe => ssio_iowe,
+ ssio_di   => cpu_do,
+ ssio_do   => ssio_do,
 
--- input_0 => input_0,
--- input_1 => input_1,
--- input_2 => input_2,
--- input_3 => input_3,
--- input_4 => input_4,
+ input_0 => input_0,
+ input_1 => input_1,
+ input_2 => input_2,
+ input_3 => input_3,
+ input_4 => input_4,
+ output_4 => output_4,
 
--- separate_audio => separate_audio,
--- audio_out_l    => audio_out_l,
--- audio_out_r    => audio_out_r,
+ separate_audio => separate_audio,
+ audio_out_l    => audio_out_l,
+ audio_out_r    => audio_out_r,
 
  -- ROM sockets are unpopulated
--- cpu_rom_addr => open,
--- cpu_rom_do => x"FF",
+ cpu_rom_addr => open,
+ cpu_rom_do => x"FF",
 
--- dbg_cpu_addr => open --dbg_cpu_addr
---);
-
-sound_board : TurboCheapSqueak
-port map(
- clock_snd    	=> clock_40,--todo
- reset_n       	=> reset_n,
- 
- main_cpu_addr => cpu_addr(7 downto 0),
- 
- ssio_iowe 		=> ssio_iowe,
- ssio_di   		=> cpu_do,
- ssio_do   		=> ssio_do,
- input_0 		=> input_0,
- input_1 		=> input_1,
- input_2 		=> input_2,
- input_3 		=> input_3,
- input_4 		=> input_4,
--- st    			=> open,
--- md    			=> open,
--- stat    		=> open,
--- key    			=> open,
- sound    		=> audio_out
+ dbg_cpu_addr => open --dbg_cpu_addr
 );
- audio_out_l <= "000000" & audio_out;
- audio_out_r <= "000000" & audio_out;
- 
+
+-- Turbo Cheap Squeak
+tcs: entity work.turbo_cheap_squeak
+port map (
+ clock_40 => clock_40,
+ reset => reset,
+ input => output_4,
+ rom_addr => snd_rom_addr,
+ rom_do => snd_rom_do,
+ audio_out => audio_out
+);
+
 end struct;

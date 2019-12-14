@@ -79,7 +79,7 @@ wire  [7:0] joy_0;
 wire  [7:0] joy_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [15:0] audio_l, audio_r;
+wire  [9:0] audio;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
@@ -206,8 +206,7 @@ dderby dderby(
 	.video_csync(cs),
 	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
-	.audio_out_l(audio_l),
-	.audio_out_r(audio_r),
+	.audio_out(audio),
 	.coin1(btn_coin),
 	.coin2(1'b0),
 	.coin3(1'b0),
@@ -290,23 +289,13 @@ user_io(
 	.status         (status         )
 	);
 
-dac #(
-	.C_bits(16))
-dac_l(
+dac #(10) dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_l),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
-	
-dac #(
-	.C_bits(16))
-dac_r(
-	.clk_i(clk_sys),
-	.res_n_i(1),
-	.dac_i(audio_r),
-	.dac_o(AUDIO_R)
-	);	
+assign AUDIO_R = AUDIO_L;
 
 wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
 wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
