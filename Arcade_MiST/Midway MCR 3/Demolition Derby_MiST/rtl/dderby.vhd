@@ -158,8 +158,10 @@ port(
  start3         : in std_logic; 
  start4         : in std_logic;  
  wheel1        : in std_logic_vector(5 downto 0);
- wheel2        : in std_logic_vector(5 downto 0); 
- 
+ wheel2        : in std_logic_vector(5 downto 0);
+ wheel3        : in std_logic_vector(5 downto 0);
+ wheel4        : in std_logic_vector(5 downto 0);
+
  p1_fire1       : in std_logic;
  p1_fire2       : in std_logic;
  p2_fire1       : in std_logic;
@@ -168,6 +170,8 @@ port(
  p3_fire2       : in std_logic;
  p4_fire1       : in std_logic;
  p4_fire2       : in std_logic;
+
+ dipsw          : in std_logic_vector(7 downto 0); -- NU, coins/credit, girl, free play, difficulty, 2player
 
  cpu_rom_addr   : out std_logic_vector(15 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -318,7 +322,8 @@ architecture struct of dderby is
  -- SSIO signals
  signal ssio_iowe : std_logic;
  signal ssio_do   : std_logic_vector(7 downto 0);
- 
+
+ signal input_sel : std_logic;
  signal input_0   : std_logic_vector(7 downto 0);
  signal input_1   : std_logic_vector(7 downto 0);
  signal input_2   : std_logic_vector(7 downto 0);
@@ -473,10 +478,25 @@ end process;
 --------------------
 -- players inputs --
 --------------------
+process (clock_vid, reset)
+begin
+	if reset='1' then
+		input_sel <= '0';
+	elsif rising_edge(clock_vid) then
+		if output_4(7) = '1' then
+			input_sel <= '0';
+		elsif output_4(6) = '1' then
+			input_sel <= '1';
+		end if;
+	end if;
+end process;
+
 input_0 <= '1' & '1' & not service & '1' & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= not wheel1 & not p1_fire2 & not p1_fire1;
-input_2 <= not wheel2 & not p2_fire2 & not p2_fire1;
-input_3 <= "11111111";
+input_1 <= not wheel1 & not p1_fire2 & not p1_fire1 when input_sel = '0' else
+           not wheel3 & not p1_fire2 & not p1_fire1;
+input_2 <= not wheel2 & not p2_fire2 & not p2_fire1 when input_sel = '0' else
+           not wheel4 & not p2_fire2 & not p2_fire1;
+input_3 <= dipsw;
 input_4 <= not p4_fire2 & not p4_fire1 & not p3_fire2 & not p3_fire1 & not start4 & not start3 & not coin4 & not coin3;
 
 ------------------------------------------

@@ -54,9 +54,16 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"O7,Swap Joystick,Off,On;",
+	"O8,Players,2,4;",
+	"O9,Difficulty,Normal,Hard;",
+	"OA,Trophy Girl,Full,Limited;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
+
+wire   players4 = status[8];
+wire   difficulty = status[9];
+wire   girl = status[10];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
@@ -77,6 +84,8 @@ wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [7:0] joy_0;
 wire  [7:0] joy_1;
+wire  [7:0] joy_2;
+wire  [7:0] joy_3;
 wire        scandoublerD;
 wire        ypbpr;
 wire  [9:0] audio;
@@ -194,6 +203,28 @@ spinner spinner2 (
 	.spin_angle(wheel2)
 );
 
+wire [5:0] wheel3;
+spinner spinner3 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(),
+	.btn_left(m_left3),
+	.btn_right(m_right3),
+	.ctc_zc_to_2(vs),
+	.spin_angle(wheel3)
+);
+
+wire [5:0] wheel4;
+spinner spinner4 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(),
+	.btn_left(m_left4),
+	.btn_right(m_right4),
+	.ctc_zc_to_2(vs),
+	.spin_angle(wheel4)
+);
+
 dderby dderby(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -208,12 +239,12 @@ dderby dderby(
 	.separate_audio(1'b0),
 	.audio_out(audio),
 	.coin1(btn_coin),
-	.coin2(1'b0),
-	.coin3(1'b0),
-	.coin4(1'b0),
+	.coin2(btn_coin),
+	.coin3(btn_coin),
+	.coin4(btn_coin),
 	
-	.start4(1'b0),
-	.start3(1'b0),
+	.start4(btn_four_players),
+	.start3(btn_three_players),
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	
@@ -221,16 +252,18 @@ dderby dderby(
 	.p1_fire2(m_fire1b),
 	.p2_fire1(m_fire2),
 	.p2_fire2(m_fire2b),
-	.p3_fire1(m_fire1),
-	.p3_fire2(m_fire1b),
-	.p4_fire1(m_fire2),
-	.p4_fire2(m_fire2b),
+	.p3_fire1(m_fire3),
+	.p3_fire2(m_fire3b),
+	.p4_fire1(m_fire4),
+	.p4_fire2(m_fire4b),
 
 	.wheel1(wheel1),
 	.wheel2(wheel2),
+	.wheel3(wheel3),
+	.wheel4(wheel4),
 
 	.service(status[6]),
-
+	.dipsw(~{3'b000, girl, 1'b0, difficulty, players4}), // NU, coins/credit, girl, free play, difficulty, 2player
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
@@ -286,6 +319,8 @@ user_io(
 	.key_code       (key_code       ),
 	.joystick_0     (joy_0          ),
 	.joystick_1     (joy_1          ),
+	.joystick_2     (joy_2          ),
+	.joystick_3     (joy_3          ),
 	.status         (status         )
 	);
 
@@ -311,8 +346,20 @@ wire m_right2  = joystick_1[0];
 wire m_fire2   = joystick_1[4];
 wire m_fire2b  = joystick_1[5];
 
+wire m_left3   = joy_2[1];
+wire m_right3  = joy_2[0];
+wire m_fire3   = joy_2[4];
+wire m_fire3b  = joy_2[5];
+
+wire m_left4   = joy_3[1];
+wire m_right4  = joy_3[0];
+wire m_fire4   = joy_3[4];
+wire m_fire4b  = joy_3[5];
+
 reg btn_one_player = 0;
 reg btn_two_players = 0;
+reg btn_three_players = 0;
+reg btn_four_players = 0;
 reg btn_left = 0;
 reg btn_right = 0;
 //reg btn_down = 0;
@@ -335,6 +382,8 @@ always @(posedge clk_sys) begin
 			'h76: btn_coin        <= key_pressed; // ESC
 			'h05: btn_one_player  <= key_pressed; // F1
 			'h06: btn_two_players <= key_pressed; // F2
+			'h04: btn_three_players  <= key_pressed; // F3
+			'h0C: btn_four_players <= key_pressed; // F4
 //			'h14: btn_fire3       <= key_pressed; // ctrl
 			'h11: btn_fire2       <= key_pressed; // alt
 			'h29: btn_fire1       <= key_pressed; // Space
