@@ -701,7 +701,7 @@ begin
 				end case;
 			end if;
 			
-			sp_palette_addr <= sp_col(1 downto 0) & sp_vid;
+			sp_palette_addr <= not sp_col(1 downto 0) & sp_vid;
 		
 		end if;
 
