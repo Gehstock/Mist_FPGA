@@ -19,8 +19,9 @@ module MoonWar_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Moon War;;",
+	"MWar;;",
 	"O34,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -58,7 +59,7 @@ berzerk berzerk(
 	.video_g(g),
 	.video_b(b),
 	.video_hi(),
-   .video_clk(),
+	.video_clk(),
 	.video_csync(),
 	.video_hs(hs),
 	.video_vs(vs),
@@ -80,14 +81,14 @@ berzerk berzerk(
 	.dbg_cpu_addr_latch()
 );
 
-mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
+mist_video #(.COLOR_DEPTH(1), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_20),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,r,r} : 0),
-	.G(blankn ? {g,g,g} : 0),
-	.B(blankn ? {b,b,b} : 0),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? b : 0),
 	.HSync(~hs),
 	.VSync(~vs),
 	.VGA_R(VGA_R),
@@ -95,18 +96,18 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(9)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.ce_divider(0),
+	.ce_divider(1'b1),
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
+	.blend(status[5]),
+	.scanlines(status[4:3]),
 	.ypbpr(ypbpr)
 	);
-
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_20         ),
+	.clk_sys        (clk_10         ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -125,10 +126,8 @@ user_io(
 	);
 
 
-dac #(
-	.C_bits(15))
-dac(
-	.clk_i(clk_20),
+dac #(16) dac(
+	.clk_i(clk_10),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -158,7 +157,7 @@ wire       key_pressed;
 wire [7:0] key_code;
 wire       key_strobe;
 
-always @(posedge clk_20) begin
+always @(posedge clk_10) begin
 	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
