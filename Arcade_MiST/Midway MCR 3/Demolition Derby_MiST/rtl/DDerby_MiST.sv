@@ -135,7 +135,7 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + snd_addr[14:1]) ),//Turbo Cheap Squeak
+	.cpu2_addr     ( cpu2_addr ),//Turbo Cheap Squeak
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -151,6 +151,8 @@ sdram sdram(
 	.sp_q          ( sp_do )
 );
 
+reg [15:0] cpu2_addr;
+
 // ROM download controller
 always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
@@ -162,6 +164,8 @@ always @(posedge clk_sys) begin
 			port2_req <= ~port2_req;
 		end
 	end
+	// register for better timings
+	cpu2_addr <= ioctl_downl ? 16'hffff : (16'h8000 + snd_addr[14:1]);
 end
 
 // reset signal generation
