@@ -69,6 +69,8 @@ port(
  input_3 : in std_logic_vector(7 downto 0);
  input_4 : in std_logic_vector(7 downto 0);
  
+ output_4 : out std_logic_vector(7 downto 0);
+ 
  separate_audio : in std_logic;
  
  audio_out_l : out std_logic_vector(15 downto 0);
@@ -475,6 +477,9 @@ begin
 				when "11" => iram_3_do <= ssio_di;
 				when others => null;
 				end case;
+			end if;
+			if ssio_iowe = '1' and main_cpu_addr(7 downto 0) = x"04" then
+				output_4 <= ssio_di;
 			end if;
 		end if;
 	end if;
