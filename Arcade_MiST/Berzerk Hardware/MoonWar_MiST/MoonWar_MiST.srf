@@ -1,3 +1,0 @@
-{ "" "" "" "VHDL Signal Declaration warning at berzerk.vhd(107): used implicit default value for signal \"dbg_cpu_di\" because signal was never assigned a value or an explicit default value. Use of implicit default value may introduce unintended design optimizations." {  } {  } 0 10541 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Verilog HDL information at scandoubler.v(114): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Verilog HDL warning at hq2x.sv(247): extended using \"x\" or \"z\"" {  } {  } 0 10273 "" 0 0 "Quartus II" 0 -1 0 ""}

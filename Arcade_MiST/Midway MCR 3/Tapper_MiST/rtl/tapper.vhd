@@ -695,7 +695,7 @@ begin
 				end case;
 			end if;
 			
-			sp_palette_addr <= sp_col(1 downto 0) & sp_vid;
+			sp_palette_addr <= not sp_col(1 downto 0) & sp_vid;
 		
 		end if;
 
@@ -938,7 +938,7 @@ bg_graphics_1 : entity work.tapper_bg_bits_1
 port map(
  clk  => clock_vidn,
  addr => bg_code_line,
- data => bg_graphx1_do
+ data => bg_graphx2_do
 );
 
 -- background graphics ROM 5F
@@ -946,7 +946,7 @@ bg_graphics_2 : entity work.tapper_bg_bits_2
 port map(
  clk  => clock_vidn,
  addr => bg_code_line,
- data => bg_graphx2_do
+ data => bg_graphx1_do
 );
 
 -- timber_sound_board 
