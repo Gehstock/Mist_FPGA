@@ -1,3 +1,8 @@
+Timber MiST port
+
+
+- TIMBER.ROM is needed on the SD Card.
+
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Timber (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)
 -- http://darfpga.blogspot.fr

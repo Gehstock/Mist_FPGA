@@ -1,43 +1,44 @@
-Discs of Tron MiST port
-- DOTRON.ROM is needed on the SD Card.
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: Spy Hunter port to MiST by Gehstock
+-- 16 November 2019
+-- 
 
+SHUNTER.ROM is required at the root of the SD-Card.
 
-	Aim Left    	:     F
-	Aim Right   	:     G
-	Level Up   	:     F3
-	Level Down   	:     F4
-	Forward   	:     Up
-	Backward   	:     Down
-	Left   		:     Left
-	Right   	:     Right
-	Coin   		:     ESC
-	1 Player   	:     F1
-	2 Player   	:     F2
-	Block   	:     Alt
-	Fire   		:     Space
+Controls
 
+	up		: Accelerate
+	down 		: Decelerate
+	left 		: Left
+	right		: Right
+	ESC		: Coin
+	TAB		: VAN
+	Z		: Shift
+	shift left	: Oil
+	ctrl left	: Smoke
+	alt left	: Missle
+	Space		: Gun
 
 
 ---------------------------------------------------------------------------------
--- DE10_lite Top level for Discs of Tron (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)
+-- DE10_lite Top level for Spy hunter (Midway MCR) by Dar (darfpga@aol.fr) (06/12/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
-
-
 --
 -- release rev 00 : initial release
---  (22/11/2019)
+--  (06/12/2019)
 --
---   /!\ /!\ cannot fit de10_lite : Full size sprite rom required more room or
---           sdram usage (TO DO)
---
+--   fit de10_lite OK : 
+--     - use sdram loader to load sprites data first then load spy hunter core
+
 ---------------------------------------------------------------------------------
 -- Educational use only
 -- Do not redistribute synthetized file with roms
 -- Do not redistribute roms whatever the form
 -- Use at your own risk
 ---------------------------------------------------------------------------------
--- Use timber_de10_lite.sdc to compile (Timequest constraints)
+-- Use spy_hunter_de10_lite.sdc to compile (Timequest constraints)
 -- /!\
 -- Don't forget to set device configuration mode with memory initialization 
 --  (Assignments/Device/Pin options/Configuration mode)
@@ -49,7 +50,7 @@ Discs of Tron MiST port
 --
 --  Video         : VGA 31kHz/60Hz progressive and TV 15kHz interlaced
 --  Cocktail mode : NO
---  Sound         : OK
+--  Sound         : OK - missing Chip/cheap squeak deluxe board
 -- 
 -- For hardware schematic see my other project : NES
 --
@@ -61,30 +62,34 @@ Discs of Tron MiST port
 -- Keyboard players inputs :
 --
 --   F1 : Add coin
---   F2 : Start 1 player
---   F3 : Start 2 players
+--   F3 : toggle lamp text display on screen
 --   F4 : Demo sound
 --   F5 : Separate audio
 --   F7 : Service mode
 --   F8 : 15kHz interlaced / 31 kHz progressive
 
---   SPACE       : bouton 1
---   v key       : bouton 2
---   RIGHT arrow : move right
---   LEFT  arrow : move left
---   UP    arrow : move up
---   DOWN  arrow : move down
+--   F2     : toggle hi/low gear shift
+--   SPACE  : oil
+--   f key  : missile
+--   g key  : van
+--   t key  : smoke
+--   v key  : gun
+
+--   RIGHT arrow : turn right side (auto center when released)
+--   LEFT  arrow : tirn left side (auto center when released)
+--   UP    arrow : gas increase
+--   DOWN  arrow : gas decrease
 --
 -- Other details : see timber.vhd
 -- For USB inputs and SGT5000 audio output see my other project: xevious_de10_lite
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
--- Timber by Dar (darfpga@aol.fr) (22/11/2019)
+-- Spy hunter by Dar (darfpga@aol.fr) (06/12/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 --
 -- release rev 00 : initial release
---  (22/11/2019)
+--  (06/12/2019)
 --
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -109,32 +114,36 @@ Discs of Tron MiST port
 --  Features :
 --   Video        : VGA 31Khz/60Hz progressive and TV 15kHz interlaced
 --   Coctail mode : NO
---   Sound        : OK
+--   Sound        : OK - missing cheap/chip squeak deluxe board
 
---  Use with MAME roms from timber.zip
+--  Use with MAME roms from spyhunt.zip
 --
---  Use make_timber_proms.bat to build vhd file from binaries
+--  Use make_spyhunt_proms.bat to build vhd file from binaries
 --  (CRC list included)
 
---  Timber (midway mcr) Hardware caracteristics :
+--  Spy hunter (midway mcr) Hardware caracteristics :
 --
 --  VIDEO : 1xZ80@3MHz CPU accessing its program rom, working ram,
 --    sprite data ram, I/O, sound board register and trigger.
 --		  56Kx8bits program rom
 --
---    One char/background tile map 30x32
---      2x8Kx8bits graphics rom 4bits/pixel + 2 bit color set
---      rbg programmable ram palette 64 colors 9bits : 3red 3green 3blue
+--    One char tile map 30x32 tiles of 8x8 pixels 
+--      1x4Kx8bits graphics rom 2bits/pixel single hard wired color set 
+
+--    One scroling background tile map 16x64 tile of 8x32 pixels
+--      2x16Kx8bits graphics rom 4bits/pixel single color set
+--      rbg programmable ram palette 64 (16 for background) colors 9bits : 3red 3green 3blue
 --
 --    128 sprites, up to ~30/line, 32x32 with flip H/V
---      4x32Kx8bits graphics rom 4bits/pixel + 2 bit color set
---      rbg programmable ram palette 64 colors 9bits : 3red 3green 3blue 
+--      4x32Kx8bits graphics rom 4bits/pixel single color set
+--      rbg programmable ram palette 64 (16 for sprites) colors 9bits : 3red 3green 3blue 
 --
 --    Working ram : 2Kx8bits
---    video (char/background) ram  : 2Kx8bits
+--    video char ram  : 1Kx8bits
+--    video background ram  : 2Kx8bits
 --    Sprites ram : 512x8bits + 512x8bits cache buffer
 
---    Sprites line buffer rams (graphics and colors) : 1 scan line delay flip/flop 2x256x16bits
+--    Sprites line buffer rams (graphics and colors) : 1 scan line delay flip/flop 2x256x8bits
 --
 --  SOUND : see tron_sound_board.vhd
 
@@ -205,44 +214,39 @@ Discs of Tron MiST port
 --
 ---------------------------------------------------------------------------------
 
- /!\ /!\ HALF SIZE SPRITE ROM  /!\ /!\
-
-Full size sprite rom would required more room or external ram
-
 +----------------------------------------------------------------------------------+
 ; Fitter Summary                                                                   ;
 +------------------------------------+---------------------------------------------+
-; Fitter Status                      ; Successful - Fri Nov 22 17:33:36 2019       ;
+; Fitter Status                      ; Successful - Fri Dec 13 19:55:32 2019       ;
 ; Quartus Prime Version              ; 18.1.0 Build 625 09/12/2018 SJ Lite Edition ;
-; Revision Name                      ; timber_de10_lite                            ;
-; Top-level Entity Name              ; timber_de10_lite                            ;
+; Revision Name                      ; spy_hunter_de10_lite                        ;
+; Top-level Entity Name              ; spy_hunter_de10_lite                        ;
 ; Family                             ; MAX 10                                      ;
 ; Device                             ; 10M50DAF484C6GES                            ;
 ; Timing Models                      ; Preliminary                                 ;
-; Total logic elements               ; 6,779 / 49,760 ( 14 % )                     ;
-;     Total combinational functions  ; 6,540 / 49,760 ( 13 % )                     ;
-;     Dedicated logic registers      ; 1,724 / 49,760 ( 3 % )                      ;
-; Total registers                    ; 1724                                        ;
-; Total pins                         ; 105 / 360 ( 29 % )                          ;
+; Total logic elements               ; 7,259 / 49,760 ( 15 % )                     ;
+;     Total combinational functions  ; 6,938 / 49,760 ( 14 % )                     ;
+;     Dedicated logic registers      ; 1,984 / 49,760 ( 4 % )                      ;
+; Total registers                    ; 2000                                        ;
+; Total pins                         ; 160 / 360 ( 44 % )                          ;
 ; Total virtual pins                 ; 0                                           ;
-; Total memory bits                  ; 1,399,360 / 1,677,312 ( 83 % )  <--  WITH HALF SIZE SPRITE ROM ONLY
+; Total memory bits                  ; 881,216 / 1,677,312 ( 53 % )  <--  WITH SDRAM SPRITE DATA LOADER
 ; Embedded Multiplier 9-bit elements ; 0 / 288 ( 0 % )                             ;
 ; Total PLLs                         ; 1 / 4 ( 25 % )                              ;
 ; UFM blocks                         ; 0 / 1 ( 0 % )                               ;
 ; ADC blocks                         ; 0 / 2 ( 0 % )                               ;
 +------------------------------------+---------------------------------------------+
-
 ---------------
 VHDL File list 
 ---------------
+de10_lite/max10_pll_120M.vhd        Pll 120MHz and 40MHz from 50MHz altera mf 
 
-de10_lite/max10_pll_40M.vhd        Pll 40MHz from 50MHz altera mf 
-
-rtl_dar/timber_de10_lite.vhd       Top level for de10_lite board
-rtl_dar/timber.vhd                 Main CPU and video boards logic
-rtl_dar/timber_sound_board.vhd     Main sound board logic
-rtl_dar/ctc_controler.vhd          Z80-CTC controler 
-rtl_dar/ctc_counter.vhd            Z80-CTC counter
+rtl_dar/spy_hunter_de10_lite.vhd    Top level for de10_lite board
+rtl_dar/spy_hunter.vhd              Main CPU and video boards logic
+rtl_dar/spy_hunter_sound_board.vhd  Main sound board logic
+rtl_dar/ctc_controler.vhd           Z80-CTC controler 
+rtl_dar/ctc_counter.vhd             Z80-CTC counter
+rtl_dar/sdram.sv                    specific sdram interface 8bits write / 8x16bits burst read
 
 rtl_mikej/YM2149_linmix.vhd        Copyright (c) MikeJ - Jan 2005
 
@@ -257,48 +261,54 @@ rtl_dar/kbd_joystick.vhd           Keyboard key to player/coin input
 rtl_dar/io_ps2_keyboard.vhd        Copyright 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
 rtl_dar/gen_ram.vhd                Generic RAM (Peter Wendrich + DAR Modification)
 rtl_dar/decodeur_7_seg.vhd         7 segments display decoder
+rtl_dar/cmos_ram.vhd               ram that can be initialized store setup
 
-rtl_dar/proms/timber_cpu.vhd         CPU board PROMS
-rtl_dar/proms/timber_bg_bits_2.vhd
-rtl_dar/proms/timber_bg_bits_1.vhd
+rtl_dar/proms/spy_hunter_cpu.vhd        CPU board PROMS
+rtl_dar/proms/spy_hunter_bg_bits_2.vhd
+rtl_dar/proms/spy_hunter_bg_bits_1.vhd
+rtl_dar/proms/spy_hunter_ch_bits.vhd
 
-rtl_dar/proms/timber_sp_bits.vhd     Video board PROMS
+rtl_dar/proms/spy_hunter_sp_bits_1.vhd  Video board PROMS (to be used with sdram loader)
+rtl_dar/proms/spy_hunter_sp_bits_2.vhd     
+rtl_dar/proms/spy_hunter_sp_bits_3.vhd     
+rtl_dar/proms/spy_hunter_sp_bits_4.vhd     
 
-rtl_dar/proms/timber_sound_cpu.vhd   Sound board PROMS
+rtl_dar/proms/spy_hunter_sound_cpu.vhd  Sound board PROMS
 rtl_dar/proms/midssio_82s123.vhd
 
 ----------------------
 Quartus project files
 ----------------------
-de10_lite/timber_de10_lite.sdc   Timequest constraints file
-de10_lite/timber_de10_lite.qsf   de10_lite settings (files,pins...) 
-de10_lite/timber_de10_lite.qpf   de10_lite project
+de10_lite/spy_hunter_de10_lite.sdc   Timequest constraints file
+de10_lite/spy_hunter_de10_lite.qsf   de10_lite settings (files,pins...) 
+de10_lite/spy_hunter_de10_lite.qpf   de10_lite project
 
 -----------------------------
 Required ROMs (Not included)
 -----------------------------
-You need the following 18 ROMs binary files from timber.zip and midssio.zip(MAME)
+You need the following 19 ROMs binary files from spyhunt.zip and midssio.zip(MAME)
 
-timpg0.bin  CRC 377032ab
-timpg1.bin  CRC fd772836
-timpg2.bin  CRC 632989f9
-timpg3.bin  CRC dae8a0dc
-
-tima7.bin   CRC c615dc3e
-tima8.bin   CRC 83841c87
-tima9.bin   CRC 22bcdcd3
-
-timbg1.bin  CRC b1cb2651
-timbg0.bin  CRC 2ae352c4
-
-timfg1.bin  CRC 81de4a73
-timfg0.bin  CRC 7f3a4f59
-timfg3.bin  CRC 37c03272
-timfg2.bin  CRC e2c2885c
-timfg5.bin  CRC eb636216
-timfg4.bin  CRC b7105eb7
-timfg7.bin  CRC d9c27475
-timfg6.bin  CRC 244778e8
+spy-hunter_cpu_pg0_2-9-84.6d      CRC 1721b88f
+spy-hunter_cpu_pg1_2-9-84.7d      CRC 909d044f
+spy-hunter_cpu_pg2_2-9-84.8d      CRC afeeb8bd
+spy-hunter_cpu_pg3_2-9-84.9d      CRC 5e744381
+spy-hunter_cpu_pg4_2-9-84.10d     CRC a3033c15
+spy-hunter_cpu_pg5_2-9-84.11d     CRC 88aa1e99
+spy-hunter_cpu_alpha-n_11-18-83   CRC 936dc87f
+spy-hunter_cpu_bg0_11-18-83.3a    CRC dea34fed
+spy-hunter_cpu_bg1_11-18-83.4a    CRC 8f64525f
+spy-hunter_cpu_bg2_11-18-83.5a    CRC ba0fd626
+spy-hunter_cpu_bg3_11-18-83.6a    CRC 7b482d61
+spy-hunter_video_1fg_11-18-83.a7  CRC 9fe286ec
+spy-hunter_video_0fg_11-18-83.a8  CRC 292c5466
+spy-hunter_video_3fg_11-18-83.a5  CRC b894934d
+spy-hunter_video_2fg_11-18-83.a6  CRC 62c8bfa5
+spy-hunter_video_5fg_11-18-83.a3  CRC 2d9fbcec
+spy-hunter_video_4fg_11-18-83.a4  CRC 7ca4941b
+spy-hunter_video_7fg_11-18-83.a1  CRC 940fe17e
+spy-hunter_video_6fg_11-18-83.a2  CRC 8cb8a066
+spy-hunter_snd_0_sd_11-18-83.a7   CRC c95cf31e
+spy-hunter_snd_1_sd_11-18-83.a8   CRC 12aaa48e
 
 midssio_82s123.12d CRC e1281ee9
 
@@ -306,14 +316,18 @@ midssio_82s123.12d CRC e1281ee9
 Tools 
 ------
 You need to build vhdl files from the binary file :
- - Unzip the roms file in the tools/timber_unzip directory
- - Double click (execute) the script tools/make_timber_proms.bat to get the following 6 files
+ - Unzip the roms file in the tools/spy_hunter_unzip directory
+ - Double click (execute) the script tools/make_spy_hunter_proms.bat to get the following 10 files
 
-timber_cpu.vhd
-timber_sound_cpu.vhd
-timber_bg_bits_1.vhd
-timber_bg_bits_2.vhd 
-timber_sp_bits.vhd
+spy_hunter_cpu.vhd
+spy_hunter_sound_cpu.vhd
+spy_hunter_ch_bits.vhd
+spy_hunter_bg_bits_1.vhd
+spy_hunter_bg_bits_2.vhd 
+spy_hunter_sp_bits_1.vhd -- use sdram loader to load spy_hunter_sp_bits_1/2/3/4.vhd before loading spy_hunter core.
+spy_hunter_sp_bits_2.vhd
+spy_hunter_sp_bits_3.vhd
+spy_hunter_sp_bits_4.vhd
 midssio_82s123.vhd
 
 
@@ -321,7 +335,7 @@ midssio_82s123.vhd
 
 VHDL files are needed to compile and include roms into the project 
 
-The script make_timber_proms.bat uses make_vhdl_prom executables delivered both in linux and windows version. The script itself is delivered only in windows version (.bat) but should be easily ported to linux.
+The script make_spy_hunter_proms.bat uses make_vhdl_prom executables delivered both in linux and windows version. The script itself is delivered only in windows version (.bat) but should be easily ported to linux.
 
 Source code of make_vhdl_prom.c is also delivered.
 
@@ -331,11 +345,35 @@ Compiling for de10_lite
 You can build the project with ROM image embeded in the sof file.
 *DO NOT REDISTRIBUTE THESE FILES*
 
-3 steps
+Use the following project assignements for both sdram loader and spy_hunter core
+
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_cke
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_clk
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_cs_n
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ldqm
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ras_n
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_udqm
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_we_n
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_addr
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_ba
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_cas_n
+ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to dram_dq
+ set_instance_assignment -name FAST_INPUT_REGISTER ON -to dram_dq
+ set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to dram_dq
+
+
+2 steps for sdram loader (sprites graphics)
+
+ - put the VHDL ROM files (spy_hunter_sp_bit_1/2/3/4.vhd) into the rtl_dar/proms directory
+ - build sdram_loader_de10_lite
+
+4 steps for core
 
  - put the VHDL ROM files (.vhd) into the rtl_dar/proms directory
- - build timber_de10_lite
- - program timber_de10_lite.sof
+ - build spy_hunter_de10_lite
+
+ - program sdram_loader_de10_lite.sof (first step) (press key1 bouton to start/restart loader program)
+ - program spy_hunter_de10_lite.sof   (next step without power OFF de10_lite board) 
 
 ------------------------
 ------------------------

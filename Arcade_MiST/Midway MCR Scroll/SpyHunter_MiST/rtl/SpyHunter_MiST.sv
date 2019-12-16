@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Demolition Derby by DarFPGA
+//  Arcade: Spy Hunter by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module DDerby_MiST(
+module SpyHunter_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -48,22 +48,17 @@ module DDerby_MiST(
 `include "rtl/build_id.v"
 
 localparam CONF_STR = {
-	"DDERBY;;",
+	"SHUNTER;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
+	"O8,Demo Sounds,Off,On;",
+	"O9,Show Lamps,Off,On;",
 	"O7,Swap Joystick,Off,On;",
-	"O8,Players,2,4;",
-	"O9,Difficulty,Normal,Hard;",
-	"OA,Trophy Girl,Full,Limited;",
 	"T0,Reset;",
-	"V,v1.1.",`BUILD_DATE
+	"V,v1.0.",`BUILD_DATE
 };
-
-wire   players4 = status[8];
-wire   difficulty = status[9];
-wire   girl = status[10];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
@@ -84,17 +79,15 @@ wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [7:0] joy_0;
 wire  [7:0] joy_1;
-wire  [7:0] joy_2;
-wire  [7:0] joy_3;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [9:0] audio;
+wire [15:0] audio_l, audio_r;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
-wire [14:0] snd_addr;
+wire [12:0] snd_addr;
 wire [15:0] snd_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
@@ -103,6 +96,8 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] steering;
+wire  [7:0] gas;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -116,7 +111,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h14000; 
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000;//Wrong for CSD roms !!!
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -135,8 +130,8 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( cpu2_addr ),//Turbo Cheap Squeak
-	.cpu2_q        ( snd_do ),
+	.cpu2_addr     ( 16'hffff ),// CSD Roms - Change Rom File for this
+	.cpu2_q        ( ),//snd_do ),
 
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
@@ -151,8 +146,6 @@ sdram sdram(
 	.sp_q          ( sp_do )
 );
 
-reg [15:0] cpu2_addr;
-
 // ROM download controller
 always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
@@ -164,8 +157,6 @@ always @(posedge clk_sys) begin
 			port2_req <= ~port2_req;
 		end
 	end
-	// register for better timings
-	cpu2_addr <= ioctl_downl ? 16'hffff : (16'h8000 + snd_addr[14:1]);
 end
 
 // reset signal generation
@@ -185,51 +176,19 @@ always @(posedge clk_sys) begin
 
 end
 
-wire [5:0] wheel1;
-spinner spinner1 (
+spy_hunter_control spy_hunter_control(
 	.clock_40(clk_sys),
 	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_left1),
-	.btn_right(m_right1),
-	.ctc_zc_to_2(vs),
-	.spin_angle(wheel1)
-);
+	.vsync(vs),
+	.gas_plus(m_up),
+	.gas_minus(m_down),
+	.steering_plus(m_right),
+	.steering_minus(m_left),
+	.steering(steering),
+	.gas(gas)
+  );
 
-wire [5:0] wheel2;
-spinner spinner2 (
-	.clock_40(clk_sys),
-	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_left2),
-	.btn_right(m_right2),
-	.ctc_zc_to_2(vs),
-	.spin_angle(wheel2)
-);
-
-wire [5:0] wheel3;
-spinner spinner3 (
-	.clock_40(clk_sys),
-	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_left3),
-	.btn_right(m_right3),
-	.ctc_zc_to_2(vs),
-	.spin_angle(wheel3)
-);
-
-wire [5:0] wheel4;
-spinner spinner4 (
-	.clock_40(clk_sys),
-	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_left4),
-	.btn_right(m_right4),
-	.ctc_zc_to_2(vs),
-	.spin_angle(wheel4)
-);
-
-dderby dderby(
+spy_hunter spy_hunter(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -241,33 +200,22 @@ dderby dderby(
 	.video_csync(cs),
 	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
-	.audio_out(audio),
+	.audio_out_l(audio_l),
+	.audio_out_r(audio_r),
 	.coin1(btn_coin),
-	.coin2(btn_coin),
-	.coin3(btn_coin),
-	.coin4(btn_coin),
-	
-	.start4(btn_four_players),
-	.start3(btn_three_players),
-	.start2(btn_two_players),
-	.start1(btn_one_player),
-	
-	.p1_fire1(m_fire1),
-	.p1_fire2(m_fire1b),
-	.p2_fire1(m_fire2),
-	.p2_fire2(m_fire2b),
-	.p3_fire1(m_fire3),
-	.p3_fire2(m_fire3b),
-	.p4_fire1(m_fire4),
-	.p4_fire2(m_fire4b),
-
-	.wheel1(wheel1),
-	.wheel2(wheel2),
-	.wheel3(wheel3),
-	.wheel4(wheel4),
-
+	.coin2(1'b0),	
+	.shift(m_shift),
+	.oil(m_fire4),
+	.missile(m_fire2),
+	.van(m_van),
+	.smoke(m_fire3),
+	.gun(m_fire1),
+	.steering(steering),
+	.gas(gas),
+	.timer(1),
+	.show_lamps(status[9]),	
+	.demo_sound(status[8]),
 	.service(status[6]),
-	.dipsw(~{3'b000, girl, 1'b0, difficulty, players4}), // NU, coins/credit, girl, free play, difficulty, 2player
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
@@ -323,54 +271,52 @@ user_io(
 	.key_code       (key_code       ),
 	.joystick_0     (joy_0          ),
 	.joystick_1     (joy_1          ),
-	.joystick_2     (joy_2          ),
-	.joystick_3     (joy_3          ),
 	.status         (status         )
 	);
 
-dac #(10) dac(
+dac #(
+	.C_bits(16))
+dac_l(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i(audio_l),
 	.dac_o(AUDIO_L)
 	);
-assign AUDIO_R = AUDIO_L;
+	
+dac #(
+	.C_bits(16))
+dac_r(
+	.clk_i(clk_sys),
+	.res_n_i(1),
+	.dac_i(audio_r),
+	.dac_o(AUDIO_R)
+	);	
 
 wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
 wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
 
 //											Rotated														Normal
-wire m_left1   = btn_left  | joystick_0[1];
-wire m_right1  = btn_right | joystick_0[0];
-wire m_fire1   = btn_fire1 | joystick_0[4];
-wire m_fire1b  = btn_fire2 | joystick_0[5];
+wire m_up     = ~status[2] ? btn_left  | joystick_0[1] | joystick_1[1] : btn_up    | joystick_0[3] | joystick_1[3];
+wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down  | joystick_0[2] | joystick_1[2];
+wire m_left   = ~status[2] ? btn_down  | joystick_0[2] | joystick_1[2] : btn_left  | joystick_0[1] | joystick_1[1];
+wire m_right  = ~status[2] ? btn_up    | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4];
+wire m_fire2   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_fire3   = btn_fire3 | joystick_0[6] | joystick_1[6];
+wire m_fire4   = btn_fire4 | joystick_0[7] | joystick_1[7];
+wire m_van = btn_van;
+wire m_shift = btn_shift;
 
-wire m_left2   = joystick_1[1];
-wire m_right2  = joystick_1[0];
-wire m_fire2   = joystick_1[4];
-wire m_fire2b  = joystick_1[5];
-
-wire m_left3   = joy_2[1];
-wire m_right3  = joy_2[0];
-wire m_fire3   = joy_2[4];
-wire m_fire3b  = joy_2[5];
-
-wire m_left4   = joy_3[1];
-wire m_right4  = joy_3[0];
-wire m_fire4   = joy_3[4];
-wire m_fire4b  = joy_3[5];
-
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_three_players = 0;
-reg btn_four_players = 0;
+reg btn_shift = 0;
 reg btn_left = 0;
 reg btn_right = 0;
-//reg btn_down = 0;
-//reg btn_up = 0;
+reg btn_down = 0;
+reg btn_up = 0;
+reg btn_van = 0;
 reg btn_fire1 = 0;
 reg btn_fire2 = 0;
-//reg btn_fire3 = 0;
+reg btn_fire3 = 0;
+reg btn_fire4 = 0;
 reg btn_coin  = 0;
 wire       key_pressed;
 wire [7:0] key_code;
@@ -379,17 +325,16 @@ wire       key_strobe;
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
-//			'h75: btn_up          <= key_pressed; // up
-//			'h72: btn_down        <= key_pressed; // down
+			'h75: btn_up          <= key_pressed; // up
+			'h72: btn_down        <= key_pressed; // down
 			'h6B: btn_left        <= key_pressed; // left
 			'h74: btn_right       <= key_pressed; // right
 			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h04: btn_three_players  <= key_pressed; // F3
-			'h0C: btn_four_players <= key_pressed; // F4
-//			'h14: btn_fire3       <= key_pressed; // ctrl
-			'h11: btn_fire2       <= key_pressed; // alt
+			'h0D: btn_van 			 <= key_pressed; // TAB
+			'h1A: btn_shift 		 <= key_pressed; // Y  35
+			'h12: btn_fire4       <= key_pressed; // shift left
+			'h14: btn_fire3       <= key_pressed; // ctrl left
+			'h11: btn_fire2       <= key_pressed; // alt left
 			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end

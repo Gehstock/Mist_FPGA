@@ -1,3 +1,10 @@
+Tapper MiST port
+
+
+- TAPPER.ROM is needed on the SD Card.
+
+
+
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Tapper (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)
 -- http://darfpga.blogspot.fr

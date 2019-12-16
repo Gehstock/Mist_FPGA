@@ -1,12 +1,7 @@
 Demolition Derby MiST port
 
 - support for 3/4 players
-- DDERBY.ROM is needed on the SD Card. Can be created from MAME ROM filewith:
-
-# cat demo_drby_pro_0 demo_drby_pro_1 demo_drby_pro_2 demo_drby_pro_3 tcs_u5.bin tcs_u4.bin \
-demo_derby_fg0_a4.a4 demo_derby_fg4_a3.a3 demo_derby_fg1_a6.a6 demo_derby_fg5_a5.a5 \
-demo_derby_fg2_a8.a8 demo_derby_fg6_a7.a7 demo_derby_fg3_a10.a10 demo_derby_fg7_a9.a9 > DDERBY.ROM
-
+- DDERBY.ROM is needed on the SD Card.
 
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Timber (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)

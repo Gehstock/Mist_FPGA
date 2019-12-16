@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		DDerby_assignment_defaults.qdf
+#		Timber_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -158,7 +158,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY DDerby_MiST
+set_global_assignment -name TOP_LEVEL_ENTITY SpyHunter_MiST
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
@@ -214,7 +214,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/snd.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/reset.stp
 set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
 set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
 set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
@@ -223,24 +223,22 @@ set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name ALLOW_SYNCH_CTRL_USAGE ON
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/DDerby_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/dderby.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SpyHunter_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/spy_hunter.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_counter.vhd
 set_global_assignment -name VHDL_FILE rtl/ctc_controler.vhd
+set_global_assignment -name VHDL_FILE rtl/spy_hunter_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/spy_hunter_control.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/cmos_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/dderby_bg_bits_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/dderby_bg_bits_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/spy_hunter_bg_bits_2.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/spy_hunter_bg_bits_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/spy_hunter_ch_bits.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/spy_hunter_sound_cpu.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/midssio_82s123.vhd
-set_global_assignment -name VHDL_FILE rtl/super_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
-set_global_assignment -name VHDL_FILE rtl/spinner.vhd
-set_global_assignment -name VHDL_FILE ../../../common/IO/pia6821.vhd
-set_global_assignment -name VHDL_FILE ../../../common/CPU/MC6809/cpu09l_128a.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SIGNALTAP_FILE output_files/snd.stp
-set_global_assignment -name VHDL_FILE rtl/turbo_cheap_squeak.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

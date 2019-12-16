@@ -112,9 +112,13 @@ Aviable Arcade Cores
 	Wacko
 
 #Midway MCR 3
+	Demolition Derby
 	Discs of Tron
 	Tapper
 	Timber
+
+#Midway MCR Scroll
+	Spy Hunter
 
 #Namco Rally X Hardware
 	Rally X
