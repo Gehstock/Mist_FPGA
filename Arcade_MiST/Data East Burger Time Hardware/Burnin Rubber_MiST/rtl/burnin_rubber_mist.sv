@@ -21,9 +21,9 @@ module burnin_rubber_mist
 
 localparam CONF_STR = {
 	"BurningR;;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"O2,Rotate Controls,Off,On;",
 	"T6,Reset;",
 	"V,v1.10.",`BUILD_DATE
 };

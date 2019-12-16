@@ -22,7 +22,8 @@ module burger_time_mist
 localparam CONF_STR = {
 	"BurgerTime;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
 	"V,v1.10.",`BUILD_DATE
 	};
@@ -33,21 +34,20 @@ wire  [1:0] switches;
 wire  [9:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
-wire        scandoubler_disable;
+wire        scandoublerD;
 wire        ypbpr;
 wire        ps2_kbd_clk, ps2_kbd_data;
 
 assign LED = 1;
 
-wire clk_12, clk_6, clk_24;
+wire clk_12, clk_24;
 wire pll_locked;
 
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_24),
-	.c1(clk_12),
-	.c2(clk_6)
+	.c0(clk_12),
+	.c1(clk_24)
 	);
 
 wire m_up     = ~status[2] ? kbjoy[6] | joystick_0[1] | joystick_1[1] : kbjoy[4] | joystick_0[3] | joystick_1[3];
@@ -89,8 +89,8 @@ burger_time burger_time(
 
 wire [10:0] audio;
 
-dac dac(
-	.clk_i(clk_24),
+dac #(11) dac(
+	.clk_i(clk_12),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -103,68 +103,59 @@ wire [2:0] r, g;
 wire [1:0] b;
 wire       blankn;
 
-video_mixer #(
-	.LINE_LENGTH(320), 
-	.HALF_DEPTH(1)) 
-video_mixer(
-	.clk_sys(clk_24),
-	.ce_pix(clk_6),
-	.ce_pix_actual(clk_6),
-	.SPI_SCK(SPI_SCK),
-	.SPI_SS3(SPI_SS3),
-	.SPI_DI(SPI_DI),
-	.R(blankn ? {r,r} : "000000"),
-	.G(blankn ? {g,g} : "000000"),
-	.B(blankn ? {b,b,b} : "000000"),
-	.HSync(hs),
-	.VSync(vs),
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_VS(VGA_VS),
-	.VGA_HS(VGA_HS),
-	.scandoubler_disable(scandoubler_disable),
-	.scanlines(scandoubler_disable ? 2'b00 : {status[4:3] == 3, status[4:3] == 2}),
-	.hq2x(status[4:3]==1),
-	.rotate({1'b1,status[2]}),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
+	.clk_sys        ( clk_24           ),
+	.SPI_SCK        ( SPI_SCK          ),
+	.SPI_SS3        ( SPI_SS3          ),
+	.SPI_DI         ( SPI_DI           ),
+	.R              ( blankn ? r : 0   ),
+	.G              ( blankn ? g : 0   ),
+	.B              ( blankn ? {b[1], b} : 0   ),
+	.HSync          ( hs               ),
+	.VSync          ( vs               ),
+	.VGA_R          ( VGA_R            ),
+	.VGA_G          ( VGA_G            ),
+	.VGA_B          ( VGA_B            ),
+	.VGA_VS         ( VGA_VS           ),
+	.VGA_HS         ( VGA_HS           ),
+	.rotate         ( {1'b1,status[2]} ),
+	.ce_divider     ( 1'b1             ),
+	.blend          ( status[5]        ),
+	.scandoubler_disable( scandoublerD ),
+	.no_csync       ( 1'b0             ),
+	.scanlines      ( status[4:3]      ),
+	.ypbpr          ( ypbpr            )
 	);
 
-mist_io #(
+user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
-mist_io(
-	.clk_sys        (clk_24   	     ),
+user_io(
+	.clk_sys        (clk_12         ),
 	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoubler_disable(scandoubler_disable),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
 	.ps2_kbd_clk    (ps2_kbd_clk    ),
 	.ps2_kbd_data   (ps2_kbd_data   ),
-	.joystick_0   	 (joystick_0     ),
+	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
 keyboard keyboard(
-	.clk(clk_24),
+	.clk(clk_12),
 	.reset(),
 	.ps2_kbd_clk(ps2_kbd_clk),
 	.ps2_kbd_data(ps2_kbd_data),
 	.joystick(kbjoy)
 	);
 
-
 endmodule
-
-
-
-
