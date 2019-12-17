@@ -151,7 +151,8 @@ port(
   separate_audio : in  std_logic;
   audio_out_l    : out std_logic_vector(15 downto 0);
   audio_out_r    : out std_logic_vector(15 downto 0);
-  
+  csd_audio_out  : out std_logic_vector( 9 downto 0);
+
   coin1          : in std_logic;
   coin2          : in std_logic;
   shift          : in std_logic;
@@ -176,6 +177,8 @@ port(
   cpu_rom_do     : in std_logic_vector(7 downto 0);
   snd_rom_addr   : out std_logic_vector(12 downto 0);
   snd_rom_do     : in std_logic_vector(7 downto 0);
+  csd_rom_addr   : out std_logic_vector(14 downto 1);
+  csd_rom_do     : in std_logic_vector(15 downto 0);
   sp_addr        : out std_logic_vector(14 downto 0);
   sp_graphx32_do : in std_logic_vector(31 downto 0); 
   dbg_cpu_addr : out std_logic_vector(15 downto 0)
@@ -1154,6 +1157,17 @@ port map(
 -- data => sp_graphx_do
 --);
 
+-- background & sprite palette
+palette : entity work.gen_ram
+generic map( dWidth => 9, aWidth => 6)
+port map(
+ clk  => clock_vidn,
+ we   => palette_we,
+ addr => palette_addr,
+ d    => cpu_addr(0) & cpu_do,
+ q    => palette_do
+);
+
 -- Spy hunter sound board 
 sound_board : entity work.spy_hunter_sound_board
 port map(
@@ -1177,19 +1191,22 @@ port map(
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
  audio_out_r    => audio_out_r,
- 
+
+ cpu_rom_addr => snd_rom_addr,
+ cpu_rom_do   => snd_rom_do,
+
  dbg_cpu_addr => open --dbg_cpu_addr
 );
- 
--- background & sprite palette
-palette : entity work.gen_ram
-generic map( dWidth => 9, aWidth => 6)
-port map(
- clk  => clock_vidn,
- we   => palette_we,
- addr => palette_addr,
- d    => cpu_addr(0) & cpu_do,
- q    => palette_do
+
+-- Cheap Squeak Deluxe
+csd: entity work.cheap_squeak_deluxe
+port map (
+ clock_40 => clock_40,
+ reset => reset,
+ input => output_4,
+ rom_addr => csd_rom_addr,
+ rom_do => csd_rom_do,
+ audio_out => csd_audio_out
 );
 
 end struct;

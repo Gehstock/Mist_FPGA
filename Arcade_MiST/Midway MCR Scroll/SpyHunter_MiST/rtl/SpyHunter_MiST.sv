@@ -82,6 +82,7 @@ wire  [7:0] joy_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
+wire  [9:0] csd_audio;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
@@ -89,6 +90,8 @@ wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire [12:0] snd_addr;
 wire [15:0] snd_do;
+wire [14:1] csd_addr;
+wire [15:0] csd_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
 wire        ioctl_downl;
@@ -111,7 +114,21 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000;//Wrong for CSD roms !!!
+// ROM structure:
+
+//  0000 -  DFFF - Main ROM (8 bit)
+//  E000 -  FFFF - Super Sound board ROM (8 bit)
+// 10000 - 17FFF - CSD ROM (16 bit)
+// 18000 -         Sprite ROMs (32 bit)
+
+// spy-hunter_cpu_pg0_2-9-84.6d spy-hunter_cpu_pg1_2-9-84.7d spy-hunter_cpu_pg2_2-9-84.8d spy-hunter_cpu_pg3_2-9-84.9d spy-hunter_cpu_pg4_2-9-84.10d spy-hunter_cpu_pg5_2-9-84.11d
+// spy-hunter_snd_0_sd_11-18-83.a7 spy-hunter_snd_1_sd_11-18-83.a8
+// spy-hunter_cs_deluxe_u17_b_11-18-83.u17 spy-hunter_cs_deluxe_u18_d_11-18-83.u18 spy-hunter_cs_deluxe_u7_a_11-18-83.u7 spy-hunter_cs_deluxe_u8_c_11-18-83.u8
+// spy-hunter_video_1fg_11-18-83.a7 spy-hunter_video_0fg_11-18-83.a8 spy-hunter_video_3fg_11-18-83.a5 spy-hunter_video_2fg_11-18-83.a6 spy-hunter_video_5fg_11-18-83.a3 spy-hunter_video_4fg_11-18-83.a4 spy-hunter_video_7fg_11-18-83.a1 spy-hunter_video_6fg_11-18-83.a2
+
+wire [24:0] rom_ioctl_addr = ~ioctl_addr[16] ? ioctl_addr : // 8 bit ROMs
+                             {ioctl_addr[24:16], ioctl_addr[15], ioctl_addr[13:0], ioctl_addr[14]}; // 16 bit ROM
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h18000;
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -119,19 +136,22 @@ sdram sdram(
 	.init_n        ( pll_locked   ),
 	.clk           ( clk_mem      ),
 
-	// port1 used for main + sound CPU
+	// port1 used for main + sound CPUs
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
-	.port1_a       ( ioctl_addr[23:1] ),
-	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port1_a       ( rom_ioctl_addr[23:1] ),
+	.port1_ds      ( {rom_ioctl_addr[0], ~rom_ioctl_addr[0]} ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( 16'hffff ),// CSD Roms - Change Rom File for this
-	.cpu2_q        ( ),//snd_do ),
+	// need higher priority for CSD
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + csd_addr[14:1]) ),
+	.cpu2_q        ( csd_do ),
+	.cpu3_addr     ( ioctl_downl ? 16'hffff : (16'h7000 + snd_addr[12:1]) ),
+	.cpu3_q        ( snd_do ),
 
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
@@ -202,6 +222,7 @@ spy_hunter spy_hunter(
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
+	.csd_audio_out(csd_audio),
 	.coin1(btn_coin),
 	.coin2(1'b0),	
 	.shift(m_shift),
@@ -220,6 +241,8 @@ spy_hunter spy_hunter(
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.csd_rom_addr ( csd_addr        ),
+	.csd_rom_do   ( csd_do          ),
 	.sp_addr      ( sp_addr         ),
 	.sp_graphx32_do ( sp_do         )
 );
@@ -279,16 +302,16 @@ dac #(
 dac_l(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_l),
+	.dac_i(audio_l + { csd_audio, 5'd0 }),
 	.dac_o(AUDIO_L)
 	);
-	
+
 dac #(
 	.C_bits(16))
 dac_r(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_r),
+	.dac_i(audio_r + { csd_audio, 5'd0 }),
 	.dac_o(AUDIO_R)
 	);	
 

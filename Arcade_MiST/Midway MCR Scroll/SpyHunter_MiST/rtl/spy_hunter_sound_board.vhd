@@ -74,7 +74,10 @@ port(
  
  audio_out_l : out std_logic_vector(15 downto 0);
  audio_out_r : out std_logic_vector(15 downto 0);
-  
+
+ cpu_rom_addr : out std_logic_vector(12 downto 0);
+ cpu_rom_do : in std_logic_vector(7 downto 0);
+
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
 end spy_hunter_sound_board;
@@ -101,7 +104,7 @@ architecture struct of spy_hunter_sound_board is
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
  
- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
+-- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
  
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
@@ -436,12 +439,14 @@ port map(
 );
 
 -- cpu program ROM 0x0000-0x3FFF
-rom_cpu : entity work.spy_hunter_sound_cpu
-port map(
- clk  => clock_sndn,
- addr => cpu_addr(12 downto 0),
- data => cpu_rom_do
-);
+--rom_cpu : entity work.spy_hunter_sound_cpu
+--port map(
+-- clk  => clock_sndn,
+-- addr => cpu_addr(12 downto 0),
+-- data => cpu_rom_do
+--);
+
+cpu_rom_addr <= cpu_addr(12 downto 0);
 
 -- working RAM   0x8000-0x83FF
 wram : entity work.gen_ram
