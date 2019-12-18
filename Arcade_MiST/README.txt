@@ -14,6 +14,8 @@ Aviable Arcade Cores
 #Atari Discrete Logic
 	Computer Space
 
+#Atari Tetris
+
 #Bagman Hardware
 	Bagman
 	Botanic

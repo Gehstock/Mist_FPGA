@@ -57,7 +57,7 @@ localparam CONF_STR = {
 	"O9,Show Lamps,Off,On;",
 	"O7,Swap Joystick,Off,On;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v1.1.",`BUILD_DATE
 };
 
 assign LED = ~ioctl_downl;
