@@ -105,7 +105,7 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[15:1]}),
+	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b0, rom_addr[15:1]}),
 	.cpu1_q        ( rom_do ),
 
 	// port2 for gfx
