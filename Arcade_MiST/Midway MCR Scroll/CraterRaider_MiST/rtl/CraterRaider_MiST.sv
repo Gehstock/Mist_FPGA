@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module SpyHunter_MiST(
+module CraterRaider_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -83,7 +83,7 @@ wire [15:0] audio_l, audio_r;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
-wire [14:0] rom_addr;
+wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
@@ -94,8 +94,6 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire  [7:0] steering;
-wire  [7:0] gas;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -126,9 +124,9 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + snd_addr[13:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h5000 + snd_addr[13:1]) ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -174,19 +172,7 @@ always @(posedge clk_sys) begin
 
 end
 
-spy_hunter_control spy_hunter_control(
-	.clock_40(clk_sys),
-	.reset(reset),
-	.vsync(vs),
-	.gas_plus(m_up),
-	.gas_minus(m_down),
-	.steering_plus(m_right),
-	.steering_minus(m_left),
-	.steering(steering),
-	.gas(gas)
-  );
-
-spy_hunter spy_hunter(
+Crater_Raider Crater_Raider(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -208,7 +194,7 @@ spy_hunter spy_hunter(
 	.down(m_down),
 	.fire1(m_fire1),
 	.fire2(m_fire2),
-	.fire3(m_fire3),
+	.fire3(m_fire3),//not working
 	.service(status[6]),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),

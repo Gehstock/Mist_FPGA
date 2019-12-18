@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Spy hunter by Dar (darfpga@aol.fr) (06/12/2019)
+-- Crater Raider by Dar (darfpga@aol.fr) (06/12/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 --
@@ -134,7 +134,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity spy_hunter is
+entity crater_raider is
 port(
  clock_40     		: in std_logic;
  reset        		: in std_logic;
@@ -172,9 +172,9 @@ port(
  sp_graphx32_do 	: in std_logic_vector(31 downto 0);
  dbg_cpu_addr 		: out std_logic_vector(15 downto 0)
  );
-end spy_hunter;
+end crater_raider;
 
-architecture struct of spy_hunter is
+architecture struct of crater_raider is
 
  signal reset_n   : std_logic;
  signal clock_vid : std_logic;
