@@ -92,6 +92,12 @@ Aviable Arcade Cores
 	Tazz Mania
 	The End	
 
+#Mappy Hardware
+	Dig Dug 2
+	Mappy
+	Motos
+	The Tower of Druaga
+
 #Midway / Taito 8080 Hardware
 	Galaxy Wars
 	Lunar Rescue

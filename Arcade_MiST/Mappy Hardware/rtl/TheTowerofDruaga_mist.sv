@@ -35,6 +35,10 @@ module TheTowerofDruaga_mist (
 //`define CORE_NAME "MOTOS"
 //`define CORE_NAME "DIGDUG2"
 
+//`define CORE_NAME "GROBDA"
+//`define CORE_NAME "PHOZON"
+
+
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
@@ -84,19 +88,6 @@ wire  [7:0] ioctl_dout;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-
-/*
-ROM map
-00000-07FFF   cpu0     32k 3.1d+1.1b (+2.1c in Mappy)
-08000-0BFFF   spchip0  16k 6.3m
-0C000-0FFFF   spchip1  16k 7.3m
-10000-11FFF   cpu1      8k 4.1k
-12000-12FFF   bgchip    4k 5.3b
-13000-133FF   spclut    1k 7.5k
-13400-134FF   bgclut  256b 6.4c
-13500-135FF   wave    256b 3.3m
-13600-1361F   palet    32b 5.5b
-*/
 
 data_io data_io(
 	.clk_sys       ( clock_48     ),
