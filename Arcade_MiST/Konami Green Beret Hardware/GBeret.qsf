@@ -40,7 +40,7 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
-set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
@@ -204,18 +204,16 @@ set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_RO
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/gberet.stp
-set_global_assignment -name VERILOG_FILE rtl/SN76496.v
-set_global_assignment -name VERILOG_FILE rtl/hvgen.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gberet_mist.sv
+set_global_assignment -name VERILOG_FILE rtl/FPGA_GreenBeret.v
+set_global_assignment -name VERILOG_FILE rtl/GreenBeret_MAIN.v
 set_global_assignment -name VERILOG_FILE rtl/GreenBeret_VIDEO.v
 set_global_assignment -name VERILOG_FILE rtl/GreenBeret_SOUND.v
-set_global_assignment -name VERILOG_FILE rtl/GreenBeret_MAIN.v
-set_global_assignment -name VERILOG_FILE rtl/FPGA_GreenBeret.v
+set_global_assignment -name VERILOG_FILE rtl/SN76496.v
+set_global_assignment -name VERILOG_FILE rtl/hvgen.v
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VERILOG_FILE rtl/build_id.v
-set_global_assignment -name QIP_FILE pll.qip
-set_global_assignment -name SYSTEMVERILOG_FILE gberet_mist.sv
-set_global_assignment -name SYSTEMVERILOG_FILE sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
-set_global_assignment -name SIGNALTAP_FILE output_files/gberet.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

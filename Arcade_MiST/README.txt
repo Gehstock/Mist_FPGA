@@ -1,4 +1,4 @@
-Aviable Arcade Cores  118
+Aviable Arcade Cores  121
 
 #Atari 6502 Black & White Raster Hardware
 	Canyon Bomber
@@ -79,6 +79,11 @@ Aviable Arcade Cores  118
 	Pooyan
 	Power Surge
 	Time Pilot
+
+#Konami Green Beret Hardware
+	Green Beret
+	Mr. Goemon
+	Rush´n Attack
 
 #Konami Scramble Hardware
 	Amidar

@@ -32,8 +32,13 @@ module gberet_mist (
 
 `include "rtl\build_id.v" 
 
+//`define CORE_NAME "GBERET"
+//`define CORE_NAME "RUSHNA"
+`define CORE_NAME "MRGOEMON"
+
+
 localparam CONF_STR = {
-	"GBERET;ROM;",
+	`CORE_NAME,";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O5,Blend,Off,On;",
