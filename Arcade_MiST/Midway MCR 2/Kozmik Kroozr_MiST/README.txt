@@ -4,8 +4,9 @@
 -- 10 November 2019
 -- 
 -- VGA/TV
--- Control Kroozr with the mouse, shot with the joystick
-
+-- Control Kroozr with the mouse, shot with the left button, turn on shield with the right.
+-- The weapon can be rotated with the joystick (or left/right arrow keys).
+--
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

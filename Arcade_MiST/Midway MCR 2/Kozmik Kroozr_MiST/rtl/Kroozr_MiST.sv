@@ -80,6 +80,8 @@ wire  [5:0] joystick_1;
 wire signed [8:0] mouse_x;
 wire signed [8:0] mouse_y;
 wire        mouse_strobe;
+wire  [7:0] mouse_flags;
+reg   [1:0] mouse_btns;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
@@ -142,6 +144,7 @@ sdram sdram(
 	.snd_q         ( snd_do )
 );
 
+// ROM download ctrl.
 always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
 
@@ -154,6 +157,7 @@ always @(posedge clk_sys) begin
 	end
 end
 
+// Reset gen.
 reg reset = 1;
 reg rom_loaded = 0;
 always @(posedge clk_sys) begin
@@ -164,18 +168,19 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-reg signed [10:0] x_pos;
-reg signed [10:0] y_pos;
+/// Controllers
+reg  signed [9:0] x_pos;
+reg  signed [9:0] y_pos;
+wire signed [8:0] move_x = rotate ? -mouse_y : mouse_x;
+wire signed [8:0] move_y = rotate ?  mouse_x : mouse_y;
+wire signed [9:0] x_pos_new = x_pos - move_x;
+wire signed [9:0] y_pos_new = y_pos + move_y;
 
 always @(posedge clk_sys) begin
 	if (mouse_strobe) begin
-		if (rotate) begin
-			x_pos <= x_pos - mouse_y;
-			y_pos <= y_pos + mouse_x;
-		end else begin
-			x_pos <= x_pos + mouse_x;
-			y_pos <= y_pos + mouse_y;
-		end
+		mouse_btns <= mouse_flags[1:0];
+		if (!((move_x[8] & ~x_pos[9] &  x_pos_new[9]) || (~move_x[8] &  x_pos[9] & ~x_pos_new[9]))) x_pos <= x_pos_new;
+		if (!((move_y[8] &  y_pos[9] & ~y_pos_new[9]) || (~move_y[8] & ~y_pos[9] &  y_pos_new[9]))) y_pos <= y_pos_new;
 	end
 end
 
@@ -190,7 +195,7 @@ spinner spinner (
 	.spin_angle(spin_angle)
 );
 
-
+// Main core
 satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -210,9 +215,9 @@ satans_hollow satans_hollow(
 	.start2(btn_two_players),
 	.start1(btn_one_player),
 	//Controls
-	.analog_x(x_pos[10:3]),
-	.analog_y(y_pos[10:3]),
-	.spinner(spin_angle),//todo
+	.analog_x({x_pos[9],x_pos[9],x_pos[7:2]}),
+	.analog_y({y_pos[9],y_pos[9],y_pos[7:2]}),
+	.spinner(~spin_angle[6:3]),
 	.fire1(m_fire),
 	.fire2(m_bomb),//shield
 	.cocktail(0),
@@ -224,6 +229,7 @@ satans_hollow satans_hollow(
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] )
 );
 
+// Video out
 wire vs_out;
 wire hs_out;
 assign VGA_VS = scandoublerD | vs_out;
@@ -253,6 +259,7 @@ mist_video #(.COLOR_DEPTH(3    ), .SD_HCNT_WIDTH(10)) mist_video(
 	.ypbpr          ( ypbpr            )
 	);
 
+// MiST IO controller
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
@@ -274,9 +281,11 @@ user_io(
 	.mouse_x        (mouse_x        ),
 	.mouse_y        (mouse_y        ),
 	.mouse_strobe   (mouse_strobe   ),
+	.mouse_flags    (mouse_flags    ),
 	.status         (status         )
 	);
 
+// DAC
 dac #(
 	.C_bits(16))
 dac_l(
@@ -295,13 +304,12 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-//											Rotated														Normal
-//wire m_up     = rotate ? btn_right | joystick_0[0] | joystick_1[0] : btn_up    | joystick_0[3] | joystick_1[3];
-//wire m_down   = rotate ? btn_left  | joystick_0[1] | joystick_1[1] : btn_down  | joystick_0[2] | joystick_1[2];
-wire m_left   = rotate ? btn_up    | joystick_0[3] | joystick_1[3] : btn_left  | joystick_0[1] | joystick_1[1];
-wire m_right  = rotate ? btn_down  | joystick_0[2] | joystick_1[2] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire  = btn_fire1  | joystick_0[4] | joystick_1[4];
-wire m_bomb  = btn_fire2  | joystick_0[5] | joystick_1[5];
+// Controls
+
+wire m_left   = btn_left  | joystick_0[1] | joystick_1[1];
+wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
+wire m_fire  = btn_fire1  | joystick_0[4] | joystick_1[4] | mouse_btns[0];
+wire m_bomb  = btn_fire2  | joystick_0[5] | joystick_1[5] | mouse_btns[1];
 reg btn_one_player = 0;
 reg btn_two_players = 0;
 reg btn_left = 0;

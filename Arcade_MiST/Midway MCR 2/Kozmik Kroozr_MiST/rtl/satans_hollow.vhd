@@ -160,8 +160,7 @@ port(
  fire2          : in std_logic;
  analog_x       : in std_logic_vector(7 downto 0);
  analog_y       : in std_logic_vector(7 downto 0);
- dail       	 : in std_logic_vector(7 downto 0);
- spinner    	 : in std_logic_vector(6 downto 0);
+ spinner        : in std_logic_vector(3 downto 0);
  cocktail       : in std_logic;
  service        : in std_logic;
 
@@ -211,7 +210,7 @@ architecture struct of satans_hollow is
  signal ctc_counter_0_int : std_logic;
 
  signal ctc_counter_1_we  : std_logic;
--- signal ctc_counter_1_trg : std_logic;
+ signal ctc_counter_1_trg : std_logic;
  signal ctc_counter_1_do  : std_logic_vector(7 downto 0);
  signal ctc_counter_1_int : std_logic;
  
@@ -302,7 +301,6 @@ architecture struct of satans_hollow is
  signal input_2       : std_logic_vector(7 downto 0);
  signal input_3       : std_logic_vector(7 downto 0);
  signal input_4       : std_logic_vector(7 downto 0);
-signal input_dail     : std_logic_vector(7 downto 0);
    
 begin
 
@@ -366,7 +364,7 @@ begin
 																				  -- back porch  48/25*20 = 38
 					video_blankn <= '0';
 					if hcnt >= 2+16 and  hcnt < 514+16 and
-						vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
+						vcnt >= 2 and  vcnt < 480 then video_blankn <= '1';end if;
 					
 				else    -- interlaced mode
 				 
@@ -444,11 +442,10 @@ end process;
 -- players inputs --
 --------------------
 input_0 <= not service & "11" & not fire1 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= not fire2 & spinner;
+input_1 <= not fire2 & spinner(3) & "000" & spinner(2 downto 0);
 input_2 <= analog_x;
 input_3 <= '1' & cocktail & "111111" ;
 input_4 <= analog_y;
---input_dail <= dail;
 
 
 ------------------------------------------
@@ -705,7 +702,7 @@ port map(
  clk_trg   => '0',
  
  d_out     => ctc_counter_0_do,
- zc_to     => open, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
+ zc_to     => ctc_counter_1_trg, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
  int_pulse => ctc_counter_0_int
  
 );
@@ -719,7 +716,7 @@ port map(
  d_in      => cpu_do,
  load_data => ctc_counter_1_we,
  
- clk_trg   => '0',
+ clk_trg   => ctc_counter_1_trg,
  
  d_out     => ctc_counter_1_do,
  zc_to     => open,
@@ -870,7 +867,6 @@ port map(
  input_2 => input_2,
  input_3 => input_3,
  input_4 => input_4,
- input_dail => input_dail,
 
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,
