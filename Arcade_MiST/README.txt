@@ -113,6 +113,7 @@ Aviable Arcade Cores  121
 
 #Midway MCR 2
 	Domino Man
+	Kozmik Kroozr
 	Satans Hollow
 	Tron
 	Two Tigers(Tron Conversation)
