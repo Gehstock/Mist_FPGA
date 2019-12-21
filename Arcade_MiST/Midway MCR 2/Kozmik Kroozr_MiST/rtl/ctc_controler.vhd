@@ -60,7 +60,7 @@ begin
 		int_reg_1 <= '0';
 		int_reg_2 <= '0';
 		int_reg_3 <= '0';
-		load_data_r <= load_data;
+		load_data_r <= '0';
 		int_vector <= (others => '0');
 	else 
 		if rising_edge(clock) then

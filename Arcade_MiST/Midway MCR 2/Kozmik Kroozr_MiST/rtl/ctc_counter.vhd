@@ -70,7 +70,7 @@ begin
 		restart_on_next_trigger <= '0';
 		count_in  <= (others=> '0');
 		zc_to_in <= '0';
-		clk_trg_r <= clk_trg;
+		clk_trg_r <= '0';
 	else 
 		if rising_edge(clock) then
 			if clock_ena = '1' then
@@ -132,7 +132,8 @@ begin
 				if ((control_word(6) = '1' and trigger = '1'  ) or 
 					 (control_word(6) = '0' and count_ena = '1') ) and time_constant_loaded = '1' then				
 					if prescale_in = 0 then
-						prescale_in <= '0'&prescale_max(7 downto 1); -- test divide by 2 !
+						prescale_in <= prescale_max;
+--						prescale_in <= '0'&prescale_max(7 downto 1); -- test divide by 2 !
 						if count_in = 0 then
 							zc_to_in <= '1';
 							count_in <= count_max;
