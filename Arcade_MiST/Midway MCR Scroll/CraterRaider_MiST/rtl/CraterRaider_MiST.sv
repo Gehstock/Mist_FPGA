@@ -48,12 +48,11 @@ module CraterRaider_MiST(
 `include "rtl/build_id.v"
 
 localparam CONF_STR = {
-	"CRATER;ROM;",
+	"CRATER;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
-	"O7,Swap Joystick,Off,On;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -75,8 +74,8 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joy_0;
-wire  [7:0] joy_1;
+wire  [7:0] joystick_0;
+wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
@@ -107,7 +106,8 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000;
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'he000; // sound cpu prg offset
+wire [24:0] dl_addr = ioctl_addr - 18'h2e000; // background + char grfx offset
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -132,7 +132,7 @@ sdram sdram(
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
+	.port2_a       ( {sp_ioctl_addr[18:17], sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
 	.port2_ds      ( {sp_ioctl_addr[15], ~sp_ioctl_addr[15]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
@@ -172,6 +172,19 @@ always @(posedge clk_sys) begin
 
 end
 
+// spinner
+wire [7:0] spin_angle;
+        
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(),
+	.btn_left(m_left),
+	.btn_right(m_right),
+	.ctc_zc_to_2(vs),
+	.spin_angle(spin_angle)
+);
+
 Crater_Raider Crater_Raider(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -192,6 +205,7 @@ Crater_Raider Crater_Raider(
 	.start2(btn_two_players),
 	.up(m_up),
 	.down(m_down),
+	.dial(spin_angle),
 	.fire1(m_fire1),
 	.fire2(m_fire2),
 	.fire3(m_fire3),//not working
@@ -201,7 +215,10 @@ Crater_Raider Crater_Raider(
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.sp_addr      ( sp_addr         ),
-	.sp_graphx32_do ( sp_do         )
+	.sp_graphx32_do ( sp_do         ),
+	.dl_addr      ( dl_addr    ),
+	.dl_wr        ( ioctl_wr   ),
+	.dl_data      ( ioctl_dout )
 );
 
 wire vs_out;
@@ -249,8 +266,8 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joy_0          ),
-	.joystick_1     (joy_1          ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
@@ -272,17 +289,13 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
-wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
-
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left  | joystick_0[1] | joystick_1[1] : btn_up    | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down  | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down  | joystick_0[2] | joystick_1[2] : btn_left  | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up    | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_fire2   = btn_fire2 | joystick_0[5] | joystick_1[5];
-wire m_fire3   = btn_fire3 | joystick_0[6] | joystick_1[6];
+wire m_up     = btn_up    | joystick_0[3] | joystick_1[3];
+wire m_down   = btn_down  | joystick_0[2] | joystick_1[2];
+wire m_left   = btn_left  | joystick_0[1] | joystick_1[1];
+wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
+wire m_fire1  = btn_fire1 | joystick_0[4] | joystick_1[4];
+wire m_fire2  = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_fire3  = btn_fire3 | joystick_0[6] | joystick_1[6];
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;

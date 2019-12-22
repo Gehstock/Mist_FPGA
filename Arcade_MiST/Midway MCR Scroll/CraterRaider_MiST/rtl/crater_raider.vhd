@@ -157,19 +157,25 @@ port(
  start1         	: in std_logic;
  start2         	: in std_logic;
 
- up          		: in std_logic;
+ up          		  : in std_logic;
  down            	: in std_logic;
+ dial             : in std_logic_vector(7 downto 0);
  fire1        		: in std_logic;
  fire2            : in std_logic;
  fire3          	: in std_logic;
  service        	: in std_logic;
 
- cpu_rom_addr   	: out std_logic_vector(14 downto 0);
+ cpu_rom_addr   	: out std_logic_vector(15 downto 0);
  cpu_rom_do     	: in std_logic_vector(7 downto 0);
  snd_rom_addr   	: out std_logic_vector(13 downto 0);
  snd_rom_do     	: in std_logic_vector(7 downto 0);
  sp_addr        	: out std_logic_vector(14 downto 0);
  sp_graphx32_do 	: in std_logic_vector(31 downto 0);
+
+ dl_addr          : in std_logic_vector(15 downto 0);
+ dl_data          : in std_logic_vector( 7 downto 0);
+ dl_wr            : in std_logic;
+
  dbg_cpu_addr 		: out std_logic_vector(15 downto 0)
  );
 end crater_raider;
@@ -319,7 +325,7 @@ architecture struct of crater_raider is
  signal sp_buffer_sel       : std_logic;
  
  signal sp_vid              : std_logic_vector(3 downto 0);
--- signal sp_col              : std_logic_vector(3 downto 0);
+ signal sp_col              : std_logic_vector(3 downto 0);
 -- signal sp_palette_addr     : std_logic_vector(5 downto 0);
  
  signal palette_addr        : std_logic_vector(5 downto 0);
@@ -336,13 +342,15 @@ architecture struct of crater_raider is
  signal input_4   : std_logic_vector(7 downto 0);
  signal output_4  : std_logic_vector(7 downto 0);
 
+ signal dl_bg_graphics_1_we : std_logic;
+ signal dl_bg_graphics_2_we : std_logic;
+ signal dl_cg_graphics_we   : std_logic;
+
 begin
 
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
-
-
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -400,7 +408,7 @@ begin
 					if hcnt = 512+90+9+11 then video_hs <= '1'; end if; -- sync pulse  96/25*20 = 77
 																				       -- back porch  48/25*20 = 38
 					video_blankn <= '0';
-					if hcnt >= 2+16+16 and  hcnt < 514+16-1 and
+					if hcnt >= 2+16+16 and  hcnt < 514-1 and
 						vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
 				
 				else -- interlaced mode
@@ -421,7 +429,7 @@ begin
 				end if;
 				
 				video_blankn <= '0';				
-				if hcnt >= 2+16+16 and  hcnt < 514+16-1 and
+				if hcnt >= 2+16+16 and  hcnt < 514-1 and
 					vcnt >= 1    and  vcnt < 241 then video_blankn <= '1';end if;
 				
 				if    hs_cnt =  0 then hsync0 <= '0';
@@ -483,7 +491,7 @@ end process;
 	
 -- "11" for test & tilt & unused
 input_0 <= not service & "11" & not fire1 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= "11111111";--dail
+input_1 <= dial;
 input_2 <= '1' & not fire2 & '1' & not fire3 & not down & not up & "11";
 input_3 <= x"FF";
 input_4 <= x"FF";
@@ -498,7 +506,7 @@ input_4 <= x"FF";
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"E" else    -- 0000-DFFF             56Ko
+cpu_di <= cpu_rom_do   		 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"A" else    -- 0000-9FFF             48Ko
 			 bg_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"F800") = x"E000" else -- video  ram  E000-E7FF  2Ko
 			 ch_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"FC00") = x"E800" else -- char   ram  E800-EBFF  1Ko + mirroring 0400
 			 wram_do     		 when cpu_mreq_n = '0' and (cpu_addr and X"F800") = x"F000" else -- work   ram  F000-F7FF  2Ko
@@ -554,8 +562,8 @@ end process;
 ---------- sprite machine ----------
 ----  91433 Video Gen III Board ----
 ------------------------------------
-hflip <= not(hcnt);  -- apply mirror horizontal flip
---hflip <= hcnt;       -- do not apply mirror horizontal flip
+--hflip <= not(hcnt);  -- apply mirror horizontal flip
+hflip <= hcnt;       -- do not apply mirror horizontal flip
 
 vflip <= vcnt(8 downto 0) & not top_frame when tv15Khz_mode = '1' else vcnt; -- do not apply mirror flip
 
@@ -599,7 +607,7 @@ begin
 				sp_byte_cnt <= (others => '0');
 			when "000001" => 
 				sp_attr <= sp_ram_do;
-when "000010" => 
+			when "000010" => 
 				sp_code <= sp_ram_do;
 				sp_addr <= sp_ram_do(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt xor sp_hflip); -- graphics rom addr
 			when "000011" => 
@@ -608,7 +616,7 @@ when "000010" =>
 				sp_graphx32_do_r <= sp_graphx32_do; -- latch incoming sprite data
 				sp_addr <= sp_code(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt+1 xor sp_hflip); -- advance graphics rom addr
 				sp_on_line <= '1';
-      when "010010"|"011010"|"100010" => -- 18,26,34
+			when "010010"|"011010"|"100010" => -- 18,26,34
 				sp_graphx32_do_r <= sp_graphx32_do; -- latch incoming sprite data
 				sp_addr <= sp_code(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt+2 xor sp_hflip); -- advance graphics rom addr
 			  sp_byte_cnt <= sp_byte_cnt + 1;
@@ -660,32 +668,33 @@ sp_graphx_b_ok <= '1' when sp_graphx_b /= x"0" else '0';
 								
 sp_buffer_ram1a_di  <= sp_attr(3 downto 0) & sp_graphx_a                when sp_buffer_sel = '1' else x"00";
 sp_buffer_ram1b_di  <= sp_attr(3 downto 0) & sp_graphx_b                when sp_buffer_sel = '1' else x"00";
-sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                              when sp_buffer_sel = '1' else hflip(8 downto 1) - x"04";
+sp_buffer_ram1_addr <= not sp_hcnt(8 downto 1)                          when sp_buffer_sel = '1' else hflip(8 downto 1) - x"C";
 sp_buffer_ram1a_we  <= not sp_hcnt(0) and sp_on_line and sp_graphx_a_ok when sp_buffer_sel = '1' else hcnt(0);
 sp_buffer_ram1b_we  <= not sp_hcnt(0) and sp_on_line and sp_graphx_b_ok when sp_buffer_sel = '1' else hcnt(0);
 
 sp_buffer_ram2a_di  <= sp_attr(3 downto 0) & sp_graphx_a                when sp_buffer_sel = '0' else x"00";
 sp_buffer_ram2b_di  <= sp_attr(3 downto 0) & sp_graphx_b                when sp_buffer_sel = '0' else x"00";
-sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                              when sp_buffer_sel = '0' else hflip(8 downto 1) - x"04";
+sp_buffer_ram2_addr <= not sp_hcnt(8 downto 1)                          when sp_buffer_sel = '0' else hflip(8 downto 1) - x"C";
 sp_buffer_ram2a_we  <= not sp_hcnt(0) and sp_on_line and sp_graphx_a_ok when sp_buffer_sel = '0' else hcnt(0);
 sp_buffer_ram2b_we  <= not sp_hcnt(0) and sp_on_line and sp_graphx_b_ok when sp_buffer_sel = '0' else hcnt(0);
 
-sp_vid <= sp_buffer_ram1_do_r(11 downto  8) when (sp_buffer_sel = '0') and (hflip(0) = '1') else
-		    sp_buffer_ram1_do_r( 3 downto  0) when (sp_buffer_sel = '0') and (hflip(0) = '0') else
-		    sp_buffer_ram2_do_r(11 downto  8) when (sp_buffer_sel = '1') and (hflip(0) = '1') else
+sp_vid <= sp_buffer_ram1_do_r(11 downto  8) when (sp_buffer_sel = '0') and (hflip(0) = '0') else
+		    sp_buffer_ram1_do_r( 3 downto  0) when (sp_buffer_sel = '0') and (hflip(0) = '1') else
+		    sp_buffer_ram2_do_r(11 downto  8) when (sp_buffer_sel = '1') and (hflip(0) = '0') else
 			 sp_buffer_ram2_do_r( 3 downto  0);-- when (sp_buffer_sel = '1') and (hflip(0) = '0');
 
---sp_col <= sp_buffer_ram1_do_r(15 downto 12) when (sp_buffer_sel = '0') and (hflip(0) = '1') else
---		    sp_buffer_ram1_do_r( 7 downto  4) when (sp_buffer_sel = '0') and (hflip(0) = '0') else
---		    sp_buffer_ram2_do_r(15 downto 12) when (sp_buffer_sel = '1') and (hflip(0) = '1') else
---			 sp_buffer_ram2_do_r( 7 downto  4);-- when (sp_buffer_sel = '1') and (hflip(0) = '0');
+sp_col <= sp_buffer_ram1_do_r(15 downto 12) when (sp_buffer_sel = '0') and (hflip(0) = '0') else
+          sp_buffer_ram1_do_r( 7 downto  4) when (sp_buffer_sel = '0') and (hflip(0) = '1') else
+          sp_buffer_ram2_do_r(15 downto 12) when (sp_buffer_sel = '1') and (hflip(0) = '0') else
+          sp_buffer_ram2_do_r( 7 downto  4);-- when (sp_buffer_sel = '1') and (hflip(0) = '0');
+
 ----------------------------
 ------- char machine -------
---- 91442 MCR III Board ----
+--- 91721 MCR III Board ----
 ----------------------------
-ch_ram_addr <= cpu_addr(4 downto 0) & cpu_addr(9 downto 5) when hcnt(0) = '0' else vflip(8 downto 4) & hflip(8 downto 4);
+ch_ram_addr <= cpu_addr(4 downto 0) & cpu_addr(9 downto 5) when hcnt(0) = '0' else vflip(8 downto 4) & not hflip(8 downto 4);
 
-ch_code_line <= ch_code & vflip(3 downto 1) & hflip(3);
+ch_code_line <= ch_code & vflip(3 downto 1) & not hflip(3);
 
 process (clock_vid)
 begin
@@ -699,10 +708,11 @@ begin
 					end if;
 				
 				case hflip(2 downto 1) is
-					when "00"   => ch_color <= ch_graphx_do(7 downto 6);
-					when "01"   => ch_color <= ch_graphx_do(5 downto 4);
-					when "10"   => ch_color <= ch_graphx_do(3 downto 2);
-					when others => ch_color <= ch_graphx_do(1 downto 0);
+					when "11"   => ch_color <= ch_graphx_do(7 downto 6);
+					when "10"   => ch_color <= ch_graphx_do(5 downto 4);
+					when "01"   => ch_color <= ch_graphx_do(3 downto 2);
+					when "00"   => ch_color <= ch_graphx_do(1 downto 0);
+					when others => null;
 				end case;
 			end if;
 		
@@ -713,12 +723,12 @@ end process;
 
 ----------------------------
 ---- background machine ----
---- 91442 MCR III Board ----
+--- 91721 MCR III Board ----
 ----------------------------
 bg_ram_addr <= cpu_addr(10) & cpu_addr(3 downto 0) & cpu_addr(9 downto 4) when hcnt(0) = '0' else
-					vshift(9 downto 5) & hshift(11 downto 6);
+               vshift(9 downto 5) & not hshift(11 downto 6);
 
-bg_code_line <= bg_code(7) & bg_code(5 downto 0) & (vshift(4 downto 1) xor (bg_code(6) & bg_code(6) & bg_code(6) & bg_code(6))) & hshift(5 downto 3);
+bg_code_line <= bg_code(7) & bg_code(5 downto 0) & (vshift(4 downto 1) xor (bg_code(6) & bg_code(6) & bg_code(6) & bg_code(6))) & not hshift(5 downto 3);
 
 process (clock_vid)
 begin
@@ -733,17 +743,17 @@ begin
 
 		if pix_ena = '1' then
 		
-			if hcnt = "1001001001" then -- tune background h pos w.r.t char (use odd value to keep hshift(0) = hcnt(0))
-				hshift <= hoffset & '0'; 
+			if hcnt = 603 then
+				hshift <= not (hoffset+288) & '0'; -- tune background h pos w.r.t char
 			else
 				hshift <= hshift + 1 ;
 			end if;
 			
 			if (vflip(9 downto 1) = "100000111"  and tv15Khz_mode = '1') or
 				(vflip(9 downto 0) = "1000001100" and tv15Khz_mode = '0') then  -- tune background v pos w.r.t char
-				vshift <= voffset & '0'; 
+				vshift <= voffset & '0';
 			else
-				if hcnt = "1001001001" then 
+				if hcnt = 603 then 
 					if tv15Khz_mode = '0' then vshift <= vshift + 1; end if;
 					if tv15Khz_mode = '1' then vshift <= vshift + 2; end if;
 				end if;
@@ -753,10 +763,11 @@ begin
 				if hshift(5 downto 0) = "111111" then bg_code <= bg_ram_do; end if;	
 				
 				case hshift(2 downto 1) is
-					when "00"   => bg_color <= bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
-					when "01"   => bg_color <= bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
-					when "10"   => bg_color <= bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
-					when others => bg_color <= bg_graphx2_do(1 downto 0) & bg_graphx1_do(1 downto 0);
+					when "11"   => bg_color <= bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
+					when "10"   => bg_color <= bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
+					when "01"   => bg_color <= bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
+					when "00"   => bg_color <= bg_graphx2_do(1 downto 0) & bg_graphx1_do(1 downto 0);
+					when others => null;
 				end case;
 			end if;
 		
@@ -769,8 +780,8 @@ end process;
 -- mux char/sprite video --
 ---------------------------
 palette_addr <= cpu_addr(6 downto 1) when palette_we = '1'           else 
-					 "01" & bg_color      when sp_vid(2 downto 0) = "000" else
-					 "00" & sp_vid;
+                "11" & bg_color      when sp_vid(2 downto 0) = "000" else
+                not sp_col(1 downto 0) & sp_vid;
 
 process (clock_vid)
 begin
@@ -921,7 +932,7 @@ port map(
 -- data => cpu_rom_do
 --);
 
-cpu_rom_addr <= cpu_addr(14 downto 0);
+cpu_rom_addr <= cpu_addr(15 downto 0);
 
 -- working RAM   F000-F7FF  2Ko
 wram : entity work.cmos_ram
@@ -955,7 +966,7 @@ port map(
  d    => cpu_do,
  q    => bg_ram_do
 );
-	
+
 -- sprite RAM (no cpu access)
 sprite_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 9)
@@ -1023,27 +1034,66 @@ port map(
 );
 
 -- char graphics ROM 10G
-ch_graphics : entity work.crater_ch_bits
+ch_graphics : entity work.dpram
+generic map(
+	aWidth => 12,
+	dWidth => 8
+)
 port map(
- clk  => clock_vidn,
- addr => ch_code_line,
- data => ch_graphx_do
+ clk_a  => clock_vidn,
+ addr_a => ch_code_line,
+ q_a    => ch_graphx_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(11 downto 0),
+ we_b   => dl_cg_graphics_we,
+ d_b    => dl_data
 );
+dl_cg_graphics_we <= '1' when dl_wr = '1' and dl_addr(15 downto 12) = "1000" else '0';
 
 -- background graphics ROM 3A/4A
-bg_graphics_1 : entity work.crater_bg_bits_1
+bg_graphics_1 : entity work.dpram
+generic map(
+	aWidth => 14,
+	dWidth => 8
+)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx1_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx1_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(13 downto 0),
+ we_b   => dl_bg_graphics_1_we,
+ d_b    => dl_data
 );
+dl_bg_graphics_1_we <= '1' when dl_wr = '1' and dl_addr(15 downto 14) = "00" else '0';
 
 -- background graphics ROM 5A/6A
-bg_graphics_2 : entity work.crater_bg_bits_2
+bg_graphics_2 : entity work.dpram
+generic map(
+	aWidth => 14,
+	dWidth => 8
+)
+port map(
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx2_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(13 downto 0),
+ we_b   => dl_bg_graphics_2_we,
+ d_b    => dl_data
+);
+dl_bg_graphics_2_we <= '1' when dl_wr = '1' and dl_addr(15 downto 14) = "01" else '0';
+
+
+-- background & sprite palette
+palette : entity work.gen_ram
+generic map( dWidth => 9, aWidth => 6)
 port map(
  clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx2_do
+ we   => palette_we,
+ addr => palette_addr,
+ d    => cpu_addr(0) & cpu_do,
+ q    => palette_do
 );
 
 -- Spy hunter sound board 
@@ -1075,15 +1125,4 @@ port map(
  dbg_cpu_addr => open --dbg_cpu_addr
 );
  
--- background & sprite palette
-palette : entity work.gen_ram
-generic map( dWidth => 9, aWidth => 6)
-port map(
- clk  => clock_vidn,
- we   => palette_we,
- addr => palette_addr,
- d    => cpu_addr(0) & cpu_do,
- q    => palette_do
-);
-
 end struct;
