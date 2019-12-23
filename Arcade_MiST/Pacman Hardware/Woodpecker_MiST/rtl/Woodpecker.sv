@@ -43,7 +43,8 @@ localparam CONF_STR = {
 	"Woodpecker;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"T6,Reset;",
+	"O5,Blend,Off,On;",
+	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
 
@@ -73,7 +74,6 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
 wire  [7:0] audio;
 wire 			hs, vs;
 wire 			hb, vb;
@@ -94,12 +94,12 @@ pacman woodpecker(
 	.in1(~{1'b0, btn_two_players, btn_one_player, m_fire, 4'b0000}),
 	.dipsw1(8'b1_1_00_11_01),
 	.dipsw2(8'b11111111),
-	.RESET(status[0] | status[6] | buttons[1]),
+	.RESET(status[0] | buttons[1]),
 	.CLK(clk_sys),
 	.ENA_6(ce_6m)
 	);
 
-mist_video #(.COLOR_DEPTH(3)) mist_video(
+mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
@@ -117,6 +117,8 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.ypbpr(ypbpr)
 	);
 
@@ -142,11 +144,11 @@ user_io(
 	);
 
 dac #(
-	.C_bits(15))
+	.C_bits(8))
 dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({audio,audio}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 
