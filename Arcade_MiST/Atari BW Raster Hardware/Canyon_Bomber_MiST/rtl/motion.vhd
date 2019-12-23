@@ -22,8 +22,8 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity motion is 
 port(		
-			CLK6			: in  std_logic; 
 			CLK12			: in  std_logic;
+			CLK6en    : in  std_logic;
 			PHI2			: in  std_logic;
 			DISPLAY		: in  std_logic_vector(7 downto 0);
 			H256_s		: in  std_logic; -- 256H* on schematic
@@ -164,9 +164,9 @@ Shell2_n <= R9_Qb or HShell2Win_n;
 
 
 M9_in <= (L5_reg(4) or H4) & H64 & H32 & H16;
-M9: process(clk6, M9_in)
+M9: process(clk12, M9_in)
 begin
-  if falling_edge(clk6) then
+  if rising_edge(clk12) then
 	case M9_in is
 		when "0000" =>
 			M9_out <= "1111111110";
@@ -220,7 +220,7 @@ generic map(
 		widthad_a => 8,
 		width_a => 4)
 port map(
-		clock => clk6, 
+		clock => clk12, 
 		address => VidROMAdr(7 downto 0),
 		q => VidROMdout(7 downto 4)
 		);
@@ -231,7 +231,7 @@ generic map(
 		widthad_a => 8,
 		width_a => 4)
 port map(
-		clock => clk6, 
+		clock => clk12, 
 		address => VidROMAdr(7 downto 0),
 		q => VidROMdout(3 downto 0)
 		);
@@ -244,10 +244,10 @@ Vid <= VidROMDout(4) & VidROMDout(5) & VidROMDout(6) & VidROMDout(7) & VidROMDou
 	
 
 -- Decoders P8 and F8 generate the LDVxx signals
-LDV_Decoder: process(clk6, clk12, VSP1_n, VSP2_n, HCount)
+LDV_Decoder: process(clk12, VSP1_n, VSP2_n, HCount)
 begin
 	if rising_edge(clk12) then
-		if VSP1_n = '0' and clk6 = '0' then
+		if VSP1_n = '0' and clk6en = '0' then
 			case HCount(1 downto 0) is
 			when "00" => LDV1_dec <= "1110";
 			when "10" => LDV1_dec <= "1101";
@@ -260,7 +260,7 @@ begin
 			LDV1_dec <= "1111";
 		end if;
 		
-		if VSP2_n = '0' and clk6 = '0' then
+		if VSP2_n = '0' and clk6en = '0' then
 			case HCount(1 downto 0) is
 			when "00" => LDV2_dec <= "1110";
 			when "10" => LDV2_dec <= "1101";
@@ -286,13 +286,15 @@ LDV2D_n <= LDV2_dec(3);
 
 -- Ship 1 Horizontal position counter
 -- This combines two 74163s at locations P3 and N3 on the PCB 
-Ship1Count: process(clk6, H256_s, LDH1_n, Display)
+Ship1Count: process(clk12, H256_s, LDH1_n, Display)
 begin
-	if rising_edge(clk6) then
-		if LDH1_n = '0' then -- preload the counter
-			Ship1_Hpos <= Display;
-		elsif H256_s = '1' then -- increment the counter
-			Ship1_Hpos <= Ship1_Hpos + '1';		
+	if rising_edge(clk12) then
+		if clk6en = '1' then
+			if LDH1_n = '0' then -- preload the counter
+				Ship1_Hpos <= Display;
+			elsif H256_s = '1' then -- increment the counter
+				Ship1_Hpos <= Ship1_Hpos + '1';		
+			end if;
 		end if;
 	end if;
 end process;
@@ -300,13 +302,15 @@ ShipWin1_n <= '0' when Ship1_Hpos(7 downto 5) = "111" else '1';
 
 -- Ship 2 Horizontal position counter
 -- This combines two 74163s at locations R3 and M3 on the PCB 
-Ship2Count: process(clk6, H256_s, LDH2_n, Display)
+Ship2Count: process(clk12, H256_s, LDH2_n, Display)
 begin
-	if rising_edge(clk6) then
-		if LDH2_n = '0' then -- preload the counter
-			Ship2_Hpos <= Display;
-		elsif H256_s = '1' then -- increment the counter
-			Ship2_Hpos <= Ship2_Hpos + '1';		
+	if rising_edge(clk12) then
+		if clk6en = '1' then
+			if LDH2_n = '0' then -- preload the counter
+				Ship2_Hpos <= Display;
+			elsif H256_s = '1' then -- increment the counter
+				Ship2_Hpos <= Ship2_Hpos + '1';		
+			end if;
 		end if;
 	end if;
 end process;
@@ -314,18 +318,20 @@ ShipWin2_n <= '0' when Ship2_Hpos(7 downto 5) = "111" else '1';
 
 -- Shell 1 Horizontal position counter
 -- This combines two 74163s at locations R4 and M4 on the PCB 
-Shell1Count: process(clk6, H256_s, LDH3_n, Display)
+Shell1Count: process(clk12, H256_s, LDH3_n, Display)
 begin
-	if rising_edge(clk6) then
-		if LDH3_n = '0' then -- preload the counter
-			Shell1_Hpos <= Display;
-		elsif H256_s = '1' then -- increment the counter
-			Shell1_Hpos <= Shell1_Hpos + '1';		
-		end if;
-		if Shell1_Hpos(7 downto 1) = "1111111" then
-			HShell1Win_n <= '0';
-		else
-			HShell1Win_n <= '1';
+	if rising_edge(clk12) then
+		if clk6en = '1' then
+			if LDH3_n = '0' then -- preload the counter
+				Shell1_Hpos <= Display;
+			elsif H256_s = '1' then -- increment the counter
+				Shell1_Hpos <= Shell1_Hpos + '1';		
+			end if;
+			if Shell1_Hpos(7 downto 1) = "1111111" then
+				HShell1Win_n <= '0';
+			else
+				HShell1Win_n <= '1';
+			end if;
 		end if;
 	end if;
 end process;
@@ -333,18 +339,20 @@ end process;
 
 -- Shell 2 Horizontal position counter
 -- This combines two 74163s at locations P4 and N4 on the PCB 
-Shell2Count: process(clk6, H256_s, LDH4_n, Display)
+Shell2Count: process(clk12, H256_s, LDH4_n, Display)
 begin
-	if rising_edge(clk6) then
-		if LDH4_n = '0' then -- preload the counter
-			Shell2_Hpos <= Display;
-		elsif H256_s = '1' then -- increment the counter
-			Shell2_Hpos <= Shell2_Hpos + '1';		
-		end if;
-		if Shell2_Hpos(7 downto 1) = "1111111" then
-			HShell2Win_n <= '0';
-		else
-			HShell2Win_n <= '1';
+	if rising_edge(clk12) then
+		if clk6en = '1' then
+			if LDH4_n = '0' then -- preload the counter
+				Shell2_Hpos <= Display;
+			elsif H256_s = '1' then -- increment the counter
+				Shell2_Hpos <= Shell2_Hpos + '1';		
+			end if;
+			if Shell2_Hpos(7 downto 1) = "1111111" then
+				HShell2Win_n <= '0';
+			else
+				HShell2Win_n <= '1';
+			end if;
 		end if;
 	end if;
 end process;
@@ -353,18 +361,18 @@ end process;
 
 -- Ship 1 video shift register
 -- This combines four 74165s at locations R7, P7, N7 and M7 on the PCB
-Ship1Shift: process(clk6, ShipWin1_n, LDV1A_n, LDV1B_n, LDV1C_n, LDV1D_n, Vid)
+Ship1Shift: process(clk12, ShipWin1_n, LDV1A_n, LDV1B_n, LDV1C_n, LDV1D_n, Vid)
 begin
-	if LDV1A_n = '0' then
+	if rising_edge(clk12) then
+		if LDV1A_n = '0' then
 			Ship1_reg(31 downto 24) <= Vid(7 downto 0); -- Load the register with data from the video ROMs
-	elsif LDV1B_n = '0' then
+		elsif LDV1B_n = '0' then
 			Ship1_reg(23 downto 16) <= Vid(7 downto 0); 
-	elsif LDV1C_n = '0' then
+		elsif LDV1C_n = '0' then
 			Ship1_reg(15 downto 8) <= Vid(7 downto 0);
-	elsif LDV1D_n = '0' then
+		elsif LDV1D_n = '0' then
 			Ship1_reg(7 downto 0) <= Vid(7 downto 0);
-	elsif rising_edge(clk6) then
-		if ShipWin1_n = '0' then
+		elsif clk6en = '1' and ShipWin1_n = '0' then
 			Ship1_reg <= '0' & Ship1_reg(31 downto 1);
 		end if;
 	end if;
@@ -374,18 +382,18 @@ Ship1_n <= (not Ship1_reg(0)) or ShipWin1_n;
 
 -- Ship 2 video shift register
 -- This combines four 74165s at locations R6, P6, N6 and M6 on the PCB
-Ship2Shift: process(Clk6, ShipWin2_n, LDV2A_n, LDV2B_n, LDV2C_n, LDV2D_n, Vid)
+Ship2Shift: process(Clk12, ShipWin2_n, LDV2A_n, LDV2B_n, LDV2C_n, LDV2D_n, Vid)
 begin
-	if LDV2A_n = '0' then
+	if rising_edge(clk12) then
+		if LDV2A_n = '0' then
 			Ship2_reg(31 downto 24) <= Vid(7 downto 0); -- Load the register with data from the video ROMs
-	elsif LDV2B_n = '0' then
+		elsif LDV2B_n = '0' then
 			Ship2_reg(23 downto 16) <= Vid(7 downto 0); 
-	elsif LDV2C_n = '0' then
+		elsif LDV2C_n = '0' then
 			Ship2_reg(15 downto 8) <= Vid(7 downto 0);
-	elsif LDV2D_n = '0' then
+		elsif LDV2D_n = '0' then
 			Ship2_reg(7 downto 0) <= Vid(7 downto 0);
-	elsif rising_edge(clk6) then
-		if ShipWin2_n = '0' then
+		elsif clk6en = '1' and ShipWin2_n = '0' then
 			Ship2_reg <= '0' & Ship2_reg(31 downto 1);
 		end if;
 	end if;

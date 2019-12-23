@@ -23,6 +23,7 @@ entity synchronizer is
 port(		
 			clk_12		: in		std_logic;
 			clk_6			: out		std_logic;
+			clk_6en		: out		std_logic;
 			hcount		: out		std_logic_vector(8 downto 0);
 			vcount		: out		std_logic_vector(7 downto 0);
 		   hsync			: buffer	std_logic;
@@ -43,9 +44,11 @@ signal H256_n			: std_logic;
 signal H128				: std_logic;
 signal H64				: std_logic;
 signal H32				: std_logic;
+signal H32_EN			: std_logic;
 signal H16				: std_logic;
 signal H8				: std_logic;
 signal H8_n				: std_logic;
+signal H8_EN			: std_logic;
 signal H4				: std_logic;
 signal H4_n				: std_logic;
 signal H2				: std_logic;
@@ -84,13 +87,15 @@ begin
 end process;
 
 -- Vertical counter is 8 bits, clocked by the rising edge of H256 at the end of each horizontal line
-V_count: process(hsync)
+V_count: process(clk_12)
 begin
-	if rising_edge(Hsync) then
-		if vreset_n = '0' then
-			v_counter <= (others => '0');
-		else
-			v_counter <= v_counter + '1';
+	if rising_edge(clk_12) then
+		if H8_EN = '1' and H32 = '1' and hsync = '0' and hblank = '1' then -- rising_edge(hsync)
+			if vreset_n = '0' then
+				v_counter <= (others => '0');
+			else
+				v_counter <= v_counter + '1';
+			end if;
 		end if;
 	end if;
 end process;
@@ -103,16 +108,18 @@ generic map(
 		widthad_a => 8,
 		width_a => 4)
 port map(
-		clock => clk_12, 
+		clock => not clk_12, 
 		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
 		q => sync_bus
 		);
 
 -- Register fed by the sync PROM, in the original hardware this also creates the complements of these signals
-sync_register: process(hsync)
+sync_register: process(clk_12)
 begin
-	if rising_edge(hsync) then
-		sync_reg <= sync_bus;
+	if rising_edge(clk_12) then
+		if H8_EN = '1' and H32 = '1' and hsync = '0' and hblank = '1' then -- rising_edge(hsync)
+			sync_reg <= sync_bus;
+		end if;
 	end if;
 end process;
 
@@ -125,36 +132,39 @@ vblank <= sync_reg(1);
 vsync <= sync_reg(0);
 
 -- A pair of D type flip-flops that generate the Hsync signal
-Hsync_1: process(H256_n, H32)
+Hsync_1: process(clk_12, H256_n)
 begin	
 	if H256_n = '0' then	
 		hblank <= '0';
 	else
-		if rising_edge(H32) then
-			hblank <= not H64;
+		if rising_edge(clk_12) then
+			if H32_EN = '1' then hblank <= not H64; end if;
 		end if;
 	end if;
 end process;
 
-Hsync_2: process(hblank, H8) 
+Hsync_2: process(clk_12, hblank) 
 begin
 	if hblank = '0' then
 		hsync <= '0';
 	else
-		if rising_edge(H8) then
-			hsync <= H32;
+		if rising_edge(clk_12) then
+			if H8_EN = '1' then hsync <= H32; end if;
 		end if;
 	end if;
 end process;
 
 -- Assign various signals
 clk_6 <= h_counter(0);
+clk_6en <= not h_counter(0);
 H1 <= h_counter(1);
 H2 <= h_counter(2);
 H4 <= h_counter(3);
 H8 <= h_counter(4);
+H8_EN <= '1' when h_counter(4 downto 0) = "01111" else '0';
 H16 <=  h_counter(5);
 H32 <= h_counter(6);
+H32_EN <= '1' when h_counter(6 downto 0) = "0111111" else '0';
 H64 <= h_counter(7);
 H128 <= h_counter(8);
 H256 <= h_counter(9);

@@ -20,7 +20,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity audio is 
 port(		
-			Clk_6				: in  std_logic;
+			Clk_12			: in  std_logic;
 			Ena_3k			: in  std_logic;
 			Reset_n			: in	std_logic;
 			Motor1_n			: in	std_logic;
@@ -42,6 +42,7 @@ architecture rtl of audio is
 signal Reset			: std_logic;
 
 signal V2				: std_logic;
+signal V2_D			: std_logic;
 
 signal Noise			: std_logic;
 signal Noise_Shift	: std_logic_vector(15 downto 0);
@@ -75,15 +76,18 @@ V2 <= VCount(1);
 
 -- Explosion --
 -- LFSR that generates pseudo-random noise used by the explosion sound
-Noise_gen: process(Attract1, Attract2, V2)
+Noise_gen: process(Attract1, Attract2, clk_12)
 begin
 	if ((Attract1 nand Attract2) = '0') then
 		noise_shift <= (others => '0');
 		noise <= '0';
-	elsif rising_edge(V2) then
-		shift_in <= not(noise_shift(6) xor noise_shift(8));
-		noise_shift <= shift_in & noise_shift(15 downto 1);
-		noise <= noise_shift(0); 
+	elsif rising_edge(clk_12) then
+		V2_D <= V2;
+		if V2_D = '0' and V2 = '1' then
+			shift_in <= not(noise_shift(6) xor noise_shift(8));
+			noise_shift <= shift_in & noise_shift(15 downto 1);
+			noise <= noise_shift(0); 
+		end if;
 	end if;
 end process;
 
@@ -97,9 +101,9 @@ end process;
 explosion_prefilter <= explosion when noise = '1' else "0000";
 
 -- Very simple low pass filter, borrowed from MikeJ's Asteroids code, should probably be lower cutoff
-explode_filter: process(clk_6)
+explode_filter: process(clk_12)
 begin
-	if rising_edge(clk_6) then
+	if rising_edge(clk_12) then
 		if (ena_3k = '1') then
 			explosion_filter_t1 <= explosion_prefilter;
 			explosion_filter_t2 <= explosion_filter_t1;
@@ -126,7 +130,7 @@ generic map(
 		Freq_tune => 45 -- Tuning pot for engine sound frequency (Range 1-100)
 		)
 port map(		
-		Clk_6 => clk_6, 
+		Clk_12 => clk_12,
 		Ena_3k => ena_3k,
 		EngineData => motor1_speed,
 		Motor => motor1_snd
@@ -144,7 +148,7 @@ generic map(
 		Freq_tune => 47 -- Tuning pot for engine sound frequency (Range 1-100)
 		)
 port map(		
-		Clk_6 => clk_6, 
+		Clk_12 => clk_12,
 		Ena_3k => ena_3k,
 		EngineData => motor2_speed,
 		Motor => motor2_snd
@@ -159,7 +163,7 @@ generic map(
 		Freq_tune => 40 -- Tuning pot for whistle sound frequency (Range 1-100)
 		)
 port map(		
-		Clk_6 => clk_6,			
+		Clk_12 => clk_12,
 		Ena_3k => ena_3k,
 		Whistle_trig => whistle1,
 		Whistle_out => whistle_snd1
@@ -170,7 +174,7 @@ generic map(
 		Freq_tune => 44 -- Tuning pot for whistle sound frequency (Range 1-100)
 		)
 port map(			
-		Clk_6 => clk_6,			
+		Clk_12 => clk_12,
 		Ena_3k => ena_3k,
 		Whistle_trig => whistle2,
 		Whistle_out => whistle_snd2

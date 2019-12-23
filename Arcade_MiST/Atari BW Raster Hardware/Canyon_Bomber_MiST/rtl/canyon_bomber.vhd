@@ -29,7 +29,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity canyon_bomber is 
 port(		
-			clk_12	: in	std_logic;	-- 50MHz input clock
+			clk_12	: in	std_logic;	-- 12MHz input clock
 			Reset_I		: in	std_logic;	-- Reset button (Active low)
 			RGB	: out 	std_logic_vector(7 downto 0);
 			Vblank_O		: out 	std_logic;
@@ -55,6 +55,7 @@ end canyon_bomber;
 architecture rtl of canyon_bomber is
 
 signal clk_6		: std_logic;
+signal clk_6en	: std_logic;
 signal Ena_3k		: std_logic;
 signal phi1 		: std_logic;
 signal phi2		: std_logic;
@@ -127,6 +128,7 @@ Vid_sync: entity work.synchronizer
 port map(
 		clk_12 => clk_12,
 		clk_6	=> clk_6,
+		clk_6en	=> clk_6en,
 		hcount => hcount,
 		vcount => vcount,
 		hsync => HSync,
@@ -140,7 +142,8 @@ port map(
 
 Background: entity work.playfield
 port map( 
-		clk6	=> clk_6,
+		clk12	=> clk_12,
+		clk6en	=> clk_6en,
 		display => display,
 		HCount => HCount,
 		VCount => VCount,
@@ -158,8 +161,8 @@ port map(
 		
 Motion_Objects: entity work.motion
 port map(
-		CLK6 => clk_6,
 		CLK12 => clk_12,
+		clk6en => clk_6en,
 		PHI2 => phi2,
 		DISPLAY => Display,
 		H256_s => H256_s,
@@ -175,7 +178,6 @@ port map(
 CPU: entity work.cpu_mem
 port map(
 		Clk12 => clk_12,
-		Clk6	=> clk_6,
 		Ena_3k => Ena_3k,
 		Reset_I => Reset_I,
 		Reset_n => reset_n,
@@ -208,7 +210,7 @@ port map(
 	
 Sound: entity work.audio
 port map( 
-		Clk_6	=> Clk_6,
+		Clk_12	=> Clk_12,
 		Ena_3k => Ena_3k,
 		Reset_n => Reset_n,
 		Motor1_n => Motor1_n,
