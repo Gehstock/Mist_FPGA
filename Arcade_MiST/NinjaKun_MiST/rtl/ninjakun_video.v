@@ -5,7 +5,6 @@ module ninjakun_video
 	input					RESET,
 	input					VCLKx4,
 	input					VCLK,
-	
 	input   [8:0]		PH,
 	input   [8:0]		PV,
 
@@ -44,7 +43,6 @@ wire [31:0]	FGCDT;
 
 wire [12:0] BGCAD;
 wire [31:0] BGCDT;
-wire sc_acc = 0;
 
 //NJFGROM sprom(~VCLKx4, SPCAD, SPCDT, ROMCL, ROMAD, ROMDT, ROMEN);
 //NJFGROM fgrom(  ~VCLK, FGCAD, FGCDT, ROMCL, ROMAD, ROMDT, ROMEN);
@@ -85,7 +83,31 @@ fg4_rom fg4_rom (
 	.clk(~VCLKx4),
 	.addr(SPCAD),
 	.data(SPCDT[31:24])
+);/*
+
+fg1_rom fg1_rom (
+	.clk(~VCLK),//if sprite ? ~VCLKx4 : ~VCLK
+	.addr(FGCAD),//if sprite ? SPCAD : FGCAD
+	.data(FGCDT[7:0])//if sprite ? SPCDT[7:0] : FGCDT[7:0]
 );
+
+fg2_rom fg2_rom (
+	.clk(~VCLK),
+	.addr(FGCAD),
+	.data(FGCDT[15:8])
+);
+
+fg3_rom fg3_rom (
+	.clk(~VCLK),
+	.addr(FGCAD),
+	.data(FGCDT[23:16])
+);
+
+fg4_rom fg4_rom (
+	.clk(~VCLK),
+	.addr(FGCAD),
+	.data(FGCDT[31:24])
+);*/
 
 // Fore-Ground Scanline Generator
 wire		  FGPRI;

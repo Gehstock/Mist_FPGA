@@ -69,11 +69,8 @@ wire        scandoublerD;
 wire        ypbpr;
 wire  [15:0] audio;
 wire 			hs, vs;
-wire 			hb, vb;
-wire 			blankn = ~(hb | vb);
 wire [3:0] 	r, g, b;
-wire [14:0] cpu1_rom_addr;
-wire [12:0] cpu2_rom_addr;
+wire [14:0] cpu1_rom_addr, cpu2_rom_addr;
 wire [15:0] cpu1_rom_do, cpu2_rom_do;
 //wire [12:0] sp_rom_addr;
 //wire [31:0] sp_rom_do;
@@ -102,7 +99,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 16'ha000;
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000;
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -121,7 +118,7 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[14:1]} ),
 	.cpu1_q        ( cpu1_rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + cpu2_rom_addr[12:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + cpu2_rom_addr[14:1]) ),
 	.cpu2_q        ( cpu2_rom_do ),
 
 	// port2 for sprite graphics
@@ -163,7 +160,7 @@ end
 
 wire			PCLK;
 wire  [8:0] HPOS,VPOS;
-wire  [7:0] POUT;
+wire  [11:0] POUT;
 ninjakun_top ninjakun_top(
 	.RESET(reset),
 	.MCLK(CLOCK_48),
@@ -174,7 +171,7 @@ ninjakun_top ninjakun_top(
 	.PH(HPOS),
 	.PV(VPOS),
 	.PCLK(PCLK),
-	.POUT(POUT),
+	.POUT(oPIX),
 	.SNDOUT(audio),
 	.CPU1ADDR(cpu1_rom_addr),
 	.CPU1DT(cpu1_rom_addr[0] ? cpu1_rom_do[15:8] : cpu1_rom_do[7:0]),
@@ -187,6 +184,9 @@ ninjakun_top ninjakun_top(
 	.bg_rom_addr(bg_rom_addr),
 	.bg_rom_data(bg_rom_do)
 );
+
+wire  [7:0] oPIX;
+assign		POUT = {{oPIX[7:6],oPIX[1:0]},{oPIX[5:4],oPIX[1:0]},{oPIX[3:2],oPIX[1:0]}};
 	
 hvgen hvgen(
 	.HPOS(HPOS),
@@ -194,8 +194,6 @@ hvgen hvgen(
 	.PCLK(PCLK),
 	.iRGB(POUT),
 	.oRGB({r,g,b}),
-	.HBLK(hb),
-	.VBLK(vb),
 	.HSYN(hs),
 	.VSYN(vs)
 );
@@ -205,9 +203,9 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? r : 0   ),
-	.G              ( blankn ? g : 0   ),
-	.B              ( blankn ? b : 0   ),
+	.R              ( r ),
+	.G              ( g ),
+	.B              ( b ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),

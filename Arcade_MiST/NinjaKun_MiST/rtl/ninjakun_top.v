@@ -42,7 +42,7 @@ module ninjakun_top
 	output [15:0]  SNDOUT,		// Sound Output (LPCM unsigned 16bits)
 	output [14:0]	CPU1ADDR,
 	input  [7:0]	CPU1DT,
-	output [12:0]	CPU2ADDR,
+	output [14:0]	CPU2ADDR,
 	input  [7:0]	CPU2DT,
 //	output [12:0]	sp_rom_addr,
 //	input  [31:0]	sp_rom_data,

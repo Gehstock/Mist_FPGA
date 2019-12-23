@@ -240,10 +240,6 @@ set_global_assignment -name VERILOG_FILE rtl/ninjakun_adec.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_3D_8B.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_4D_9B.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_5D_8B.v
-set_global_assignment -name VHDL_FILE rtl/rom/bg4_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/bg3_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/bg2_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/bg1_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/fg4_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/fg3_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/fg2_rom.vhd

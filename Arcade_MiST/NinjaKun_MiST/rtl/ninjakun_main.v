@@ -15,7 +15,7 @@ module ninjakun_main
 	output			CPWRT,
 	output [14:0]	CPU1ADDR,
 	input  [7:0]	CPU1DT,
-	output [12:0]	CPU2ADDR,
+	output [14:0]	CPU2ADDR,
 	input  [7:0]	CPU2DT
 );
 
@@ -104,7 +104,7 @@ ninjakun_adec adec(
 wire [7:0] ROM0D, ROM1D;
 assign CPU1ADDR = CP0AD[14:0];
 assign ROM0D = CPU1DT;
-assign CPU2ADDR = CP1AD[12:0];
+assign CPU2ADDR = CP1AD[14:0];
 assign ROM1D = CPU2DT;
 
 wire [7:0] SHDT0, SHDT1;
