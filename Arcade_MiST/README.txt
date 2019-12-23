@@ -126,6 +126,7 @@ Aviable Arcade Cores  121
 	Timber
 
 #Midway MCR Scroll
+	Crater Raider
 	Spy Hunter
 
 #Namco Mappy Hardware
