@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 16:49:45  August 08, 2019
+# Date created = 18:24:18  March 06, 2019
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		Birdiy_assignment_defaults.qdf
+#		Canyon_Bomber_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -39,12 +39,10 @@
 
 # Project-Wide Assignments
 # ========================
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:52:16  OCTOBER 10, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 
 # Pin & Location Assignments
@@ -79,36 +77,28 @@ set_location_assignment PIN_126 -to SPI_SCK
 set_location_assignment PIN_127 -to SPI_SS2
 set_location_assignment PIN_91 -to SPI_SS3
 set_location_assignment PIN_13 -to CONF_DATA0
-set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 
 # Classic Timing Assignments
 # ==========================
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
+set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS OFF
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name SAVE_DISK_SPACE OFF
-set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
-set_global_assignment -name TOP_LEVEL_ENTITY Birdiy
+set_global_assignment -name TOP_LEVEL_ENTITY canyon_bomber_mist
 
 # Fitter Assignments
 # ==================
-set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
-set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
-set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name DEVICE EP3C25E144C8
-set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
-set_global_assignment -name ENABLE_NCE_PIN OFF
-set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
@@ -117,8 +107,13 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
 # Assembler Assignments
 # =====================
-set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name GENERATE_RBF_FILE ON
+
+# SignalTap II Assignments
+# ========================
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/cb.stp
 
 # Power Estimation Assignments
 # ============================
@@ -132,8 +127,41 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# --------------------
-# start ENTITY(Birdiy)
+# --------------------------------
+# start ENTITY(canyon_bomber_mist)
+
+	# Fitter Assignments
+	# ==================
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CONF_DATA0
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_DI
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_SS2
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_SCK
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_DO
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_SS3
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_27
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUDIO_L
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUDIO_R
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[5]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[4]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[3]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[2]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[1]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[0]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[5]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[4]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[3]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[2]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[1]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[0]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_HS
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[5]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[4]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[3]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[2]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[1]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[0]
+	set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_VS
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -147,20 +175,21 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(Birdiy)
-# ------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Birdiy.sv
-set_global_assignment -name VHDL_FILE rtl/pacman.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_vram_addr.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_video.vhd
-set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name QIP_FILE rtl/pll.qip
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+# end ENTITY(canyon_bomber_mist)
+# ------------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/canyon_bomber_mist.sv
+set_global_assignment -name VHDL_FILE rtl/canyon_bomber.vhd
+set_global_assignment -name VHDL_FILE rtl/whistle.vhd
+set_global_assignment -name VHDL_FILE rtl/playfield.vhd
+set_global_assignment -name VHDL_FILE rtl/motor.vhd
+set_global_assignment -name VHDL_FILE rtl/motion.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu_mem.vhd
+set_global_assignment -name VHDL_FILE rtl/sync.vhd
+set_global_assignment -name VHDL_FILE rtl/sound.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name QIP_FILE ../../../common/CPU/T65/T65.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name SIGNALTAP_FILE output_files/cb.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

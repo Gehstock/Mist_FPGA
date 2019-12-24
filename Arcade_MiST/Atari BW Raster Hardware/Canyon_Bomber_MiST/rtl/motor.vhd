@@ -28,7 +28,7 @@ generic(
 			constant Freq_tune : integer := 50 -- Value from 0-100 used to tune the overall engine sound frequency
 			);
 port(		
-			Clk_6		: in  std_logic; 
+			Clk_12		: in  std_logic; 
 			Ena_3k		: in  std_logic;
 			EngineData	: in	std_logic_vector(3 downto 0);
 			Motor		: out std_logic_vector(5 downto 0)
@@ -37,7 +37,7 @@ end EngineSound;
 
 architecture rtl of EngineSound is
 
-signal RPM_val 			: integer range 1 to 350;
+signal RPM_val 			: integer range 1 to 700;
 signal Ramp_Count 		: integer range 0 to 80000;
 signal Ramp_term		: integer range 1 to 80000;
 signal Freq_mod			: integer range 0 to 400;
@@ -61,9 +61,9 @@ begin
 -- The output of this DAC has a capacitor to smooth out the frequency variation.
 -- The constants assigned to RPM_val can be tweaked to adjust the frequency curve
 
-Speed_select: process(Clk_6)
+Speed_select: process(Clk_12)
 begin
-	if rising_edge(Clk_6) then
+	if rising_edge(Clk_12) then
 		case EngineData is
 			when "0000" => RPM_val <= 280;
 			when "0001" => RPM_val <= 245;
@@ -88,12 +88,12 @@ end process;
 -- Ramp_term terminates the ramp count, the higher this value, the longer the ramp will count up and the lower
 -- the frequency. RPM_val is multiplied by a constant which can be adjusted by changing the value of freq_tune
 -- to simulate the function of the frequency adjustment pot in the original hardware.
-ramp_term <= ((200 - freq_tune) * RPM_val);
+ramp_term <= ((200 - freq_tune) * RPM_val * 2);
 
 -- Variable frequency oscillator roughly approximating the function of a 555 astable oscillator
-Ramp_osc: process(clk_6)
+Ramp_osc: process(clk_12)
 begin
-	if rising_edge(clk_6) then
+	if rising_edge(clk_12) then
 		motor_clk <= '1';
 		ramp_count <= ramp_count + 1;
 		if ramp_count > ramp_term then
@@ -119,9 +119,9 @@ end process;
 motor_prefilter <= ('0' & Counter_B(2)) + ('0' & Counter_B(1)) + ('0' & Counter_A);
 
 -- Very simple low pass filter, borrowed from MikeJ's Asteroids code
-Engine_filter: process(clk_6)
+Engine_filter: process(clk_12)
 begin
-	if rising_edge(clk_6) then
+	if rising_edge(clk_12) then
 		if (ena_3k = '1') then
 			motor_filter_t1 <= ("00" & motor_prefilter) + ("00" & motor_prefilter);
 			motor_filter_t2 <= motor_filter_t1;

@@ -20,7 +20,8 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity playfield is 
 port(   
-			clk6				: in		std_logic;
+			clk12				: in		std_logic;
+			clk6en			: in		std_logic;
 			display			: in		std_logic_vector(7 downto 0);
 			HCount			: in  	std_logic_vector(8 downto 0);
 			VCount			: in  	std_logic_vector(7 downto 0);
@@ -97,21 +98,23 @@ generic map(
 		widthad_a => 10,
 		width_a => 4)
 port map(
-		clock => clk6, 
+		clock => clk12,
 		address => char_addr,
 		q => char_data
 		);
 
 -- 74LS195 video shift register	
-R3: process(clk6, SL, VBlank_n_s, char_data, shift_data)
+R3: process(clk12, SL, VBlank_n_s, char_data, shift_data)
 begin
 	if VBlank_n_s = '0' then -- Connected Clear input
 		shift_data <= (others => '0');
-	elsif rising_edge(clk6) then 
-		if SL = '0' then -- Parallel load
-			shift_data <= char_data;
-		else
-			shift_data <= shift_data(2 downto 0) & '0';
+	elsif rising_edge(clk12) then 
+		if clk6en = '1' then
+			if SL = '0' then -- Parallel load
+				shift_data <= char_data;
+			else
+				shift_data <= shift_data(2 downto 0) & '0';
+			end if;
 		end if;
 	end if;
 	QH <= shift_data(3);
@@ -120,10 +123,10 @@ end process;
 
 -- 9316 counter at R2
 -- CEP and CET tied to ground, counter is used only as a synchronous latch
-R2: process(clk6, H1H2, display, H256, CompSync_n, CompBlank_n)
+R2: process(clk12, H1H2, display, H256, CompSync_n, CompBlank_n)
 begin
-	if rising_edge(clk6) then
-		if H1H2 = '0' then
+	if rising_edge(clk12) then
+		if clk6en = '1' and H1H2 = '0' then
 			R2_reg <= (H256 & display(7) & CompBlank_n & CompSync_n);
 		end if;
 	end if;

@@ -25,7 +25,7 @@ generic(
 			constant Freq_tune : integer := 50 -- Value from 0-100 used to tune the overall whistle sound frequency
 			);
 port(		
-			clk_6				: in  std_logic;  
+			clk_12				: in  std_logic;  
 			Ena_3k			: in  std_logic;	-- Saves some logic since this signal is already used elsewhere
 			Whistle_trig	: in  std_logic;  -- Active-high trigger for whistle sound
 			Whistle_out		: out std_logic_vector(3 downto 0)	-- Whistle output 
@@ -44,11 +44,11 @@ begin
 -- downward as a capacitor discharges through a resistor. This simulates that functionality by
 -- incrementing a value on each cycle of ena_3k, this value is then used to alter the frequency
 -- of the whistle.
-RC_pitchbend: process(clk_6, ena_3k, Whistle_trig)
+RC_pitchbend: process(clk_12, ena_3k, Whistle_trig)
 begin
 	if Whistle_trig = '0' then
 		Pitch_bend <= 0;
-	elsif rising_edge(clk_6) then
+	elsif rising_edge(clk_12) then
 		if ena_3k = '1' then
 			if Pitch_bend < 30000 then
 				Pitch_bend <= pitch_bend + 1;
@@ -62,12 +62,12 @@ end process;
 -- the frequency. This is a constant which can be adjusted by changing the value of freq_tune, here a setting of
 -- 0 to 100 results in a ramp_term value ranging from 1000 to 3000 to simulate the function of the frequency 
 -- adjustment pot in the original hardware.
-Ramp_term <= 2800 - (20 * Freq_tune);
+Ramp_term <= (2800 - (20 * Freq_tune))*2;
 
 -- Variable frequency oscillator roughly approximating the function of a 555 astable oscillator
-Ramp_osc: process(clk_6, pitch_bend)
+Ramp_osc: process(clk_12, pitch_bend)
 begin
-	if rising_edge(clk_6) then
+	if rising_edge(clk_12) then
 		Ramp_count <= Ramp_count + 1;
 		if Ramp_count > Ramp_term + Pitch_bend / 2 then
 			Ramp_count <= 0;

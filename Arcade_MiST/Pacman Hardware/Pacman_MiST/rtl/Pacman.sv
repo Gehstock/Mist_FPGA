@@ -43,7 +43,8 @@ localparam CONF_STR = {
 	"Pacman;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"T6,Reset;",
+	"O5,Blend,Off,On;",
+	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
 
@@ -73,7 +74,6 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
 wire  [7:0] audio;
 wire 			hs, vs;
 wire 			hb, vb;
@@ -98,7 +98,7 @@ pacmant pacmant(
    .ENA_6(ce_6m)
 	);
 
-mist_video #(.COLOR_DEPTH(3)) mist_video(
+mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
@@ -116,6 +116,8 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
+	.ce_divider(1'b1),
+	.blend(status[5]),
 	.ypbpr(ypbpr)
 	);
 
@@ -141,11 +143,11 @@ user_io(
 	);
 	
 dac #(
-	.C_bits(15))
+	.C_bits(8))
 dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({audio,audio}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 
