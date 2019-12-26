@@ -22,14 +22,19 @@ library ieee;
 --  use UNISIM.Vcomponents.all;
 
 entity MC_COL_PAL is
+generic (
+	name         : string
+);
 port (
 	I_CLK_12M    : in  std_logic;
 	I_CLK_6M     : in  std_logic;
 	I_VID        : in  std_logic_vector(1 downto 0);
 	I_COL        : in  std_logic_vector(2 downto 0);
 	I_C_BLnX     : in  std_logic;
+	I_H_BLnX     : in  std_logic;
 
 	O_C_BLXn     : out std_logic;
+	O_H_BLXn     : out std_logic;
 	O_STARS_OFFn : out std_logic;
 	O_R          : out std_logic_vector(2 downto 0);
 	O_G          : out std_logic_vector(2 downto 0);
@@ -43,12 +48,17 @@ architecture RTL of MC_COL_PAL is
 	signal W_6M_DI      : std_logic_vector(6 downto 0) := (others => '0');
 	signal W_6M_DO      : std_logic_vector(6 downto 0) := (others => '0');
 	signal W_6M_CLR     : std_logic := '0';
+	signal W_6M_HBL     : std_logic := '0';
+	signal W_6M_HBLCLR  : std_logic := '0';
 
 begin
 	W_6M_DI      <= I_COL(2 downto 0) & I_VID(1 downto 0) & not (I_VID(0) or I_VID(1)) & I_C_BLnX;
 	W_6M_CLR     <= W_6M_DI(0) or W_6M_DO(0);
 	O_C_BLXn     <= W_6M_DI(0) or W_6M_DO(0);
 	O_STARS_OFFn <= W_6M_DO(1);
+
+	W_6M_HBLCLR  <= I_H_BLnX or W_6M_HBL;
+	O_H_BLXn     <= I_H_BLnX or W_6M_HBL;
 
 --always@(posedge I_CLK_6M or negedge W_6M_CLR)
 	process(I_CLK_6M, W_6M_CLR)
@@ -60,10 +70,19 @@ begin
 		end if;
 	end process;
 
-	---    COL ROM     --------------------------------------------------------
---wire   W_COL_ROM_OEn = W_6M_DO[1];
+	process(I_CLK_6M, W_6M_HBLCLR)
+	begin
+		if (W_6M_HBLCLR = '0') then
+			W_6M_HBL <= '0';
+		elsif rising_edge(I_CLK_6M) then
+			W_6M_HBL <= I_H_BLnX;
+		end if;
+	end process;
 
-	galaxian_6l : entity work.GALAXIAN_6L
+	clut : entity work.ROM_6L
+	generic map (
+		name => name
+	)
 	port map (
 		CLK  => I_CLK_12M,
 		ADDR => W_6M_DO(6 downto 2),

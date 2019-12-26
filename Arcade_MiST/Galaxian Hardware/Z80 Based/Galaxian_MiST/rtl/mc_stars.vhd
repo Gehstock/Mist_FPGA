@@ -18,7 +18,7 @@ library ieee;
 
 entity MC_STARS is
 	port (
-		I_CLK_18M     : in  std_logic;
+		I_CLK_12M     : in  std_logic;
 		I_CLK_6M      : in  std_logic;
 		I_H_FLIP      : in  std_logic;
 		I_V_SYNC      : in  std_logic;
@@ -52,7 +52,7 @@ begin
 	O_G       <= (W_1AB_Q(11) & W_1AB_Q(10) ) when (W_2A = '0' and W_4P = '0') else (others => '0');
 	O_B       <= (W_1AB_Q(13) & W_1AB_Q(12) ) when (W_2A = '0' and W_4P = '0') else (others => '0');
 
-	CLK_1C    <= not (I_CLK_18M and (not I_CLK_6M )and (not I_V_SYNC) and I_256HnX);
+	CLK_1C    <= not (I_CLK_12M and (not I_CLK_6M )and (not I_V_SYNC) and I_256HnX);
 	CLK_1AB   <= not (CLK_1C or (not (I_H_FLIP or W_1C_Q(1))));
 	W_3B      <= W_2D_Qn xor W_1AB_Q(4);
 

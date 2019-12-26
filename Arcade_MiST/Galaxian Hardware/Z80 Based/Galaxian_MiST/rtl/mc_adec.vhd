@@ -57,7 +57,6 @@ entity MC_ADEC is
 	port (
 		I_CLK_12M     : in  std_logic;
 		I_CLK_6M      : in  std_logic;
-		I_CPU_CLK     : in  std_logic;
 		I_RSTn        : in  std_logic;
 
 		I_CPU_A       : in  std_logic_vector(15 downto 0);
@@ -86,11 +85,14 @@ entity MC_ADEC is
 		O_WDR_OE      : out std_logic;
 		O_DRIVER_WE   : out std_logic;
 		O_SOUND_WE    : out std_logic;
+		O_MISC_WE     : out std_logic;
 		O_PITCH       : out std_logic;
 		O_H_FLIP      : out std_logic;
 		O_V_FLIP      : out std_logic;
+		O_SPEECH      : out std_logic_vector(1 downto 0); -- kingballoon
 		O_BD_G        : out std_logic;
-		O_STARS_ON    : out std_logic
+		O_STARS_ON    : out std_logic;
+		O_ROM_SWP     : out std_logic  -- ZigZag
 	);
 end;
 
@@ -115,12 +117,12 @@ begin
 --		O_WAITn <= '1' ; -- No Wait
 		O_WAITn <= W_6S1_Qn;
 
-	process(I_CPU_CLK, I_V_BLn)
+	process(I_CLK_6M, I_V_BLn)
 	begin
 		if (I_V_BLn = '0') then
 --			W_6S1_Q  <= '0';
 			W_6S1_Qn <= '1';
-		elsif rising_edge(I_CPU_CLK) then
+		elsif rising_edge(I_CLK_6M) then
 --			W_6S1_Q  <= not (I_H_BL or W_8P_Q(2));
 			W_6S1_Qn <=      I_H_BL or W_8P_Q(2);
 		end if;
@@ -213,7 +215,7 @@ begin
 	O_CPU_RAM_RD  <= not W_8N_Q(0);
 
 	O_PITCH       <= not W_8M_Q(7);
---	STARS_ON_ENA  <= not W_8M_Q(6);
+	O_MISC_WE     <= not W_8M_Q(6);
 	O_SOUND_WE    <= not W_8M_Q(5);
 	O_DRIVER_WE   <= not W_8M_Q(4);
 	O_OBJ_RAM_WR  <= not W_8M_Q(3);
@@ -247,5 +249,7 @@ begin
 	O_STARS_ON <= W_9N_Q(4);
 	O_H_FLIP   <= W_9N_Q(6);
 	O_V_FLIP   <= W_9N_Q(7);
+	O_SPEECH   <= W_9N_Q(2)&W_9N_Q(0); -- King & Balloon
+	O_ROM_SWP  <= W_9N_Q(2); -- ZigZag
 
 end RTL;
