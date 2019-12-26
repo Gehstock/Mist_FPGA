@@ -97,18 +97,17 @@ entity LLANDER_TOP is
 	 VID_HBLANK			: out std_logic;
 	 VID_VBLANK			: out std_logic;
 
-	DIP					: in std_logic_vector(7 downto 0);
+	 DIP					: in std_logic_vector(7 downto 0);
 	 
     RESET_L           : in    std_logic;
 
     -- ref clock in
 	 clk_6					  	:  in  std_logic;
 	 clk_25						:  in  std_logic;
-	vram_write_addr   : out   std_logic_vector(18 downto 0);
-	vram_write_data   : out   std_logic_vector(3 downto 0);
-	vram_read_addr    : out   std_logic_vector(18 downto 0);
-	vram_read_data    : in   std_logic_vector(3 downto 0);
-	vram_wren			: out   std_logic
+	 cpu_rom_address        : out   std_logic_vector(12 downto 0);   
+	 cpu_rom_data				: in std_logic_vector(7 downto 0);
+	 vector_rom_address     : out   std_logic_vector(12 downto 0);   
+	 vector_rom_data			: in std_logic_vector(7 downto 0)
     );
 end;
 
@@ -203,7 +202,11 @@ port map(
 		y_vector => y_vector,
 		z_vector => z_vector,
 		beam_on => beam_on,
-      BEAM_ENA  => beam_ena
+      BEAM_ENA  => beam_ena,
+		cpu_rom_address  => cpu_rom_address,
+		cpu_rom_data  => cpu_rom_data,
+		vector_rom_address  => vector_rom_address, 
+		vector_rom_data  => vector_rom_data
 		);
 
 	y_vector_w_offset<= y_vector+100;
@@ -228,13 +231,7 @@ port map(
       VSYNC_OUT        => VSYNC_OUT,
 		VID_DE				=> VGA_DE,
 		VID_HBLANK		=>	VID_HBLANK,
-		VID_VBLANK		=>	VID_VBLANK,
-		
-		vram_write_addr => vram_write_addr,
-		vram_write_data => vram_write_data,
-		vram_read_addr => vram_read_addr,
-		vram_read_data => vram_read_data,
-		vram_wren => vram_wren
+		VID_VBLANK		=>	VID_VBLANK
       );
 
 

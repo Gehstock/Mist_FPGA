@@ -84,7 +84,11 @@ entity LLander is
 		Y_VECTOR 			: out std_logic_vector(9 downto 0);
 		Z_VECTOR				: out std_logic_vector(3 downto 0);
 		BEAM_ON   			: out std_logic;
-		BEAM_ENA   			: out std_logic
+		BEAM_ENA   			: out std_logic;
+		cpu_rom_address    	: out   std_logic_vector(12 downto 0);
+		cpu_rom_data     		: in    std_logic_vector( 7 downto 0);
+		vector_rom_address    : out   std_logic_vector(12 downto 0);
+		vector_rom_data     	: in    std_logic_vector( 7 downto 0)
 		);
 end;
 
@@ -430,56 +434,15 @@ begin
     end case;
   end process;
   
-  rom0 : entity work.LLANDER_PROG_ROM_0
-    port map (
-      addr    	=> c_addr(10 downto 0),
-      data		=> rom0_dout,
-      clk      => CLK_6
-      );
+--rom : entity work.llander_cpu_rom
+--    port map (
+--	clk      => CLK_6,
+--	addr     => c_addr(12 downto 0),
+--	data     => rom_dout
+--);
 
-  rom1 : entity work.LLANDER_PROG_ROM_1
-    port map (
-      addr     => c_addr(10 downto 0),
-      data     => rom1_dout,
-      clk      => CLK_6
-      );
-
- rom2 : entity work.LLANDER_PROG_ROM_2
-    port map (
-      addr     => c_addr(10 downto 0),
-      data     => rom2_dout,
-      clk      => CLK_6
-      );
-
-  rom3 : entity work.LLANDER_PROG_ROM_3
-    port map (
-      addr     => c_addr(10 downto 0),
-      data     => rom3_dout,
-      clk      => CLK_6
-      );
-
-  p_rom_mux : process(c_addr, rom0_dout, rom1_dout, rom2_dout, rom3_dout)
-  begin
-    rom_dout <= (others => '0');
-    case c_addr(12 downto 11) is
-      when "00" => rom_dout <= rom0_dout;
-      when "01" => rom_dout <= rom1_dout;
-      when "10" => rom_dout <= rom2_dout;
-      when "11" => rom_dout <= rom3_dout;
-      when others => null;
-    end case;
-  end process;
-
-  
--- Zero-page RAM		
---RAM: Entity work.RAM256
---port map(
---	clock => clk_6,
---	address => c_addr(7 downto 0),
---	data => c_dout,
---	wren => ram_we,
---	q => ram_dout
---	);
+cpu_rom_address	<= c_addr(12 downto 0);
+rom_dout <= cpu_rom_data;
 
 RAM: Entity work.gen_ram
 	generic map(
@@ -639,7 +602,9 @@ end process;
       ENA_1_5M_E   => ena_1_5m_e,
       RESET_L      => reset_l,
       CLK_6        => CLK_6,
-		CLK_25       => CLK_25
+		CLK_25       => CLK_25,
+		vector_rom_address => vector_rom_address,
+		vector_rom_data => vector_rom_data
       );
 
   BEAM_ENA <= ena_1_5m;

@@ -13,7 +13,7 @@ module LunarLander_MiST(
 	input         SPI_SS2,
 	input         SPI_SS3,
 	input         CONF_DATA0,
-	input         CLOCK_27/*,
+	input         CLOCK_27,
 
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
@@ -26,13 +26,13 @@ module LunarLander_MiST(
 	output  [1:0] SDRAM_BA,
 	output        SDRAM_CLK,
 	output        SDRAM_CKE
-*/
+
 );
 
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"LunarLander;;",
+	"LLANDER;ROM;",
 	"O12,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O3,Test,Off,On;",
 	"O45,Language,English,Spanish,French,German;",
@@ -41,8 +41,10 @@ localparam CONF_STR = {
 	"V,v1.00.",`BUILD_DATE
 };
 
-assign LED = 1;
+assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
+assign SDRAM_CLK = clk_50;
+assign SDRAM_CKE = 1;
 
 wire clk_50, clk_25, clk_6, locked;
 pll pll(
@@ -70,45 +72,81 @@ wire  [7:0] audio;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-//this must go to sdram
-wire [18:0] vram_write_addr;
-wire  [3:0] vram_write_data;
-wire [18:0] vram_read_addr;
-wire  [3:0] vram_read_data;
-wire        vram_wren;
-/*
-sdram  sdram (
-	.SDRAM_DQ(SDRAM_DQ),
-	.SDRAM_A(SDRAM_A),
-	.SDRAM_DQML(SDRAM_DQML),
-	.SDRAM_DQMH(SDRAM_DQMH),
-	.SDRAM_BA(SDRAM_BA),
-	.SDRAM_nCS(SDRAM_nCS),
-	.SDRAM_nWE(SDRAM_nWE),
-	.SDRAM_nRAS(SDRAM_nRAS),
-	.SDRAM_nCAS(SDRAM_nCAS),
-	.SDRAM_CKE(SDRAM_CKE),
-	.init(~locked),			// init signal after FPGA config to initialize RAM
-	.clk(clk_50),			// sdram is accessed at up to 128MHz
-	.clkref(clk_25),		// reference clock to sync to
-	.din(vram_write_data),			// data input from chipset/cpu
-	.dout(vram_read_data),				// data output to chipset/cpu
-	.raddr(vram_read_addr),       // 25 bit byte address
-	.waddr(vram_write_addr),       // 25 bit byte address
-	.rd(~vram_wren),         // cpu/chipset requests read
-	.we(vram_wren)
-);*/
+wire [12:0] cpu_rom_address;
+wire [15:0] cpu_rom_data;
+wire [12:0] vector_rom_address;
+wire [15:0] vector_rom_data;
+wire        ioctl_downl;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
 
-//reduced ram size
+data_io data_io(
+	.clk_sys       ( clk_25       ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
+	.ioctl_download( ioctl_downl  ),
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
+);
 
-p2ram p2ram (
-	.clock(clk_25),
-	.data(vram_write_data),
-	.rdaddress(vram_read_addr[15:0]),
-	.wraddress(vram_write_addr[15:0]),
-	.wren(vram_wren),
-	.q(vram_read_data)
-	);
+reg port1_req, port2_req;
+sdram sdram(
+	.*,
+	.init_n        ( locked   ),
+	.clk           ( clk_50      ),
+
+	// port1 used for main CPU
+	.port1_req     ( port1_req    ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port1_we      ( ioctl_downl ),
+	.port1_d       ( {ioctl_dout, ioctl_dout} ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {3'b000, cpu_rom_address[12:1]} ),
+	.cpu1_q        ( cpu_rom_data ),
+
+	// port2 for sound board
+	.port2_req     ( port2_req ),
+	.port2_ack     ( ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h1000 ),
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port2_we      ( ioctl_downl ),
+	.port2_d       ( {ioctl_dout, ioctl_dout} ),
+	.port2_q       ( ),
+
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {3'b000, vector_rom_address[12:1]} ),
+	.snd_q         ( vector_rom_data )
+);
+
+always @(posedge clk_25) begin
+	reg        ioctl_wr_last = 0;
+
+	ioctl_wr_last <= ioctl_wr;
+	if (ioctl_downl) begin
+		if (~ioctl_wr_last && ioctl_wr) begin
+			port1_req <= ~port1_req;
+			port2_req <= ~port2_req;
+		end
+	end
+end
+
+reg reset = 1;
+reg rom_loaded = 0;
+always @(posedge clk_25) begin
+	reg ioctl_downlD;
+	ioctl_downlD <= ioctl_downl;
+
+	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
+	reset <= status[0] | buttons[1] | ~rom_loaded;
+end
+
 	
 LLANDER_TOP LLANDER_TOP (
 	.ROT_LEFT_L(~m_left),
@@ -137,14 +175,13 @@ LLANDER_TOP LLANDER_TOP (
 	.VID_VBLANK(vb),
 	.VGA_DE(vgade),
 	.DIP({1'b0,1'b0,status[4],status[5],~status[6],1'b1,status[7],status[8]}),//todo dip full
-   .RESET_L(~(status[0] | buttons[1])),
+   .RESET_L(~(reset)),
 	.clk_6(clk_6),
 	.clk_25(clk_25),
-	.vram_write_addr(vram_write_addr),
-	.vram_write_data(vram_write_data),
-	.vram_read_addr(vram_read_addr),
-	.vram_read_data(vram_read_data),
-	.vram_wren(vram_wren)
+	.cpu_rom_address(cpu_rom_address),
+	.cpu_rom_data  (cpu_rom_address[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
+	.vector_rom_address(vector_rom_address), 
+	.vector_rom_data  (vector_rom_address[0] ? vector_rom_data[15:8] : vector_rom_data[7:0] )
     );
 	 
 ovo #(

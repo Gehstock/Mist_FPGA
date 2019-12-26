@@ -52,26 +52,28 @@ library ieee;
 
 entity LLANDER_VG is
   port (
-    C_ADDR       : in    std_logic_vector(15 downto 0);
-    C_DIN        : in    std_logic_vector( 7 downto 0);
-    C_DOUT       : out   std_logic_vector( 7 downto 0);
-    C_RW_L       : in    std_logic;
-    VMEM_L       : in    std_logic;
+    C_ADDR       		: in    std_logic_vector(15 downto 0);
+    C_DIN        		: in    std_logic_vector( 7 downto 0);
+    C_DOUT       		: out   std_logic_vector( 7 downto 0);
+    C_RW_L       		: in    std_logic;
+    VMEM_L       		: in    std_logic;
 
-    DMA_GO_L     : in    std_logic;
-    DMA_RESET_L  : in    std_logic;
-    HALT_OP      : out   std_logic;
+    DMA_GO_L     		: in    std_logic;
+    DMA_RESET_L  		: in    std_logic;
+    HALT_OP      		: out   std_logic;
 
-    X_VECTOR     : out   std_logic_vector(9 downto 0);
-    Y_VECTOR     : out   std_logic_vector(9 downto 0);
-    Z_VECTOR     : out   std_logic_vector(3 downto 0);
-    BEAM_ON      : out   std_logic;
+    X_VECTOR     		: out   std_logic_vector(9 downto 0);
+    Y_VECTOR     		: out   std_logic_vector(9 downto 0);
+    Z_VECTOR     		: out   std_logic_vector(3 downto 0);
+    BEAM_ON      		: out   std_logic;
 
-    ENA_1_5M     : in    std_logic;
-    ENA_1_5M_E   : in    std_logic;
-    RESET_L      : in    std_logic;
-    CLK_6        : in    std_logic;
-	 Clk_25       : in    std_logic
+    ENA_1_5M     		: in    std_logic;
+    ENA_1_5M_E   		: in    std_logic;
+    RESET_L      		: in    std_logic;
+    CLK_6        		: in    std_logic;
+	 Clk_25       		: in    std_logic;
+	 vector_rom_address   : out   std_logic_vector(12 downto 0);
+	 vector_rom_data     	: in    std_logic_vector( 7 downto 0)
     );
 end;
 
@@ -117,14 +119,10 @@ architecture RTL of LLANDER_VG is
 
   signal vram1_l              : std_logic;
   signal vram2_l              : std_logic;
-  signal vrom1_l              : std_logic;
-  signal vrom2_l              : std_logic;
-  signal vrom3_l					: std_logic;
+  signal vrom_l              : std_logic;
   signal vram1_t1_l           : std_logic;
   signal vram2_t1_l           : std_logic;
-  signal vrom1_t1_l           : std_logic;
-  signal vrom2_t1_l           : std_logic;
-  signal vrom3_t1_l				: std_logic;
+  signal vrom_t1_l              : std_logic;
   signal am_bus               : std_logic_vector(12 downto 0);
   signal vw_l                 : std_logic;
 
@@ -144,9 +142,7 @@ architecture RTL of LLANDER_VG is
   signal ram_din              : std_logic_vector(7 downto 0);
   signal ram_dout_1           : std_logic_vector(7 downto 0);
   signal ram_dout_2           : std_logic_vector(7 downto 0);
-  signal rom_dout_1           : std_logic_vector(7 downto 0);
-  signal rom_dout_2           : std_logic_vector(7 downto 0);
-  signal rom_dout_3           : std_logic_vector(7 downto 0);
+  signal rom_dout             : std_logic_vector(7 downto 0);
   signal memory_dout          : std_logic_vector(7 downto 0);
 
 begin
@@ -403,18 +399,16 @@ begin
   begin
     vram1_l <= '1';
     vram2_l <= '1';
-    vrom1_l <= '1';
-    vrom2_l <= '1';
-    vrom3_l <= '1';
+    vrom_l <= '1';
     case am_bus(12 downto 10) is
       when "000" => vram1_l <= '0';
       when "001" => vram2_l <= '0';
-      when "010" => vrom1_l <= '0';
-      when "011" => vrom1_l <= '0';
-      when "100" => vrom2_l <= '0';
-      when "101" => vrom2_l <= '0';
-		when "110" => vrom3_l <= '0'; -- AJS?
-		when "111" => vrom3_l <= '0';
+      when "010" => vrom_l <= '0';
+      when "011" => vrom_l <= '0';
+      when "100" => vrom_l <= '0';
+      when "101" => vrom_l <= '0';
+		when "110" => vrom_l <= '0'; -- AJS?
+		when "111" => vrom_l <= '0';
 
       when others => null;
     end case;
@@ -425,9 +419,7 @@ begin
     wait until rising_edge(CLK_6);
     vram1_t1_l <= vram1_l;
     vram2_t1_l <= vram2_l;
-    vrom1_t1_l <= vrom1_l;
-    vrom2_t1_l <= vrom2_l;
-    vrom3_t1_l <= vrom3_l;
+    vrom_t1_l <= vrom_l;
   end process;
 
   -- only cpu can write to vector ram
@@ -457,28 +449,17 @@ begin
     CLK    => CLK_6
     );
 
-u_vector_rom_0 : entity work.LLANDER_VEC_ROM_0
-    port map (
-      addr    	=> am_bus(10 downto 0),
-      data		=> rom_dout_1,
-      clk      => CLK_6
-	);
+--  u_vector_rom : entity work.llander_vec_rom
+--    port map (
+--	clk      => CLK_6,
+--	addr     => am_bus(12 downto 0),
+--	data     => rom_dout
+--);
 
-u_vector_rom_1 : entity work.LLANDER_VEC_ROM_1
-    port map (
-      addr    	=> am_bus(10 downto 0),
-      data		=> rom_dout_2,
-      clk      => CLK_6
-	);
-	
-u_vector_rom_2 : entity work.LLANDER_VEC_ROM_2
-    port map (
-      addr    	=> am_bus(10 downto 0),
-      data		=> rom_dout_3,
-      clk      => CLK_6
-	);
+vector_rom_address <= am_bus(12 downto 0);
+rom_dout <= vector_rom_data;
 
-  p_memory_data_mux : process(vram1_t1_l, vram2_t1_l, vrom1_t1_l, vrom2_t1_l, vrom3_t1_l,ram_dout_1, ram_dout_2, rom_dout_1, rom_dout_2,rom_dout_3)
+  p_memory_data_mux : process(vram1_t1_l, vram2_t1_l, vrom_t1_l, ram_dout_1, ram_dout_2, rom_dout)
   begin
     -- cpu buffer enabled when VMEM_L = 0
     memory_dout <= (others => '0');
@@ -486,16 +467,12 @@ u_vector_rom_2 : entity work.LLANDER_VEC_ROM_2
       memory_dout <= ram_dout_1;
     elsif (vram2_t1_l = '0') then
       memory_dout <= ram_dout_2;
-	 elsif (vrom1_t1_l = '0') then
-		memory_dout <= rom_dout_1;  -- AJS??
-	 elsif (vrom2_t1_l = '0') then
-      memory_dout <= rom_dout_2;  -- AJS??
-	 elsif (vrom3_t1_l = '0') then
-		memory_dout <= rom_dout_3;  -- AJS??
+	 elsif (vrom_t1_l = '0')then
+		memory_dout <= rom_dout;  -- AJS??
 	 else
       memory_dout <= (others => 'X');
     end if;
-  end process;
+  end process;	
   --
   -- data memory latches
   --

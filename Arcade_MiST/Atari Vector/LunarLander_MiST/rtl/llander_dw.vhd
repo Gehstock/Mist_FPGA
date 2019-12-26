@@ -57,30 +57,24 @@ library ieee;
 
 entity LLANDER_DW is
   port (
-   RESET            	: in    std_logic;
-	clk_25           	: in    std_logic;
-	clk_6            	: in    std_logic;
+    RESET            : in    std_logic;
+	 clk_25           : in    std_logic;
+	 clk_6            : in    std_logic;
 
-   X_VECTOR         	: in    std_logic_vector(9 downto 0);
-   Y_VECTOR         	: in    std_logic_vector(9 downto 0);
-   Z_VECTOR         	: in    std_logic_vector(3 downto 0);
-   BEAM_ON          	: in    std_logic;
-   BEAM_ENA         	: in    std_logic;
+    X_VECTOR         : in    std_logic_vector(9 downto 0);
+    Y_VECTOR         : in    std_logic_vector(9 downto 0);
+    Z_VECTOR         : in    std_logic_vector(3 downto 0);
+    BEAM_ON          : in    std_logic;
+    BEAM_ENA         : in    std_logic;
 
-   VIDEO_R_OUT      	: out   std_logic_vector(3 downto 0);
-   VIDEO_G_OUT      	: out   std_logic_vector(3 downto 0);
-   VIDEO_B_OUT      	: out   std_logic_vector(3 downto 0);
-   HSYNC_OUT        	: out   std_logic;
-   VSYNC_OUT        	: out   std_logic;
-	VID_DE				: out   std_logic;
-	VID_HBLANK			: out		std_logic;
-	VID_VBLANK			: out		std_logic;
-	
-	vram_write_addr   : out   std_logic_vector(18 downto 0);
-	vram_write_data   : out   std_logic_vector(3 downto 0);
-	vram_read_addr    : out   std_logic_vector(18 downto 0);
-	vram_read_data    : in   std_logic_vector(3 downto 0);
-	vram_wren			: out   std_logic
+    VIDEO_R_OUT      : out   std_logic_vector(3 downto 0);
+    VIDEO_G_OUT      : out   std_logic_vector(3 downto 0);
+    VIDEO_B_OUT      : out   std_logic_vector(3 downto 0);
+    HSYNC_OUT        : out   std_logic;
+    VSYNC_OUT        : out   std_logic;
+	 VID_DE				: out   std_logic;
+	 VID_HBLANK			: out		std_logic;
+	 VID_VBLANK			: out		std_logic
     );
 end;
 
@@ -129,7 +123,7 @@ architecture RTL of LLANDER_DW is
   signal vcount					: std_logic_vector(8 downto 0);
   signal hcount					: std_logic_vector(8 downto 0);
   signal pxcount					: std_logic_vector(8 downto 0);
---  signal vram_wren				: std_logic;
+  signal vram_wren				: std_logic;
 
 
 
@@ -431,20 +425,18 @@ begin
   end process;
   
   
---video_rgb : work.dpram generic map (19,4)
---port map(
---	clock_a   => clk_25,
---	wren_a    => vram_wren,
---	address_a => dw_addr(18 downto 0),
---	data_a    => vid_data,
+    video_rgb : work.dpram generic map (16,4)	
+port map
+(
+	clock_a   => clk_25,
+	wren_a    => vram_wren,
+	address_a => dw_addr(15 downto 0),
+	data_a    => vid_data,
 
---	clock_b   => clk_25,
---	address_b => (screen & up_addr(17 downto 0)),
---);	
-vram_write_addr <= dw_addr(18 downto 0);
-vram_write_data <= vid_data;
-vram_read_addr <= screen & up_addr(17 downto 0);
-vid_out <= vram_read_data;
+	clock_b   => clk_25,
+	address_b => (screen & up_addr(14 downto 0)),
+	q_b       => vid_out
+);	
 
   -- job done !
 end architecture RTL;
