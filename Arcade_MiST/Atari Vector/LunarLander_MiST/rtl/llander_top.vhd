@@ -64,7 +64,6 @@ library ieee;
 
 entity LLANDER_TOP is
   port (
-
 		ROT_LEFT_L			: in	std_logic;
 		ROT_RIGHT_L			: in	std_logic;
 		ABORT_L				: in	std_logic;
@@ -86,66 +85,43 @@ entity LLANDER_TOP is
 		LAMP5					: out std_logic;
 
 
-    AUDIO_OUT         : out   std_logic_vector(7 downto 0);    
-    VIDEO_R_OUT       : out   std_logic_vector(3 downto 0);
-    VIDEO_G_OUT       : out   std_logic_vector(3 downto 0);
-    VIDEO_B_OUT       : out   std_logic_vector(3 downto 0);
+		AUDIO_OUT         : out   std_logic_vector(7 downto 0);    
+		VIDEO_R_OUT       : out   std_logic_vector(3 downto 0);
+		VIDEO_G_OUT       : out   std_logic_vector(3 downto 0);
+		VIDEO_B_OUT       : out   std_logic_vector(3 downto 0);
 
-    HSYNC_OUT         : out   std_logic;
-    VSYNC_OUT         : out   std_logic;
-	 VGA_DE				: out std_logic;
-	 VID_HBLANK			: out std_logic;
-	 VID_VBLANK			: out std_logic;
+		HSYNC_OUT         : out   std_logic;
+		VSYNC_OUT         : out   std_logic;
+		VGA_DE				: out std_logic;
+		VID_HBLANK			: out std_logic;
+		VID_VBLANK			: out std_logic;
 
-	 DIP					: in std_logic_vector(7 downto 0);
+		DIP					: in std_logic_vector(7 downto 0);
 	 
-    RESET_L           : in    std_logic;
+		RESET_L           : in    std_logic;
 
-    -- ref clock in
-	 clk_6					  	:  in  std_logic;
-	 clk_25						:  in  std_logic;
-	 cpu_rom_address        : out   std_logic_vector(12 downto 0);   
-	 cpu_rom_data				: in std_logic_vector(7 downto 0);
-	 vector_rom_address     : out   std_logic_vector(12 downto 0);   
-	 vector_rom_data			: in std_logic_vector(7 downto 0)
-    );
+		-- ref clock in
+		clk_6					: in  std_logic;
+		clk_25				: in  std_logic;
+		cpu_rom_addr      : out   std_logic_vector(12 downto 0);   
+		cpu_rom_data		: in std_logic_vector(7 downto 0);
+		vector_rom_addr   : out   std_logic_vector(12 downto 0);   
+		vector_rom_data	: in std_logic_vector(7 downto 0)
+	);
 end;
 
 architecture RTL of LLANDER_TOP is
-
-	signal RAM_ADDR_A        :   std_logic_vector(18 downto 0);
-   signal RAM_ADDR_B        :   std_logic_vector(15 downto 0); -- same as above
-   signal RAM_WE_L          :   std_logic;
-   signal RAM_ADV_L         :   std_logic;
-   signal RAM_OE_L          :   std_logic;
-   signal RAM_DO           :  std_logic_vector(31 downto 0);
-	signal RAM_DI           :  std_logic_vector(31 downto 0);
-	signal ram_we          :   std_logic;
-	
   signal reset_dll_h          : std_logic;
-
   signal delay_count          : std_logic_vector(7 downto 0) := (others => '0');
   signal reset_6_l            : std_logic;
   signal reset_6              : std_logic;
-
   signal clk_cnt              : std_logic_vector(2 downto 0) := "000";
-
   signal x_vector             : std_logic_vector(9 downto 0);
   signal y_vector             : std_logic_vector(9 downto 0);
-  signal y_vector_w_offset             : std_logic_vector(9 downto 0);
+  signal y_vector_w_offset    : std_logic_vector(9 downto 0);
   signal z_vector             : std_logic_vector(3 downto 0);
   signal beam_on              : std_logic;
   signal beam_ena             : std_logic;
-
-  signal ram_addr_int         : std_logic_vector(18 downto 0);
-  signal ram_we_l_int         : std_logic;
-  signal ram_adv_l_int        : std_logic;
-  signal ram_oe_l_int         : std_logic;
-  signal ram_dout_oe_l        : std_logic;
-  signal ram_dout_oe_l_reg    : std_logic;
-  signal ram_dout             : std_logic_vector(31 downto 0);
-  signal ram_dout_reg         : std_logic_vector(31 downto 0);
-  signal ram_din              : std_logic_vector(31 downto 0);
 
 begin
 
@@ -176,62 +152,62 @@ begin
 
   LLander: entity work.llander 
 port map(
-		clk_6 => clk_6,
-		clk_25 => clk_25,
-		reset_6_l => reset_6_l,
+		clk_6 				=> clk_6,
+		clk_25 				=> clk_25,
+		reset_6_l 			=> reset_6_l,
 		dip => DIP,
-		rot_left_l => rot_left_l,
-		rot_right_l => rot_right_l,
-		abort_l => abort_l,
-		game_sel_l => game_sel_l,
-		start_l => start_l,
-		coin1_l => coin1_l,
-		coin2_l => coin2_l,
-		thrust => thrust,
-		diag_step_l => diag_step_l,
-		slam_l => '1', --switches(15),
-		self_test_l =>self_test_l,
-		start_sel_l => start_sel_l,
-		lamp2 => lamp2,
-		lamp3 => lamp3,
-		lamp4 => lamp4,
-		lamp5 => lamp5,
-		coin_ctr => open,			
-		audio_out => AUDIO_OUT,
-		x_vector => x_vector,
-		y_vector => y_vector,
-		z_vector => z_vector,
-		beam_on => beam_on,
-      BEAM_ENA  => beam_ena,
-		cpu_rom_address  => cpu_rom_address,
-		cpu_rom_data  => cpu_rom_data,
-		vector_rom_address  => vector_rom_address, 
-		vector_rom_data  => vector_rom_data
+		rot_left_l 			=> rot_left_l,
+		rot_right_l 		=> rot_right_l,
+		abort_l 				=> abort_l,
+		game_sel_l 			=> game_sel_l,
+		start_l 				=> start_l,
+		coin1_l 				=> coin1_l,
+		coin2_l 				=> coin2_l,
+		thrust 				=> thrust,
+		diag_step_l 		=> diag_step_l,
+		slam_l 				=> '1', --switches(15),
+		self_test_l 		=> self_test_l,
+		start_sel_l 		=> start_sel_l,
+		lamp2 				=> lamp2,
+		lamp3 				=> lamp3,
+		lamp4 				=> lamp4,
+		lamp5 				=> lamp5,
+		coin_ctr 			=> open,			
+		audio_out 			=> AUDIO_OUT,
+		x_vector 			=> x_vector,
+		y_vector 			=> y_vector,
+		z_vector 			=> z_vector,
+		beam_on 				=> beam_on,
+      BEAM_ENA  			=> beam_ena,
+		cpu_rom_addr  		=> cpu_rom_addr,
+		cpu_rom_data  		=> cpu_rom_data,
+		vector_rom_addr  	=> vector_rom_addr, 
+		vector_rom_data  	=> vector_rom_data
 		);
 
 	y_vector_w_offset<= y_vector+100;
 		
   u_DW : entity work.LLANDER_DW
     port map (
-      RESET            => reset_6,
+      RESET            	=> reset_6,
 		clk_25				=> clk_25,
 		clk_6					=> clk_6,
 
-      X_VECTOR         => x_vector,
-      Y_VECTOR         => y_vector_w_offset,-- AJS move up y_vector,
-      Z_VECTOR         => z_vector,
+      X_VECTOR         	=> x_vector,
+      Y_VECTOR         	=> y_vector_w_offset,-- AJS move up y_vector,
+      Z_VECTOR         	=> z_vector,
 
-      BEAM_ON          => beam_on,
-      BEAM_ENA         => beam_ena,
+      BEAM_ON         	=> beam_on,
+      BEAM_ENA         	=> beam_ena,
 
-      VIDEO_R_OUT      => VIDEO_R_OUT,
-      VIDEO_G_OUT      => VIDEO_G_OUT,
-      VIDEO_B_OUT      => VIDEO_B_OUT,
-      HSYNC_OUT        => HSYNC_OUT,
-      VSYNC_OUT        => VSYNC_OUT,
+      VIDEO_R_OUT      	=> VIDEO_R_OUT,
+      VIDEO_G_OUT      	=> VIDEO_G_OUT,
+      VIDEO_B_OUT      	=> VIDEO_B_OUT,
+      HSYNC_OUT        	=> HSYNC_OUT,
+      VSYNC_OUT        	=> VSYNC_OUT,
 		VID_DE				=> VGA_DE,
-		VID_HBLANK		=>	VID_HBLANK,
-		VID_VBLANK		=>	VID_VBLANK
+		VID_HBLANK			=>	VID_HBLANK,
+		VID_VBLANK			=>	VID_VBLANK
       );
 
 

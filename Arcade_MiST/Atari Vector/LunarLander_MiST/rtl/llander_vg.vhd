@@ -72,8 +72,8 @@ entity LLANDER_VG is
     RESET_L      		: in    std_logic;
     CLK_6        		: in    std_logic;
 	 Clk_25       		: in    std_logic;
-	 vector_rom_address   : out   std_logic_vector(12 downto 0);
-	 vector_rom_data     	: in    std_logic_vector( 7 downto 0)
+	 vector_rom_addr  : out   std_logic_vector(12 downto 0);
+	 vector_rom_data  : in    std_logic_vector( 7 downto 0)
     );
 end;
 
@@ -456,7 +456,7 @@ begin
 --	data     => rom_dout
 --);
 
-vector_rom_address <= am_bus(12 downto 0);
+vector_rom_addr <= am_bus(12 downto 0);
 rom_dout <= vector_rom_data;
 
   p_memory_data_mux : process(vram1_t1_l, vram2_t1_l, vrom_t1_l, ram_dout_1, ram_dout_2, rom_dout)

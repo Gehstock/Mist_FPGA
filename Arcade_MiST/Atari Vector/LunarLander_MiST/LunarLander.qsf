@@ -190,8 +190,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/LunarLander_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/llander_top.vhd
 set_global_assignment -name VHDL_FILE rtl/llander.vhd
 set_global_assignment -name VHDL_FILE rtl/llander_vg.vhd
-set_global_assignment -name VHDL_FILE rtl/llander_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/llander_dw.vhd
+set_global_assignment -name VHDL_FILE rtl/llander_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/ovo.vhd

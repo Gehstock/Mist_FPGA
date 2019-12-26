@@ -72,9 +72,9 @@ wire  [7:0] audio;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-wire [12:0] cpu_rom_address;
+wire [12:0] cpu_rom_addr;
 wire [15:0] cpu_rom_data;
-wire [12:0] vector_rom_address;
+wire [12:0] vector_rom_addr;
 wire [15:0] vector_rom_data;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -92,7 +92,7 @@ data_io data_io(
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
-);
+	);
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -109,7 +109,7 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {3'b000, cpu_rom_address[12:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {3'b000, cpu_rom_addr[12:1]} ),
 	.cpu1_q        ( cpu_rom_data ),
 
 	// port2 for sound board
@@ -121,9 +121,9 @@ sdram sdram(
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.snd_addr      ( ioctl_downl ? 15'h7fff : {3'b000, vector_rom_address[12:1]} ),
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {3'b000, vector_rom_addr[12:1]} ),
 	.snd_q         ( vector_rom_data )
-);
+	);
 
 always @(posedge clk_25) begin
 	reg        ioctl_wr_last = 0;
@@ -178,11 +178,11 @@ LLANDER_TOP LLANDER_TOP (
    .RESET_L(~(reset)),
 	.clk_6(clk_6),
 	.clk_25(clk_25),
-	.cpu_rom_address(cpu_rom_address),
-	.cpu_rom_data  (cpu_rom_address[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
-	.vector_rom_address(vector_rom_address), 
-	.vector_rom_data  (vector_rom_address[0] ? vector_rom_data[15:8] : vector_rom_data[7:0] )
-    );
+	.cpu_rom_addr(cpu_rom_addr),
+	.cpu_rom_data  (cpu_rom_addr[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
+	.vector_rom_addr(vector_rom_addr), 
+	.vector_rom_data  (vector_rom_addr[0] ? vector_rom_data[15:8] : vector_rom_data[7:0])
+   );
 	 
 ovo #(
 	.COLS(1), 
@@ -207,7 +207,7 @@ diff (
 	.ena(diff_count > 0),
 	.in0(difficulty),
 	.in1()
-);
+	);
 
 reg [7:0] thrust = 0;
 

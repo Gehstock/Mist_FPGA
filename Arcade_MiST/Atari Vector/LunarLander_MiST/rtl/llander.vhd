@@ -85,10 +85,10 @@ entity LLander is
 		Z_VECTOR				: out std_logic_vector(3 downto 0);
 		BEAM_ON   			: out std_logic;
 		BEAM_ENA   			: out std_logic;
-		cpu_rom_address    	: out   std_logic_vector(12 downto 0);
-		cpu_rom_data     		: in    std_logic_vector( 7 downto 0);
-		vector_rom_address    : out   std_logic_vector(12 downto 0);
-		vector_rom_data     	: in    std_logic_vector( 7 downto 0)
+		cpu_rom_addr    	: out   std_logic_vector(12 downto 0);
+		cpu_rom_data     	: in    std_logic_vector( 7 downto 0);
+		vector_rom_addr   : out   std_logic_vector(12 downto 0);
+		vector_rom_data   : in    std_logic_vector( 7 downto 0)
 		);
 end;
 
@@ -141,10 +141,6 @@ architecture RTL of LLander is
   signal halt                 : std_logic;
 
   -- memory
-  signal rom0_dout            : std_logic_vector(7 downto 0);
-  signal rom1_dout            : std_logic_vector(7 downto 0);
-  signal rom2_dout            : std_logic_vector(7 downto 0);
-  signal rom3_dout            : std_logic_vector(7 downto 0);
   signal rom_dout             : std_logic_vector(7 downto 0);
   signal ram_addr             : std_logic_vector(9 downto 0);
   signal ram_dout             : std_logic_vector(7 downto 0);
@@ -441,7 +437,7 @@ begin
 --	data     => rom_dout
 --);
 
-cpu_rom_address	<= c_addr(12 downto 0);
+cpu_rom_addr	<= c_addr(12 downto 0);
 rom_dout <= cpu_rom_data;
 
 RAM: Entity work.gen_ram
@@ -603,7 +599,7 @@ end process;
       RESET_L      => reset_l,
       CLK_6        => CLK_6,
 		CLK_25       => CLK_25,
-		vector_rom_address => vector_rom_address,
+		vector_rom_addr => vector_rom_addr,
 		vector_rom_data => vector_rom_data
       );
 
