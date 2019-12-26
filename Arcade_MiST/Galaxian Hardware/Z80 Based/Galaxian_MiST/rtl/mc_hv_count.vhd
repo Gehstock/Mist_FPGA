@@ -35,6 +35,7 @@ entity MC_HV_COUNT is
 		O_H_CNT  : out std_logic_vector(8 downto 0);
 		O_H_SYNC : out std_logic;
 		O_H_BL   : out std_logic;
+		O_H_BLn  : out std_logic;
 		O_V_BL2n : out std_logic;
 		O_V_CNT  : out std_logic_vector(7 downto 0);
 		O_V_SYNC : out std_logic;
@@ -47,7 +48,10 @@ architecture RTL of MC_HV_COUNT is
 	signal H_CNT  : std_logic_vector(8 downto 0) := (others => '0');
 	signal V_CNT  : std_logic_vector(8 downto 0) := (others => '0');
 	signal H_SYNC : std_logic := '0';
+	signal H_SYNC_NEXT : std_logic := '0';
+	signal H_SYNC_EN : std_logic := '0';
 	signal H_CLK  : std_logic := '0';
+	signal H_CLK_EN  : std_logic := '0';
 	signal H_BL   : std_logic := '0';
 	signal V_BLn  : std_logic := '0';
 	signal V_BL2n : std_logic := '0';
@@ -69,13 +73,19 @@ begin
 	O_H_CNT  <= H_CNT;
 
 ---------   H_SYNC     ----------------------------------------
-	H_CLK <= H_CNT(4);
-	process(H_CLK, H_CNT(8))
+--	H_CLK <= H_CNT(4);
+	H_CLK_EN <= '1' when H_CNT(4 downto 0) = "01111" else '0';
+	H_SYNC_NEXT <= (not H_CNT(6) ) and H_CNT(5);
+	H_SYNC_EN <= '1' when H_CLK_EN = '1' and H_CNT(8) = '1' and H_SYNC = '0' and H_SYNC_NEXT = '1' else '0';
+
+	process(I_CLK, H_CNT(8))
 	begin
 		if (H_CNT(8) = '0') then
 			H_SYNC <= '0';
-		elsif rising_edge(H_CLK) then
-			H_SYNC <= (not H_CNT(6) ) and H_CNT(5);
+		elsif rising_edge(I_CLK) then
+			if H_CLK_EN = '1' then
+				H_SYNC <= H_SYNC_NEXT;
+			end if;
 		end if;
 	end process;
 
@@ -97,15 +107,17 @@ begin
 	O_H_BL <= H_BL;
 
 ---------   V_COUNT   ----------------------------------------   
-	process(H_SYNC, I_RSTn)
+	process(I_CLK, I_RSTn)
 	begin
 		if (I_RSTn = '0') then
 			V_CNT <= (others => '0');
-		elsif rising_edge(H_SYNC) then
-			if (V_CNT = 255) then
-				V_CNT <= std_logic_vector(to_unsigned(504, V_CNT'length));
-			else
-				V_CNT <= V_CNT + 1 ;
+		elsif rising_edge(I_CLK) then
+			if H_SYNC_EN = '1' then -- rising_edge(HSYNC)
+				if (V_CNT = 255) then
+					V_CNT <= std_logic_vector(to_unsigned(504, V_CNT'length));
+				else
+					V_CNT <= V_CNT + 1 ;
+				end if;
 			end if;
 		end if;
 	end process;
@@ -115,24 +127,28 @@ begin
 
 ---------   V_BLn    ------------------------------------------
 
-	process(H_SYNC)
+	process(I_CLK)
 	begin
-		if rising_edge(H_SYNC) then
-			if V_CNT(7 downto 0) = 239 then
-				V_BLn <= '0';
-			elsif V_CNT(7 downto 0) = 15 then
-				V_BLn <= '1';
+		if rising_edge(I_CLK) then
+			if H_SYNC_EN = '1' then -- rising_edge(HSYNC)
+				if V_CNT(7 downto 0) = 239 then
+					V_BLn <= '0';
+				elsif V_CNT(7 downto 0) = 15 then
+					V_BLn <= '1';
+				end if;
 			end if;
 		end if;
 	end process;
 
-	process(H_SYNC)
+	process(I_CLK)
 	begin
-		if rising_edge(H_SYNC) then
-			if V_CNT(7 downto 0) = 239 then
-				V_BL2n <= '0';
-			elsif V_CNT(7 downto 0) = 16 then
-				V_BL2n <= '1';
+		if rising_edge(I_CLK) then
+			if H_SYNC_EN = '1' then -- rising_edge(HSYNC)
+				if V_CNT(7 downto 0) = 239 then
+					V_BL2n <= '0';
+				elsif V_CNT(7 downto 0) = 16 then
+					V_BL2n <= '1';
+				end if;
 			end if;
 		end if;
 	end process;
@@ -141,5 +157,6 @@ begin
 	O_V_BL2n <= V_BL2n;
 -------   C_BLn     ------------------------------------------
 	O_C_BLn  <= V_BLn and (not H_CNT(8));
+	O_H_BLn  <= not H_CNT(8);
 
 end;

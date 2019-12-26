@@ -35,14 +35,21 @@ library ieee;
   use ieee.numeric_std.all;
 
 entity MC_INPORT is
+generic (
+	name       : in  string
+);
 port (
 	I_COIN1    : in  std_logic;   --  active high
 	I_COIN2    : in  std_logic;   --  active high
 	I_1P_LE    : in  std_logic;   --  active high
 	I_1P_RI    : in  std_logic;   --  active high
+	I_1P_UP    : in  std_logic;   --  active high
+	I_1P_DN    : in  std_logic;   --  active high
 	I_1P_SH    : in  std_logic;   --  active high
 	I_2P_LE    : in  std_logic;
 	I_2P_RI    : in  std_logic;
+	I_2P_UP    : in  std_logic;
+	I_2P_DN    : in  std_logic;
 	I_2P_SH    : in  std_logic;
 	I_1P_START : in  std_logic;   --  active high
 	I_2P_START : in  std_logic;   --  active high
@@ -66,9 +73,31 @@ architecture RTL of MC_INPORT is
 
 begin
 
-	W_SW0_DO <= x"00" when I_SW0_OE = '0' else W_SERVICE & W_TEST &  W_TABLE &  I_1P_SH &  I_1P_RI & I_1P_LE & I_COIN2    & I_COIN1;
-	W_SW1_DO <= x"00" when I_SW1_OE = '0' else "000"                         &  I_2P_SH &  I_2P_RI & I_2P_LE & I_2P_START & I_1P_START;
-	W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000100";
+	ioports: if name = "AZURIAN" generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else '0'  & I_1P_SH & I_1P_SH & I_COIN1 & I_1P_LE & I_1P_RI & I_1P_UP  & I_1P_DN;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else "10" & I_1P_LE & I_1P_RI & I_2P_UP & I_2P_DN & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000100";
+	elsif name = "DEVILFSH" or name = "TRIPLEDR" generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else I_1P_UP & I_2P_UP &  I_1P_DN &  I_1P_SH &  I_1P_RI & I_1P_LE & I_COIN2    & I_COIN1;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else "01"              &  I_2P_DN &  I_2P_SH &  I_2P_RI & I_2P_LE & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000100";
+	elsif name = "MRDONIGH" generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else W_SERVICE & W_TEST &  W_TABLE &  I_1P_SH &  I_1P_RI & I_1P_LE & I_COIN2    & I_COIN1;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else "000"                         &  I_1P_SH &  I_1P_DN & I_1P_UP & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000100";
+	elsif name = "ORBITRON" or name = "VICTORY" or name = "WAROFBUG" generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else I_1P_UP & I_1P_DN &  I_2P_DN  &  I_1P_SH &  I_1P_RI &  I_1P_LE &    I_COIN2 &    I_COIN1;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else I_2P_UP &     "1" & "0"       &  I_1P_SH &  I_1P_RI &  I_1P_LE & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00001000";
+	elsif name = "ZIGZAG" generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else '0' & I_1P_DN & I_1P_UP &  I_1P_SH &  I_1P_RI & I_1P_LE & I_COIN2 & I_COIN1;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else "000000" & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000011";
+	else generate
+		W_SW0_DO <= x"00" when I_SW0_OE = '0' else W_SERVICE & W_TEST &  W_TABLE &  I_1P_SH &  I_1P_RI & I_1P_LE & I_COIN2    & I_COIN1;
+		W_SW1_DO <= x"00" when I_SW1_OE = '0' else "000"                         &  I_2P_SH &  I_2P_RI & I_2P_LE & I_2P_START & I_1P_START;
+		W_DIP_DO <= x"00" when I_DIP_OE = '0' else "00000100";
+	end generate;
 	O_D      <= W_SW0_DO or W_SW1_DO or W_DIP_DO ;
 
 end RTL;
