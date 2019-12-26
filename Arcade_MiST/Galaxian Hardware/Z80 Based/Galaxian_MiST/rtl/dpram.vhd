@@ -16,7 +16,7 @@ entity dpram is
 		clock_a		: IN STD_LOGIC  := '1';
 		clock_b		: IN STD_LOGIC ;
 		data_a		: IN STD_LOGIC_VECTOR (data_width_g-1 DOWNTO 0);
-		data_b		: IN STD_LOGIC_VECTOR (data_width_g-1 DOWNTO 0);
+		data_b		: IN STD_LOGIC_VECTOR (data_width_g-1 DOWNTO 0) := (others => '0');
 		enable_a		: IN STD_LOGIC  := '1';
 		enable_b		: IN STD_LOGIC  := '1';
 		wren_a		: IN STD_LOGIC  := '0';

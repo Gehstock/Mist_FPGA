@@ -15,6 +15,26 @@
 -- 2004- 5- 6  first release.
 -- 2004- 8-23  Improvement with T80-IP.
 -- 2004- 9-22  The problem which missile didn't sometimes come out from was improved.
+--
+-- 2019-12 Multi-machine support added
+-- "GALAXIAN"
+-- "MOONCR"
+-- "AZURIAN"
+-- "BLACKHOLE"
+-- "CATACOMB"
+-- "CHEWINGG"
+-- "DEVILFSH"
+-- "KINGBAL"
+-- "MRDONIGH"
+-- "OMEGA"
+-- "ORBITRON"
+-- "PISCES"
+-- "UNIWARS"
+-- "VICTORY"
+-- "WAROFBUG"
+-- "ZIGZAG" -- doesn't work yet
+-- "TRIPLEDR"
+
 ------------------------------------------------------------------------------
 library ieee;
   use ieee.std_logic_1164.all;
@@ -24,8 +44,10 @@ library ieee;
 --use work.pkg_galaxian.all;
 
 entity galaxian is
+	generic (
+		name       : string := "GALAXIAN"
+	);
 	port(
-		W_CLK_18M  : in  std_logic;
 		W_CLK_12M  : in  std_logic;
 		W_CLK_6M   : in  std_logic;
 
@@ -40,8 +62,9 @@ entity galaxian is
 		VBLANK     : out std_logic;
 		W_H_SYNC   : out std_logic;
 		W_V_SYNC   : out std_logic;
-		W_SDAT_A   : out std_logic_vector( 7 downto 0);
-		W_SDAT_B   : out std_logic_vector( 7 downto 0);
+		W_SDAT_A   : out std_logic_vector( 7 downto 0) := (others => '0');
+		W_SDAT_B   : out std_logic_vector( 7 downto 0) := (others => '0');
+		W_SDAT_C   : out std_logic_vector( 7 downto 0) := (others => '0');
 		O_CMPBL    : out std_logic
 	);
 end;
@@ -50,7 +73,7 @@ architecture RTL of galaxian is
 	--    CPU ADDRESS BUS
 	signal W_A                : std_logic_vector(15 downto 0) := (others => '0');
 	--    CPU IF
-	signal W_CPU_CLK          : std_logic := '0';
+	signal W_CPU_CLK_EN       : std_logic := '0';
 	signal W_CPU_MREQn        : std_logic := '0';
 	signal W_CPU_NMIn         : std_logic := '0';
 	signal W_CPU_RDn          : std_logic := '0';
@@ -59,9 +82,15 @@ architecture RTL of galaxian is
 	signal W_CPU_WRn          : std_logic := '0';
 	signal W_CPU_WR           : std_logic := '0';
 	signal W_RESETn           : std_logic := '0';
+	signal CPU_INT_n          : std_logic;
+	signal CPU_NMI_n          : std_logic;
+
 	-------- H and V COUNTER -------------------------
 	signal W_C_BLn            : std_logic := '0';
 	signal W_C_BLnX           : std_logic := '0';
+	signal W_H_BLn            : std_logic := '0';
+	signal W_H_BLnX           : std_logic := '0';
+	signal W_H_BLXn           : std_logic := '0';
 	signal W_C_BLXn           : std_logic := '0';
 	signal W_H_BL             : std_logic := '0';
 	signal W_H_SYNC_int       : std_logic := '0';
@@ -76,6 +105,7 @@ architecture RTL of galaxian is
 	signal W_BD_G             : std_logic := '0';
 	signal W_CPU_RAM_CS       : std_logic := '0';
 	signal W_CPU_RAM_RD       : std_logic := '0';
+	signal W_CPU_ROM_ADDR     : std_logic_vector(13 downto 0);
 --	signal W_CPU_RAM_WR       : std_logic := '0';
 	signal W_CPU_ROM_CS       : std_logic := '0';
 	signal W_DIP_OE           : std_logic := '0';
@@ -86,7 +116,10 @@ architecture RTL of galaxian is
 	signal W_OBJ_RAM_WR       : std_logic := '0';
 	signal W_PITCH            : std_logic := '0';
 	signal W_SOUND_WE         : std_logic := '0';
+	signal W_MISC_WE          : std_logic := '0';
+	signal W_SPEECH_IN        : std_logic_vector(1 downto 0);
 	signal W_STARS_ON         : std_logic := '0';
+	signal W_STARS_ON_ADJ     : std_logic := '0';
 	signal W_STARS_OFFn       : std_logic := '0';
 	signal W_SW0_OE           : std_logic := '0';
 	signal W_SW1_OE           : std_logic := '0';
@@ -101,9 +134,9 @@ architecture RTL of galaxian is
 	-----  DATA I/F -------------------------------------
 	signal W_CPU_ROM_DO       : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_CPU_ROM_DOB      : std_logic_vector( 7 downto 0) := (others => '0');
+	signal W_ROM_SWP          : std_logic := '0'; -- ZigZag
 	signal W_BDO              : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_BDI              : std_logic_vector( 7 downto 0) := (others => '0');
-	signal W_CPU_RAM_CLK      : std_logic := '0';
 	signal W_VOL1             : std_logic := '0';
 	signal W_VOL2             : std_logic := '0';
 	signal W_FIRE             : std_logic := '0';
@@ -142,11 +175,34 @@ architecture RTL of galaxian is
 	signal W_WAV_D1           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_WAV_D2           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_DAC              : std_logic_vector( 3 downto 0) := (others => '0');
+	
+	signal PSG_EN             : std_logic;
+	signal PSG_D              : std_logic_vector(7 downto 0);
+	signal PSG_A,PSG_B,PSG_C  : std_logic_vector(7 downto 0);
+	signal PSG_OUT            : std_logic_vector(9 downto 0);
+
+	component ym2149
+	port (
+		CLK       : in  std_logic;
+		CE        : in  std_logic;
+		RESET     : in  std_logic;
+		BDIR      : in  std_logic;
+		BC        : in  std_logic;
+		DI        : in  std_logic_vector(7 downto 0);
+		DO        : out std_logic_vector(7 downto 0);
+		CHANNEL_A : out std_logic_vector(7 downto 0);
+		CHANNEL_B : out std_logic_vector(7 downto 0);
+		CHANNEL_C : out std_logic_vector(7 downto 0)
+	);
+	end component;
 
 begin
+
 	mc_vid : entity work.MC_VIDEO
+	generic map(
+		name          => name
+	)
 	port map(
-		I_CLK_18M     => W_CLK_18M,
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
 		I_H_CNT       => W_H_CNT,
@@ -155,6 +211,7 @@ begin
 		I_V_FLIP      => W_V_FLIP,
 		I_V_BLn       => W_V_BLn,
 		I_C_BLn       => W_C_BLn,
+		I_H_BLn       => W_H_BLn,
 		I_A           => W_A(9 downto 0),
 		I_OBJ_SUB_A   => "000",
 		I_BD          => W_BDI,
@@ -165,6 +222,7 @@ begin
 		I_VID_RAM_WR  => W_VID_RAM_WR,
 		I_DRIVER_WR   => W_DRIVER_WE,
 		O_C_BLnX      => W_C_BLnX,
+		O_H_BLnX      => W_H_BLnX,
 		O_8HF         => W_8HF,
 		O_256HnX      => W_256HnX,
 		O_1VF         => W_1VF,
@@ -175,13 +233,22 @@ begin
 		O_COL         => W_COL
 	);
 
-	cpu : entity work.T80as
+	int_gen: if name = "DEVILFSH" generate
+		CPU_INT_n <= W_CPU_NMIn;
+		CPU_NMI_n <= '1';
+	else generate
+		CPU_INT_n <= '1';
+		CPU_NMI_n <= W_CPU_NMIn;
+	end generate;
+
+	cpu : entity work.T80se
 	port map (
 		RESET_n       => W_RESETn,
-		CLK_n         => W_CPU_CLK,
+		CLK_n         => W_CLK_6M,
+		CLKEN         => W_CPU_CLK_EN,
 		WAIT_n        => W_CPU_WAITn,
-		INT_n         => '1',
-		NMI_n         => W_CPU_NMIn,
+		INT_n         => CPU_INT_n,
+		NMI_n         => CPU_NMI_n,
 		BUSRQ_n       => '1',
 		MREQ_n        => W_CPU_MREQn,
 		RD_n          => W_CPU_RDn,
@@ -193,13 +260,14 @@ begin
 		M1_n          => open,
 		IORQ_n        => open,
 		HALT_n        => open,
-		BUSAK_n       => open,
-		DOE           => open
+		BUSAK_n       => open--,
+--		DOE           => open
 	);
 
 	mc_cpu_ram : entity work.MC_CPU_RAM
 	port map (
-		I_CLK         => W_CPU_RAM_CLK,
+		I_CLK         => W_CLK_12M,
+		I_CS          => W_CPU_RAM_CS,
 		I_ADDR        => W_A(9 downto 0),
 		I_D           => W_BDI,
 		I_WE          => W_CPU_WR,
@@ -211,7 +279,6 @@ begin
 	port map(
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
-		I_CPU_CLK     => W_CPU_CLK,
 		I_RSTn        => W_RESETn,
 
 		I_CPU_A       => W_A,
@@ -240,15 +307,21 @@ begin
 		O_WDR_OE      => W_WDR_OE,
 		O_DRIVER_WE   => W_DRIVER_WE,
 		O_SOUND_WE    => W_SOUND_WE,
+		O_MISC_WE     => W_MISC_WE,
 		O_PITCH       => W_PITCH,
 		O_H_FLIP      => W_H_FLIP,
 		O_V_FLIP      => W_V_FLIP,
+		O_SPEECH      => W_SPEECH_IN,
 		O_BD_G        => W_BD_G,
-		O_STARS_ON    => W_STARS_ON
+		O_STARS_ON    => W_STARS_ON,
+		O_ROM_SWP     => W_ROM_SWP
 	);
 
 	-- active high buttons
 	mc_inport : entity work.MC_INPORT
+	generic map(
+		name          => name
+	)
 	port map (
 		I_COIN1       => P1_CSJUDLR(6),
 		I_COIN2       => P2_CSJUDLR(6),
@@ -260,6 +333,10 @@ begin
 		I_2P_LE       => P2_CSJUDLR(1),
 		I_1P_RI       => P1_CSJUDLR(0),
 		I_2P_RI       => P2_CSJUDLR(0),
+		I_1P_UP       => P1_CSJUDLR(3),
+		I_2P_UP       => P2_CSJUDLR(3),
+		I_1P_DN       => P1_CSJUDLR(2),
+		I_2P_DN       => P2_CSJUDLR(2),
 		I_SW0_OE      => W_SW0_OE,
 		I_SW1_OE      => W_SW1_OE,
 		I_DIP_OE      => W_DIP_OE,
@@ -273,6 +350,7 @@ begin
 		O_H_CNT       => W_H_CNT,
 		O_H_SYNC      => W_H_SYNC_int,
 		O_H_BL        => W_H_BL,
+		O_H_BLn       => W_H_BLn,
 		O_V_CNT       => W_V_CNT,
 		O_V_SYNC      => W_V_SYNC_int,
 		O_V_BL2n      => W_V_BL2n,
@@ -281,22 +359,29 @@ begin
 	);
 
 	mc_col_pal : entity work.MC_COL_PAL
+	generic map(
+		name          => name
+	)
 	port map(
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
 		I_VID         => W_VID,
 		I_COL         => W_COL,
 		I_C_BLnX      => W_C_BLnX,
+		I_H_BLnX      => W_H_BLnX,
 		O_C_BLXn      => W_C_BLXn,
+		O_H_BLXn      => W_H_BLXn,
 		O_STARS_OFFn  => W_STARS_OFFn,
 		O_R           => W_VIDEO_R,
 		O_G           => W_VIDEO_G,
 		O_B           => W_VIDEO_B
 	);
 
+	comps: if name /= "ZIGZAG" generate
+
 	mc_stars : entity work.MC_STARS
 	port map (
-		I_CLK_18M     => W_CLK_18M,
+		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
 		I_H_FLIP      => W_H_FLIP,
 		I_V_SYNC      => W_V_SYNC_int,
@@ -304,7 +389,7 @@ begin
 		I_256HnX      => W_256HnX,
 		I_1VF         => W_1VF,
 		I_2V          => W_V_CNT(1),
-		I_STARS_ON    => W_STARS_ON,
+		I_STARS_ON    => W_STARS_ON_ADJ,
 		I_STARS_OFFn  => W_STARS_OFFn,
 		O_R           => W_STARS_R,
 		O_G           => W_STARS_G,
@@ -334,14 +419,24 @@ begin
 		I_FS          => W_FS,
 		O_SDAT        => W_SDAT_B
 	);
+end generate;
 
 --------- ROM           -------------------------------------------------------
 	mc_roms : entity work.ROM_PGM_0
+	generic map (
+		name => name
+	)
 	port map (
 		CLK  => W_CLK_12M,
-		ADDR => W_A(13 downto 0),
+		ADDR => W_CPU_ROM_ADDR,
 		DATA => W_CPU_ROM_DO
 	);
+
+	romaddr: if name = "ZIGZAG" generate
+		W_CPU_ROM_ADDR <=  W_A(13) & (W_A(12) xor (W_ROM_SWP and W_A(13))) & W_A(11 downto 0);
+	else generate
+		W_CPU_ROM_ADDR <=  W_A(13 downto 0);
+	end generate;
 
 -------- VIDEO  -----------------------------
 	blx_comb <= not ( W_C_BLXn and W_V_BL2n );
@@ -363,7 +458,7 @@ begin
 	process(W_CLK_6M)
 	begin
 		if rising_edge(W_CLK_6M) then
-			HBLANK   <= not W_C_BLXn;
+			HBLANK   <= not W_H_BLXn;
 			VBLANK   <= not W_V_BL2n;
 		end if;
 	end process;
@@ -371,8 +466,8 @@ begin
 
 -----  CPU I/F  -------------------------------------
 
-	W_CPU_CLK     <= W_H_CNT(0);
-	W_CPU_RAM_CLK <= W_CLK_12M and W_CPU_RAM_CS;
+	W_CPU_CLK_EN  <= not W_H_CNT(0); -- CPU clock enable in the 6MHz domain
+--	W_CPU_CLK     <= W_H_CNT(0);
 
 	W_CPU_ROM_DOB <= W_CPU_ROM_DO when W_CPU_ROM_CS = '1' else (others=>'0');
 
@@ -382,12 +477,12 @@ begin
 
 	new_sw <= (W_FS(2) or W_FS(1) or W_FS(0)) & W_HIT & W_FIRE;
 
-	process(W_CPU_CLK, I_RESET)
+	process(W_CLK_6M, I_RESET)
 	begin
 		if (I_RESET = '1') then
 			rst_count <= (others => '0');
-		elsif rising_edge( W_CPU_CLK) then
-			if ( rst_count /= x"f") then
+		elsif rising_edge( W_CLK_6M) then
+			if ( W_CPU_CLK_EN = '1' and rst_count /= x"f") then
 				rst_count <= rst_count + 1;
 			end if;
 		end if;
@@ -443,4 +538,54 @@ begin
 	end process;
 
 -------------------------------------------------------------------------------
+-- King & Balloon speech board
+kb_speech: if name = "KINGBAL" generate
+	speech : entity work.kb_synth
+	port map(
+		reset_n       => W_RESETn,
+		clk           => W_CLK_12M,
+		in0           => W_SPEECH_IN(0),
+		in1           => W_SPEECH_IN(1),
+		in2           => '0', -- GND
+		in3           => '0', -- GND
+		speech_out    => W_SDAT_C
+	);
+	
+		W_STARS_ON_ADJ <= '0'; -- no stars in this game
+else generate
+		W_STARS_ON_ADJ <= W_STARS_ON;
+end generate;
+
+-- AY8910 for ZigZag
+psg: if name = "ZIGZAG" generate
+	PSG_EN <= '1' when W_A(15 downto 11) = "01001" and W_A(9) = '0' and W_CPU_MREQn = '0' and W_CPU_WRn = '0' else '0';
+
+	process(W_CLK_6M)
+	begin
+		if rising_edge(W_CLK_6M) then
+			if PSG_EN = '1' and W_A(8) = '1' then
+				PSG_D <= W_A(7 downto 0);
+			end if;
+		end if;
+	end process;
+
+	PSG_OUT <= ("00" & PSG_A) + ("00" & PSG_B) + ("00" & PSG_C);
+	W_SDAT_C <= PSG_OUT(9 downto 2);
+
+	psg : ym2149
+	port map (
+		CLK       => W_CLK_6M,
+		CE        => W_CPU_CLK_EN,
+		RESET     => I_RESET,
+
+		BDIR      => PSG_EN and W_A(0) and not W_A(8),
+		BC        => W_A(1),
+		DI        => PSG_D,
+
+		CHANNEL_A => PSG_A,
+		CHANNEL_B => PSG_B,
+		CHANNEL_C => PSG_C
+	);
+end generate;
+
 end RTL;

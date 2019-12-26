@@ -40,50 +40,12 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Galaxian_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/galaxian.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_video.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_stars.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_sound_vco.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_sound_b.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_sound_a.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_missile.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_logic.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_ld_pls.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_inport.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_hv_count.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_col_pal.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_bram.vhd
-set_global_assignment -name VHDL_FILE rtl/mc_adec.vhd
-set_global_assignment -name VHDL_FILE rtl/sine_package.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80as.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GALAXIAN_6L.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GALAXIAN_1K.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GALAXIAN_1H.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GAL_HIT.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/GAL_FIR.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -186,4 +148,105 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(Galaxian_MiST)
 # -------------------------
+set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS OFF
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/kb.stp
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Galaxian_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/galaxian.vhd -hdl_version VHDL_2008
+set_global_assignment -name VHDL_FILE rtl/mc_video.vhd -hdl_version VHDL_2008
+set_global_assignment -name VHDL_FILE rtl/mc_stars.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_sound_vco.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_sound_b.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_sound_a.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_missile.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_logic.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_ld_pls.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_inport.vhd -hdl_version VHDL_2008
+set_global_assignment -name VHDL_FILE rtl/mc_hv_count.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_col_pal.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_bram.vhd
+set_global_assignment -name VHDL_FILE rtl/mc_adec.vhd
+set_global_assignment -name VHDL_FILE rtl/sine_package.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name VHDL_FILE rtl/kb_synth.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ym2149.sv
+set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../../common/CPU/T80/T80.qip
+set_global_assignment -name VHDL_FILE rtl/ROM/ROMS.vhd -hdl_version VHDL_2008
+set_global_assignment -name VHDL_FILE rtl/ROM/tripledrawpoker/TRIPLEDRAWPOKER_ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/tripledrawpoker/TRIPLEDRAWPOKER_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/tripledrawpoker/TRIPLEDRAWPOKER_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/tripledrawpoker/TRIPLEDRAWPOKER_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/zigzag/rom_k.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/zigzag/rom_h.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/zigzag/prog.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/zigzag/col.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/warofbugs/WAROFBUGS_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/warofbugs/WAROFBUGS_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/warofbugs/WAROFBUGS_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/warofbugs/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/victory/prog.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/victory/k_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/victory/h_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/victory/col.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/uniwars/UNIWARS_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/uniwars/UNIWARS_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/uniwars/UNIWARS_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/uniwars/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/pisces/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/pisces/PISCES_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/pisces/PISCES_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/pisces/PISCES_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/orbitron/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/orbitron/ORBITRON_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/orbitron/ORBITRON_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/orbitron/ORBITRON_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/omega/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/omega/OMEGA_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/omega/OMEGA_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/omega/OMEGA_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mrdonightmare/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mrdonightmare/MRDONIGHTMARE_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mrdonightmare/MRDONIGHTMARE_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mrdonightmare/MRDONIGHTMARE_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/kingbaloon/rom_k.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/kingbaloon/rom_h.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/kingbaloon/prog.vhd
+set_global_assignment -name VHDL_FILE "rtl/ROM/kingbaloon/kbe3-6.vhd"
+set_global_assignment -name VHDL_FILE "rtl/ROM/kingbaloon/kbe2-5.vhd"
+set_global_assignment -name VHDL_FILE "rtl/ROM/kingbaloon/kbe1-4.vhd"
+set_global_assignment -name VHDL_FILE rtl/ROM/kingbaloon/col.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/devilfish/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/devilfish/DEVILFISH_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/devilfish/DEVILFISH_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/devilfish/DEVILFISH_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/chewinggum/prog.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/chewinggum/k.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/chewinggum/h.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/chewinggum/col.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/catacomb/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/catacomb/CATACOMB_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/catacomb/CATACOMB_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/catacomb/CATACOMB_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/blackhole/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/blackhole/BLACKHOLE_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/blackhole/BLACKHOLE_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/blackhole/BLACKHOLE_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/azurian/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/azurian/AZURIAN_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/azurian/AZURIAN_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/azurian/AZURIAN_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mooncresta/ROM_PGM_0.vhd -hdl_version VHDL_2008
+set_global_assignment -name VHDL_FILE rtl/ROM/mooncresta/MOONCR_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mooncresta/MOONCR_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/mooncresta/MOONCR_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/galaxian/ROM_PGM_0.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/galaxian/GALAXIAN_6L.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/galaxian/GALAXIAN_1K.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/galaxian/GALAXIAN_1H.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/GAL_HIT.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/GAL_FIR.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

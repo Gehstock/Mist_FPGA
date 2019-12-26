@@ -30,8 +30,10 @@ library ieee;
   use ieee.numeric_std.all;
 
 entity MC_VIDEO is
+  generic (
+		name          : string
+	);
 	port(
-		I_CLK_18M     : in  std_logic;
 		I_CLK_12M     : in  std_logic;
 		I_CLK_6M      : in  std_logic;
 		I_H_CNT       : in  std_logic_vector(8 downto 0);
@@ -40,6 +42,7 @@ entity MC_VIDEO is
 		I_V_FLIP      : in  std_logic;
 		I_V_BLn       : in  std_logic;
 		I_C_BLn       : in  std_logic;
+		I_H_BLn       : in  std_logic;
 
 		I_A           : in  std_logic_vector(9 downto 0);
 		I_BD          : in  std_logic_vector(7 downto 0);
@@ -52,6 +55,7 @@ entity MC_VIDEO is
 		I_DRIVER_WR   : in  std_logic;
 
 		O_C_BLnX      : out std_logic;
+		O_H_BLnX      : out std_logic;
 		O_8HF         : out std_logic;
 		O_256HnX      : out std_logic;
 		O_1VF         : out std_logic;
@@ -97,7 +101,7 @@ architecture RTL of MC_VIDEO is
 	signal W_RV         : std_logic_vector( 1 downto 0) := (others => '0');
 	signal W_RC         : std_logic_vector( 2 downto 0) := (others => '0');
 
-	signal W_O_OBJ_ROM_A  : std_logic_vector(10 downto 0) := (others => '0');
+	signal W_O_OBJ_ROM_A  : std_logic_vector(11 downto 0) := (others => '0');
 	signal W_VID_RAM_A    : std_logic_vector(11 downto 0) := (others => '0');
 	signal W_VID_RAM_AA   : std_logic_vector(11 downto 0) := (others => '0');
 	signal W_VID_RAM_AB   : std_logic_vector(11 downto 0) := (others => '0');
@@ -145,9 +149,13 @@ architecture RTL of MC_VIDEO is
 	signal W_SRCLK        : std_logic := '0';
 	signal W_SRLD         : std_logic := '0';
 	signal W_VID_RAM_CS   : std_logic := '0';
-	signal W_CLK_6Mn      : std_logic := '0';
+
+	type bank_a is array(0 to 3) of std_logic_vector(7 downto 0);
+	signal bank     : bank_a;
+	signal pisces_gfxbank : std_logic;
 
 begin
+
 	ld_pls : entity work.MC_LD_PLS
 	port map(
 		I_CLK_6M    => I_CLK_6M,
@@ -183,16 +191,15 @@ begin
 
 	lram : entity work.MC_LRAM
 	port map(
-		I_CLK  => I_CLK_18M,
+		I_WCLK => I_CLK_6M,
+		I_RCLK => I_CLK_12M,
 		I_ADDR => W_LRAM_A,
-		I_WE   => W_CLK_6Mn,
 		I_D    => W_LRAM_DI,
 		O_Dn   => W_LRAM_DO
 	);
 
 	missile : entity work.MC_MISSILE
 	port map(
-		I_CLK_18M  => I_CLK_18M,
 		I_CLK_6M   => I_CLK_6M,
 		I_C_BLn_X  => W_C_BLnX,
 		I_MLDn     => W_MLDn,
@@ -220,7 +227,10 @@ begin
 	);
 
 	-- 1K VID-Rom
-	k_rom : entity work.GALAXIAN_1K 
+	k_rom : entity work.ROM_1K
+	generic map (
+		name => name
+	)
 	port map (
 		CLK  => I_CLK_12M,
 		ADDR => W_O_OBJ_ROM_A,
@@ -228,7 +238,10 @@ begin
 	);
 
 	-- 1H VID-Rom
-	h_rom : entity work.GALAXIAN_1H
+	h_rom : entity work.ROM_1H
+	generic map (
+		name => name
+	)
 	port map(
 		CLK  => I_CLK_12M,
 		ADDR => W_O_OBJ_ROM_A,
@@ -250,8 +263,6 @@ begin
 			W_SLDn      <= WB_SLDn;
 		end if;
 	end process;
-
-	W_CLK_6Mn <= not I_CLK_6M;
 
 	W_6J_DA <= I_H_FLIP & W_HF_CNT(7) & W_HF_CNT(3) & I_H_CNT(2);
 	W_6J_DB <= W_OBJ_D(6) & ( W_HF_CNT(3) and I_H_CNT(1) ) & I_H_CNT(2) & I_H_CNT(1);
@@ -299,7 +310,19 @@ begin
 			W_2M_Q <= W_45N_Q;
 		end if;
 	end process;
-	
+
+	process(I_CLK_12M)
+	begin
+		if rising_edge(I_CLK_12M) then
+			if I_DRIVER_WR = '1' and I_A(2) = '0' then
+				bank(to_integer(unsigned(I_A(1 downto 0)))) <= I_BD;
+			end if;
+			if I_DRIVER_WR = '1' and I_A(2 downto 0) = "010" then
+				pisces_gfxbank <= I_BD(0);
+			end if;
+		end if;
+	end process;
+
 	W_2N          <= I_H_CNT(8) and W_OBJ_D(7);
 	W_1M          <= W_2M_Q(3 downto 0) xor (W_2N & W_2N & W_2N & W_2N);
 	W_VID_RAM_CS  <= I_VID_RAM_RD or I_VID_RAM_WR;
@@ -315,7 +338,20 @@ begin
 	W_SRLD        <= not (W_LDn or W_VID_RAM_A(11));
 	W_OBJ_ROM_AB  <= W_OBJ_D(5 downto 0) & W_1M(3) & (W_OBJ_D(6) xor I_H_CNT(3));
 	W_OBJ_ROM_A   <= W_OBJ_ROM_AB when I_H_CNT(8) = '1' else W_VID_RAM_DOB;
-	W_O_OBJ_ROM_A <= W_OBJ_ROM_A & W_1M(2 downto 0);
+
+	rom_a : if name = "MOONCR" generate
+		W_O_OBJ_ROM_A <= '1' & bank(0)(0) & bank(1)(0) & W_OBJ_ROM_A(5 downto 0) & W_1M(2 downto 0)
+                   when (bank(2) /= X"00" and W_OBJ_ROM_A(7 downto 6) = "10") else
+                   '0' & W_OBJ_ROM_A & W_1M(2 downto 0);
+	elsif name = "DEVILFSH" generate
+		W_O_OBJ_ROM_A <=  not I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
+	elsif name = "ZIGZAG" generate
+		W_O_OBJ_ROM_A <=  I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
+	elsif name = "PISCES" or name = "UNIWARS" generate
+		W_O_OBJ_ROM_A <=  pisces_gfxbank & W_OBJ_ROM_A & W_1M(2 downto 0);
+	else generate
+		W_O_OBJ_ROM_A <= '0' & W_OBJ_ROM_A & W_1M(2 downto 0);
+	end generate;
 
 -----------------------------------------------------------------------------------
 
@@ -374,8 +410,7 @@ begin
 		if rising_edge(I_CLK_6M) then
 			if (W_LDn = '0') then
 				W_6P_Q <= W_H_FLIP2 & W_H_FLIP1 & I_C_BLn & (not I_H_CNT(8)) & W_6K_Q(2 downto 0);
-			else
-				W_6P_Q <= W_6P_Q;
+				O_H_BLnX <= I_H_BLn;
 			end if;
 		end if;
 	end process;

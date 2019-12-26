@@ -21,7 +21,6 @@ library ieee;
 entity MC_MISSILE is
 	port(
 		I_CLK_6M    : in std_logic;
-		I_CLK_18M   : in std_logic;
 		I_C_BLn_X   : in std_logic;
 		I_MLDn      : in std_logic;
 		I_SLDn      : in std_logic;
