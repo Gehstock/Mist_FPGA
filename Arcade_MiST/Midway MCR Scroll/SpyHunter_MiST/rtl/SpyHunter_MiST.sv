@@ -50,12 +50,10 @@ module SpyHunter_MiST(
 localparam CONF_STR = {
 	"SHUNTER;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"O8,Demo Sounds,Off,On;",
 	"O9,Show Lamps,Off,On;",
-	"O7,Swap Joystick,Off,On;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -77,8 +75,8 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joy_0;
-wire  [7:0] joy_1;
+wire [15:0] joystick_0;
+wire [15:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
@@ -272,7 +270,6 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
 	.no_csync       ( 1'b1             ),
-	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
 	);
 
@@ -292,8 +289,8 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joy_0          ),
-	.joystick_1     (joy_1          ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
@@ -315,20 +312,17 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
-wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
-
 //											Rotated														Normal
 wire m_up     = ~status[2] ? btn_left  | joystick_0[1] | joystick_1[1] : btn_up    | joystick_0[3] | joystick_1[3];
 wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down  | joystick_0[2] | joystick_1[2];
 wire m_left   = ~status[2] ? btn_down  | joystick_0[2] | joystick_1[2] : btn_left  | joystick_0[1] | joystick_1[1];
 wire m_right  = ~status[2] ? btn_up    | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_fire2   = btn_fire2 | joystick_0[5] | joystick_1[5];
-wire m_fire3   = btn_fire3 | joystick_0[6] | joystick_1[6];
-wire m_fire4   = btn_fire4 | joystick_0[7] | joystick_1[7];
-wire m_van = btn_van;
-wire m_shift = btn_shift;
+wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4]; // A
+wire m_fire2   = btn_fire2 | joystick_0[5] | joystick_1[5]; // B
+wire m_fire3   = btn_fire3 | joystick_0[6] | joystick_1[6]; // C (Select)
+wire m_fire4   = btn_fire4 | joystick_0[8] | joystick_1[8]; // X
+wire m_van     = btn_van   | joystick_0[7] | joystick_1[7]; // Start
+wire m_shift   = btn_shift | joystick_0[9] | joystick_1[9]; // Y
 
 reg btn_shift = 0;
 reg btn_left = 0;

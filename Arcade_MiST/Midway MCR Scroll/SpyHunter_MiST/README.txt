@@ -7,18 +7,18 @@
 SHUNTER.ROM is required at the root of the SD-Card.
 
 Controls
-
-	up		: Accelerate
-	down 		: Decelerate
-	left 		: Left
-	right		: Right
+Joy	Keyboard
+up	up		: Accelerate
+down	down 		: Decelerate
+left	left 		: Left
+right	right		: Right
 	ESC		: Coin
-	TAB		: VAN
-	Z		: Shift
-	shift left	: Oil
-	ctrl left	: Smoke
-	alt left	: Missle
-	Space		: Gun
+start	TAB		: VAN
+Y	Z		: Shift
+X	shift left	: Oil
+C	ctrl left	: Smoke
+B	alt left	: Missle
+A	Space		: Gun
 
 
 ---------------------------------------------------------------------------------
