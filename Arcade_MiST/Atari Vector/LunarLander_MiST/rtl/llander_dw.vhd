@@ -423,18 +423,18 @@ begin
 		beam_ena_r := beam_ena;
 		end if;
   end process;
-  
-  
-    video_rgb : work.dpram generic map (16,4)	
+
+
+video_rgb : work.dpram generic map (19,4)
 port map
 (
 	clock_a   => clk_25,
 	wren_a    => vram_wren,
-	address_a => dw_addr(15 downto 0),
+	address_a => dw_addr,
 	data_a    => vid_data,
 
 	clock_b   => clk_25,
-	address_b => (screen & up_addr(14 downto 0)),
+	address_b => screen & up_addr,
 	q_b       => vid_out
 );	
 

@@ -33,7 +33,6 @@ module LunarLander_MiST(
 
 localparam CONF_STR = {
 	"LLANDER;ROM;",
-	"O12,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O3,Test,Off,On;",
 	"O45,Language,English,Spanish,French,German;",
 	"O68,Fuel,450,600,750,900,1100,1300,1550,1800;",
@@ -43,15 +42,15 @@ localparam CONF_STR = {
 
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
-assign SDRAM_CLK = clk_50;
+assign SDRAM_CLK = clk_72;
 assign SDRAM_CKE = 1;
 
-wire clk_50, clk_25, clk_6, locked;
+wire clk_72, clk_50, clk_6, locked;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_50),
-	.c1(clk_25),
-	.c2(clk_6),
+	.c0(clk_72), //memclk = 12x sysclk
+	.c1(clk_50), //video clk
+	.c2(clk_6),  //sysclk
 	.locked(locked)
 );
 
@@ -72,10 +71,6 @@ wire  [7:0] audio;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-wire [12:0] cpu_rom_addr;
-wire [15:0] cpu_rom_data;
-wire [12:0] vector_rom_addr;
-wire [15:0] vector_rom_data;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -83,7 +78,7 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 data_io data_io(
-	.clk_sys       ( clk_25       ),
+	.clk_sys       ( clk_72       ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -94,11 +89,22 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 	);
 
+wire [12:0] cpu_rom_addr;
+wire [15:0] cpu_rom_data;
+wire [12:0] vector_rom_addr;
+wire [15:0] vector_rom_data;
+wire  [9:0] vector_ram_addr;
+wire [15:0] vector_ram_din;
+wire [15:0] vector_ram_dout;
+wire        vector_ram_we;
+wire        vector_ram_cs1;
+wire        vector_ram_cs2;
+
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( locked   ),
-	.clk           ( clk_50      ),
+	.clk           ( clk_72      ),
 
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
@@ -109,37 +115,44 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {3'b000, cpu_rom_addr[12:1]} ),
-	.cpu1_q        ( cpu_rom_data ),
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {3'b001, vector_rom_addr[12:1]} ),
+	.cpu1_q        ( vector_rom_data ),
+	.cpu2_addr     ( ioctl_downl ? 15'h7fff : {3'b000, cpu_rom_addr[12:1]} ),
+	.cpu2_q        ( cpu_rom_data ),
 
-	// port2 for sound board
+	// port2 is for vector RAM
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( ioctl_addr[23:1] - 16'h1000 ),
-	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
-	.port2_we      ( ioctl_downl ),
-	.port2_d       ( {ioctl_dout, ioctl_dout} ),
-	.port2_q       ( ),
-
-	.snd_addr      ( ioctl_downl ? 15'h7fff : {3'b000, vector_rom_addr[12:1]} ),
-	.snd_q         ( vector_rom_data )
+	.port2_a       ( vector_ram_addr_last ),
+	.port2_ds      ( {vector_ram_cs2, vector_ram_cs1} ),
+	.port2_we      ( vector_ram_we_last ),
+	.port2_d       ( vector_ram_din ),
+	.port2_q       ( vector_ram_dout )
 	);
 
-always @(posedge clk_25) begin
+reg  [9:0] vector_ram_addr_last = 0;
+reg        vector_ram_we_last = 0;
+
+always @(posedge clk_72) begin
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
 		end
+	end
+
+	if ((vector_ram_cs1 || vector_ram_cs2) && (vector_ram_addr_last != vector_ram_addr || vector_ram_we_last != vector_ram_we)) begin
+		vector_ram_addr_last <= vector_ram_addr;
+		vector_ram_we_last <= vector_ram_we;
+		port2_req <= ~port2_req;
 	end
 end
 
 reg reset = 1;
 reg rom_loaded = 0;
-always @(posedge clk_25) begin
+always @(posedge clk_6) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
 
@@ -177,13 +190,22 @@ LLANDER_TOP LLANDER_TOP (
 	.DIP({1'b0,1'b0,status[4],status[5],~status[6],1'b1,status[7],status[8]}),//todo dip full
    .RESET_L(~(reset)),
 	.clk_6(clk_6),
-	.clk_25(clk_25),
-	.cpu_rom_addr(cpu_rom_addr),
-	.cpu_rom_data  (cpu_rom_addr[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
-	.vector_rom_addr(vector_rom_addr), 
-	.vector_rom_data  (vector_rom_addr[0] ? vector_rom_data[15:8] : vector_rom_data[7:0])
+	.clk_50(clk_50),
+	.cpu_rom_addr    (cpu_rom_addr),
+	.cpu_rom_data    (cpu_rom_addr[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
+	.vector_rom_addr (vector_rom_addr), 
+	.vector_rom_data (vector_rom_addr[0] ? vector_rom_data[15:8] : vector_rom_data[7:0]),
+	.vector_ram_addr (vector_ram_addr),
+	.vector_ram_din  (vector_ram_din),
+	.vector_ram_dout (vector_ram_dout),
+	.vector_ram_we   (vector_ram_we),
+	.vector_ram_cs1  (vector_ram_cs1),
+	.vector_ram_cs2  (vector_ram_cs2)
    );
-	 
+
+reg ce_pix;
+always @(posedge clk_50) ce_pix <= ~ce_pix;
+
 ovo #(
 	.COLS(1), 
 	.LINES(1), 
@@ -195,8 +217,8 @@ diff (
 	.i_hs(~hs),
 	.i_vs(~vs),
 	.i_de(vgade),
-	.i_en(1),
-	.i_clk(clk_25),
+	.i_en(ce_pix),
+	.i_clk(clk_50),
 
 	.o_r(ro),
 	.o_g(go),
@@ -211,13 +233,13 @@ diff (
 
 reg [7:0] thrust = 0;
 
-// 1 second = 50,000,000 cycles (duh)
+// 1 second = 6,000,000 cycles (duh)
 // If we want to go from zero to full throttle in 1 second we tick every
-// 196,850 cycles.
-always @(posedge clk_50) begin :thrust_count
+// 23,529 cycles.
+always @(posedge clk_6) begin :thrust_count
 	int thrust_count;
 	thrust_count <= thrust_count + 1'd1;
-	if (thrust_count == 'd196_850) begin
+	if (thrust_count == 'd23529) begin
 		thrust_count <= 0;
 		if (m_down && thrust > 0)
 			thrust <= thrust - 1'd1;
@@ -228,11 +250,11 @@ always @(posedge clk_50) begin :thrust_count
 end
 
 int diff_count = 0;
-always @(posedge clk_50) begin
+always @(posedge clk_6) begin
 	if (diff_count > 0)
 		diff_count <= diff_count - 1;
 	if (~m_fire2)
-		diff_count <= 'd500_000_000; // 10 seconds
+		diff_count <= 'd60_000_000; // 10 seconds
 end
 
 wire lamp2, lamp3, lamp4, lamp5;
@@ -248,28 +270,28 @@ always_comb begin
 		difficulty = 2'd0;
 end
 	
-mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10)) mist_video(
-	.clk_sys        ( clk_25           ),
+mist_video #(.COLOR_DEPTH(6)) mist_video(
+	.clk_sys        ( clk_50           ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
 	.R              ( blankn ? ro[7:2] : 0   ),
 	.G              ( blankn ? go[7:2] : 0   ),
 	.B              ( blankn ? bo[7:2] : 0   ),
-	.HSync          ( hso               ),
-	.VSync          ( vso               ),
+	.HSync          ( ~hso             ),
+	.VSync          ( ~vso             ),
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.scandoubler_disable(1),//scandoublerD ),
-	.scanlines      ( status[2:1]      ),
+	.no_csync       ( 1'b1 ),
 	.ypbpr          ( ypbpr            )
 	);
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clk_25         ),
+	.clk_sys        (clk_6          ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -290,7 +312,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 dac #(
 	.C_bits(8))
 dac(
-	.clk_i(clk_25),
+	.clk_i(clk_6),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -313,10 +335,8 @@ reg btn_fire2 = 0;
 //reg btn_fire3 = 0;
 reg btn_coin  = 0;
 
-always @(posedge clk_25) begin
-	reg old_state;
-	old_state <= key_strobe;
-	if(old_state != key_strobe) begin
+always @(posedge clk_6) begin
+	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
 			'h72: btn_down        	<= key_pressed; // down

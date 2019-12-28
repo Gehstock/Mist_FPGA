@@ -71,9 +71,16 @@ entity LLANDER_VG is
     ENA_1_5M_E   		: in    std_logic;
     RESET_L      		: in    std_logic;
     CLK_6        		: in    std_logic;
-	 Clk_25       		: in    std_logic;
-	 vector_rom_addr  : out   std_logic_vector(12 downto 0);
-	 vector_rom_data  : in    std_logic_vector( 7 downto 0)
+
+		vector_rom_addr  : out   std_logic_vector(12 downto 0);
+		vector_rom_data  : in    std_logic_vector( 7 downto 0);
+
+		vector_ram_addr : out std_logic_vector( 9 downto 0);
+		vector_ram_din  : out std_logic_vector(15 downto 0);
+		vector_ram_dout : in  std_logic_vector(15 downto 0);
+		vector_ram_we   : out std_logic;
+		vector_ram_cs1  : out std_logic;
+		vector_ram_cs2  : out std_logic
     );
 end;
 
@@ -426,28 +433,36 @@ begin
   ram_din <= C_DIN;
   C_DOUT <= memory_dout;
 
+	vector_ram_addr <= am_bus(9 downto 0);
+	vector_ram_din <= ram_din & ram_din;
+	ram_dout_1 <= vector_ram_dout( 7 downto 0);
+	ram_dout_2 <= vector_ram_dout(15 downto 8);
+	vector_ram_we <= not vw_l;
+	vector_ram_cs1 <= not vram1_l;
+	vector_ram_cs2 <= not vram2_l;
+	
   -- vector memory
-  u_vector_ram_1 : entity work.LLANDER_RAM
-    port map (
-    ADDR   => am_bus(9 downto 0),
-    DIN    => ram_din,
-    DOUT   => ram_dout_1,
-    RW_L   => vw_l,
-    CS_L   => vram1_l,
-    ENA    => ena_1_5M,
-    CLK    => CLK_6
-    );
-
-  u_vector_ram_2 : entity work.LLANDER_RAM
-    port map (
-    ADDR   => am_bus(9 downto 0),
-    DIN    => ram_din,
-    DOUT   => ram_dout_2,
-    RW_L   => vw_l,
-    CS_L   => vram2_l,
-    ENA    => ena_1_5M,
-    CLK    => CLK_6
-    );
+--  u_vector_ram_1 : entity work.LLANDER_RAM
+--    port map (
+--    ADDR   => am_bus(9 downto 0),
+--    DIN    => ram_din,
+--    DOUT   => ram_dout_1,
+--    RW_L   => vw_l,
+--    CS_L   => vram1_l,
+--    ENA    => ena_1_5M,
+--    CLK    => CLK_6
+--    );
+--
+--  u_vector_ram_2 : entity work.LLANDER_RAM
+--    port map (
+--    ADDR   => am_bus(9 downto 0),
+--    DIN    => ram_din,
+--    DOUT   => ram_dout_2,
+--    RW_L   => vw_l,
+--    CS_L   => vram2_l,
+--    ENA    => ena_1_5M,
+--    CLK    => CLK_6
+--    );
 
 --  u_vector_rom : entity work.llander_vec_rom
 --    port map (
