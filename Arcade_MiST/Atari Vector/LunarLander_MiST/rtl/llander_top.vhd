@@ -101,12 +101,21 @@ entity LLANDER_TOP is
 		RESET_L           : in    std_logic;
 
 		-- ref clock in
-		clk_6					: in  std_logic;
-		clk_25				: in  std_logic;
-		cpu_rom_addr      : out   std_logic_vector(12 downto 0);   
-		cpu_rom_data		: in std_logic_vector(7 downto 0);
-		vector_rom_addr   : out   std_logic_vector(12 downto 0);   
-		vector_rom_data	: in std_logic_vector(7 downto 0)
+		clk_6           : in  std_logic;
+		clk_50          : in  std_logic;
+
+		cpu_rom_addr    : out   std_logic_vector(12 downto 0);   
+		cpu_rom_data    : in std_logic_vector(7 downto 0);
+
+		vector_rom_addr : out   std_logic_vector(12 downto 0);   
+		vector_rom_data	: in std_logic_vector(7 downto 0);
+		vector_ram_addr : out std_logic_vector( 9 downto 0);
+		vector_ram_dout : in  std_logic_vector(15 downto 0);
+		vector_ram_din  : out std_logic_vector(15 downto 0);
+		vector_ram_we   : out std_logic;
+		vector_ram_cs1  : out std_logic;
+		vector_ram_cs2  : out std_logic
+
 	);
 end;
 
@@ -153,7 +162,6 @@ begin
   LLander: entity work.llander 
 port map(
 		clk_6 				=> clk_6,
-		clk_25 				=> clk_25,
 		reset_6_l 			=> reset_6_l,
 		dip => DIP,
 		rot_left_l 			=> rot_left_l,
@@ -182,33 +190,38 @@ port map(
 		cpu_rom_addr  		=> cpu_rom_addr,
 		cpu_rom_data  		=> cpu_rom_data,
 		vector_rom_addr  	=> vector_rom_addr, 
-		vector_rom_data  	=> vector_rom_data
+		vector_rom_data  	=> vector_rom_data,
+		vector_ram_addr   => vector_ram_addr,
+		vector_ram_din    => vector_ram_din,
+		vector_ram_dout   => vector_ram_dout,
+		vector_ram_we     => vector_ram_we,
+		vector_ram_cs1    => vector_ram_cs1,
+		vector_ram_cs2    => vector_ram_cs2
 		);
 
 	y_vector_w_offset<= y_vector+100;
 		
-  u_DW : entity work.LLANDER_DW
+  u_SB : entity work.LLANDER_SB
     port map (
-      RESET            	=> reset_6,
-		clk_25				=> clk_25,
-		clk_6					=> clk_6,
+			RESET            	=> reset_6,
+			clk_vidx2         => clk_50,
+			clk_6             => clk_6,
 
-      X_VECTOR         	=> x_vector,
-      Y_VECTOR         	=> y_vector_w_offset,-- AJS move up y_vector,
-      Z_VECTOR         	=> z_vector,
+			X_VECTOR         	=> x_vector,
+			Y_VECTOR         	=> y_vector_w_offset,-- AJS move up y_vector,
+			Z_VECTOR         	=> z_vector,
 
-      BEAM_ON         	=> beam_on,
-      BEAM_ENA         	=> beam_ena,
+			BEAM_ON         	=> beam_on,
+			BEAM_ENA         	=> beam_ena,
 
-      VIDEO_R_OUT      	=> VIDEO_R_OUT,
-      VIDEO_G_OUT      	=> VIDEO_G_OUT,
-      VIDEO_B_OUT      	=> VIDEO_B_OUT,
-      HSYNC_OUT        	=> HSYNC_OUT,
-      VSYNC_OUT        	=> VSYNC_OUT,
-		VID_DE				=> VGA_DE,
-		VID_HBLANK			=>	VID_HBLANK,
-		VID_VBLANK			=>	VID_VBLANK
-      );
-
+			VIDEO_R_OUT      	=> VIDEO_R_OUT,
+			VIDEO_G_OUT      	=> VIDEO_G_OUT,
+			VIDEO_B_OUT      	=> VIDEO_B_OUT,
+			HSYNC_OUT        	=> HSYNC_OUT,
+			VSYNC_OUT        	=> VSYNC_OUT,
+			VID_DE            => VGA_DE,
+			VID_HBLANK        => VID_HBLANK,
+			VID_VBLANK        => VID_VBLANK
+		);
 
 end RTL;

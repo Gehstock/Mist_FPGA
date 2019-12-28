@@ -52,7 +52,6 @@ use ieee.std_logic_unsigned.all;
 entity LLander is
 	port (
 		CLK_6             : in	std_logic;
-		CLK_25            : in	std_logic;
 		RESET_6_L         : in	std_logic;
 		--
 		DIP					: in 	std_logic_vector(7 downto 0);
@@ -85,10 +84,16 @@ entity LLander is
 		Z_VECTOR				: out std_logic_vector(3 downto 0);
 		BEAM_ON   			: out std_logic;
 		BEAM_ENA   			: out std_logic;
-		cpu_rom_addr    	: out   std_logic_vector(12 downto 0);
-		cpu_rom_data     	: in    std_logic_vector( 7 downto 0);
-		vector_rom_addr   : out   std_logic_vector(12 downto 0);
-		vector_rom_data   : in    std_logic_vector( 7 downto 0)
+		cpu_rom_addr    : out std_logic_vector(12 downto 0);
+		cpu_rom_data    : in  std_logic_vector( 7 downto 0);
+		vector_rom_addr : out std_logic_vector(12 downto 0);
+		vector_rom_data : in  std_logic_vector( 7 downto 0);
+		vector_ram_addr : out std_logic_vector( 9 downto 0);
+		vector_ram_dout : in  std_logic_vector(15 downto 0);
+		vector_ram_din  : out std_logic_vector(15 downto 0);
+		vector_ram_we   : out std_logic;
+		vector_ram_cs1  : out std_logic;
+		vector_ram_cs2  : out std_logic
 		);
 end;
 
@@ -598,9 +603,14 @@ end process;
       ENA_1_5M_E   => ena_1_5m_e,
       RESET_L      => reset_l,
       CLK_6        => CLK_6,
-		CLK_25       => CLK_25,
-		vector_rom_addr => vector_rom_addr,
-		vector_rom_data => vector_rom_data
+			vector_rom_addr => vector_rom_addr,
+			vector_rom_data => vector_rom_data,
+			vector_ram_addr => vector_ram_addr,
+			vector_ram_din  => vector_ram_din,
+			vector_ram_dout => vector_ram_dout,
+			vector_ram_we   => vector_ram_we,
+			vector_ram_cs1  => vector_ram_cs1,
+			vector_ram_cs2  => vector_ram_cs2
       );
 
   BEAM_ENA <= ena_1_5m;
