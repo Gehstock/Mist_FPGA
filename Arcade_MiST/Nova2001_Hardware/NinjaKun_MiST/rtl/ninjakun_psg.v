@@ -1,7 +1,6 @@
 module ninjakun_psg
 (
-	input				AXSCLK,
-	input				CLK,
+	input				MCLK,
 	input	 [1:0]	ADR,
 	input				CS,
 	input				WR,
@@ -22,11 +21,11 @@ assign OD = ADR[1] ? OD1 : OD0;
 reg [7:0] SA0, SB0, SC0; wire [7:0] S0x; wire [1:0] S0c;
 reg [7:0] SA1, SB1, SC1; wire [7:0] S1x; wire [1:0] S1c;
 
-reg [1:0] encnt;
+reg [2:0] encnt;
 reg ENA;
-always @(posedge AXSCLK) begin
+always @(posedge MCLK) begin
 	ENA <= (encnt==0);
-	encnt <= encnt+1;
+	encnt <= encnt+1'd1;
 	case (S0c)
 	2'd0: SA0 <= S0x;
 	2'd1: SB0 <= S0x;
@@ -65,7 +64,7 @@ YM2149 psg0(
 	.I_IOB(DSW2),
 	.ENA(ENA),
 	.RESET_L(~RESET),
-	.CLK(AXSCLK)
+	.CLK(MCLK)
 );
 
 YM2149 psg1(
@@ -85,7 +84,7 @@ YM2149 psg1(
 	.O_IOB(SCRPY),
 	.ENA(ENA),
 	.RESET_L(~RESET),
-	.CLK(AXSCLK)
+	.CLK(MCLK)
 );
 
 wire [11:0] SND = SA0+SB0+SC0+SA1+SB1+SC1;

@@ -1,6 +1,6 @@
 module ninjakun_cpumux
 (
-	input				SHCLK,
+	input				MCLK,
 	output [15:0]	CPADR,
 	output  [7:0]	CPODT,
 	input   [7:0]	CPIDT,
@@ -8,6 +8,8 @@ module ninjakun_cpumux
 	output    		CPWRT,
 
 	output reg		CP0CL,
+	output reg		CP0CE_P,
+	output reg		CP0CE_N,
 	input  [15:0]	CP0AD,
 	input   [7:0]	CP0OD,
 	output  [7:0]	CP0ID,
@@ -15,6 +17,8 @@ module ninjakun_cpumux
 	input    		CP0WR,
 
 	output reg		CP1CL,
+	output reg		CP1CE_P,
+	output reg		CP1CE_N,
 	input  [15:0]	CP1AD,
 	input   [7:0]	CP1OD,
 	output  [7:0]	CP1ID,
@@ -23,24 +27,26 @@ module ninjakun_cpumux
 );
 
 reg  [7:0] CP0DT, CP1DT;
-reg  [2:0] PHASE;
+reg  [3:0] PHASE;
 reg		  CSIDE;
-always @( posedge SHCLK ) begin	// 24MHz
+always @( posedge MCLK ) begin	// 48MHz
+	CP0CE_P <= 0; CP0CE_N <= 0;
+	CP1CE_P <= 0; CP1CE_N <= 0;
 	case (PHASE)
-	0: begin CP0DT <= CPIDT; CSIDE <= 1'b0; end
-	4: begin CP1DT <= CPIDT; CSIDE <= 1'b1; end
+	0: begin CP0DT <= CPIDT; CP0CE_P <= 1; CP1CE_N <= 1; end
+	1: CSIDE <= 0;
+	8: begin CP1DT <= CPIDT; CP1CE_P <= 1; CP0CE_N <= 1; end
+	9: CSIDE <= 1;
 	default:;
 	endcase
 end
-always @( negedge SHCLK ) begin
+always @( posedge MCLK ) begin
 	case (PHASE)
-	0: CP0CL <= 1'b1;
-	2: CP0CL <= 1'b0;
-	4: CP1CL <= 1'b1;
-	6: CP1CL <= 1'b0;
+	1: begin CP0CL <= 1; CP1CL <= 0; end
+	9: begin CP1CL <= 1; CP0CL <= 0; end
 	default:;
 	endcase
-	PHASE <= PHASE+1;
+	PHASE <= PHASE+1'd1;
 end
 
 assign CPADR = CSIDE ? CP1AD : CP0AD;
