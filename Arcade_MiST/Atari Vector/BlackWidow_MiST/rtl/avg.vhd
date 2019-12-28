@@ -27,22 +27,32 @@ use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity avg is
-    Port ( cpu_data_in : out  STD_LOGIC_VECTOR (7 downto 0);
-           cpu_data_out : in  STD_LOGIC_VECTOR (7 downto 0);
-           cpu_addr : in  STD_LOGIC_VECTOR (13 downto 0);
-           cpu_cs_l : in  STD_LOGIC;
-           cpu_rw_l : in  STD_LOGIC;
-			  vgrst : in STD_LOGIC; 
-			  vggo : in STD_LOGIC;
-			  halted : out STD_LOGIC;
-           xout : out  STD_LOGIC_VECTOR (9 downto 0);
-           yout : out  STD_LOGIC_VECTOR (9 downto 0);
-           zout : out  STD_LOGIC_VECTOR (7 downto 0);
-           rgbout : out  STD_LOGIC_VECTOR (2 downto 0);
-		  	  dbg : out std_logic_vector(15 downto 0);
-			  clken: in STD_LOGIC;
-           clk : in  STD_LOGIC		  
-		);
+	Port (
+		cpu_data_in : out  STD_LOGIC_VECTOR (7 downto 0);
+		cpu_data_out : in  STD_LOGIC_VECTOR (7 downto 0);
+		cpu_addr : in  STD_LOGIC_VECTOR (13 downto 0);
+		cpu_cs_l : in  STD_LOGIC;
+		cpu_rw_l : in  STD_LOGIC;
+		vgrst : in STD_LOGIC; 
+		vggo : in STD_LOGIC;
+		halted : out STD_LOGIC;
+		xout : out  STD_LOGIC_VECTOR (9 downto 0);
+		yout : out  STD_LOGIC_VECTOR (9 downto 0);
+		zout : out  STD_LOGIC_VECTOR (7 downto 0);
+		rgbout : out  STD_LOGIC_VECTOR (2 downto 0);
+		dbg : out std_logic_vector(15 downto 0);
+		clken: in STD_LOGIC;
+		clk : in  STD_LOGIC;
+
+		vector_rom_addr : out std_logic_vector(13 downto 0);
+		vector_rom_data : in  std_logic_vector( 7 downto 0);
+		vector_ram_addr : out std_logic_vector(10 downto 0);
+		vector_ram_dout : in  std_logic_vector(15 downto 0);
+		vector_ram_din  : out std_logic_vector(15 downto 0);
+		vector_ram_we   : out std_logic;
+		vector_ram_cs1  : out std_logic;
+		vector_ram_cs2  : out std_logic
+	);
 end avg;
 
 -- Opcodes stored as lo-hi in 8bit memory.
@@ -89,24 +99,32 @@ architecture Behavioral of avg is
 	signal rgb: STD_LOGIC_VECTOR(2 downto 0);
 begin
 
-mypgmram : entity work.gen_ram
-	generic map( dWidth => 8, aWidth => 11)
-	port map(
-		clk  => clk,
-		we   => (not vecram_rw_l) and (not vecram_cs_l),
-		addr => memory_addr(10 downto 0),
-		d    => vecram_din,
-		q    => vecram_dout
-	);
-	
+--mypgmram : entity work.gen_ram
+--	generic map( dWidth => 8, aWidth => 11)
+--	port map(
+--		clk  => clk,
+--		we   => (not vecram_rw_l) and (not vecram_cs_l),
+--		addr => memory_addr(10 downto 0),
+--		d    => vecram_din,
+--		q    => vecram_dout
+--	);
 
-myvecrom: entity work.vecrom 
-	port map (
-		addr		=> memory_addr,
-		data		=> vecrom_dout,
-		clk		=> clk
-	);
-	
+vector_ram_addr <= memory_addr(10 downto 0);
+vector_ram_din <= vecram_din & vecram_din;
+vector_ram_we <= not vecram_rw_l;
+vector_ram_cs1 <= not vecram_cs_l;
+vector_ram_cs2 <= '0';
+vecram_dout <= vector_ram_dout(7 downto 0);
+--myvecrom: entity work.vecrom 
+--	port map (
+--		addr		=> memory_addr,
+--		data		=> vecrom_dout,
+--		clk		=> clk
+--	);
+
+vector_rom_addr <= memory_addr;
+vecrom_dout <= vector_rom_data;
+
 vectordrawer: entity work.vector_drawer 
 	port map (
 		clk => clk,

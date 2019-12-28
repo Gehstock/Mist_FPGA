@@ -46,15 +46,10 @@ architecture rtl of gen_ram is
 	subtype addressRange is integer range 0 to ((2**aWidth)-1);
 	type ramDef is array(addressRange) of std_logic_vector((dWidth-1) downto 0);
 	signal ram: ramDef;
+--	attribute ramstyle : string;
+--	attribute ramstyle of ram : signal is "logic";
 
-	signal rAddrReg : std_logic_vector((aWidth-1) downto 0);
-	signal qReg : std_logic_vector((dWidth-1) downto 0);
 begin
--- -----------------------------------------------------------------------
--- Signals to entity interface
--- -----------------------------------------------------------------------
---	q <= qReg;
-
 -- -----------------------------------------------------------------------
 -- Memory write
 -- -----------------------------------------------------------------------
@@ -73,12 +68,8 @@ begin
 process(clk)
 	begin
 		if rising_edge(clk) then
---			qReg <= ram(to_integer(unsigned(rAddrReg)));
---			rAddrReg <= addr;
-----			qReg <= ram(to_integer(unsigned(addr)));
-      q <= ram(to_integer(unsigned(addr)));
+			q <= ram(to_integer(unsigned(addr)));
 		end if;
 	end process;
---q <= ram(to_integer(unsigned(addr)));
 end architecture;
 
