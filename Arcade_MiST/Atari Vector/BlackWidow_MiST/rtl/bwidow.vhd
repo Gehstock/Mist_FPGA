@@ -29,7 +29,6 @@ entity bwidow is
   port(
 		reset_h   : in    std_logic;
 		clk			: in    std_logic; --12 MHz
-		clk_25		: in	std_logic;
 		analog_sound_out    : out std_logic_vector(7 downto 0);
 		analog_x_out    : out std_logic_vector(9 downto 0);
 		analog_y_out    : out std_logic_vector(9 downto 0);
@@ -39,7 +38,18 @@ entity bwidow is
 		buttons				 : in std_logic_vector(14 downto 0);
 		SW_B4				 : in std_logic_vector(7 downto 0);
 		SW_D4				 : in std_logic_vector(7 downto 0);
-		dbg				 : out std_logic_vector(15 downto 0)
+		dbg				 : out std_logic_vector(15 downto 0);
+
+		cpu_rom_addr    : out std_logic_vector(14 downto 0);
+		cpu_rom_data    : in  std_logic_vector( 7 downto 0);
+		vector_rom_addr : out std_logic_vector(13 downto 0);
+		vector_rom_data : in  std_logic_vector( 7 downto 0);
+		vector_ram_addr : out std_logic_vector(10 downto 0);
+		vector_ram_dout : in  std_logic_vector(15 downto 0);
+		vector_ram_din  : out std_logic_vector(15 downto 0);
+		vector_ram_we   : out std_logic;
+		vector_ram_cs1  : out std_logic;
+		vector_ram_cs2  : out std_logic
 	);
 end bwidow;
 
@@ -137,14 +147,16 @@ cpu: entity work.T65
 		DO      => c_dout
 	);
 	
-mypgmrom: entity work.pgmrom 
-	port map (
-		addr		=> pgmrom_addr(14 downto 0),
-		data		=> pgmrom_dout,
-		clk		=> clk
-	);
-	
---mypgmram: entity work.ram2k 
+--mypgmrom: entity work.pgmrom 
+--	port map (
+--		addr		=> pgmrom_addr(14 downto 0),
+--		data		=> pgmrom_dout,
+--		clk		=> clk
+--	);
+cpu_rom_addr <= pgmrom_addr(14 downto 0);
+pgmrom_dout <= cpu_rom_data;
+
+--mypgmram: entity work.ram2k
 --	port map (
 --		addr		=> pgmram_addr,
 --		data_in	=> c_dout,
@@ -194,7 +206,16 @@ myavg: entity work.avg
 		yout => analog_y_out,
 		zout => analog_z_out,
 		rgbout => rgb_out,
-		dbg => avg_dbg
+		dbg => avg_dbg,
+
+		vector_rom_addr   => vector_rom_addr,
+		vector_rom_data   => vector_rom_data,
+		vector_ram_addr   => vector_ram_addr,
+		vector_ram_din    => vector_ram_din,
+		vector_ram_dout   => vector_ram_dout,
+		vector_ram_we     => vector_ram_we,
+		vector_ram_cs1    => vector_ram_cs1,
+		vector_ram_cs2    => vector_ram_cs2
 	);
 
 	-- Memory decoding: CPU read
@@ -301,6 +322,21 @@ myavg: entity work.avg
 	
 	
 	  BEAM_ENA <= ena_1_5m;
+	  
+--maybe not needed - check if we have a stable Picture	  
+--adec1: entity work.gravitar_dec_rom1
+--	port map (
+--		clk 		=> clk,
+--		addr 		=> c_addr(15 downto 11),
+--		data 		=> dec_data1
+--	);
+
+--adec2: entity work.gravitar_dec_rom2
+--	port map (
+--		clk 		=> clk,
+--		addr 		=> c_addr(15 downto 11),
+--		data 		=> dec_data1
+--	);	
 
 end Behaviour;
 

@@ -43,28 +43,28 @@ begin
 --136017-109.np7	4096	32768		1000 000000000000
 --136017-110.r7	4096	36864		1001 000000000000
 
-roma: entity work.bwidow_vec_rom1
+roma: entity work.gravitar_vec_rom1
 	port map (
 		clk 	=> clk,
 		addr 	=> addr(10 downto 0),
 		data 	=> dataa
 	);
 	
-romb: entity work.bwidow_vec_rom2 
+romb: entity work.gravitar_vec_rom2 
 	port map (
 		clk 	=> clk,
 		addr 	=> addr(11 downto 0),
 		data 	=> datab
 	);
 	
-romc: entity work.bwidow_vec_rom3
+romc: entity work.gravitar_vec_rom3
 	port map (
 		clk 	=> clk,
 		addr 	=> addr(11 downto 0),
 		data 	=> datac
 	);
 	
-romd: entity work.bwidow_vec_rom4
+romd: entity work.gravitar_vec_rom4
 	port map (
 		clk 	=> clk,
 		addr 	=> addr(11 downto 0),

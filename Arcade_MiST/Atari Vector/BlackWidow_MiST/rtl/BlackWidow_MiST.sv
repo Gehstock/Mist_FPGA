@@ -13,7 +13,7 @@ module BlackWidow_MiST(
 	input         SPI_SS2,
 	input         SPI_SS3,
 	input         CONF_DATA0,
-	input         CLOCK_27/*,
+	input         CLOCK_27,
 
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
@@ -26,14 +26,16 @@ module BlackWidow_MiST(
 	output  [1:0] SDRAM_BA,
 	output        SDRAM_CLK,
 	output        SDRAM_CKE
-*/
+
 );
 
 `include "rtl\build_id.v" 
 
+`define CORE_NAME "BWIDOW"
+//`define CORE_NAME "GRAVITAR"
+
 localparam CONF_STR = {
-	"BLACKWIDOW;;",
-	"O12,Scanlines,None,CRT 25%,CRT 50%,CRT 75%;",
+	`CORE_NAME,";;",
 	"O3,Test,Off,On;",
 //	"O45,Max Start Level,13,21,37,53;",
 //	"O67,Lives,3,4,5,6;",
@@ -45,14 +47,15 @@ localparam CONF_STR = {
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
+assign SDRAM_CKE = 1;
+assign SDRAM_CLK = clk_72;
 
-wire clk_50, clk_25, clk_12, clk_6, locked;
+wire clk_72, clk_50, clk_12, locked;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_50),
-	.c1(clk_25),
+	.c0(clk_72),
+	.c1(clk_50),
 	.c2(clk_12),
-	.c3(clk_6),
 	.locked(locked)
 );
 
@@ -72,50 +75,97 @@ wire  [7:0] audio;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-//this must go to sdram
-wire [18:0] vram_write_addr;
-wire  [3:0] vram_write_data;
-wire [18:0] vram_read_addr;
-wire  [3:0] vram_read_data;
-wire        vram_wren;
-/*
-sdram  sdram (
-	.SDRAM_DQ(SDRAM_DQ),
-	.SDRAM_A(SDRAM_A),
-	.SDRAM_DQML(SDRAM_DQML),
-	.SDRAM_DQMH(SDRAM_DQMH),
-	.SDRAM_BA(SDRAM_BA),
-	.SDRAM_nCS(SDRAM_nCS),
-	.SDRAM_nWE(SDRAM_nWE),
-	.SDRAM_nRAS(SDRAM_nRAS),
-	.SDRAM_nCAS(SDRAM_nCAS),
-	.SDRAM_CKE(SDRAM_CKE),
-	.init(~locked),			// init signal after FPGA config to initialize RAM
-	.clk(clk_50),			// sdram is accessed at up to 128MHz
-	.clkref(clk_25),		// reference clock to sync to
-	.din(vram_write_data),			// data input from chipset/cpu
-	.dout(vram_read_data),				// data output to chipset/cpu
-	.raddr(vram_read_addr),       // 25 bit byte address
-	.waddr(vram_write_addr),       // 25 bit byte address
-	.rd(~vram_wren),         // cpu/chipset requests read
-	.we(vram_wren)
-);*/
 
-//reduced ram size
+wire        ioctl_downl;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
 
-p2ram p2ram (
-	.clock(clk_25),
-	.data(vram_write_data),
-	.rdaddress(vram_read_addr[14:0]),
-	.wraddress(vram_write_addr[14:0]),
-	.wren(vram_wren),
-	.q(vram_read_data)
-	);
+// ROM structure:
+//*.d1 *.d1 *.ef1 *.h1 *.j1 *.kl1 *.m1 *.m1 PROG ROM 32k
+//*.l7 *.l7 *.mn7 *.np7 *.r7                VEC ROM  16k
+
+data_io data_io(
+	.clk_sys       ( clk_72       ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
+	.ioctl_download( ioctl_downl  ),
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
+);
+
+wire [14:0] cpu_rom_addr;
+wire [15:0] cpu_rom_data;
+wire [13:0] vector_rom_addr;
+wire [15:0] vector_rom_data;
+wire [10:0] vector_ram_addr;
+wire [15:0] vector_ram_din;
+wire [15:0] vector_ram_dout;
+wire        vector_ram_we;
+wire        vector_ram_cs1;
+wire        vector_ram_cs2;
+
+reg port1_req, port2_req;
+sdram sdram(
+	.*,
+	.init_n        ( locked   ),
+	.clk           ( clk_72      ),
+
+	// port1 used for main CPU
+	.port1_req     ( port1_req    ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port1_we      ( ioctl_downl ),
+	.port1_d       ( {ioctl_dout, ioctl_dout} ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {2'b10, vector_rom_addr[13:1]} ),
+	.cpu1_q        ( vector_rom_data ),
+	.cpu2_addr     ( ioctl_downl ? 15'h7fff : {1'b0, cpu_rom_addr[14:1]} ),
+	.cpu2_q        ( cpu_rom_data ),
+
+	// port2 is for vector RAM
+	.port2_req     ( port2_req ),
+	.port2_ack     ( ),
+	.port2_a       ( vector_ram_addr_last ),
+	.port2_ds      ( {vector_ram_cs2, vector_ram_cs1} ),
+	.port2_we      ( vector_ram_we_last ),
+	.port2_d       ( vector_ram_din ),
+	.port2_q       ( vector_ram_dout )
+);
+
+reg [10:0] vector_ram_addr_last = 0;
+reg        vector_ram_we_last = 0;
+
+always @(posedge clk_72) begin
+	reg        ioctl_wr_last = 0;
+
+	ioctl_wr_last <= ioctl_wr;
+	if (ioctl_downl) begin
+		if (~ioctl_wr_last && ioctl_wr) begin
+			port1_req <= ~port1_req;
+		end
+	end
+
+	if ((vector_ram_cs1 || vector_ram_cs2) && (vector_ram_addr_last != vector_ram_addr || vector_ram_we_last != vector_ram_we)) begin
+		vector_ram_addr_last <= vector_ram_addr;
+		vector_ram_we_last <= vector_ram_we;
+		port2_req <= ~port2_req;
+	end
+end
 
 wire [7:0] sw_d4 = {2'b00, 2'b00,1'b0,3'b000}; // will be do if i see enough
 wire [7:0] sw_b4 = {status[11:10],status[9:8],status[7:6], status[5:4]};	
 wire [14:0] BUTTONS = ~{~btn_test, status[3], btn_coin, 1'b0, 1'b1, btn_two_players, btn_one_player, m_fire_down, m_fire_up, m_fire_left, m_fire_right, m_up, m_down, m_left, m_right};
-bwidow_top bwidow_top(
+bwidow_top bwidow_top(// gravitar uses Address Decoding Roms - Check this
+	.RESET_L(~(status[0] | buttons[1])),
+	.clk_12(clk_12),
+	.clk_50(clk_50),
 	.BUTTON(BUTTONS),
 	.SELF_TEST_SWITCH_L(status[3]), 
 	.AUDIO_OUT(audio),
@@ -127,20 +177,22 @@ bwidow_top bwidow_top(
 	.VID_HBLANK(hb),
 	.VID_VBLANK(vb),
 	.SW_B4(sw_b4),
-	.SW_D4(sw_d4),	
-	.RESET_L(~(status[0] | buttons[1])),
-	.clk_6(clk_6),
-	.clk_12(clk_12),
-	.clk_25(clk_25),
-	.vram_write_addr(vram_write_addr),
-	.vram_write_data(vram_write_data),
-	.vram_read_addr(vram_read_addr),
-	.vram_read_data(vram_read_data),
-	.vram_wren(vram_wren)
+	.SW_D4(sw_d4),
+	
+	.cpu_rom_addr    (cpu_rom_addr),
+	.cpu_rom_data    (cpu_rom_addr[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
+	.vector_rom_addr (vector_rom_addr),
+	.vector_rom_data (vector_rom_addr[0] ? vector_rom_data[15:8] : vector_rom_data[7:0]),
+	.vector_ram_addr (vector_ram_addr),
+	.vector_ram_din  (vector_ram_din),
+	.vector_ram_dout (vector_ram_dout),
+	.vector_ram_we   (vector_ram_we),
+	.vector_ram_cs1  (vector_ram_cs1),
+	.vector_ram_cs2  (vector_ram_cs2)
 );
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
-	.clk_sys        ( clk_25           ),
+	.clk_sys        ( clk_50           ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
@@ -155,12 +207,12 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.scandoubler_disable(1),//scandoublerD ),
-	.scanlines      ( status[2:1]      ),
+	.no_csync       ( 1'b1             ),
 	.ypbpr          ( ypbpr            )
 	);
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clk_25         ),
+	.clk_sys        (clk_12         ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -181,7 +233,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 dac #(
 	.C_bits(8))
 dac(
-	.clk_i(clk_25),
+	.clk_i(clk_12),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
@@ -209,10 +261,8 @@ reg btn_test = 0;
 
 reg btn_coin  = 0;
 
-always @(posedge clk_25) begin
-	reg old_state;
-	old_state <= key_strobe;
-	if(old_state != key_strobe) begin
+always @(posedge clk_12) begin
+	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
 			'h72: btn_down        	<= key_pressed; // down
