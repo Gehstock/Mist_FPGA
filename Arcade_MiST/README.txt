@@ -1,4 +1,4 @@
-Aviable Arcade Cores  123
+Aviable Arcade Cores  124
 
 #Atari 6502 Black & White Raster Hardware
 	Canyon Bomber
@@ -141,6 +141,13 @@ Aviable Arcade Cores  123
 #Namco Rally X Hardware
 	Rally X
 
+#Nintendo Popeye Hardware
+	Popeye			
+
+#Nintendo Radar Scope Hardware
+	Donkey Kong
+	Donkey Kong Jr.
+
 #Non Arcade
 	2048
 	Arkanoid
@@ -176,10 +183,6 @@ Aviable Arcade Cores  123
 	Capitol
 	Phoenix
 	Pleiads
-
-#Radar Scope Hardware
-	Donkey Kong
-	Donkey Kong Jr.
 
 #Sega Zaxxon Hardware
 	Zaxxon
