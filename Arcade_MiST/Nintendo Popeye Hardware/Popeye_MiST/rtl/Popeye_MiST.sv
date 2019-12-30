@@ -172,6 +172,11 @@ popeye popeye(
 	.cpu_rom_do(rom_addr[0] ? rom_do[15:8] : rom_do[7:0])
 	);
 
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
+
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( sys_clk          ),
 	.SPI_SCK        ( SPI_SCK          ),
@@ -185,13 +190,14 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.ce_divider     ( 1'b1             ),
 	.blend          ( status[5]            ),
 	.rotate         ( {1'b1, status[2]}   ),
 	.scandoubler_disable(1),//scandoublerD  ),
 	.scanlines      ( "00"),//status[3:4]        ),
+	.no_csync       ( 1'b1             ),
 	.ypbpr          ( ypbpr            )
 	);
 
