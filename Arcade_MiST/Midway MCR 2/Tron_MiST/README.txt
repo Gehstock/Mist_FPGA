@@ -3,7 +3,7 @@
 -- Arcade: Tron port to MiST by Gehstock
 -- 13 November 2019
 -- 
--- VGA Only
+
 
 Controls 
 

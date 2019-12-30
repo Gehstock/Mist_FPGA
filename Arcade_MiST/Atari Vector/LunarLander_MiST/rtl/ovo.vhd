@@ -11,7 +11,6 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 LIBRARY work;
-USE work.base_pack.ALL;
 
 ENTITY ovo IS
   GENERIC (
@@ -20,9 +19,9 @@ ENTITY ovo IS
     RGB   : unsigned(23 DOWNTO 0) :=x"FFFFFF");
   PORT (
     -- VGA IN
-    i_r   : IN  uv8;
-    i_g   : IN  uv8;
-    i_b   : IN  uv8;
+    i_r   : IN  unsigned( 7 DOWNTO 0 );
+    i_g   : IN  unsigned( 7 DOWNTO 0 );
+    i_b   : IN  unsigned( 7 DOWNTO 0 );
     i_hs  : IN  std_logic;
     i_vs  : IN  std_logic;
     i_de  : IN  std_logic;
@@ -30,9 +29,9 @@ ENTITY ovo IS
     i_clk : IN  std_logic;
 
     -- VGA_OUT
-    o_r   : OUT uv8;
-    o_g   : OUT uv8;
-    o_b   : OUT uv8;
+    o_r   : OUT unsigned( 7 DOWNTO 0 );
+    o_g   : OUT unsigned( 7 DOWNTO 0 );
+    o_b   : OUT unsigned( 7 DOWNTO 0 );
     o_hs  : OUT std_logic;
     o_vs  : OUT std_logic;
     o_de  : OUT std_logic;
@@ -49,7 +48,7 @@ END ENTITY ovo;
 --##############################################################################
 
 ARCHITECTURE rtl OF ovo IS
-  TYPE arr_slv8 IS ARRAY (natural RANGE <>) OF uv8;
+  TYPE arr_slv8 IS ARRAY (natural RANGE <>) OF unsigned( 7 DOWNTO 0 );
   CONSTANT chars : arr_slv8 :=(
     x"3E", x"63", x"73", x"7B", x"6F", x"67", x"3E", x"00",  -- 0
     x"0C", x"0E", x"0C", x"0C", x"0C", x"0C", x"3F", x"00",  -- 1
@@ -87,10 +86,10 @@ ARCHITECTURE rtl OF ovo IS
   SIGNAL vcpt,hcpt,hcpt2 : natural RANGE 0 TO 4095;
   SIGNAL vin0,vin1 : unsigned(0 TO COLS*5-1);
   
-  SIGNAL t_r,t_g,t_b : uv8;
+  SIGNAL t_r,t_g,t_b : unsigned( 7 DOWNTO 0 );
   SIGNAL t_hs,t_vs,t_de : std_logic;
 
-  SIGNAL col : uv8;
+  SIGNAL col : unsigned( 7 DOWNTO 0 );
   SIGNAL de : std_logic;
 
   SIGNAL in0s,in1s : unsigned(in0'range); 
@@ -177,4 +176,3 @@ BEGIN
   
   
 END ARCHITECTURE rtl;
-

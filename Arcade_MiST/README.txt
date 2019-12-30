@@ -1,4 +1,4 @@
-Aviable Arcade Cores  121
+Aviable Arcade Cores  123
 
 #Atari 6502 Black & White Raster Hardware
 	Canyon Bomber
@@ -15,6 +15,9 @@ Aviable Arcade Cores  121
 	Computer Space
 
 #Atari Tetris
+
+#Atari Vector
+	Lunar Lander
 
 #Bagman Hardware
 	Bagman
@@ -144,6 +147,9 @@ Aviable Arcade Cores  121
 	FlappyBird
 	River Raid(Clone)
 
+#Nova2001_Hardware
+	Ninja Kun
+
 #Pacman Hardware
 	Ali Baba and 40 Thieves
 	Birdiy
@@ -174,6 +180,9 @@ Aviable Arcade Cores  121
 #Radar Scope Hardware
 	Donkey Kong
 	Donkey Kong Jr.
+
+#Sega Zaxxon Hardware
+	Zaxxon
 
 #Tehkan Bombjack Hardware
 	Bombjack

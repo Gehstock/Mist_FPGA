@@ -31,8 +31,8 @@ module BlackWidow_MiST(
 
 `include "rtl\build_id.v" 
 
-`define CORE_NAME "BWIDOW"
-//`define CORE_NAME "GRAVITAR"
+//`define CORE_NAME "BWIDOW"
+`define CORE_NAME "GRAVITAR"
 
 localparam CONF_STR = {
 	`CORE_NAME,";;",
@@ -183,6 +183,7 @@ bwidow_top bwidow_top(// gravitar uses Address Decoding Roms - Check this
 	.cpu_rom_data    (cpu_rom_addr[0] ? cpu_rom_data[15:8] : cpu_rom_data[7:0] ),
 	.vector_rom_addr (vector_rom_addr),
 	.vector_rom_data (vector_rom_addr[0] ? vector_rom_data[15:8] : vector_rom_data[7:0]),
+	
 	.vector_ram_addr (vector_ram_addr),
 	.vector_ram_din  (vector_ram_din),
 	.vector_ram_dout (vector_ram_dout),
