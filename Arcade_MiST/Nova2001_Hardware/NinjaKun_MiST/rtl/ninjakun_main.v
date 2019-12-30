@@ -1,7 +1,6 @@
 module ninjakun_main(
 	input				RESET,
-	input				CLK24M,
-	input				CLK3M,
+	input       MCLK,
 	input				VBLK,
 
 	input	  [7:0]	CTR1,
@@ -12,19 +11,18 @@ module ninjakun_main(
 	input	  [7:0]	CPIDT,
 	output			CPRED,
 	output			CPWRT,
+
 	output [14:0]	CPU1ADDR,
 	input  [7:0]	CPU1DT,
 	output [14:0]	CPU2ADDR,
 	input  [7:0]	CPU2DT
 );
 
-wire	SHCLK = CLK24M;
-wire	INPCL = CLK24M;
 
 wire	CP0IQ, CP0IQA;
 wire	CP1IQ, CP1IQA;
 ninjakun_irqgen ninjakun_irqgen( 
-	.CLK(CLK3M),
+	.MCLK(MCLK),
 	.VBLK(VBLK),
 	.IRQ0_ACK(CP0IQA),
 	.IRQ1_ACK(CP1IQA),
@@ -32,7 +30,7 @@ ninjakun_irqgen ninjakun_irqgen(
 	.IRQ1(CP1IQ)
 );
 
-wire			CP0CL, CP1CL;
+wire			CP0CE_P, CP0CE_N, CP1CE_P, CP1CE_N;
 wire [15:0]	CP0AD, CP1AD;
 wire  [7:0]	CP0OD, CP1OD;
 wire  [7:0] CP0DT, CP1DT;
@@ -41,7 +39,9 @@ wire			CP0RD, CP1RD;
 wire			CP0WR, CP1WR;
 Z80IP cpu0(
 	.reset_in(RESET),
-	.clk(CP0CL),
+	.clk(MCLK),
+	.clken_p(CP0CE_P),
+	.clken_n(CP0CE_N),
 	.adr(CP0AD),
 	.data_in(CP0DT),
 	.data_out(CP0OD),
@@ -53,7 +53,9 @@ Z80IP cpu0(
 
 Z80IP cpu1(
 	.reset_in(RESET),
-	.clk(CP1CL),
+	.clk(MCLK),
+	.clken_p(CP1CE_P),
+	.clken_n(CP1CE_N),
 	.adr(CP1AD),
 	.data_in(CP1DT),
 	.data_out(CP1OD),
@@ -64,19 +66,21 @@ Z80IP cpu1(
 );
 
 ninjakun_cpumux ioshare(
-	.SHCLK(SHCLK),
+	.MCLK(MCLK),
 	.CPADR(CPADR),
 	.CPODT(CPODT),
 	.CPIDT(CPIDT),
 	.CPRED(CPRED),
 	.CPWRT(CPWRT),
-	.CP0CL(CP0CL),
+	.CP0CE_P(CP0CE_P),
+	.CP0CE_N(CP0CE_N),
 	.CP0AD(CP0AD),
 	.CP0OD(CP0OD),
 	.CP0ID(CP0ID),
 	.CP0RD(CP0RD),
 	.CP0WR(CP0WR),
-	.CP1CL(CP1CL),
+	.CP1CE_P(CP1CE_P),
+	.CP1CE_N(CP1CE_N),
 	.CP1AD(CP1AD),
 	.CP1OD(CP1OD),
 	.CP1ID(CP1ID),
@@ -107,14 +111,14 @@ assign CPU2ADDR = CP1AD[14:0];
 assign ROM1D = CPU2DT;
 
 wire [7:0] SHDT0, SHDT1;
-DPRAM800	shmem(
-	SHCLK, {  CP0AD[10] ,CP0AD[9:0]}, CS_SH0 & CP0WR, CP0OD, SHDT0,
-	SHCLK, {(~CP1AD[10]),CP1AD[9:0]}, CS_SH1 & CP1WR, CP1OD, SHDT1
-);
+
+dpram #(8,11) shmem(
+	MCLK, CS_SH0 & CP0WR, { CP0AD[10] ,CP0AD[9:0]}, CP0OD, SHDT0,
+	MCLK, CS_SH1 & CP1WR, {~CP1AD[10], CP1AD[9:0]}, CP1OD, SHDT1);
 
 wire [7:0] INPD0, INPD1;
 ninjakun_input inps(
-	.INPCL(INPCL),
+	.MCLK(MCLK),
 	.RESET(RESET),
 	.CTR1i(CTR1),	// Control Panel (Negative Logic)
 	.CTR2i(CTR2),

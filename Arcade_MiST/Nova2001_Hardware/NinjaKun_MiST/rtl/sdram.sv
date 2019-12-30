@@ -59,8 +59,13 @@ module sdram (
 	input      [15:0] port2_d,
 	output reg [31:0] port2_q,
 	
+	input      [16:2] bg_addr,
+	output reg [31:0] bg_q,
+	input      [16:2] fg_addr,
+	output reg [31:0] fg_q,
 	input      [16:2] sp_addr,
-	output reg [31:0] sp_q
+	output reg [31:0] sp_q,
+	output reg        sp_rdy
 );
 
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
@@ -81,7 +86,7 @@ localparam RFRSH_CYCLES = 10'd842;
 
 /*
  SDRAM state machine for 2 bank interleaved access
- 1 word burst, CL2
+ 2 words burst, CL2
 cmd issued  registered
  0 RAS0     cas1 - data0 read burst terminated
  1          ras0
@@ -153,7 +158,7 @@ assign SDRAM_nWE  = sd_cmd[0];
 reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
 reg [16:1] addr_last[2];
-reg [16:2] addr_last2[2];
+reg [16:2] addr_last2[4];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
@@ -162,14 +167,16 @@ reg  [1:0] ds[2];
 reg        port1_state;
 reg        port2_state;
 
-localparam PORT_NONE  = 2'd0;
-localparam PORT_CPU1  = 2'd1;
-localparam PORT_CPU2  = 2'd2;
-localparam PORT_SP    = 2'd1;
-localparam PORT_REQ   = 2'd3;
+localparam PORT_NONE  = 3'd0;
+localparam PORT_CPU1  = 3'd1;
+localparam PORT_CPU2  = 3'd2;
+localparam PORT_SP    = 3'd1;
+localparam PORT_FG    = 3'd2;
+localparam PORT_BG    = 3'd3;
+localparam PORT_REQ   = 3'd4;
 
-reg  [1:0] next_port[2];
-reg  [1:0] port[2];
+reg  [2:0] next_port[2];
+reg  [2:0] port[2];
 
 reg        refresh;
 reg [10:0] refresh_cnt;
@@ -203,6 +210,12 @@ always @(*) begin
 	end else if (sp_addr != addr_last2[PORT_SP]) begin
 		next_port[1] = PORT_SP;
 		addr_latch_next[1] = { 1'b1, 7'd0, sp_addr, 1'b0 };
+	end else if (fg_addr != addr_last2[PORT_FG]) begin
+		next_port[1] = PORT_FG;
+		addr_latch_next[1] = { 1'b1, 7'd0, fg_addr, 1'b0 };
+	end else if (bg_addr != addr_last2[PORT_BG]) begin
+		next_port[1] = PORT_BG;
+		addr_latch_next[1] = { 1'b1, 7'd0, bg_addr, 1'b0 };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -217,6 +230,8 @@ always @(posedge clk) begin
 	{ SDRAM_DQMH, SDRAM_DQML } <= 2'b11;
 	sd_cmd <= CMD_NOP;  // default: idle
 	refresh_cnt <= refresh_cnt + 1'd1;
+
+	sp_rdy <= 0;
 
 	if(init) begin
 		// initialization takes place at the end of the reset phase
@@ -328,6 +343,8 @@ always @(posedge clk) begin
 		if(t == STATE_READ1 && oe_latch[1]) begin
 			case(port[1])
 				PORT_REQ:	port2_q[15:0] <= sd_din;
+				PORT_FG :    fg_q[15:0] <= sd_din;
+				PORT_BG :    bg_q[15:0] <= sd_din;
 				PORT_SP :    sp_q[15:0] <= sd_din;
 				default: ;
 			endcase;
@@ -338,10 +355,13 @@ always @(posedge clk) begin
 		if(t == STATE_READ1b && oe_latch[1]) begin
 			case(port[1])
 				PORT_REQ: begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
-				PORT_SP : begin    sp_q[31:16] <= sd_din; end
+				PORT_FG : begin    fg_q[31:16] <= sd_din; end
+				PORT_BG : begin    bg_q[31:16] <= sd_din; end
+				PORT_SP : begin    sp_q[31:16] <= sd_din; sp_rdy <= 1; end
 				default: ;
 			endcase;
 		end
+
 	end
 end
 

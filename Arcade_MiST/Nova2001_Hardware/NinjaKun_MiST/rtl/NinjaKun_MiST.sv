@@ -25,7 +25,6 @@ module NinjaKun_MiST (
 	output  [1:0] SDRAM_BA,
 	output        SDRAM_CLK,
 	output        SDRAM_CKE
-
 );
 
 `include "rtl\build_id.v" 
@@ -33,7 +32,8 @@ module NinjaKun_MiST (
 localparam CONF_STR = {
 	"NINJAKUN;ROM;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",	
+	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O5,Blend,Off,On;",
 	"O8,Difficulty,Normal,Hard;",
 	"O9A,Lives,4,3,2,5;",
 	"OB,1st Extra,30000,40000;",
@@ -43,13 +43,13 @@ localparam CONF_STR = {
 	"OH,Endless(If Free Play),No,Yes;",
 	"OE,Demo Sound,Off,On;",
 	"OI,Name Letters,8,3;",
-	"T6,Reset;",
+	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = ~CLOCK_48;
+assign 		SDRAM_CLK = CLOCK_48;
 assign 		SDRAM_CKE = 1;
 
 wire CLOCK_48, pll_locked;
@@ -62,33 +62,33 @@ pll pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [11:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [15:0] audio;
-wire 			hs, vs;
+wire [15:0] audio;
+wire        hs, vs;
 wire [3:0] 	r, g, b;
-wire [14:0] cpu1_rom_addr, cpu2_rom_addr;
-wire [15:0] cpu1_rom_do, cpu2_rom_do;
-//wire [12:0] sp_rom_addr;
-//wire [31:0] sp_rom_do;
-//wire [12:0] fg_rom_addr;
-//wire [31:0] fg_rom_do;
-wire [12:0] bg_rom_addr;
-wire [31:0] bg_rom_do;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire        key_strobe;
-wire        key_pressed;
-wire  [7:0] key_code;
+
+/*
+ROM Structure (same as the original)
+fg gfx 32k ninja-6.7n ninja-7.7p ninja-8.7s ninja-9.7t
+bg gfx 32k ninja-10.2c ninja-11.2d ninja-12.4c ninja-13.4d
+cpu1   32k ninja-1.7a ninja-2.7b ninja-3.7d ninja-4.7e 
+cpu2   32k ninja-5.7h ninja-2.7b ninja-3.7d ninja-4.7e
+*/
 
 data_io data_io(
-	.clk_sys       ( CLOCK_48      ),
+	.clk_sys       ( CLOCK_48     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -99,41 +99,55 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000;
+wire [24:0] cpu_ioctl_addr = ioctl_addr - 17'h10000;
+reg         port1_req, port2_req;
 
-reg port1_req, port2_req;
+wire [14:0] cpu1_rom_addr, cpu2_rom_addr;
+wire [15:0] cpu1_rom_do, cpu2_rom_do;
+wire [12:0] sp_rom_addr;
+wire [31:0] sp_rom_do;
+wire        sp_rdy;
+wire [12:0] fg_rom_addr;
+wire [31:0] fg_rom_do;
+wire [12:0] bg_rom_addr;
+wire [31:0] bg_rom_do;
+
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( CLOCK_48      ),
+	.clk           ( CLOCK_48     ),
 
-	// port1 used for main + sound CPU
+	// port1 used for main + aux CPU
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
-	.port1_a       ( ioctl_addr[23:1] ),
-	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port1_a       ( cpu_ioctl_addr[23:1] ),
+	.port1_ds      ( {cpu_ioctl_addr[0], ~cpu_ioctl_addr[0]} ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[14:1]} ),
 	.cpu1_q        ( cpu1_rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + cpu2_rom_addr[14:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : {1'b1, cpu2_rom_addr[14:1]} ),
 	.cpu2_q        ( cpu2_rom_do ),
 
-	// port2 for sprite graphics
+	// port2 for graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[12:0], sp_ioctl_addr[14]} ),
-	.port2_ds      ( {sp_ioctl_addr[13], ~sp_ioctl_addr[13]} ),
+	.port2_a       ( {ioctl_addr[23:15], ioctl_addr[14], ioctl_addr[12:0]} ),
+	.port2_ds      ( {ioctl_addr[13], ~ioctl_addr[13]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'h7fff : bg_rom_addr ),
-	.sp_q          ( bg_rom_do )
+	.fg_addr       ( ioctl_downl ? 15'h7fff : {1'b0, fg_rom_addr} ),
+	.fg_q          ( fg_rom_do ),
+	.sp_addr       ( ioctl_downl ? 15'h7fff : {1'b0, sp_rom_addr} ),
+	.sp_q          ( sp_rom_do ),
+	.sp_rdy        ( sp_rdy ),
+	.bg_addr       ( ioctl_downl ? 15'h7fff : {1'b1, bg_rom_addr} ),
+	.bg_q          ( bg_rom_do )
 );
-
 
 // ROM download controller
 always @(posedge CLOCK_48) begin
@@ -148,19 +162,19 @@ always @(posedge CLOCK_48) begin
 	end
 end
 
-
 reg reset = 1;
 reg rom_loaded = 0;
 always @(posedge CLOCK_48) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | buttons[1] | status[6] | ~rom_loaded;
+	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-wire			PCLK;
+wire        PCLK_EN;
 wire  [8:0] HPOS,VPOS;
-wire  [11:0] POUT;
+wire [11:0] POUT;
+
 ninjakun_top ninjakun_top(
 	.RESET(reset),
 	.MCLK(CLOCK_48),
@@ -170,42 +184,44 @@ ninjakun_top ninjakun_top(
 	.DSW2({~status[17], ~status[16], 1'b0, ~status[15], ~status[18], 3'b111}),
 	.PH(HPOS),
 	.PV(VPOS),
-	.PCLK(PCLK),
+	.PCLK_EN(PCLK_EN),
 	.POUT(oPIX),
 	.SNDOUT(audio),
 	.CPU1ADDR(cpu1_rom_addr),
 	.CPU1DT(cpu1_rom_addr[0] ? cpu1_rom_do[15:8] : cpu1_rom_do[7:0]),
 	.CPU2ADDR(cpu2_rom_addr),
 	.CPU2DT(cpu2_rom_addr[0] ? cpu2_rom_do[15:8] : cpu2_rom_do[7:0]),
-//	.sp_rom_addr(sp_rom_addr),
-//	.sp_rom_data(sp_rom_do),
-//	.fg_rom_addr(fg_rom_addr),
-//	.fg_rom_data(sp_rom_do),
+	.sp_rom_addr(sp_rom_addr),
+	.sp_rom_data(sp_rom_do),
+	.sp_rdy(sp_rdy),
+	.fg_rom_addr(fg_rom_addr),
+	.fg_rom_data(fg_rom_do),
 	.bg_rom_addr(bg_rom_addr),
 	.bg_rom_data(bg_rom_do)
 );
 
 wire  [7:0] oPIX;
 assign		POUT = {{oPIX[7:6],oPIX[1:0]},{oPIX[5:4],oPIX[1:0]},{oPIX[3:2],oPIX[1:0]}};
-	
+
 hvgen hvgen(
+	.CLK(CLOCK_48),
+	.PCLK_EN(PCLK_EN),
 	.HPOS(HPOS),
 	.VPOS(VPOS),
-	.PCLK(PCLK),
 	.iRGB(POUT),
-	.oRGB({r,g,b}),
+	.oRGB({b,g,r}),
 	.HSYN(hs),
 	.VSYN(vs)
 );
-	
+
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.clk_sys        ( CLOCK_48         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( r ),
-	.G              ( g ),
-	.B              ( b ),
+	.R              ( r                ),
+	.G              ( g                ),
+	.B              ( b                ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
@@ -214,7 +230,8 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( {1'b1,status[2]} ),
-	.ce_divider		 (1),
+	.ce_divider		  ( 1'b1             ),
+	.blend          ( status[5]        ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( status[4:3]      ),
 	.ypbpr          ( ypbpr            )
@@ -248,8 +265,8 @@ dac #(.C_bits(16))dac(
 //											Rotated														Normal
 //wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
 //wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_left   = status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
+wire m_right  = status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
 wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
@@ -265,9 +282,7 @@ reg btn_fire2 = 0;
 reg btn_coin  = 0;
 
 always @(posedge CLOCK_48) begin
-	reg old_state;
-	old_state <= key_strobe;
-	if(old_state != key_strobe) begin
+	if(key_strobe) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
 			'h72: btn_down        	<= key_pressed; // down

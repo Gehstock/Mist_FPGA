@@ -40,7 +40,7 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.0.2
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:48:06 MAY 24,2017"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
@@ -158,7 +158,7 @@ set_global_assignment -name GENERATE_RBF_FILE ON
 # SignalTap II Assignments
 # ========================
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/druaga.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/nk.stp
 
 # Power Estimation Assignments
 # ============================
@@ -220,34 +220,27 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VERILOG_FILE rtl/ninjakun_sprite.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/NinjaKun_MiST.sv
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_top.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_main.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_io_video.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_video.v
 set_global_assignment -name VERILOG_FILE rtl/hvgen.v
-set_global_assignment -name VERILOG_FILE rtl/ninjakun_bg.v
-set_global_assignment -name VERILOG_FILE rtl/ninjakun_fg.v
-set_global_assignment -name VERILOG_FILE rtl/ninjakun_sp.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_psg.v
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_cpumux.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_irqgen.v
-set_global_assignment -name VERILOG_FILE rtl/ninjakun_clkgen.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_input.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_sadec.v
 set_global_assignment -name VERILOG_FILE rtl/ninjakun_adec.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_3D_8B.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_4D_9B.v
 set_global_assignment -name VERILOG_FILE rtl/dataselector_5D_8B.v
-set_global_assignment -name VHDL_FILE rtl/rom/fg4_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/fg3_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/fg2_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/fg1_rom.vhd
 set_global_assignment -name VERILOG_FILE rtl/z80ip.v
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VERILOG_FILE rtl/mems.v
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

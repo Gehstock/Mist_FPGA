@@ -1,130 +1,81 @@
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+-- -----------------------------------------------------------------------
+--
+-- Syntiac's generic VHDL support files.
+--
+-- -----------------------------------------------------------------------
+-- Copyright 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
+-- http://www.syntiac.com/fpga64.html
+--
+-- Modified April 2016 by Dar (darfpga@aol.fr) 
+-- http://darfpga.blogspot.fr
+--   Remove address register when writing
+--
+-- -----------------------------------------------------------------------
+--
+-- dpram.vhd
+--
+-- -----------------------------------------------------------------------
+--
+-- generic ram.
+--
+-- -----------------------------------------------------------------------
 
-LIBRARY altera_mf;
-USE altera_mf.all;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.numeric_std.ALL;
 
-ENTITY dpram IS
-	GENERIC
-	(
-		init_file			: string := "";
-		widthad_a			: natural;
-		width_a				: natural := 8;
-    outdata_reg_a : string := "UNREGISTERED";
-    outdata_reg_b : string := "UNREGISTERED"
+-- -----------------------------------------------------------------------
+
+entity dpram is
+	generic (
+		dWidth : integer := 8;
+		aWidth : integer := 10
 	);
-	PORT
-	(
-		address_a		: IN STD_LOGIC_VECTOR (widthad_a-1 DOWNTO 0);
-		address_b		: IN STD_LOGIC_VECTOR (widthad_a-1 DOWNTO 0);
-		clock_a		: IN STD_LOGIC ;
-		clock_b		: IN STD_LOGIC ;
-		data_a		: IN STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-		data_b		: IN STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-		wren_a		: IN STD_LOGIC  := '1';
-		wren_b		: IN STD_LOGIC  := '1';
-		q_a		: OUT STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-		q_b		: OUT STD_LOGIC_VECTOR (width_a-1 DOWNTO 0)
+	port (
+		clk_a : in std_logic;
+		we_a : in std_logic := '0';
+		addr_a : in std_logic_vector((aWidth-1) downto 0);
+		d_a : in std_logic_vector((dWidth-1) downto 0) := (others => '0');
+		q_a : out std_logic_vector((dWidth-1) downto 0);
+
+		clk_b : in std_logic;
+		we_b : in std_logic := '0';
+		addr_b : in std_logic_vector((aWidth-1) downto 0);
+		d_b : in std_logic_vector((dWidth-1) downto 0) := (others => '0');
+		q_b : out std_logic_vector((dWidth-1) downto 0)
 	);
-END dpram;
+end entity;
 
+-- -----------------------------------------------------------------------
 
-ARCHITECTURE SYN OF dpram IS
+architecture rtl of dpram is
+	subtype addressRange is integer range 0 to ((2**aWidth)-1);
+	type ramDef is array(addressRange) of std_logic_vector((dWidth-1) downto 0);
+	signal ram: ramDef;
+	signal addr_a_reg: std_logic_vector((aWidth-1) downto 0);
+	signal addr_b_reg: std_logic_vector((aWidth-1) downto 0);
+begin
 
-	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-	SIGNAL sub_wire1	: STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
+-- -----------------------------------------------------------------------
+	process(clk_a)
+	begin
+		if rising_edge(clk_a) then
+			if we_a = '1' then
+				ram(to_integer(unsigned(addr_a))) <= d_a;
+			end if;
+			q_a <= ram(to_integer(unsigned(addr_a)));
+		end if;
+	end process;
 
+	process(clk_b)
+	begin
+		if rising_edge(clk_b) then
+			if we_b = '1' then
+				ram(to_integer(unsigned(addr_b))) <= d_b;
+			end if;
+			q_b <= ram(to_integer(unsigned(addr_b)));
+		end if;
+	end process;
+	
+end architecture;
 
-
-	COMPONENT altsyncram
-	GENERIC (
-		address_reg_b		: STRING;
-		clock_enable_input_a		: STRING;
-		clock_enable_input_b		: STRING;
-		clock_enable_output_a		: STRING;
-		clock_enable_output_b		: STRING;
-		indata_reg_b		: STRING;
-		init_file		: STRING;
-		intended_device_family		: STRING;
-		lpm_type		: STRING;
-		numwords_a		: NATURAL;
-		numwords_b		: NATURAL;
-		operation_mode		: STRING;
-		outdata_aclr_a		: STRING;
-		outdata_aclr_b		: STRING;
-		outdata_reg_a		: STRING;
-		outdata_reg_b		: STRING;
-		power_up_uninitialized		: STRING;
-		read_during_write_mode_port_a		: STRING;
-		read_during_write_mode_port_b		: STRING;
-		widthad_a		: NATURAL;
-		widthad_b		: NATURAL;
-		width_a		: NATURAL;
-		width_b		: NATURAL;
-		width_byteena_a		: NATURAL;
-		width_byteena_b		: NATURAL;
-		wrcontrol_wraddress_reg_b		: STRING
-	);
-	PORT (
-			wren_a	: IN STD_LOGIC ;
-			clock0	: IN STD_LOGIC ;
-			wren_b	: IN STD_LOGIC ;
-			clock1	: IN STD_LOGIC ;
-			address_a	: IN STD_LOGIC_VECTOR (widthad_a-1 DOWNTO 0);
-			address_b	: IN STD_LOGIC_VECTOR (widthad_a-1 DOWNTO 0);
-			q_a	: OUT STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-			q_b	: OUT STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-			data_a	: IN STD_LOGIC_VECTOR (width_a-1 DOWNTO 0);
-			data_b	: IN STD_LOGIC_VECTOR (width_a-1 DOWNTO 0)
-	);
-	END COMPONENT;
-
-BEGIN
-	q_a    <= sub_wire0(width_a-1 DOWNTO 0);
-	q_b    <= sub_wire1(width_a-1 DOWNTO 0);
-
-	altsyncram_component : altsyncram
-	GENERIC MAP (
-		address_reg_b => "CLOCK1",
-		clock_enable_input_a => "BYPASS",
-		clock_enable_input_b => "BYPASS",
-		clock_enable_output_a => "BYPASS",
-		clock_enable_output_b => "BYPASS",
-		indata_reg_b => "CLOCK1",
-		init_file => init_file,
-		intended_device_family => "Cyclone III",
-		lpm_type => "altsyncram",
-		numwords_a => 2**widthad_a,
-		numwords_b => 2**widthad_a,
-		operation_mode => "BIDIR_DUAL_PORT",
-		outdata_aclr_a => "NONE",
-		outdata_aclr_b => "NONE",
-		outdata_reg_a => outdata_reg_a,
-		outdata_reg_b => outdata_reg_a,
-		power_up_uninitialized => "FALSE",
-		read_during_write_mode_port_a => "NEW_DATA_NO_NBE_READ",
-		read_during_write_mode_port_b => "NEW_DATA_NO_NBE_READ",
-		widthad_a => widthad_a,
-		widthad_b => widthad_a,
-		width_a => width_a,
-		width_b => width_a,
-		width_byteena_a => 1,
-		width_byteena_b => 1,
-		wrcontrol_wraddress_reg_b => "CLOCK1"
-	)
-	PORT MAP (
-		wren_a => wren_a,
-		clock0 => clock_a,
-		wren_b => wren_b,
-		clock1 => clock_b,
-		address_a => address_a,
-		address_b => address_b,
-		data_a => data_a,
-		data_b => data_b,
-		q_a => sub_wire0,
-		q_b => sub_wire1
-	);
-
-
-
-END SYN;

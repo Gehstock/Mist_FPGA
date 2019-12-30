@@ -2,7 +2,7 @@
 
 module ninjakun_input
 (
-	input				INPCL,
+	input				MCLK,
 	input				RESET,
 
 	input [7:0]		CTR1i,	// Control Panel (Negative Logic)
@@ -24,7 +24,7 @@ module ninjakun_input
 
 reg [1:0] SYNCFLG;
 reg [7:0] CTR1,CTR2;
-always @( posedge INPCL or posedge RESET ) begin
+always @( posedge MCLK or posedge RESET ) begin
 	if (RESET) begin
 		SYNCFLG = 0;
 	end
