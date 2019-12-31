@@ -1,4 +1,4 @@
-Aviable Arcade Cores  124
+Aviable Arcade Cores  125
 
 #Atari 6502 Black & White Raster Hardware
 	Canyon Bomber
@@ -70,6 +70,7 @@ Aviable Arcade Cores  124
 
 #Irem M52 Hardware
 	Moon Patrol
+	Shot Rider
 	Traverse USA
 
 #Ladybug Hardware

@@ -50,28 +50,16 @@ module TraverseUSA_MiST(
 
 `include "rtl/build_id.v" 
 
-//`define CORE_NAME "SHTRIDER"
-`define CORE_NAME "TRAVRUSA"
+`define CORE_NAME "SHTRIDER"
+//`define CORE_NAME "TRAVRUSA"
 
-reg shtrider;
-//TravUSA: Coinage_B(7-4) / Cont. play(3) / Fuel consumption(2) / Fuel lost when collision (1-0)
+reg shtrider = 0;
 wire [7:0] dip1 = 8'hff;
-reg  [7:0] dip2;
+reg  [7:0] dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
 
-always @(*) begin
-	if (`CORE_NAME == "SHTRIDER") begin
-		shtrider = 1;
-		// Cocktail(3) / M-Km(1) / Flip(0)
-		dip2 = { 4'b1111, 2'b11, status[5], 1'b0 };
-	end else begin
-		shtrider = 0;
-		// Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
-		dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
-	end
-end
 
 localparam CONF_STR = {
-	`CORE_NAME,";;",
+	"TROPANG;rom;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"OA,Blending,Off,On;",
