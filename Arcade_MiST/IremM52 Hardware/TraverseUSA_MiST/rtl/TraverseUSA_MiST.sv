@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: TraverseUSA
+//  Arcade: TraverseUSA, ShotRider
 //
 //  DarFPGA's core ported to MiST by (C) 2019 Szombathelyi György
 //
@@ -50,8 +50,28 @@ module TraverseUSA_MiST(
 
 `include "rtl/build_id.v" 
 
+//`define CORE_NAME "SHTRIDER"
+`define CORE_NAME "TRAVRUSA"
+
+reg shtrider;
+//TravUSA: Coinage_B(7-4) / Cont. play(3) / Fuel consumption(2) / Fuel lost when collision (1-0)
+wire [7:0] dip1 = 8'hff;
+reg  [7:0] dip2;
+
+always @(*) begin
+	if (`CORE_NAME == "SHTRIDER") begin
+		shtrider = 1;
+		// Cocktail(3) / M-Km(1) / Flip(0)
+		dip2 = { 4'b1111, 2'b11, status[5], 1'b0 };
+	end else begin
+		shtrider = 0;
+		// Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
+		dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
+	end
+end
+
 localparam CONF_STR = {
-	"TRAVERSE;;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"OA,Blending,Off,On;",
@@ -60,13 +80,14 @@ localparam CONF_STR = {
 	"O7,Game name,Traverse USA,Zippyrace;",
 	"O8,Demo mode,Off,On;",
 	"O9,Test mode,Off,On;",
-	"T1,Reset;",
+	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 assign SDRAM_CLK = clk_sys;
+assign SDRAM_CKE = 1;
 
 wire clk_sys, clk_aud;
 wire pll_locked;
@@ -95,12 +116,24 @@ wire  [1:0] r;
 wire [14:0] cart_addr;
 wire [15:0] sdram_do;
 wire        cart_rd;
+wire [12:0] snd_addr;
+wire [15:0] snd_do;
+
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
+/* ROM structure
+00000-07FFF CPU ROM  32k zr1-0.m3 zr1-5.l3 zr1-6a.k3 zr1-7.j3
+08000-09FFF SND ROM   8k mr10.1a mr10.1a
+0A000-0FFFF GFX1     24k zippyrac.001 mr8.3c mr9.3a
+10000-15FFF GFX2     24k zr1-8.n3 zr1-9.l3 zr1-10.k3
+16000-161FF CHR PAL 512b mmi6349.ij
+16200-162FF SPR PAL 256b tbp24s10.3
+16300-1631F SPR LUT  32b tbp18s.2
+*/
 data_io data_io (
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
@@ -112,20 +145,49 @@ data_io data_io (
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
-sdram cart
-(
+
+reg port1_req, port2_req;
+sdram sdram(
 	.*,
-	.init          ( ~pll_locked  ),
+	.init_n        ( pll_locked   ),
 	.clk           ( clk_sys      ),
-	.wtbt          ( 2'b00        ),
-	.dout          ( sdram_do     ),
-	.din           ( {ioctl_dout, ioctl_dout} ),
-	.addr          ( ioctl_downl ? ioctl_addr : cart_addr ),
-	.we            ( ioctl_downl & ioctl_wr ),
-	.rd            ( !ioctl_downl & cart_rd ),
-	.ready()
+
+	// port1 used for main CPU
+	.port1_req     ( port1_req    ),
+	.port1_ack     ( ),
+	.port1_a       ( ioctl_addr[23:1] ),
+	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port1_we      ( ioctl_downl ),
+	.port1_d       ( {ioctl_dout, ioctl_dout} ),
+	.port1_q       ( ),
+
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : {1'b0, cart_addr[14:1]} ),
+	.cpu1_q        ( sdram_do ),
+ 
+	// port2 for sound board
+	.port2_req     ( port2_req ),
+	.port2_ack     ( ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h4000 ),
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
+	.port2_we      ( ioctl_downl ),
+	.port2_d       ( {ioctl_dout, ioctl_dout} ),
+	.port2_q       ( ),
+
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {3'b000, snd_addr[12:1]} ),
+	.snd_q         ( snd_do )
 );
+
+always @(posedge clk_sys) begin
+	reg        ioctl_wr_last = 0;
+
+	ioctl_wr_last <= ioctl_wr;
+	if (ioctl_downl) begin
+		if (~ioctl_wr_last && ioctl_wr) begin
+			port1_req <= ~port1_req;
+			port2_req <= ~port2_req;
+		end
+	end
+end
 
 reg reset = 1;
 reg rom_loaded = 0;
@@ -134,33 +196,27 @@ always @(posedge clk_sys) begin
 	ioctl_downlD <= ioctl_downl;
 
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | status[1] | buttons[1] | ~rom_loaded;
+	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-//Coinage_B(7-4) / Cont. play(3) / Fuel consumption(2) / Fuel lost when collision (1-0)
-wire [7:0] dip1 = 8'hff;
-//Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
-wire [7:0] dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
 
 // Traverse_usa
 traverse_usa traverse_usa (
 	.clock_36     ( clk_sys         ),
 	.clock_0p895  ( clk_aud         ),
-	.reset        ( reset 				),
+	.reset        ( reset 				  ),
 
+	.shtrider     ( shtrider        ),
+	
 	.video_r      ( r               ),
 	.video_g      ( g               ),
 	.video_b      ( b               ),
-    .video_hs     ( hs              ),
+	.video_hs     ( hs              ),
 	.video_vs     ( vs              ),
 	.video_blankn ( blankn          ),
 
 	.audio_out    ( audio           ),
-	
-	.cpu_rom_addr ( cart_addr       ),
-	.cpu_rom_do   ( sdram_do[7:0]   ),
-	.cpu_rom_rd   ( cart_rd         ),
-	
+
 	.dip_switch_1 ( dip1            ),  
 	.dip_switch_2 ( dip2            ),
 
@@ -176,7 +232,16 @@ traverse_usa traverse_usa (
 	.right2       ( m_right         ),
 	.left2        ( m_left          ),
 	.brake2       ( m_down          ),
-	.accel2       ( m_up            )
+	.accel2       ( m_up            ),
+
+	.cpu_rom_addr ( cart_addr       ),
+	.cpu_rom_do   ( cart_addr[0] ? sdram_do[15:8] : sdram_do[7:0] ),
+	.cpu_rom_rd   ( cart_rd         ),
+	.snd_rom_addr ( snd_addr        ),
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.dl_addr      ( ioctl_addr[16:0]),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr        )
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
@@ -227,7 +292,7 @@ dac #(
 	.C_bits(11))
 dac(
 	.clk_i(clk_aud),
-	.res_n_i(1),
+	.res_n_i(~reset),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
