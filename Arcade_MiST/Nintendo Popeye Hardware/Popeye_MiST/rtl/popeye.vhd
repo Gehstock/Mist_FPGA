@@ -343,8 +343,8 @@ begin
 				if hcnt >= 2+16 and  hcnt < 514+16-1 and
 					vcnt >= 16   and  vcnt < 240 then video_blankn <= '1';end if;
 				
-				if    hs_cnt =  0 then hsync0 <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1';
+				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
