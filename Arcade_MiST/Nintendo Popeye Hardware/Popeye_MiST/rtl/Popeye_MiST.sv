@@ -50,7 +50,7 @@ wire sys_clk, sdram_clk;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
-	.c0(sdram_clk),//48
+	.c0(sdram_clk),//80
 	.c1(sys_clk),//40
 	.locked(pll_locked)
 	);

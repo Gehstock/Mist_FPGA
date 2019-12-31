@@ -36,6 +36,7 @@ localparam CONF_STR = {
 	"O2,Service,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"O6,Joystick Swap,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -58,8 +59,8 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire  [7:0] joy_0;
+wire  [7:0] joy_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio;
@@ -221,8 +222,8 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
+	.joystick_0     (joy_0          ),
+	.joystick_1     (joy_1          ),
 	.status         (status         )
 	);
 
@@ -234,6 +235,9 @@ dac_l(
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
+
+wire [7:0] joystick_0 = status[6] ? joy_1 : joy_0;
+wire [7:0] joystick_1 = status[6] ? joy_0 : joy_1;
 
 wire m_down1   = btn_down | joystick_0[2];
 wire m_left1   = btn_left | joystick_0[1];
