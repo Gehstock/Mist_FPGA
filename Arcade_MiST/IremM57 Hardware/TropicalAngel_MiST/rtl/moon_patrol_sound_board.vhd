@@ -31,10 +31,8 @@ port(
 
  select_sound : in std_logic_vector(7 downto 0);
  audio_out    : out std_logic_vector(11 downto 0);
-
- rom_addr     : out std_logic_vector(12 downto 0);
- rom_do       : in  std_logic_vector( 7 downto 0);
-
+ snd_rom_addr: out std_logic_vector(12 downto 0);
+ snd_rom_do  : in  std_logic_vector(7 downto 0);
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
 end moon_patrol_sound_board;
@@ -86,7 +84,7 @@ architecture struct of moon_patrol_sound_board is
  signal wram_do   : std_logic_vector( 7 downto 0);
  
  signal rom_cs    : std_logic;
--- signal rom_do    : std_logic_vector( 7 downto 0);
+ signal rom_do    : std_logic_vector( 7 downto 0);
 
  signal ay1_chan_a    : std_logic_vector(7 downto 0);
  signal ay1_chan_b    : std_logic_vector(7 downto 0);
@@ -164,7 +162,7 @@ wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
 ports_cs  <= '1' when cpu_addr(15 downto  4) = X"000"    else '0'; -- 0000-000F
 adpcm_cs  <= '1' when cpu_addr(14 downto 11) = "0001"    else '0'; -- 0800-0FFF / 8800-8FFF
 irqraz_cs <= '1' when cpu_addr(14 downto 12) = "001"     else '0'; -- 1000-1FFF / 9000-9FFF
-rom_cs    <= '1' when cpu_addr(14 downto 13) = "11"      else '0'; -- 6000-7FFF / E000-FFFF
+rom_cs    <= '1' when cpu_addr(14 downto 12) = "111"     else '0'; -- 7000-7FFF / F000-FFFF
 	
 -- write enables
 wram_we <=   '1' when cpu_rw = '0' and wram_cs =   '1' else '0';
@@ -179,7 +177,7 @@ cpu_di <=
 	port2_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"1" else
 	port1_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"2" else
 	port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
-	rom_do when rom_cs = '1' else X"55";
+	snd_rom_do when rom_cs = '1' else X"55";
 
 process (clock_E)
 begin
@@ -351,10 +349,12 @@ port map(
 --cpu_prog_rom : entity work.travusa_sound
 --port map(
 -- clk  => clock_E,
--- addr => cpu_addr(11 downto 0),
+-- addr => cpu_addr(12 downto 0),
 -- data => rom_do
 --);
-rom_addr <= cpu_addr(12 downto 0);
+ 
+ 
+snd_rom_addr <= cpu_addr(12 downto 0);
 
 -- cpu wram
 cpu_ram : entity work.gen_ram

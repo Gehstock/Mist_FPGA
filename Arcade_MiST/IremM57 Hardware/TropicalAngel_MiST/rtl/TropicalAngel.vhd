@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Traverse USA by Dar (darfpga@aol.fr) (16/03/2019)
+-- Tropical Angel by Dar (darfpga@aol.fr) (16/03/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -107,13 +107,11 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity traverse_usa is
+entity TropicalAngel is
 port(
  clock_36     : in std_logic;
  clock_0p895  : in std_logic;
  reset        : in std_logic;
-
- shtrider       : in std_logic; -- Shot Rider mode
 -- tv15Khz_mode : in std_logic;
  video_r        : out std_logic_vector(1 downto 0);
  video_g        : out std_logic_vector(2 downto 0);
@@ -125,8 +123,15 @@ port(
  video_vs       : out std_logic;
  audio_out      : out std_logic_vector(10 downto 0);
 
- dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B(7-4) / Cont. play(3) / Fuel consumption(2) / Fuel lost when collision (1-0)
- dip_switch_2   : in std_logic_vector(7 downto 0); -- Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
+ cpu_rom_addr   : out std_logic_vector(14 downto 0);
+ cpu_rom_do     : in  std_logic_vector( 7 downto 0);
+ snd_rom_addr: out std_logic_vector(12 downto 0);
+ snd_rom_do  : in  std_logic_vector(7 downto 0);
+ sp_addr        : out std_logic_vector(14 downto 0);
+ sp_graphx32_do : in std_logic_vector(31 downto 0);
+
+ dip_switch_1   : in std_logic_vector(7 downto 0);
+ dip_switch_2   : in std_logic_vector(7 downto 0);
   
  start2         : in std_logic;
  start1         : in std_logic;
@@ -141,22 +146,13 @@ port(
  left2          : in std_logic; 
  accel2         : in std_logic;
  brake2         : in std_logic;
+ service         : in std_logic;
  
- cpu_rom_addr   : out std_logic_vector(14 downto 0);
- cpu_rom_do     : in  std_logic_vector( 7 downto 0);
- cpu_rom_rd     : out std_logic;
- snd_rom_addr   : out std_logic_vector(12 downto 0);
- snd_rom_do     : in  std_logic_vector( 7 downto 0);
- 
- dl_addr        : in  std_logic_vector(16 downto 0);
- dl_data        : in  std_logic_vector( 7 downto 0);
- dl_wr          : in  std_logic;
-
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
-end traverse_usa;
+end TropicalAngel;
 
-architecture struct of traverse_usa is
+architecture struct of TropicalAngel is
 
  signal reset_n: std_logic;
  signal clock_36n : std_logic;
@@ -196,11 +192,10 @@ architecture struct of traverse_usa is
  signal wram_we    : std_logic;
  signal wram_do    : std_logic_vector( 7 downto 0);
 
- signal vflip    : std_logic;
  signal flip     : std_logic;
  signal flip_int : std_logic;
  
- signal chrram_addr: std_logic_vector(10 downto 0);
+ signal chrram_addr: std_logic_vector(11 downto 0);
  signal chrram_we  : std_logic;
  signal chrram_do  : std_logic_vector(7 downto 0);
  signal chrram_do_to_cpu : std_logic_vector( 7 downto 0);
@@ -218,8 +213,9 @@ architecture struct of traverse_usa is
  signal chr_graphx3_do   : std_logic_vector(7 downto 0);
  signal chr_color        : std_logic_vector(3 downto 0);
  signal chr_palette_addr : std_logic_vector(7 downto 0);
- signal chr_palette_1_do : std_logic_vector(7 downto 0); 
- signal chr_palette_2_do : std_logic_vector(7 downto 0); 
+ signal chr_palette_do   : std_logic_vector(7 downto 0); 
+ signal chr_palette1_do   : std_logic_vector(7 downto 0);
+ signal chr_palette2_do   : std_logic_vector(7 downto 0);
 
  signal sprram_addr      : std_logic_vector(9 downto 0);
  signal sprram_we        : std_logic;
@@ -242,6 +238,10 @@ architecture struct of traverse_usa is
  signal spr_graphx1_do   : std_logic_vector( 7 downto 0);
  signal spr_graphx2_do   : std_logic_vector( 7 downto 0);
  signal spr_graphx3_do   : std_logic_vector( 7 downto 0);
+ signal spr_graphx4_do   : std_logic_vector(7 downto 0);
+ signal spr_graphx5_do   : std_logic_vector(7 downto 0);
+ signal spr_graphx6_do   : std_logic_vector(7 downto 0);
+ signal sp_graphx32_do_r: std_logic_vector(31 downto 0);
  signal spr_palette_addr : std_logic_vector( 7 downto 0);
  signal spr_palette_do   : std_logic_vector( 7 downto 0);
  signal spr_pixels       : std_logic_vector( 4 downto 0);
@@ -273,28 +273,13 @@ architecture struct of traverse_usa is
  signal input_1       : std_logic_vector(7 downto 0);
  signal input_2       : std_logic_vector(7 downto 0);
 
- signal char_graphics_1_we   : std_logic;
- signal char_graphics_2_we   : std_logic;
- signal char_graphics_3_we   : std_logic;
- signal sprite_graphics_1_we : std_logic;
- signal sprite_graphics_2_we : std_logic;
- signal sprite_graphics_3_we : std_logic;
- signal chr_palette_1_we     : std_logic;
- signal chr_palette_2_we     : std_logic;
- signal spr_palette_we       : std_logic;
- signal spr_lut_we           : std_logic;
- 
- signal scroll_we           : std_logic;
- signal scroll_addr       : std_logic_vector(8 downto 0);
- signal scroll_do       : std_logic_vector(7 downto 0);
-
 begin
 
 clock_36n <= not clock_36;
 reset_n   <= not reset;
 
 -- debug 
-process (reset, clock_36, cpu_ena, cpu_mreq_n)
+process (reset, clock_36)
 begin
  if rising_edge(clock_36) and cpu_ena ='1' and cpu_mreq_n ='0' then
    dbg_cpu_addr <= cpu_addr;
@@ -326,7 +311,7 @@ cpu_ena <= '1' when clock_cnt = "1011" else '0'; -- (3MHz)
 --  hcnt [x080..x0FF-x100..x1FF] => 128+256 = 384 pixels,  384/6.144Mhz => 1 line is 62.5us (16.000KHz)
 --  vcnt [x0E6..x0FF-x100..x1FF] =>  26+256 = 282 lines, 1 frame is 260 x 62.5us = 17.625ms (56.74Hz)
 
-process (reset, clock_36, pix_ena)
+process (reset, clock_36)
 begin
 	if reset='1' then
 		hcnt  <= (others=>'0');
@@ -347,13 +332,12 @@ end process;
 
 flip <= flip_int xor dip_switch_2(0);
 hcnt_flip <= '0'&hcnt(7 downto 0) when flip ='1' else '0' & not hcnt(7 downto 0);
-vflip <= flip xor shtrider;
-vcnt_flip <= vcnt when vflip ='1' else not vcnt;
+vcnt_flip <= vcnt when flip ='1' else not vcnt;
 
 --------------------
 -- players inputs --
 --------------------
-input_0       <= "1111" & not coin1 & '1' & not start2 & not start1;
+input_0       <= "1111" & not coin1 & service & not start2 & not start1;
 input_1       <= not brake1 & '1' & not accel1 & "111" & not left1 & not right1; 
 input_2       <= not brake2 & '1' & not accel2 & "111" & not left2 & not right2;
 
@@ -382,13 +366,13 @@ begin
 		if cpu_m1_n = '0' and cpu_ioreq_n = '0' then
 			cpu_irq_n <= '1';
 		else	-- lauch irq and end of frame
-			if ((vcnt = 230 and vflip = '0') or (vcnt = 448 and vflip = '1')) and (hcnt = '0'&X"80")  then
+			if ((vcnt = 230 and flip = '0') or (vcnt = 448 and flip = '1')) and (hcnt = '0'&X"80")  then
 				cpu_irq_n <= '0';
 			end if;
 		end if;
 
-		if cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"9" then scroll_x(7 downto 0) <= cpu_do;    end if;
-		if cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"A" then scroll_x(8)          <= cpu_do(0); end if;
+		if cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"9" then scroll_x(7 downto 0) <= cpu_do;    end if;--scrollram
+--		if cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"A" then scroll_x(8)          <= cpu_do(0); end if;
 
 		if cpu_wr_n = '0' and cpu_addr(15 downto 0) = X"D000" then sound_cmd <= cpu_do;    end if;
 		if cpu_wr_n = '0' and cpu_addr(15 downto 0) = X"D001" then flip_int  <= cpu_do(0); end if;
@@ -400,7 +384,7 @@ end process;
 -- write enable to working ram from CPU --
 ------------------------------------------
 wram_we   <= '1' when cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"E" else '0';
-
+--sram_we   <= '1' when cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"9" else '0';
 ----------------------
 --- sprite machine ---
 ----------------------
@@ -434,13 +418,14 @@ end process;
 -- from x080 to x0FF and from x1C0 to x1FF when not flipped (scrolling zone from x100 to x1BF)
 -- within scrolling zone sprite data ram is accessed by sprite data scanner (spr_hcnt)
 
-cpu_has_spr_ram <= '1' when ( vcnt < '1'&x"3F" and vflip = '0') or 
-									 ((vcnt > '1'&x"C0" or vcnt < '0'&x"FF") and vflip = '1') else '0';
+cpu_has_spr_ram <= '1' when ( vcnt < '1'&x"3F" and flip = '0') or 
+									 ((vcnt > '1'&x"C0" or vcnt < '0'&x"FF") and flip = '1') else '0';
 
 sprram_we <= '1' when cpu_wr_n = '0' and cpu_addr(15 downto 11) = X"C"&"1" and cpu_has_spr_ram = '1' else '0';
 
 sprram_addr <= '0' & spr_hcnt(10 downto 4) & spr_hcnt(2 downto 1) when  cpu_has_spr_ram = '0' else
 					cpu_addr(9 downto 0);
+
 
 -- latch current sprite data with respect to pixel and hcnt in relation with sprite data ram addressing  
 process (clock_36)
@@ -465,8 +450,7 @@ end process;
 spr_vcnt <= vcnt_flip(7 downto 0) + spr_posv_r - 1 ;
 spr_on_line <= '1' when spr_vcnt(7 downto 4) = x"F" and cpu_has_spr_ram = '0' else '0';
 spr_line_cnt <= spr_vcnt(4 downto 0) xor (spr_attr_r(7) & spr_attr_r(7) & spr_attr_r(7) & spr_attr_r(7) & spr_attr_r(7));
-spr_code_line <= spr_code_r & (spr_attr_r(6) xor not spr_hcnt(3)) & spr_line_cnt(3 downto 0) when shtrider = '0' else
-                 spr_code_r & spr_line_cnt(3) & (spr_attr_r(6) xor not spr_hcnt(3)) & spr_line_cnt(2 downto 0);
+spr_code_line <= spr_code_r & (spr_attr_r(6) xor not spr_hcnt(3)) & spr_line_cnt(3 downto 0);
 
 -- get and serialise sprite graphics data and w.r.t enable (attr(5)) and h_flip (attr(6))
 -- and compute palette address from graphics bits and color set#
@@ -582,9 +566,9 @@ hcnt_scrolled_flip <= hcnt_scrolled(2 downto 0) when flip = '1' else not (hcnt_s
 -- address char code at pixel # 4
 -- give access to CPU for all other pixels
 with hcnt_scrolled_flip(2 downto 0) select
-chrram_addr <= vcnt_flip(6 downto 3) & hcnt_scrolled(8 downto 3) & '1' when "000",
-					vcnt_flip(6 downto 3) & hcnt_scrolled(8 downto 3) & '0' when "100",
-					cpu_addr(10 downto 0) when others;
+chrram_addr <= vcnt_flip(7 downto 3) & hcnt_scrolled(8 downto 3) & '1' when "000",
+					vcnt_flip(7 downto 3) & hcnt_scrolled(8 downto 3) & '0' when "100",
+					cpu_addr(11 downto 0) when others;
 		
 -- write enable to char tile ram from CPU
 chrram_we <= '1' when cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"8" and hcnt_scrolled_flip(1 downto 0) /= "00" else '0';
@@ -618,6 +602,7 @@ begin
 		if pix_ena = '1' then
 			chr_palette_addr(6 downto 3) <= chr_color;
 			chr_palette_addr(7) <= '0';
+--			chr_palette_addr(8) <= '0';
 			if chr_flip_h = '0' then
 				chr_palette_addr(0) <= chr_graphx1_do(to_integer(unsigned(not(hcnt_scrolled(2 downto 0)))));
 				chr_palette_addr(1) <= chr_graphx2_do(to_integer(unsigned(not(hcnt_scrolled(2 downto 0)))));
@@ -647,17 +632,13 @@ begin
 				video_r <= spr_rgb_lut_do(7 downto 6);
 				video_g <= spr_rgb_lut_do(5 downto 3);
 				video_b <= spr_rgb_lut_do(2 downto 0);
-			elsif shtrider = '0' then -- 1x8 bit in Traverse USA
-				video_r <= chr_palette_1_do(7 downto 6);
-				video_g <= chr_palette_1_do(5 downto 3);
-				video_b <= chr_palette_1_do(2 downto 0);
-			else -- 2x4 bit in Shot Rider
-				video_r <= chr_palette_1_do(3 downto 2);
-				video_g <= chr_palette_1_do(1 downto 0) & chr_palette_2_do(3);
-				video_b <= chr_palette_2_do(2 downto 0);
+			else
+				video_r <= chr_palette_do(7 downto 6);
+				video_g <= chr_palette_do(5 downto 3);
+				video_b <= chr_palette_do(2 downto 0);
 			end if;
 		end if;
-
+		
 	end if;
 end process;	
 
@@ -666,18 +647,13 @@ end process;
 ---------------------------------------------------------
 moon_patrol_sound_board : entity work.moon_patrol_sound_board
 port map(
- clock_E      => clock_0p895,
- areset       => reset,
- 
- select_sound => sound_cmd, -- not(key(1)) & sw(6 downto 0),
- audio_out    => audio,
-
- rom_addr     => snd_rom_addr,
- rom_do       => snd_rom_do,
-
- dbg_cpu_addr => open --dbg_cpu_addr
+ clock_E      	=> clock_0p895,
+ areset       	=> reset,
+ select_sound 	=> sound_cmd,
+ snd_rom_addr 	=> snd_rom_addr,
+ snd_rom_do 	=> snd_rom_do,
+ audio_out    	=> audio
 );
-
 
 audio_out <= audio(11 downto 1);
 
@@ -687,7 +663,7 @@ audio_out <= audio(11 downto 1);
 
 video_csync <= csync;
 
-process(clock_36, pix_ena)
+process(clock_36)
 	constant hcnt_base : integer := 180;
 	variable hsync_cnt : std_logic_vector(8 downto 0);
 	variable vsync_cnt : std_logic_vector(3 downto 0);
@@ -764,12 +740,12 @@ end process;
 ------------------------------
 
 -- microprocessor Z80
-cpu : entity work.T80s
+cpu : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK     => clock_36,
-  CEN     => cpu_ena,
+  CLK_n   => not clock_36,
+  CLKEN   => cpu_ena,
   WAIT_n  => '1',
   INT_n   => cpu_irq_n,
   NMI_n   => '1', --cpu_nmi_n,
@@ -787,50 +763,31 @@ port map(
   DO      => cpu_do
 );
 
--- cpu program ROM 0x0000-0x7FFF
---rom_cpu : entity work.travusa_cpu
---port map(
--- clk  => clock_36n,
--- addr => cpu_addr(14 downto 0),
--- data => cpu_rom_do
---);
 cpu_rom_addr <= cpu_addr(14 downto 0);
-cpu_rom_rd   <= '1' when cpu_mreq_n = '0' and cpu_addr(15) = '0';
 
--- working RAM   0xE000-0xEFFF
+-- working RAM   0xE000-0xE7FF
 wram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 12)
+generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_36n,
  we   => wram_we,
- addr => cpu_addr(11 downto 0),
+ addr => cpu_addr(10 downto 0),
  d    => cpu_do,
  q    => wram_do
 );
 
--- char RAM   0x8000-0x91FF
-scrollram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 9)
-port map(
- clk  => clock_36n,
- we   => scroll_we,
- addr => scroll_addr,
- d    => cpu_do,
- q    => scroll_do
-);
-
--- scoll RAM   0x9000-0x87FF
+-- char RAM   0x8000-0x87FF
 chrram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_36n,
  we   => chrram_we,
- addr => chrram_addr,
+ addr => chrram_addr(10 downto 0),
  d    => cpu_do,
  q    => chrram_do
 );
 
--- sprite RAM  0xC800-0xCBFF
+-- sprite RAM  0xC820-0xC8FF
 sprite_ram : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 10)
 port map(
@@ -864,143 +821,106 @@ port map(
 );
 
 -- char graphics ROM 3E
-char_graphics_1 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+char_graphics_1 : entity work.tropical_chr_bit1
 port map(
- clk_a  => clock_36n,
- addr_a => chr_code_line,
- q_a    => chr_graphx1_do,
- clk_b  => clock_36,
- we_b   => char_graphics_1_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => chr_code_line,
+ data => chr_graphx1_do
 );
-char_graphics_1_we <= '1' when dl_addr(16 downto 13) = "0101" and dl_wr = '1' else '0'; -- 0A000-0BFFF
 
--- char graphics ROM 3E
-char_graphics_2 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+-- char graphics ROM 3D
+char_graphics_2 : entity work.tropical_chr_bit2
 port map(
- clk_a  => clock_36n,
- addr_a => chr_code_line,
- q_a    => chr_graphx2_do,
- clk_b  => clock_36,
- we_b   => char_graphics_2_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => chr_code_line,
+ data => chr_graphx2_do
 );
-char_graphics_2_we <= '1' when dl_addr(16 downto 13) = "0110" and dl_wr = '1' else '0'; -- 0C000-0DFFF
 
--- char graphics ROM 3E
-char_graphics_3 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+-- char graphics ROM 3C
+char_graphics_3 : entity work.tropical_chr_bit3
 port map(
- clk_a  => clock_36n,
- addr_a => chr_code_line,
- q_a    => chr_graphx3_do,
- clk_b  => clock_36,
- we_b   => char_graphics_3_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => chr_code_line,
+ data => chr_graphx3_do
 );
-char_graphics_3_we <= '1' when dl_addr(16 downto 13) = "0111" and dl_wr = '1' else '0'; -- 0E000-0FFFF
 
 --char palette ROM
-char_palette_1 : entity work.dpram
-generic map( dWidth => 8, aWidth => 8)
+char_palette_l : entity work.tropical_chr_palette_l
 port map(
- clk_a  => clock_36n,
- addr_a => chr_palette_addr,
- q_a    => chr_palette_1_do,
- clk_b  => clock_36,
- we_b   => chr_palette_1_we,
- addr_b => dl_addr(7 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => chr_palette_addr,
+ data => chr_palette1_do
 );
-chr_palette_1_we <= '1' when dl_addr(16 downto 8) = "101100000" and dl_wr = '1' else '0'; -- 16000-160FF
 
-char_palette_2 : entity work.dpram
-generic map( dWidth => 8, aWidth => 8)
+char_palette_h : entity work.tropical_chr_palette_h
 port map(
- clk_a  => clock_36n,
- addr_a => chr_palette_addr,
- q_a    => chr_palette_2_do,
- clk_b  => clock_36,
- we_b   => chr_palette_2_we,
- addr_b => dl_addr(7 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => chr_palette_addr,
+ data => chr_palette2_do
 );
-chr_palette_2_we <= '1' when dl_addr(16 downto 8) = "101100001" and dl_wr = '1' else '0'; -- 16100-161FF
-
+chr_palette_do <= chr_palette2_do(3 downto 0) & chr_palette1_do(3 downto 0);
 -- sprite graphics ROM 3N
-sprite_graphics_1 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+sprite_graphics_1 : entity work.tropical_spr_bit1
 port map(
- clk_a  => clock_36n,
- addr_a => spr_code_line,
- q_a    => spr_graphx1_do,
- clk_b  => clock_36,
- we_b   => sprite_graphics_1_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx1_do
 );
-sprite_graphics_1_we <= '1' when dl_addr(16 downto 13) = "1000" and dl_wr = '1' else '0'; -- 10000-11FFF
 
 -- sprite graphics ROM 3L or 3M
-sprite_graphics_2 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+sprite_graphics_2 : entity work.tropical_spr_bit2
 port map(
- clk_a  => clock_36n,
- addr_a => spr_code_line,
- q_a    => spr_graphx2_do,
- clk_b  => clock_36,
- we_b   => sprite_graphics_2_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx2_do
 );
-sprite_graphics_2_we <= '1' when dl_addr(16 downto 13) = "1001" and dl_wr = '1' else '0'; -- 12000-13FFF
 
 -- sprite graphics ROM 3K
-sprite_graphics_3 : entity work.dpram
-generic map( dWidth => 8, aWidth => 13)
+sprite_graphics_3 : entity work.tropical_spr_bit3
 port map(
- clk_a  => clock_36n,
- addr_a => spr_code_line,
- q_a    => spr_graphx3_do,
- clk_b  => clock_36,
- we_b   => sprite_graphics_3_we,
- addr_b => dl_addr(12 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx3_do
 );
-sprite_graphics_3_we <= '1' when dl_addr(16 downto 13) = "1010" and dl_wr = '1' else '0'; -- 14000-15FFF
+
+-- sprite graphics ROM 3N
+sprite_graphics_4 : entity work.tropical_spr_bit4
+port map(
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx4_do
+);
+
+-- sprite graphics ROM 3L or 3M
+sprite_graphics_5 : entity work.tropical_spr_bit5
+port map(
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx5_do
+);
+
+-- sprite graphics ROM 3K
+sprite_graphics_6 : entity work.tropical_spr_bit6
+port map(
+ clk  => clock_36n,
+ addr => spr_code_line,
+ data => spr_graphx6_do
+);
 
 -- sprite palette ROM 2H
-spr_palette : entity work.dpram
-generic map( dWidth => 8, aWidth => 8)
+spr_palette: entity work.tropical_spr_palette
 port map(
- clk_a  => clock_36n,
- addr_a => spr_palette_addr,
- q_a    => spr_palette_do,
- clk_b  => clock_36,
- we_b   => spr_palette_we,
- addr_b => dl_addr(7 downto 0),
- d_b    => dl_data
+ clk  => clock_36n,
+ addr => spr_palette_addr,
+ data => spr_palette_do
 );
-spr_palette_we <= '1' when dl_addr(16 downto 8) = "101100010" and dl_wr = '1' else '0'; -- 16200-162FF
 
 -- sprite rgb lut ROM 1F
-spr_rgb_lut : entity work.dpram
-generic map( dWidth => 8, aWidth => 8)
+spr_rgb_lut: entity work.tropical_spr_rgb_lut
 port map(
- clk_a  => clock_36n,
- addr_a => "000"&spr_rgb_lut_addr, -- extended to 8 bit, prevents segfault of Quartus
- q_a    => spr_rgb_lut_do,
- clk_b  => clock_36,
- we_b   => spr_lut_we,
- addr_b => "000"&dl_addr(4 downto 0),
- d_b    => dl_data,
- q_b    => open
+ clk  => clock_36n,
+ addr => spr_rgb_lut_addr,
+ data => spr_rgb_lut_do
 );
-spr_lut_we <= '1' when dl_addr(16 downto 5) = "101100011000" and dl_wr = '1' else '0'; -- 16300-1631F
 
 end struct;
