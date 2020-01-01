@@ -120,6 +120,7 @@ architecture struct of popeye is
  signal cpu_di      : std_logic_vector( 7 downto 0);
  signal cpu_do      : std_logic_vector( 7 downto 0);
  signal cpu_wr_n    : std_logic;
+ signal cpu_wr_n_r  : std_logic;
  signal cpu_rd_n    : std_logic;
  signal cpu_mreq_n  : std_logic;
  signal cpu_ioreq_n : std_logic;
@@ -234,6 +235,12 @@ architecture struct of popeye is
  
  signal ay_iob_do : std_logic_vector(7 downto 0);
  signal ay_ioa_di : std_logic_vector(7 downto 0);
+ 
+ signal protection_data0 : std_logic_vector(7 downto 0);
+ signal protection_data1 : std_logic_vector(7 downto 0);
+ signal protection_do    : std_logic_vector(7 downto 0);
+ signal protection_shift : std_logic_vector(2 downto 0);
+
 
 begin
 
@@ -415,8 +422,19 @@ cpu_rom_do_swp <=
 	cpu_rom_do(3) & cpu_rom_do(4) & cpu_rom_do(2) & cpu_rom_do(5) &
 	cpu_rom_do(1) & cpu_rom_do(6) & cpu_rom_do(0) & cpu_rom_do(7);
 	
+protection_do <=
+	(protection_data1(7 downto 0)      ) or ( "00000000"                               )  when protection_shift = "000" else
+	(protection_data1(6 downto 0) & '0' ) or ( "0000000" & protection_data0(7 downto 7))  when protection_shift = "001" else
+	(protection_data1(5 downto 0) & "00" ) or ( "000000" & protection_data0(7 downto 6))  when protection_shift = "010" else
+	(protection_data1(4 downto 0) & "000" ) or ( "00000" & protection_data0(7 downto 5))  when protection_shift = "011" else
+	(protection_data1(3 downto 0) & "0000" ) or ( "0000" & protection_data0(7 downto 4))  when protection_shift = "100" else
+	(protection_data1(2 downto 0) & "00000" ) or ( "000" & protection_data0(7 downto 3))  when protection_shift = "101" else
+	(protection_data1(1 downto 0) & "000000" ) or ( "00" & protection_data0(7 downto 2))  when protection_shift = "110" else
+	(protection_data1(0 downto 0) & "0000000" ) or ( '0' & protection_data0(7 downto 1)); --   protection_shift = "111"
+
 cpu_di <= cpu_rom_do_swp	 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- program rom 0000-7FFF 32Ko
 			 wram_do_r   		 when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"8000" else -- work    ram 8000-87FF  2Ko + mirroring 1800
+			 protection_do     when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E000" else -- protection E000
    		 input_0           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "00") else
    		 input_1           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "01") else
    		 input_2           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "10") else
@@ -487,7 +505,7 @@ end process;
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
-
+		cpu_wr_n_r <= cpu_wr_n;
 		if cpu_mreq_n = '0' and cpu_wr_n = '0' then 
 			if (cpu_addr = x"8C00") then hoffset <= cpu_do; end if;
 			if (cpu_addr = x"8C01") then voffset <= cpu_do; end if;
@@ -497,9 +515,14 @@ begin
 				bg_palette_addr(4) <= cpu_do(3);
 			end if;			
 		end if;
-		
+			if (cpu_addr = x"E000") then protection_shift <= cpu_do(2 downto 0); end if;
+			if (cpu_addr = x"E001") and cpu_wr_n_r = '1' then
+				protection_data0 <= protection_data1;
+				protection_data1 <= cpu_do;
+			end if;		
 	end if;
 end process;
+
 
 cpu_nmi_n <= video_vs;
 

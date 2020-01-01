@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------
+-- 
+-- Arcade: Spy Hunter port to MiST by Gehstock
+-- 16 November 2019
+-- 
+
+SHUNTER.ROM is required at the root of the SD-Card.
+
+Controls
+Joy	Keyboard
+up	up		: Accelerate
+down	down 		: Decelerate
+left	left 		: Left
+right	right		: Right
+	ESC		: Coin
+start	TAB		: VAN
+Y	Z		: Shift
+X	shift left	: Oil
+C	ctrl left	: Smoke
+B	alt left	: Missle
+A	Space		: Gun
+
+
+---------------------------------------------------------------------------------
 -- DE10_lite Top level for Spy hunter (Midway MCR) by Dar (darfpga@aol.fr) (06/12/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
