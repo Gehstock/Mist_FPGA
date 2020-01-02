@@ -50,10 +50,11 @@ module TropicalAngel_MiST(
 
 `include "rtl/build_id.v" 
 
-localparam CONF_STR = {
+localparam CONF_STR = {      
 	"TROPANG;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"OA,Blending,Off,On;",
 	"O5,Analog Accelarator,Off,On;",
 	"O6,Stop Mode,Off,On;",
 	"O7,Invulnerability,Off,On;",
@@ -63,7 +64,7 @@ localparam CONF_STR = {
 };
 
 assign LED = ~ioctl_downl;
-assign SDRAM_CLK = clk_sd;
+assign SDRAM_CLK = clk_sd;//sound problems on sys clock
 assign SDRAM_CKE = 1; 
 
 wire clk_sys, clk_aud, clk_sd;

@@ -32,7 +32,7 @@ module Popeye_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"POPEYE;;",
+	"POPEYE;ROM;",
 //	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 //	"O7,Service,Off,On;",//Beep on REV4 ROM, not needed
