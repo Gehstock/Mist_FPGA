@@ -29,10 +29,6 @@ module vectrex_mist
 	output        SDRAM_CKE
 );
 
-assign LED = !ioctl_downl;
-assign AUDIO_R = AUDIO_L;
-assign SDRAM_CLK = clk_24;
-
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
@@ -47,16 +43,6 @@ localparam CONF_STR = {
 	"T6,Reset;",
 	"V,v1.50.",`BUILD_DATE
 };
-
-wire 			clk_24, clk_12;
-wire 			pll_locked;
-pll pll (
-	.inclk0			( CLOCK_27		),
-	.areset			( 0				),
-	.c0				( clk_24		),
-	.c1				( clk_12		),
-	.locked			( pll_locked	)
-	);
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -77,19 +63,38 @@ wire 			hb, vb;
 wire       	blankn = ~(hb | vb);
 wire 			cart_rd;
 wire [14:0] cart_addr;
-wire [15:0] cart_do;
+wire  [7:0] cart_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
-sdram cart(
+
+assign LED = !ioctl_downl;
+
+wire 			clk_24, clk_12;
+wire 			pll_locked;
+
+pll pll (
+	.inclk0			( CLOCK_27		),
+	.areset			( 0				),
+	.c0				( clk_24		),
+	.c1				( clk_12		),
+	.locked			( pll_locked	)
+	);
+
+assign SDRAM_CLK = clk_24;
+wire [15:0] sdram_do;
+assign cart_do = sdram_do[7:0];
+
+sdram cart
+(
     .*,
     .init(~pll_locked),
     .clk(clk_24),
     .wtbt(2'b00),
-    .dout(cart_do),
+    .dout(sdram_do),
     .din ({ioctl_dout, ioctl_dout}),
     .addr(ioctl_downl ? ioctl_addr : cart_addr),
     .we(ioctl_downl & ioctl_wr),
@@ -126,24 +131,24 @@ assign pot_x_2 = status[4] ? joy_ana_0[15:8] : joy_ana_1[15:8];
 assign pot_y_1 = status[4] ? ~joy_ana_1[ 7:0] : ~joy_ana_0[ 7:0];
 assign pot_y_2 = status[4] ? ~joy_ana_0[ 7:0] : ~joy_ana_1[ 7:0];
 
-vectrex vectrex(
+vectrex vectrex (
 	.clock_24		( clk_24			),  
 	.clock_12		( clk_12 		),
 	.reset			( reset 			),
-	.cpu				( status[1]         ),
+	.cpu			( status[1]         ),
 	.video_r			( rr				),
 	.video_g			( gg				),
 	.video_b			( bb				),
 	.video_csync	( cs				),
 	.video_hblank	( hb				),
 	.video_vblank	( vb				),
-	.speech_mode   ( status[5]		),
+	.speech_mode    ( status[5]		),
 	.video_hs		( hs				),
 	.video_vs		( vs				),
 	.frame			( frame_line	),
 	.audio_out		( audio			),
 	.cart_addr		( cart_addr		),
-	.cart_do			( cart_do[7:0]	),
+	.cart_do			( cart_do		),
 	.cart_rd			( cart_rd		),	
 	.btn11          ( status[4] ? joystick_1[4] : joystick_0[4]),
 	.btn12          ( status[4] ? joystick_1[5] : joystick_0[5]),
@@ -156,17 +161,18 @@ vectrex vectrex(
 	.btn23          ( status[4] ? joystick_0[6] : joystick_1[6]),
 	.btn24          ( status[4] ? joystick_0[7] : joystick_1[7]),
 	.pot_x_2        ( pot_x_2			),
-	.pot_y_2        ( pot_y_2			)
+	.pot_y_2        ( pot_y_2			),
+	.leds				(					),
+	.dbg_cpu_addr	(					)
 	);
-	
-dac #(
-	.C_bits(10))
-dac(
-	.clk_i( clk_24 ),
-	.res_n_i( 1'b1 ),
-	.dac_i( audio ),
-	.dac_o( AUDIO_L )
+
+dac dac (
+	.clk_i			( clk_24			),
+	.res_n_i		( 1				),
+	.dac_i			( audio			),
+	.dac_o			( AUDIO_L		)
 	);
+assign AUDIO_R = AUDIO_L;
 
 //////////////////   VIDEO   //////////////////
 
@@ -183,7 +189,6 @@ mist_video #(.COLOR_DEPTH(4)) mist_video
 	.SPI_DI(SPI_DI),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
-	.ce_divider(1'b1),
 	.scandoubler_disable(1),
 	.rotate(2'b00),
 	.ypbpr(ypbpr),
@@ -193,7 +198,7 @@ mist_video #(.COLOR_DEPTH(4)) mist_video
 	.G(g),
 	.B(b),
 	.VGA_HS(VGA_HS),
-	.VGA_VS(VGA_VS),
+	.VGA_VS(VGS_VS),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
 	.VGA_B(VGA_B)
