@@ -180,7 +180,7 @@ port(
  GAMBLE_IN      : in std_logic;
  GAMBLE_OUT     : in std_logic;
  SERVICE        : in std_logic;
-
+ show_lamps     : in std_logic;
  bgcolor        : in std_logic;
 
  cpu_rom_addr   : out std_logic_vector(14 downto 0);
@@ -337,6 +337,30 @@ architecture struct of kick is
  signal input_4      : std_logic_vector(7 downto 0);
  signal mram_we      : std_logic;
  signal mram_do      : std_logic_vector(7 downto 0);
+ signal output_1     : std_logic_vector(7 downto 0);
+ signal Lamp_Hold    : std_logic;
+ signal Lamp_Deal    : std_logic;
+ signal Lamp_Cancel  : std_logic;
+ signal Lamp_Stand   : std_logic;
+ 
+ type texte is array(0 to  24) of std_logic_vector(7 downto 0);
+ signal lamp_text: texte := (
+	x"44", x"4C", x"4F", x"48", x"00",                      -- HOLD
+	x"4C", x"41", x"45", x"44", x"00",                      -- DEAL
+	x"4C", x"45", x"43", x"4E", x"41", x"43", x"00",        -- CANCEL
+	x"44", x"4E", x"41", x"54", x"53", x"00",               -- STAND
+	x"00", x"00");
+	
+--	WRITE8_MEMBER(mcr_dpoker_state::lamps1_w)(
+--	// cpanel button lamps (white)
+--	m_lamps[0] = BIT(data, 0); // hold 1
+--	m_lamps[1] = BIT(data, 4); // hold 2
+--	m_lamps[2] = BIT(data, 5); // hold 3
+--	m_lamps[3] = BIT(data, 6); // hold 4
+--	m_lamps[4] = BIT(data, 7); // hold 5
+--	m_lamps[5] = BIT(data, 1); // deal
+--	m_lamps[6] = BIT(data, 2); // cancel
+--	m_lamps[7] = BIT(data, 3); // stand)
 begin
 
 clock_vid  <= clock_40;
@@ -475,86 +499,7 @@ begin
 				
 				
 				end if;
-				
---			   -- test pattern (progressive)
---
---				video_blankn <= '1';
---
---				video_r <= "0000";
---				video_g <= "0000";
---				video_b <= "0000";
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_b <= "0100"; end if;
---
---				if hcnt >= 1 and  hcnt < 511 and
---					vcnt >= 1 and  vcnt < 479 then video_r <= "0100"; end if;
---			
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 then video_g <= "0100"; end if;
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 480 and 
---					hcnt(5 downto 0) = vcnt(5 downto 0) then 
---						video_r <= "1100";
---						video_g <= "1100";
---						video_b <= "1100";
---				end if;
 
-
---			   -- test pattern (interlaced)
-
---				video_r <= "0000";
---				video_g <= "0000";
---				video_b <= "0000";
---
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 240 then video_b <= "0100"; end if;
---
---				if hcnt >= 10 and hcnt < 501 and
---					vcnt >= 10 and vcnt < 229 then video_r <= "0100"; end if;
---			
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 240 then video_g <= "0100"; end if;
---
---				if hcnt >= 0 and  hcnt < 512 and first = '0' and
---					vcnt = 120 then video_b <= "0000"; video_r <= "0100"; video_g <= "0000";end if;
---					
---				if hcnt >= 0 and  hcnt < 512 and first = '1' and
---					vcnt = 120 then video_b <= "0000"; video_r <= "0000"; video_g <= "0100";end if;
---
---				if hcnt >= 0 and  hcnt < 128 and
---					vcnt = 130 then video_b <= "0000"; video_r <= "0100"; video_g <= "0000";end if;
---				if hcnt >= 128 and  hcnt < 256 and
---					vcnt = 130 then video_b <= "0000"; video_r <= "0000"; video_g <= "0100";end if;
---				if hcnt >= 256 and  hcnt < 384 and
---					vcnt = 130 then video_b <= "0000"; video_r <= "0100"; video_g <= "0100";end if;
---
---
---				if hcnt >= 0 and  hcnt < 128 and first = '0' and 
---					vcnt = 133 then video_b <= "0000"; video_r <= "0100"; video_g <= "0000";end if;
---				if hcnt >= 128 and  hcnt < 256 and first = '1'and
---					vcnt = 133 then video_b <= "0000"; video_r <= "0000"; video_g <= "0100";end if;
---				if hcnt >= 256 and  hcnt < 384 and first = '0' and
---					vcnt = 133 then video_b <= "0000"; video_r <= "0100"; video_g <= "0100";end if;
---					
---				if hcnt >= 0 and  hcnt < 128 and first = '0' and 
---					vcnt = 135 then video_b <= "0000"; video_r <= "0100"; video_g <= "0000";end if;
---				if hcnt >= 128 and  hcnt < 256 and first = '1'and
---					vcnt = 135 then video_b <= "0000"; video_r <= "0000"; video_g <= "0100";end if;
---				if hcnt >= 256 and  hcnt < 384 and first = '0' and
---					vcnt = 135 then video_b <= "0000"; video_r <= "0100"; video_g <= "0100";end if;
-					
-					
---				if hcnt >= 0 and  hcnt < 512 and
---					vcnt >= 0 and  vcnt < 240 and 
---					hcnt(5 downto 0) = vcnt(5 downto 0) then 
---						video_r <= "1100";
---						video_g <= "1100";
---						video_b <= "1100";
---				end if;
-
-		
 			end if;
 		end if;
 	end if;
@@ -586,7 +531,7 @@ input_4 <= x"FF";                    -- Unused
 ------------------------------------------
 cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else      -- 0000-6FFF
 			 wram_do     		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"7" else      -- 7000-7FFF
-       mram_do          when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1000000" else -- 8000-81FF
+			 mram_do          when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1000000" else -- 8000-81FF
 			 sp_ram_cache_do  when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1111000" else -- sprite ram  0xF000-0xF1FF
 			 bg_ram_do        when cpu_mreq_n = '0' and cpu_addr(15 downto 10) = "111111"  else -- video ram   0xFC00-0xFFFF
 			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                    else -- ctc ctrl (interrupt vector)
@@ -731,16 +676,15 @@ bg_code_line <=  bg_ram_do & vflip(3 downto 1) & hcnt(3);
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
-		
-		if hcnt(0) = '1' then
+		if pix_ena = '1' then
+--		if hcnt(0) = '1' then
 			case hcnt(2 downto 1) is
 				when "00"   => bg_palette_addr <= bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
 				when "01"   => bg_palette_addr <= bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
 				when "10"   => bg_palette_addr <= bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
 				when others => bg_palette_addr <= bg_graphx2_do(1 downto 0) & bg_graphx1_do(1 downto 0);
 			end case;
-		end if;
-
+		end if;		
 	end if;
 end process;
 	
@@ -762,6 +706,21 @@ sp_palette_red_we    <= '1' when palette_F8_we = '1' and cpu_addr(4) = '1' else 
 sp_palette_green_we  <= '1' when palette_F4_we = '1' and cpu_addr(4) = '1' else '0'; -- 0xF410-1F d0-d3 ( G8)
 sp_palette_blue_we   <= '1' when palette_F4_we = '1' and cpu_addr(4) = '1' else '0'; -- 0xF410-1F d4-d7 (F10)
 
+--process (clock_vid)
+--begin
+--	if rising_edge(clock_vid) then
+--		if sp_vid = "0000" then 
+--			video_r <= bg_palette_red_do;
+--			video_g <= bg_palette_green_do;
+--			video_b <= bg_palette_blue_do;
+--		else
+--			video_r <= sp_palette_red_do;
+--			video_g <= sp_palette_green_do;
+--			video_b <= sp_palette_blue_do;
+--		end if;
+--	end if;
+--end process;		
+
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
@@ -774,8 +733,51 @@ begin
 			video_g <= sp_palette_green_do;
 			video_b <= sp_palette_blue_do;
 		end if;
+		
+		if hcnt(9 downto 4) >= 32 then -- set lamp text line colors
+		
+			if show_lamps = '1' then 
+			  if (vflip >  1*16 and vflip <  4*16) then 
+					video_g <= "0000";
+					video_b <= "1110";
+					video_r <= "0000";			  
+			  elsif
+				  (vflip >  4*16 and vflip <  8*16 and Lamp_Hold = '1') or
+				  (vflip >  8*16 and vflip < 14*16 and Lamp_Deal = '1') or
+				  (vflip > 14*16 and vflip < 18*16 and Lamp_Cancel = '1') or
+				  (vflip > 18*16 and vflip < 26*16 and Lamp_Stand = '1') then
+					video_g <= "0000";
+					video_b <= "0000";
+					video_r <= "1111";
+				else
+					video_g <= "0100";  -- light grey for light OFF text
+					video_b <= "0100";
+					video_r <= "0100";
+				end if;
+			end if;
+					
+		else
+		
+--			case ch_color is
+--				when "01" =>
+--					video_g <= "111";
+--					video_b <= "000";
+--					video_r <= "000";
+--				when "10" =>
+--					video_g <= "000";
+--					video_b <= "111";
+--					video_r <= "000";
+--				when "11" =>
+--					video_g <= "111";
+--					video_b <= "111";
+--					video_r <= "111";
+--				when others => null;	
+--			end case;
+
+		end if;
+		
 	end if;
-end process;		
+end process;
 		
 ------------------------------
 -- components & sound board --

@@ -320,7 +320,8 @@ architecture struct of journey is
  signal input_2   : std_logic_vector(7 downto 0);
  signal input_3   : std_logic_vector(7 downto 0);
  signal input_4   : std_logic_vector(7 downto 0);
-   
+ signal output_4   : std_logic_vector(7 downto 0);
+
 begin
 
 clock_vid  <= clock_40;

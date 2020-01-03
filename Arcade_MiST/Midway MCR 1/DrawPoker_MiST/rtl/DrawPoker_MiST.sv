@@ -172,6 +172,7 @@ kick kick(
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
+	.show_lamps(1),
 	.bgcolor(status[6]),
 	.STAND(btn_stand), 
 	.CANCEL(btn_cancel), 
