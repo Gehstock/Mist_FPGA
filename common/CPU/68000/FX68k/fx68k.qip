@@ -1,0 +1,4 @@
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) fx68k.vhd     ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fx68k.sv      ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fx68kAlu.sv      ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) uaddrPla.sv      ]
