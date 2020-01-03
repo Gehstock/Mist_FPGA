@@ -47,29 +47,6 @@ set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name FLOW_ENABLE_IO_ASSIGNMENT_ANALYSIS ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Survival_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/phoenix.vhd
-set_global_assignment -name VHDL_FILE rtl/phoenix_effect3.vhd
-set_global_assignment -name VHDL_FILE rtl/phoenix_effect2.vhd
-set_global_assignment -name VHDL_FILE rtl/phoenix_effect1.vhd
-set_global_assignment -name VHDL_FILE rtl/phoenix_video.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ym2149.sv
-set_global_assignment -name VHDL_FILE rtl/ROM/survival_prog.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_palette_ic41.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_palette_ic40.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic40.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic39.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic24.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic23.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name QIP_FILE "D:/Github/Mist_FPGA/common/mist/mist.qip"
 
 # Pin & Location Assignments
 # ==========================
@@ -421,4 +398,22 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(Survival_MiST)
 # -------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Survival_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/phoenix.vhd
+set_global_assignment -name VHDL_FILE rtl/phoenix_effect3.vhd
+set_global_assignment -name VHDL_FILE rtl/phoenix_effect2.vhd
+set_global_assignment -name VHDL_FILE rtl/phoenix_effect1.vhd
+set_global_assignment -name VHDL_FILE rtl/phoenix_video.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ym2149.sv
+set_global_assignment -name VHDL_FILE rtl/ROM/survival_prog.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_palette_ic41.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_palette_ic40.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic40.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic39.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic24.vhd
+set_global_assignment -name VHDL_FILE rtl/ROM/prom_ic23.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

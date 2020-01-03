@@ -33,6 +33,7 @@ localparam CONF_STR = {
 	"Survival;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -106,6 +107,7 @@ mist_video #(.COLOR_DEPTH(2)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.ce_divider(0),
+	.blend(status[5]),
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),

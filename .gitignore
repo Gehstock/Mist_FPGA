@@ -19,6 +19,5 @@ PLLJ_PLLSPE_INFO.txt
 *.sof
 *.qws
 *.ppf
-*.qip
 *.ddb
 *.srf

@@ -33,19 +33,21 @@ localparam CONF_STR = {
 	"Phoenix;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.21.",`BUILD_DATE
 };
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clk_sys;
+wire clk_sys, clk_22;
 wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys)//11
+	.c0(clk_sys),//11
+	.c1(clk_22)
 	);
 
 wire [31:0] status;
@@ -55,15 +57,9 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
-reg	[11:0] audio;
+reg  [11:0] audio;
 wire 			hb1, hb2, vb;
-<<<<<<< HEAD
-wire        blankn = ~(hb1 | hb2 | vb);
-=======
 wire        blankn = ~((hb1 & hb2) | vb);
-wire 			ce_pix;
->>>>>>> 446007a4fb619051d6e65af18a1c0b2ed9b4dae6
 wire 			hs, vs;
 wire  [1:0] r,g,b;
 
@@ -90,7 +86,7 @@ phoenix phoenix(
 	);
 	
 mist_video #(.COLOR_DEPTH(2)) mist_video(
-	.clk_sys(clk_sys),
+	.clk_sys(clk_22),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
@@ -104,7 +100,8 @@ mist_video #(.COLOR_DEPTH(2)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.ce_divider(1'b1),
+	.ce_divider(0),
+	.blend(status[5]),
 	.rotate({1'b1,status[2]}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
@@ -114,7 +111,7 @@ mist_video #(.COLOR_DEPTH(2)) mist_video(
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_sys        ),
+	.clk_sys        (clk_22         ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -133,11 +130,11 @@ user_io(
 	);
 
 dac #(
-	.C_bits(15))
+	.C_bits(16))
 dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({audio, 3'b000}),
+	.dac_i({audio, 4'b000}),
 	.dac_o(AUDIO_L)
 	);
 //											Rotated														Normal
