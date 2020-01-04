@@ -50,7 +50,6 @@ module Journey_MiST(
 localparam CONF_STR = {
 	"JOURNEY;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
@@ -79,7 +78,7 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire [15:0] audio_l, audio_r;
-wire        hs, vs;
+wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
 wire [15:0] rom_addr;
@@ -94,6 +93,13 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
+/*
+ROM Structure
+00000-09FFF Main CPU 40k  d2+d3+d4+d5+d6
+0A000-0DFFF Snd CPU  16k  a+b+c+d
+0E000-11FFF Gfx1     16k  g3+g4
+12000-      Gfx2     64k  a7+a8+a5+a6+a3+a4+a1+a2
+*/
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
@@ -106,8 +112,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-//wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h12000; //SP ROM offset: 0x12000
-wire [24:0] sp_ioctl_addr = ioctl_addr - 16'he000; //SP ROM offset: 0x12000
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h12000; //SP ROM offset: 0x12000
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -132,8 +137,8 @@ sdram sdram(
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {sp_ioctl_addr[15], ~sp_ioctl_addr[15]} ),
+	.port2_a       ( {sp_ioctl_addr[23:16], sp_ioctl_addr[13:0], sp_ioctl_addr[15]} ), // merge sprite roms to 32-bit wide words
+	.port2_ds      ( {sp_ioctl_addr[14], ~sp_ioctl_addr[14]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
@@ -175,12 +180,14 @@ end
 journey journey(
 	.clock_40(clk_sys),
 	.reset(reset),
+	.tv15Khz_mode(scandoublerD),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
 	.video_blankn(blankn),
 	.video_hs(hs),
 	.video_vs(vs),
+	.video_csync(cs),
 	.separate_audio(1'b0),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
@@ -201,7 +208,6 @@ journey journey(
 	.down2(m_down2),
 	.fire2(m_fire2),
 
-
 	.cocktail(0),
 	.coin_meters(1),
 	.service(status[6]),
@@ -210,8 +216,16 @@ journey journey(
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.sp_addr      ( sp_addr         ),
-	.sp_graphx32_do ( sp_do         )
+	.sp_graphx32_do ( sp_do         ),
+	.dl_addr      ( ioctl_addr[16:0]),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr        )
 );
+
+wire vs_out;
+wire hs_out;
+assign VGA_VS = scandoublerD | vs_out;
+assign VGA_HS = scandoublerD ? cs : hs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -226,13 +240,14 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
-	.VGA_VS         ( VGA_VS           ),
-	.VGA_HS         ( VGA_HS           ),
+	.VGA_VS         ( vs_out           ),
+	.VGA_HS         ( hs_out           ),
 	.rotate         ( {1'b1,status[2]} ),
-	.ce_divider     ( 1                ),
+	.ce_divider     ( 1'b1             ),
 	.blend          ( status[5]        ),
 	.scandoubler_disable(1),//scandoublerD ),
-	.scanlines      ( status[4:3]      ),
+	.no_csync       ( 1'b1             ),
+	.scanlines      ( ),
 	.ypbpr          ( ypbpr            )
 	);
 
@@ -276,17 +291,17 @@ dac_r(
 	);	
 
 //											Rotated														Normal
-wire m_up1     = ~status[2] ? btn_left | joystick_1[1] : btn_up | joystick_1[3];
-wire m_down1   = ~status[2] ? btn_right | joystick_1[0] : btn_down | joystick_1[2];
-wire m_left1   = ~status[2] ? btn_down | joystick_1[2] : btn_left | joystick_1[1];
-wire m_right1  = ~status[2] ? btn_up | joystick_1[3] : btn_right | joystick_1[0];
-wire m_fire1   = btn_fire1 | joystick_1[4];
+wire m_up1     = ~status[2] ? btn_left  | joystick_0[1] | joystick_1[1] : btn_up    | joystick_1[3] | joystick_1[3];
+wire m_down1   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down  | joystick_1[2] | joystick_1[2];
+wire m_left1   = ~status[2] ? btn_down  | joystick_0[2] | joystick_1[2] : btn_left  | joystick_1[1] | joystick_1[1];
+wire m_right1  = ~status[2] ? btn_up    | joystick_0[3] | joystick_1[3] : btn_right | joystick_1[0] | joystick_1[0];
+wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4];
 
-wire m_up2     = ~status[2] ? joystick_0[1] : joystick_0[3];
-wire m_down2   = ~status[2] ? joystick_0[0] : joystick_0[2];
-wire m_left2   = ~status[2] ? joystick_0[2] : joystick_0[1];
-wire m_right2  = ~status[2] ? joystick_0[3] : joystick_0[0];
-wire m_fire2   = joystick_0[4];
+wire m_up2     = m_up1;
+wire m_down2   = m_down1;
+wire m_left2   = m_left1;
+wire m_right2  = m_right1;
+wire m_fire2   = m_fire1;
 
 reg btn_one_player = 0;
 reg btn_two_players = 0;

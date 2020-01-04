@@ -35,9 +35,10 @@ architecture struct of ctc_counter is
 
  signal prescale_max : std_logic_vector(7 downto 0);
  signal prescale_in  : std_logic_vector(7 downto 0) := (others => '0');
- signal count_max    : std_logic_vector(8 downto 0);
- signal count_in     : std_logic_vector(8 downto 0) := (others => '0');
+ signal count_max    : std_logic_vector(7 downto 0);
+ signal count_in     : std_logic_vector(7 downto 0) := (others => '0');
  signal zc_to_in     : std_logic;
+ signal clk_trg_in   : std_logic;
  signal clk_trg_r    : std_logic;
  signal trigger      : std_logic;
  signal count_ena    : std_logic;
@@ -49,16 +50,15 @@ prescale_max <=
 	(others => '0') when control_word(6) = '1' else  -- counter mode (prescale max = 0)
 	X"0F" when control_word(6 downto 5) = "00" else  -- timer mode prescale 16
 	X"FF";                                           -- timer mode prescale 256
-			
-trigger <=
-	'1' when (clk_trg = '0' and clk_trg_r = '1' and control_word(4) = '0') or        -- falling edge
-	         (clk_trg = '1' and clk_trg_r = '0' and control_word(4) = '1') else '0'; -- rising edge
-	
+
+clk_trg_in <= clk_trg xor control_word(4);
+trigger <= '1' when clk_trg_in = '0' and clk_trg_r = '1' else '0';
+
 d_out <= count_in(7 downto 0);
 
 zc_to <= zc_to_in;
 int_pulse <= zc_to_in when control_word(7) = '1' else '0';
-			
+
 process (reset, clock)
 begin
 
@@ -75,7 +75,7 @@ begin
 		if rising_edge(clock) then
 			if clock_ena = '1' then
 			
-				clk_trg_r <= clk_trg;
+				clk_trg_r <= clk_trg_in;
 				load_data_r <= load_data;
 				
 				if (restart_on_next_trigger = '1' and trigger = '1') or (restart_on_next_clock = '1') then												
@@ -91,13 +91,8 @@ begin
 					if wait_for_time_constant = '1' then
 						wait_for_time_constant <= '0';
 						time_constant_loaded   <= '1';
-						
-						if d_in = X"00" then 
-							count_max <= '1'&X"00";
-						else 
-							count_max <= '0'&d_in;
-						end if;
-						
+						count_max <= d_in;
+
 						if control_word(6) = '0' and count_ena = '0' then -- in timer mode, if count was stooped
 							if control_word(3) = '0' then -- auto start when time_constant loaded
 								restart_on_next_clock <= '1';
@@ -105,9 +100,13 @@ begin
 								restart_on_next_trigger <= '1';
 							end if;
 						end if;
-						
+						if control_word(6) = '1' then -- in trigger mode reload the counter immediately, 
+						                              -- otherwise the first period will undefined
+							prescale_in <= (others => '0');
+							count_in    <= d_in;
+						end if;
 					else -- not waiting for time constant
-					
+
 						if d_in(0) = '1' then -- check if its a control world
 							control_word <= d_in;
 							wait_for_time_constant <= d_in(2);
@@ -133,8 +132,7 @@ begin
 					 (control_word(6) = '0' and count_ena = '1') ) and time_constant_loaded = '1' then				
 					if prescale_in = 0 then
 						prescale_in <= prescale_max;
---						prescale_in <= '0'&prescale_max(7 downto 1); -- test divide by 2 !
-						if count_in = 0 then
+						if count_in = 1 then
 							zc_to_in <= '1';
 							count_in <= count_max;
 						else
