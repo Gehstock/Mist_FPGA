@@ -166,7 +166,7 @@ vectrex vectrex (
 	.dbg_cpu_addr	(					)
 	);
 
-dac dac (
+dac #(10) dac (
 	.clk_i			( clk_24			),
 	.res_n_i		( 1				),
 	.dac_i			( audio			),
@@ -198,7 +198,7 @@ mist_video #(.COLOR_DEPTH(4)) mist_video
 	.G(g),
 	.B(b),
 	.VGA_HS(VGA_HS),
-	.VGA_VS(VGS_VS),
+	.VGA_VS(VGA_VS),
 	.VGA_R(VGA_R),
 	.VGA_G(VGA_G),
 	.VGA_B(VGA_B)

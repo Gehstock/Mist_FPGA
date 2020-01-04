@@ -1,10 +1,13 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Journey port to MiST by Gehstock
--- 10 November 2019
+-- Arcade: Journey port to MiST by Slingshot
+-- 03 January 2020
 -- 
--- VGA Only
-
+-- TV 15kHz interlaced / VGA
+-- JOURNEY.ROM required
+-- cat d2 d3 d4 d5 d6 a b c d g3 g4 a7 a8 a5 a6 a3 a4 a1 a2 > JOURNEY.ROM
+--
+-- Based on Kickman/Timber by Dar
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

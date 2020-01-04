@@ -12,7 +12,7 @@
 --
 -- -----------------------------------------------------------------------
 --
--- gen_rwram.vhd
+-- dpram.vhd
 --
 -- -----------------------------------------------------------------------
 --
@@ -26,59 +26,56 @@ use IEEE.numeric_std.ALL;
 
 -- -----------------------------------------------------------------------
 
-entity gen_ram is
+entity dpram is
 	generic (
 		dWidth : integer := 8;
 		aWidth : integer := 10
 	);
 	port (
-		clk : in std_logic;
-		we : in std_logic;
-		addr : in std_logic_vector((aWidth-1) downto 0);
-		d : in std_logic_vector((dWidth-1) downto 0);
-		q : out std_logic_vector((dWidth-1) downto 0)
+		clk_a : in std_logic;
+		we_a : in std_logic := '0';
+		addr_a : in std_logic_vector((aWidth-1) downto 0);
+		d_a : in std_logic_vector((dWidth-1) downto 0) := (others => '0');
+		q_a : out std_logic_vector((dWidth-1) downto 0);
+
+		clk_b : in std_logic;
+		we_b : in std_logic := '0';
+		addr_b : in std_logic_vector((aWidth-1) downto 0);
+		d_b : in std_logic_vector((dWidth-1) downto 0) := (others => '0');
+		q_b : out std_logic_vector((dWidth-1) downto 0)
 	);
 end entity;
 
 -- -----------------------------------------------------------------------
 
-architecture rtl of gen_ram is
+architecture rtl of dpram is
 	subtype addressRange is integer range 0 to ((2**aWidth)-1);
 	type ramDef is array(addressRange) of std_logic_vector((dWidth-1) downto 0);
 	signal ram: ramDef;
-
-	signal rAddrReg : std_logic_vector((aWidth-1) downto 0);
-	signal qReg : std_logic_vector((dWidth-1) downto 0);
+	signal addr_a_reg: std_logic_vector((aWidth-1) downto 0);
+	signal addr_b_reg: std_logic_vector((aWidth-1) downto 0);
 begin
--- -----------------------------------------------------------------------
--- Signals to entity interface
--- -----------------------------------------------------------------------
---	q <= qReg;
 
 -- -----------------------------------------------------------------------
--- Memory write
--- -----------------------------------------------------------------------
-	process(clk)
+	process(clk_a)
 	begin
-		if rising_edge(clk) then
-			if we = '1' then
-				ram(to_integer(unsigned(addr))) <= d;
+		if rising_edge(clk_a) then
+			if we_a = '1' then
+				ram(to_integer(unsigned(addr_a))) <= d_a;
 			end if;
+			q_a <= ram(to_integer(unsigned(addr_a)));
+		end if;
+	end process;
+
+	process(clk_b)
+	begin
+		if rising_edge(clk_b) then
+			if we_b = '1' then
+				ram(to_integer(unsigned(addr_b))) <= d_b;
+			end if;
+			q_b <= ram(to_integer(unsigned(addr_b)));
 		end if;
 	end process;
 	
--- -----------------------------------------------------------------------
--- Memory read
--- -----------------------------------------------------------------------
-process(clk)
-	begin
-		if rising_edge(clk) then
---			qReg <= ram(to_integer(unsigned(rAddrReg)));
---			rAddrReg <= addr;
-----			qReg <= ram(to_integer(unsigned(addr)));
-      q <= ram(to_integer(unsigned(addr)));
-		end if;
-	end process;
---q <= ram(to_integer(unsigned(addr)));
 end architecture;
 
