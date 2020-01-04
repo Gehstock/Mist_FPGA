@@ -320,7 +320,7 @@ cpu : entity work.T80s
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clock,
+  CLK   	 => not cpu_clock,
  -- CLKEN   => '1',
   WAIT_n  => '1',
   INT_n   => cpu_irq_n,

@@ -130,7 +130,7 @@ wire [7:0]	idt   = romd | ramd | irqv | vidd | inpd;
 
 T80s z80(
 	.RESET_n(~RESET), 
-	.CLK_n(CCLK),
+	.CLK(~CCLK),
 	.WAIT_n(1'b1), 
 	.INT_n(irq_n), 
 	.NMI_n(1'b1), 

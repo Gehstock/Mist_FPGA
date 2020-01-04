@@ -157,16 +157,11 @@ set_global_assignment -name VHDL_FILE rtl/roms/jng_dot_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/jng_col_rom.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/jng_chr_rom.vhd
 set_global_assignment -name VERILOG_FILE rtl/rams.v
-set_global_assignment -name VHDL_FILE rtl/T80/T80s.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_board.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
