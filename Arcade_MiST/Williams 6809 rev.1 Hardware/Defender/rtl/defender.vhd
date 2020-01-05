@@ -123,10 +123,10 @@ use ieee.numeric_std.all;
 
 entity defender is
 port(
- clk_sys        : in std_logic;
- clock_6     	 : in std_logic;
- clk_0p89       : in std_logic;
- reset          : in std_logic;
+ clk_sys        : in  std_logic;
+ clock_6     	  : in  std_logic;
+ clk_0p89       : in  std_logic;
+ reset          : in  std_logic;
  video_r        : out std_logic_vector(2 downto 0);
  video_g        : out std_logic_vector(2 downto 0);
  video_b        : out std_logic_vector(1 downto 0);
@@ -134,27 +134,26 @@ port(
  video_blankn   : out std_logic;
  video_hs       : out std_logic;
  video_vs       : out std_logic;
- audio_out      : out std_logic_vector(7 downto 0); 
+ audio_out      : out std_logic_vector( 7 downto 0);
+ 
+ mayday         : in  std_logic; -- Mayday protection
+ input0         : in  std_logic_vector( 7 downto 0);
+ input1         : in  std_logic_vector( 7 downto 0);
+ input2         : in  std_logic_vector( 7 downto 0);
+
+ cmd_select_players_btn : out std_logic;
+
  roms_addr   		: out std_logic_vector(14 downto 0);
  roms_do     		: in  std_logic_vector( 7 downto 0);
  vma       			: out std_logic;
- btn_auto_up          : in std_logic;
- btn_advance          : in std_logic; 
- btn_high_score_reset : in std_logic;
+ snd_addr       : out std_logic_vector(11 downto 0);
+ snd_do         : in  std_logic_vector( 7 downto 0);
+ snd_vma        : out std_logic;
 
- btn_left_coin  : in std_logic;
- btn_one_player : in std_logic;
- btn_two_players: in std_logic;
-
- btn_fire       : in std_logic;
- btn_thrust     : in std_logic;
- btn_smart_bomb : in std_logic;
- btn_hyperSpace : in std_logic;
- btn_reverse    : in std_logic;
- btn_down       : in std_logic;
- btn_up         : in std_logic;
- sw_coktail_table : in std_logic;
- cmd_select_players_btn : out std_logic
+ dl_clock       : in  std_logic;
+ dl_addr        : in  std_logic_vector(15 downto 0);
+ dl_data        : in  std_logic_vector( 7 downto 0);
+ dl_wr          : in  std_logic
 );
 end defender;
 
@@ -164,6 +163,7 @@ architecture struct of defender is
  signal clock_div : std_logic_vector(1 downto 0);
 
  signal clock_6n  : std_logic;
+ signal cpu_a      : std_logic_vector(15 downto 0);
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
  signal cpu_do     : std_logic_vector( 7 downto 0);
@@ -274,7 +274,10 @@ architecture struct of defender is
  
  signal select_sound : std_logic_vector(5 downto 0);
  signal cpu_ce  : std_logic;
- 
+
+ signal cpu_video_addr_decoder_we  : std_logic;
+ signal video_scan_addr_decoder_we : std_logic;
+
 begin
 
 clock_6n  <= not clock_6;
@@ -350,7 +353,7 @@ roms_addr <=
 	"110" & cpu_addr(11 downto 0) when cpu_addr(15 downto 12) = X"C" and rom_page = "111" else 
 	"000" & cpu_addr(11 downto 0) when cpu_addr(15 downto 12) = X"D" else 
 	"001" & cpu_addr(11 downto 0) when cpu_addr(15 downto 12) = X"E" else 
-	"010" & cpu_addr(11 downto 0) ;--when cpu_addr(15 downto 12) = X"F"; 
+	"010" & cpu_addr(11 downto 0) ;--when cpu_addr(15 downto 12) = X"F";
 
 -- encoded cpu addr (decoder.2) and encoded scan addr (decoder.3)
 -- and screen control for cocktail table flip
@@ -451,53 +454,10 @@ begin
  end if;
 end process;
 
--- pia rom board port a
---      bit 0  Auto Up / manual Down
---      bit 1  Advance
---      bit 2  Right Coin (nc)
---      bit 3  High Score Reset
---      bit 4  Left Coin
---      bit 5  Center Coin (nc)
---      bit 6  led 2 (output)
---      bit 7  led 1 (output)
-
 pias_clock <= clock_6; --not cpu_clock;
-
-pia_rom_pa_i(0) <= btn_auto_up;
-pia_rom_pa_i(1) <= btn_advance;
-pia_rom_pa_i(2) <= '0';
-pia_rom_pa_i(3) <= btn_high_score_reset;
-pia_rom_pa_i(4) <= btn_left_coin;
-pia_rom_pa_i(5) <= '0';
-pia_rom_pa_i(6) <= '0';
-pia_rom_pa_i(7) <= '0';
-
--- pia io port a
---      bit 0  Fire
---      bit 1  Thrust
---      bit 2  Smart Bomb
---      bit 3  HyperSpace
---      bit 4  2 Players
---      bit 5  1 Player
---      bit 6  Reverse
---      bit 7  Down
-
-pia_io_pa_i(0) <= btn_fire;
-pia_io_pa_i(1) <= btn_thrust;
-pia_io_pa_i(2) <= btn_smart_bomb;
-pia_io_pa_i(3) <= btn_hyperSpace;
-pia_io_pa_i(4) <= btn_two_players;
-pia_io_pa_i(5) <= btn_one_player;
-pia_io_pa_i(6) <= btn_reverse;
-pia_io_pa_i(7) <= btn_down;
-
--- pia io port b
---      bit 0  Up
---      bit 7  1 for coktail table, 0 for upright cabinet
---      other <= GND
-pia_io_pb_i(0) <= btn_up;
-pia_io_pb_i(6 downto 1) <= "000000";
-pia_io_pb_i(7) <= sw_coktail_table;
+pia_rom_pa_i <= input0;
+pia_io_pa_i  <= input1;
+pia_io_pb_i  <= input2;
 
 -- pia io ca/cb
 cmd_select_players_btn <= pia_io_cb2_o; 
@@ -518,23 +478,30 @@ cpu_ce <= '1' when pixel_cnt = "100" or pixel_cnt = "010" else '0';
 main_cpu : entity work.cpu09
 port map(	
 	clk      => clock_6,  -- E clock input (falling edge)
+	ce       => cpu_ce,
 	rst      => reset,    -- reset input (active high)
 	vma      => vma,     -- valid memory address (active high)
-   lic_out  => open,     -- last instruction cycle (active high)
-   ifetch   => open,     -- instruction fetch cycle (active high)
-   opfetch  => open,     -- opcode fetch (active high)
-   ba       => open,     -- bus available (high on sync wait or DMA grant)
-   bs       => open,     -- bus status (high on interrupt or reset vector fetch or DMA grant)
-	addr     => cpu_addr, -- address bus output
+	lic_out  => open,     -- last instruction cycle (active high)
+	ifetch   => open,     -- instruction fetch cycle (active high)
+	opfetch  => open,     -- opcode fetch (active high)
+	ba       => open,     -- bus available (high on sync wait or DMA grant)
+	bs       => open,     -- bus status (high on interrupt or reset vector fetch or DMA grant)
+	addr     => cpu_a,    -- address bus output
 	rw       => cpu_rw,   -- read not write output
 	data_out => cpu_do,   -- data bus output
 	data_in  => cpu_di,   -- data bus input
 	irq      => cpu_irq,  -- interrupt request input (active high)
 	firq     => '0',      -- fast interrupt request input (active high)
 	nmi      => '0',      -- non maskable interrupt request input (active high)
-	halt     => '0',      -- not cpu_ce -- hold input (active high) extend bus cycle
-	hold     => not cpu_ce -- hold input (active high) extend bus cycle
+	halt     => '0'      -- not cpu_ce -- hold input (active high) extend bus cycle
+--	hold     => '0'--not cpu_ce -- hold input (active high) extend bus cycle
 );
+
+-- Mayday protection.
+cpu_addr <= cpu_a   when mayday = '0' else
+            x"A193" when cpu_rw = '1' and cpu_a = x"A190" else
+            x"A194" when cpu_rw = '1' and cpu_a = x"A191" else
+            cpu_a;
 
 -- cpu program rom
 -- 4k D000-DFFF
@@ -611,20 +578,32 @@ port map(
 );
 
 -- cpu to video addr decoder
-cpu_video_addr_decoder : entity work.defender_decoder_2
+cpu_video_addr_decoder : entity work.dpram
+generic map( dWidth => 8, aWidth => 9)
 port map(
- clk  => clock_6,
- addr => cpu_to_video_addr,
- data => cpu_to_video_do
+ clk_a  => clock_6,
+ addr_a => cpu_to_video_addr,
+ q_a    => cpu_to_video_do,
+ clk_b  => dl_clock,
+ we_b   => cpu_video_addr_decoder_we,
+ addr_b => dl_addr(8 downto 0),
+ d_b    => dl_data
 );
+cpu_video_addr_decoder_we <= '1' when dl_wr = '1' and dl_addr(15 downto 9) = x"7"&"000" else '0'; -- 7000-71FF
 
 -- video scan addr decoder
-video_scan_addr_decoder : entity work.defender_decoder_3
+video_scan_addr_decoder : entity work.dpram
+generic map( dWidth => 8, aWidth => 9)
 port map(
- clk  => clock_6,
- addr => video_scan_addr,
- data => video_scan_do
+ clk_a  => clock_6,
+ addr_a => video_scan_addr,
+ q_a    => video_scan_do,
+ clk_b  => dl_clock,
+ we_b   => video_scan_addr_decoder_we ,
+ addr_b => dl_addr(8 downto 0),
+ d_b    => dl_data
 );
+video_scan_addr_decoder_we <= '1' when dl_wr = '1' and dl_addr(15 downto 9) = x"7"&"001" else '0'; -- 7200-73FF
 
 -- pia i/O board
 pia_io : entity work.pia6821
@@ -756,7 +735,10 @@ port map(
  clk_0p89      => clk_0p89,
  reset         => reset,
  select_sound  => select_sound,
- audio_out     => audio_out
+ audio_out     => audio_out,
+ rom_addr      => snd_addr,
+ rom_do        => snd_do,
+ rom_vma       => snd_vma
 );
 
 end struct;
