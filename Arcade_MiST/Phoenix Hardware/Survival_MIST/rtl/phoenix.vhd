@@ -20,10 +20,9 @@ generic (
 port(
 	clk          : in std_logic; -- 11 MHz for TV, 25 MHz for VGA
 	clk_28          : in std_logic;
-	clk_1p79          : in std_logic;
+	clk_ay          : in std_logic;
 	reset        : in std_logic;
 	ce_pix       : out std_logic;
-	
 	dip_switch   : in std_logic_vector(7 downto 0);
 	-- game controls, normal logic '1':pressed, '0':released
  
@@ -125,33 +124,14 @@ architecture struct of phoenix is
  signal player_start : std_logic_vector(1 downto 0);
  signal buttons      : std_logic_vector(3 downto 0);
  signal R_autofire   : std_logic_vector(21 downto 0);
- signal ay_do  : std_logic_vector( 7 downto 0) := (others =>'0');
- signal protection  : std_logic_vector( 7 downto 0) := (others =>'0');
- signal chanA  : std_logic_vector( 7 downto 0) := (others =>'0');
- signal chanB  : std_logic_vector( 7 downto 0) := (others =>'0');
- signal chanC  : std_logic_vector( 7 downto 0) := (others =>'0');
 
-COMPONENT ym2149
-	PORT
-	(
-		CLK		:	 IN STD_LOGIC;
-		CE		:	 IN STD_LOGIC;
-		RESET		:	 IN STD_LOGIC;
-		BDIR		:	 IN STD_LOGIC;
-		BC		:	 IN STD_LOGIC;
-		DI		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		DO		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		CHANNEL_A		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		CHANNEL_B		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		CHANNEL_C		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		SEL		:	 IN STD_LOGIC;
-		MODE		:	 IN STD_LOGIC;
-		IOA_in		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		IOA_out		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		IOB_in		:	 IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		IOB_out		:	 OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-	);
-END COMPONENT;
+ signal psg_cs    : std_logic;
+ signal ay_ena    : std_logic;
+ signal ay_do  : std_logic_vector( 7 downto 0) := (others =>'0');
+ signal ay_iob_do : std_logic_vector(7 downto 0);
+ signal ay_ioa_di : std_logic_vector(7 downto 0);
+ signal ay_bdir    : std_logic;
+ signal ay_bc1    : std_logic;
 
 begin
 
@@ -401,28 +381,43 @@ port map(
 	q    => bkgnd_ram_do
 );
 
+-- bdir bc1 (bc2 = 1)
+--  0    0 : Inactive
+--  0    1 : Read
+--  1    0 : Write
+--  1    1 : Address
+--ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & "000" & not sw1;
 
-music: YM2149
-port map(
-  -- data bus
-  DI 				=> 		cpu_do,
-  DO 				=> 		open,--?
-  BDIR			=> 		cpu_wr_n,--?
-  BC				=> 		cpu_adr(0),--?
-  SEL				=> 		'0',--?
-  MODE			=> 		'1',--AY8910
-  CHANNEL_A		=> 		chanA,
-  CHANNEL_B		=> 		chanB,
-  CHANNEL_C		=> 		chanC,
-  IOA_in			=> 		(others => '0'),
-  IOA_out		=> 		open,
-  IOB_in			=> 		(others => '0'),
-  IOB_out		=> 		ay_do,--protection
-  CE 				=> 		clk_1p79,--2.75
-  RESET 			=> 		not reset_n,
-  CLK      		=> 		clk
-  );
+ay_bdir <= '1' when cpu_wr_n = '0' else '0';
+ay_bc1  <= '1' when ((cpu_wr_n = '1' and cpu_adr(0) = '0')) else '0';
+psg_cs <= '1' when cpu_adr(15 downto 10) = "110100" else '0';--110100000000000
+ym2149 : entity work.ym2149											 --110100100000000
+port map (
+-- data bus
+	I_DA            => cpu_do,       --: in  std_logic_vector(7 downto 0);
+	O_DA            => ay_do,        --: out std_logic_vector(7 downto 0);
+	O_DA_OE_L       => open,         --: out std_logic;
+-- control
+	I_A9_L          => '1',         --: in  std_logic;
+	I_A8            => '1',          --: in  std_logic;
+	I_BDIR          => ay_bdir,      --: in  std_logic;
+	I_BC2           => '1',          --: in  std_logic;
+	I_BC1           => ay_bc1,       --: in  std_logic;
+	I_SEL_L         => '1',          --: in  std_logic;
+-- audio
+	O_AUDIO         => audio,     --: out std_logic_vector(7 downto 0);
+-- port a
+	I_IOA           => ay_ioa_di,    --: in  std_logic_vector(7 downto 0);
+	O_IOA           => open,         --: out std_logic_vector(7 downto 0);
+	O_IOA_OE_L      => open,         --: out std_logic;
+-- port b
+	I_IOB           => "11111111",   --: in  std_logic_vector(7 downto 0);
+	O_IOB           => ay_iob_do,    --: out std_logic_vector(7 downto 0);
+	O_IOB_OE_L      => open,         --: out std_logic;
 
-audio <= chanA + chanB + chanC;
+	ENA             => '1',       --: in  std_logic; -- clock enable for higher speed operation
+	RESET_L         => '1',          --: in  std_logic;
+	CLK             => clk_ay
+);
 
 end struct;

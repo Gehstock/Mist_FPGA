@@ -41,14 +41,14 @@ localparam CONF_STR = {
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
-wire clk_sys, clk_28, clk_1p79;
+wire clk_sys, clk_28, clk_ay;
 wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),//11
 	.c1(clk_28),//28
-	.c2(clk_1p79)//1.79
+	.c2(clk_ay)//2.75
 	);
 
 wire [31:0] status;
@@ -69,7 +69,7 @@ wire  [1:0] r,g,b;
 phoenix phoenix(
 	.clk(clk_sys),
 	.clk_28(clk_28),
-	.clk_1p79(clk_1p79),
+	.clk_ay(clk_ay),
 	.reset(status[0] | status[6] | buttons[1]),
 	.dip_switch(8'b00001111),	
 	.btn_coin(btn_coin),

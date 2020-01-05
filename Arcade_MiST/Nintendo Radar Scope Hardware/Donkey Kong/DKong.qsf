@@ -144,16 +144,15 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(dkong_MiST)
 # ----------------------
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/dkong_MiST.sv
 set_global_assignment -name VERILOG_FILE rtl/dkong_top.v
 set_global_assignment -name VERILOG_FILE rtl/i8035ip.v
@@ -211,4 +210,5 @@ set_global_assignment -name VHDL_FILE "rtl/t48_ip/alu_pack-p.vhd"
 set_global_assignment -name VHDL_FILE rtl/t48_ip/alu.vhd
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/dkong_soundboard.sv
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

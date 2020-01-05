@@ -45,36 +45,6 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/DigDug.sv
-set_global_assignment -name VERILOG_FILE rtl/FPGA_DIGDUG.v
-set_global_assignment -name VERILOG_FILE rtl/DIGDUG_CORES.v
-set_global_assignment -name VERILOG_FILE rtl/cpucore.v
-set_global_assignment -name VERILOG_FILE rtl/DIGDUG_CUSIO.v
-set_global_assignment -name VERILOG_FILE rtl/DIGDUG_IODEV.v
-set_global_assignment -name VERILOG_FILE rtl/DIGDUG_SPRITE.v
-set_global_assignment -name VERILOG_FILE rtl/DIGDUG_VIDEO.v
-set_global_assignment -name VERILOG_FILE rtl/hvgen.v
-set_global_assignment -name VERILOG_FILE rtl/dprams.v
-set_global_assignment -name VERILOG_FILE rtl/wsg.v
-set_global_assignment -name VERILOG_FILE rtl/LINEBUF.v
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/TV80/tv80s.v
-set_global_assignment -name VERILOG_FILE rtl/TV80/tv80_reg.v
-set_global_assignment -name VERILOG_FILE rtl/TV80/tv80_mcode.v
-set_global_assignment -name VERILOG_FILE rtl/TV80/tv80_core.v
-set_global_assignment -name VERILOG_FILE rtl/TV80/tv80_alu.v
-set_global_assignment -name VHDL_FILE rtl/roms/wave_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/spclut_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/spchip_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/palette_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/fgchip_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/cpu2_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/cpu1_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/bgscrn_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/bgclut_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/bgchip_rom.vhd
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SYSTEMVERILOG_FILE ../../../common/mist/sdram.sv
 
 # Pin & Location Assignments
 # ==========================
@@ -228,4 +198,30 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(DigDug)
 # ------------------
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/DigDug.sv
+set_global_assignment -name VERILOG_FILE rtl/FPGA_DIGDUG.v
+set_global_assignment -name VERILOG_FILE rtl/DIGDUG_CORES.v
+set_global_assignment -name VERILOG_FILE rtl/cpucore.v
+set_global_assignment -name VERILOG_FILE rtl/DIGDUG_CUSIO.v
+set_global_assignment -name VERILOG_FILE rtl/DIGDUG_IODEV.v
+set_global_assignment -name VERILOG_FILE rtl/DIGDUG_SPRITE.v
+set_global_assignment -name VERILOG_FILE rtl/DIGDUG_VIDEO.v
+set_global_assignment -name VHDL_FILE rtl/roms/wave_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/spclut_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/spchip_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/palette_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/fgchip_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/cpu2_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/cpu1_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/bgscrn_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/bgclut_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/bgchip_rom.vhd
+set_global_assignment -name VERILOG_FILE rtl/hvgen.v
+set_global_assignment -name VERILOG_FILE rtl/dprams.v
+set_global_assignment -name VERILOG_FILE rtl/wsg.v
+set_global_assignment -name VERILOG_FILE rtl/LINEBUF.v
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/tv80/TV80.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

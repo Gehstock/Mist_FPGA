@@ -28,14 +28,13 @@ wire [7:0]	m_di = cs_mrom ? IR : DV ? DI : 8'hFF;
 
 assign m_irq = ~IRQ;
 assign m_nmi = ~NMI;
-
 tv80s core(
 	.mreq_n(m_me),
 	.iorq_n(m_ie),
 	.rd_n(m_rd),
 	.wr_n(m_wr),
 	.A(m_ad),
-	.do(m_do),
+	.dout(m_do),
 
 	.reset_n(~RESET),
 	.clk(CLK),

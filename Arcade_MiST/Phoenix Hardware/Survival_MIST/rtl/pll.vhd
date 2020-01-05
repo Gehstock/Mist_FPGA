@@ -167,7 +167,7 @@ BEGIN
 		clk1_duty_cycle => 50,
 		clk1_multiply_by => 57,
 		clk1_phase_shift => "0",
-		clk2_divide_by => 860,
+		clk2_divide_by => 560,
 		clk2_duty_cycle => 50,
 		clk2_multiply_by => 57,
 		clk2_phase_shift => "0",
@@ -256,7 +256,7 @@ END SYN;
 -- Retrieval info: PRIVATE: DEVICE_SPEED_GRADE STRING "8"
 -- Retrieval info: PRIVATE: DIV_FACTOR0 NUMERIC "140"
 -- Retrieval info: PRIVATE: DIV_FACTOR1 NUMERIC "55"
--- Retrieval info: PRIVATE: DIV_FACTOR2 NUMERIC "860"
+-- Retrieval info: PRIVATE: DIV_FACTOR2 NUMERIC "560"
 -- Retrieval info: PRIVATE: DIV_FACTOR3 NUMERIC "35"
 -- Retrieval info: PRIVATE: DUTY_CYCLE0 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
@@ -264,7 +264,7 @@ END SYN;
 -- Retrieval info: PRIVATE: DUTY_CYCLE3 STRING "50.00000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "10.992857"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "27.981817"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "1.789535"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "2.748214"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "43.971428"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 -- Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
@@ -301,7 +301,7 @@ END SYN;
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "11.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "28.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "1.79000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "2.75000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "44.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "0"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "0"
@@ -370,7 +370,7 @@ END SYN;
 -- Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
 -- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "57"
 -- Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"
--- Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "860"
+-- Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "560"
 -- Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
 -- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "57"
 -- Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "0"

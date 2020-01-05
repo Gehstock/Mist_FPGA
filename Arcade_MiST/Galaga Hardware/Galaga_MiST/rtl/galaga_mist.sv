@@ -23,9 +23,9 @@ localparam CONF_STR = {
 	"Galaga;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-//	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O5,Blend,Off,On;",
 	"T6,Reset;",
-	"V,v1.20.",`BUILD_DATE
+	"V,v1.21.",`BUILD_DATE
 };
 
 assign LED = 1;
@@ -36,7 +36,6 @@ pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_18)
 	);
-
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -83,7 +82,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : 0),
 	.G(blankn ? g : 0),
-	.B(blankn ? {b, b[1]} : 0),
+	.B(blankn ? {b[0], b} : 0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -92,6 +91,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.ce_divider(1'b1),
+	.blend(status[5]),
 	.rotate({1'b1,status[2]}),
 	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
 	.scandoubler_disable(scandoublerD),
