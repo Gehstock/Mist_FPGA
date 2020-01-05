@@ -30,7 +30,10 @@ port(
  clk_0p89     : in std_logic;
  reset        : in std_logic;
  select_sound : in std_logic_vector(5 downto 0);
- audio_out    : out std_logic_vector( 7 downto 0)
+ audio_out    : out std_logic_vector( 7 downto 0);
+ rom_addr     : out std_logic_vector(11 downto 0);
+ rom_do       : in  std_logic_vector( 7 downto 0);
+ rom_vma      : out std_logic
 );
 end defender_sound_board;
 
@@ -43,13 +46,14 @@ architecture struct of defender_sound_board is
  signal cpu_do     : std_logic_vector( 7 downto 0);
  signal cpu_rw     : std_logic;
  signal cpu_irq    : std_logic;
+ signal cpu_vma    : std_logic;
 
  signal wram_cs   : std_logic;
  signal wram_we   : std_logic;
  signal wram_do   : std_logic_vector( 7 downto 0);
  
  signal rom_cs    : std_logic;
- signal rom_do    : std_logic_vector( 7 downto 0);
+-- signal rom_do    : std_logic_vector( 7 downto 0);
 
 -- pia port a
 --      bit 0-7 audio output
@@ -78,11 +82,9 @@ begin
 
 reset_n   <= not reset;
 
-
-
 -- pia cs
 wram_cs <= '1' when cpu_addr(15 downto  8) = X"00" else '0';                       -- 0000-007F
-pia_cs  <= '1' when cpu_addr(15 downto 12) = X"0" and cpu_addr(10) = '1' else '0'; -- 8400-8403 ? => 0400-0403
+pia_cs  <= '1' when cpu_addr(14 downto 12) = "000" and cpu_addr(10) = '1' else '0'; -- 8400-8403 ? => 0400-0403
 rom_cs  <= '1' when cpu_addr(15 downto 12) = X"F" else '0';                        -- F800-FFFF
 	
 -- write enables
@@ -98,8 +100,10 @@ cpu_di <=
 -- pia I/O
 audio_out <= pia_pa_o;
 
-pia_pb_i(4 downto 0) <= select_sound(4 downto 0);
-pia_pb_i(6 downto 5) <= "11"; -- assume DS1-1 and DS1-2 open
+pia_pb_i(5 downto 0) <= select_sound(5 downto 0);
+--pia_pb_i(4 downto 0) <= select_sound(4 downto 0);
+--pia_pb_i(6 downto 5) <= "11"; -- assume DS1-1 and DS1-2 open
+pia_pb_i(6) <= '1';
 pia_pb_i(7) <= '1'; -- Handshake to ? from rom board (drawings are confusing)
 
 -- pia Cb1
@@ -114,7 +118,7 @@ port map(
 	clk      => clk_0p89,-- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
 	rw       => cpu_rw,   -- read not write output
-	vma      => open,     -- valid memory address (active high)
+	vma      => cpu_vma,  -- valid memory address (active high)
 	address  => cpu_addr, -- address bus output
 	data_in  => cpu_di,   -- data bus input
 	data_out => cpu_do,   -- data bus output
@@ -127,12 +131,14 @@ port map(
 );
 
 -- cpu program rom
-cpu_prog_rom : entity work.defender_sound
-port map(
- clk  => clk_0p89,
- addr => cpu_addr(10 downto 0),
- data => rom_do
-);
+--cpu_prog_rom : entity work.defender_sound
+--port map(
+-- clk  => clk_0p89,
+-- addr => cpu_addr(10 downto 0),
+-- data => rom_do
+--);
+rom_vma   <= rom_cs and cpu_vma;
+rom_addr  <= cpu_addr(11 downto 0);
 
 -- cpu wram 
 cpu_ram : entity work.gen_ram
