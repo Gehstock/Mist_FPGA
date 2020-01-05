@@ -212,9 +212,6 @@ set_global_assignment -name USE_SIGNALTAP_FILE output_files/snd.stp
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Defender_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/defender.vhd
 set_global_assignment -name VHDL_FILE rtl/defender_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/defender_sound.vhd
-set_global_assignment -name VHDL_FILE rtl/defender_decoder_3.vhd
-set_global_assignment -name VHDL_FILE rtl/defender_decoder_2.vhd
 set_global_assignment -name VHDL_FILE rtl/defender_cmos_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu68.vhd
 set_global_assignment -name QIP_FILE rtl/pll_mist.qip
@@ -224,6 +221,4 @@ set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE ../../../common/IO/pia6821.vhd
 set_global_assignment -name VHDL_FILE ../../../common/CPU/MC6809/cpu09l_128a.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SIGNALTAP_FILE output_files/snd.stp
-set_global_assignment -name CDF_FILE output_files/Chain2.cdf
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
