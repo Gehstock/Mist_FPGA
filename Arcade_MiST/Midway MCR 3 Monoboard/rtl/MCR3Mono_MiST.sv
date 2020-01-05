@@ -83,7 +83,7 @@ always @(*) begin
 		input1 = ~{m_fire1 | m_fire1b, m_fire1 | m_fire1b, m_fire2 | m_fire2b, m_fire2 | m_fire2b, m_down1, m_up1, m_down2, m_up2};
 		input2 = ~{m_fire3 | m_fire3b, m_fire3 | m_fire3b, m_fire4 | m_fire4b, m_fire4 | m_fire4b, m_down3, m_up3, m_down4, m_up4};
 	end else if (`CORE_NAME == "MAXRPM") begin
-		input0 = ~{1'b0, service, 2'b00, m_start1, m_start2, m_coin1, m_coin2};
+		input0 = ~{service, 3'b000, m_start1, m_start2, m_coin1, m_coin2};
 		input1 =  {pedal1[5:2], pedal2[5:2]};
 		input2 = ~{maxrpm_gear1, maxrpm_gear2};
 	end else if (`CORE_NAME == "RAMPAGE") begin
