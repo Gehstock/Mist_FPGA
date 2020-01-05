@@ -216,30 +216,14 @@ architecture struct of kick is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
- 
- signal ctc_controler_we  : std_logic;
- signal ctc_controler_do  : std_logic_vector(7 downto 0);
- signal ctc_int_ack       : std_logic;
+ signal cpu_int_ack_n : std_logic;
 
- signal ctc_counter_0_we  : std_logic;
--- signal ctc_counter_0_trg : std_logic;
- signal ctc_counter_0_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_0_int : std_logic;
+ signal ctc_ce      : std_logic;
+ signal ctc_do      : std_logic_vector(7 downto 0);
 
- signal ctc_counter_1_we  : std_logic;
--- signal ctc_counter_1_trg : std_logic;
- signal ctc_counter_1_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_1_int : std_logic;
- 
- signal ctc_counter_2_we  : std_logic;
--- signal ctc_counter_2_trg : std_logic;
- signal ctc_counter_2_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_2_int : std_logic;
- 
- signal ctc_counter_3_we  : std_logic;
- signal ctc_counter_3_trg : std_logic;
- signal ctc_counter_3_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_3_int : std_logic;
+ signal ctc_counter_1_trg : std_logic;
+ signal ctc_counter_2_trg : std_logic;
+ signal ctc_counter_3_trg : std_logic; 
  
 -- signal cpu_rom_do : std_logic_vector( 7 downto 0);
  
@@ -409,6 +393,10 @@ begin
 					else
 						vs_cnt <= vs_cnt +1;
 					end if;
+
+					if vcnt = 240 then video_vs <= '0'; end if;
+					if vcnt = 242 then video_vs <= '1'; end if;
+
 				else 
 					hs_cnt <= hs_cnt + 1;
 				end if;
@@ -418,8 +406,8 @@ begin
 					vcnt >= 1 and  vcnt < 241 then video_blankn <= '1';end if;
 
 				
-				if    hs_cnt =  0 then hsync0 <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1';
+				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
@@ -566,24 +554,16 @@ cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7"
 			 wram_do     		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"7" else      -- 7000-7FFF
 			 sp_ram_cache_do  when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1111000" else -- sprite ram  0xF000-0xF1FF
 			 bg_ram_do        when cpu_mreq_n = '0' and cpu_addr(15 downto 10) = "111111"  else -- video ram   0xFC00-0xFFFF
-			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                    else -- ctc ctrl (interrupt vector)
+       ctc_do           when cpu_int_ack_n = '0' or ctc_ce = '1'                     else -- ctc (interrupt vector or counter data)
 			 ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = X"0"  else
- 			 ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
    		 X"FF";
 		 
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
 ------------------------------------------------------------------------
-ctc_counter_3_trg <= '1' when (vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')else '0';
-ctc_counter_3_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else '0';
-ctc_counter_2_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else '0';
-ctc_counter_1_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else '0';
-ctc_counter_0_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';
-ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0'; -- F0
-ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
+cpu_int_ack_n     <= cpu_ioreq_n or cpu_m1_n;
+ctc_ce            <= '1' when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = x"F" else '0';
+ctc_counter_3_trg <= '1' when top_frame = '1' and ((vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')) else '0';
 
 ------------------------------------------
 -- write enable / ram access from CPU --
@@ -780,92 +760,28 @@ port map(
   DO      => cpu_do
 );
 
--- CTC interrupt controler Z80-CTC (MK3882)
-ctc_controler : entity work.ctc_controler
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_controler_we,
- int_ack   => ctc_int_ack,
-
- int_pulse_0 => ctc_counter_0_int,
- int_pulse_1 => ctc_counter_1_int,
- int_pulse_2 => ctc_counter_2_int,
- int_pulse_3 => ctc_counter_3_int,
- 
- d_out     => ctc_controler_do,
- int_n     => cpu_irq_n
-);
-
-ctc_counter_0 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_0_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_0_do,
- zc_to     => open, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
- int_pulse => ctc_counter_0_int
- 
-);
-
-ctc_counter_1 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_1_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_1_do,
- zc_to     => open,
- int_pulse => ctc_counter_1_int
- 
-);
-
-ctc_counter_2 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_2_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_2_do,
- zc_to     => ctc_zc_to_2, -- used for spin angle decoder simulation
- int_pulse => ctc_counter_2_int
- 
-);
-
-ctc_counter_3 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_3_we,
- 
- clk_trg   => ctc_counter_3_trg,
- 
- d_out     => ctc_counter_3_do,
- zc_to     => open,
- int_pulse => ctc_counter_3_int
- 
+-- Z80-CTC (MK3882)
+z80ctc : entity work.z80ctc_top
+port map (
+	clock     => clock_vid,
+	clock_ena => cpu_ena,
+	reset     => reset,
+	din       => cpu_do,
+	cpu_din   => cpu_di,
+	dout      => ctc_do,
+	ce_n      => not ctc_ce,
+	cs        => cpu_addr(1 downto 0),
+	m1_n      => cpu_m1_n,
+	iorq_n    => cpu_ioreq_n,
+	rd_n      => cpu_rd_n,
+	int_n     => cpu_irq_n,
+	trg0      => '0',
+	to0       => ctc_counter_1_trg,
+	trg1      => ctc_counter_1_trg,
+	to1       => open,
+	trg2      => '0',
+	to2       => ctc_zc_to_2,
+	trg3      => ctc_counter_3_trg
 );
 
 -- cpu program ROM 0x0000-0x6FFF
