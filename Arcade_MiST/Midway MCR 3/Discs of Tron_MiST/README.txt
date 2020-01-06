@@ -1,20 +1,20 @@
 Discs of Tron MiST port
-- DOTRON.ROM is needed on the SD Card.
+- DOTRON.ROM is needed on the SD Card
 
-
-	Aim Left    	:     F
-	Aim Right   	:     G
-	Level Up   	:     F3
-	Level Down   	:     F4
-	Forward   	:     Up
-	Backward   	:     Down
-	Left   		:     Left
-	Right   	:     Right
-	Coin   		:     ESC
-	1 Player   	:     F1
-	2 Player   	:     F2
-	Block   	:     Alt
-	Fire   		:     Space
+	                     Joy/keyboard   MAME key
+	Forward         :     Up
+	Backward        :     Down
+	Left            :     Left
+	Right           :     Right
+	Coin            :     ESC             5,6
+	1 Player        :     F1               1
+	2 Player        :     F2               2
+	Fire            :     Button A       Space
+	Block           :     Button B        Alt
+	Aim Left        :     Button X,L       Z,C
+	Aim Right       :     Button Y,R       X,V
+	Aim Up          :     Button C        Ctrl
+	Aim Down        :     Button D       LShift
 
 
 
