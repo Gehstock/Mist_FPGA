@@ -1,0 +1,4 @@
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) z80ctc_top.vhd    ]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) ctc_controler.vhd ]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) ctc_counter.vhd   ]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) z80ctc_top.vhd    ]
