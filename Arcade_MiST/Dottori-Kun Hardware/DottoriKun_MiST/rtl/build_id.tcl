@@ -17,7 +17,7 @@ proc generateBuildID_Verilog {} {
 	set buildTime [ clock format [ clock seconds ] -format %H%M%S ]
 
 	# Create a Verilog file for output
-	set outputFileName "sys/build_id.sv"
+	set outputFileName "sys/build_id.v"
 	set outputFile [open $outputFileName "w"]
 
 	# Output the Verilog source

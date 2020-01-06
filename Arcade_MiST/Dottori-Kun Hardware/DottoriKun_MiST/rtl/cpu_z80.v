@@ -26,6 +26,8 @@ module cpu_z80(
 	tv80_core TV80( , IORQ, NO_READ, WRITE, , , , ADDRESS, DATA_OUT, M_CYCLE,
 							T_STATE, nINTCYCLE, , , nRESET, CLK, 1'b1, 1'b1,
 							nINT, nNMI, 1'b1, DATA_IN, DATA_IN_REG);
+							
+						
 	
 	always @(posedge CLK)
 	begin
