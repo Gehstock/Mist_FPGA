@@ -58,6 +58,12 @@ localparam CONF_STR = {
 	"V,v1.1.",`BUILD_DATE
 };
 
+wire rotate = status[2];
+wire blend  = status[5];
+wire service = status[6];
+wire demosnd = status[8];
+wire lamps   = status[9];
+
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
 assign SDRAM_CKE = 1;
@@ -84,6 +90,10 @@ wire  [9:0] csd_audio;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
+wire       key_pressed;
+wire [7:0] key_code;
+wire       key_strobe;
+
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire [12:0] snd_addr;
@@ -97,8 +107,6 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire  [7:0] steering;
-wire  [7:0] gas;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -217,24 +225,24 @@ spy_hunter spy_hunter(
 	.video_vs(vs),
 	.video_csync(cs),
 	.tv15Khz_mode(scandoublerD),
-	.separate_audio(1'b0),
+	.separate_audio(1'b1),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
 	.csd_audio_out(csd_audio),
-	.coin1(btn_coin),
-	.coin2(1'b0),	
-	.shift(m_shift),
-	.oil(m_fire4),
-	.missile(m_fire2),
-	.van(m_van),
-	.smoke(m_fire3),
-	.gun(m_fire1),
+	.coin1(m_coin1),
+	.coin2(m_coin2),	
+	.shift(shift),
+	.oil(oil),
+	.missile(missile),
+	.van(van),
+	.smoke(smoke),
+	.gun(gun),
 	.steering(steering),
 	.gas(gas),
 	.timer(1),
-	.show_lamps(status[9]),	
-	.demo_sound(status[8]),
-	.service(status[6]),
+	.show_lamps(lamps),	
+	.demo_sound(demosnd),
+	.service(service),
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
@@ -265,9 +273,9 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( vs_out           ),
 	.VGA_HS         ( hs_out           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.ce_divider     ( 1                ),
-	.blend          ( status[5]        ),
+	.blend          ( blend            ),
 	.scandoubler_disable(1),//scandoublerD ),
 	.no_csync       ( 1'b1             ),
 	.ypbpr          ( ypbpr            )
@@ -312,47 +320,40 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left  | joystick_0[1] | joystick_1[1] : btn_up    | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down  | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down  | joystick_0[2] | joystick_1[2] : btn_left  | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up    | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire1   = btn_fire1 | joystick_0[4] | joystick_1[4]; // A
-wire m_fire2   = btn_fire2 | joystick_0[5] | joystick_1[5]; // B
-wire m_fire3   = btn_fire3 | joystick_0[6] | joystick_1[6]; // C (Select)
-wire m_fire4   = btn_fire4 | joystick_0[8] | joystick_1[8]; // X
-wire m_van     = btn_van   | joystick_0[7] | joystick_1[7]; // Start
-wire m_shift   = btn_shift | joystick_0[9] | joystick_1[9]; // Y
+wire  [7:0] steering;
+wire  [7:0] gas;
+wire        gun = m_fireA;
+wire        missile = m_fireB;
+wire        smoke = m_fireC;
+wire        van = m_fireD | btn_van;
+wire        oil = m_fireE;
+wire        shift = m_fireF;
 
-reg btn_shift = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
+
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
+
 reg btn_van = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_fire4 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
 always @(posedge clk_sys) begin
 	if(key_strobe) begin
 		case(key_code)
-			'h75: btn_up          <= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin        <= key_pressed; // ESC
 			'h0D: btn_van 			 <= key_pressed; // TAB
-			'h1A: btn_shift 		 <= key_pressed; // Y  35
-			'h12: btn_fire4       <= key_pressed; // shift left
-			'h14: btn_fire3       <= key_pressed; // ctrl left
-			'h11: btn_fire2       <= key_pressed; // alt left
-			'h29: btn_fire1       <= key_pressed; // Space
 		endcase
 	end
 end

@@ -75,7 +75,7 @@ architecture struct of spy_hunter_control is
 gas <= gas_r;
 steering <= steering_r;
 
-process (clock_40)
+process (clock_40, reset)
 begin
 	if reset = '1' then 	
 		gas_r <= x"39";
