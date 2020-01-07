@@ -34,10 +34,10 @@ module Defender_MiST(
 
 `include "rtl/build_id.v" 
 
-`define CORE_NAME "DEFENDER"
+//`define CORE_NAME "DEFENDER"
 //`define CORE_NAME "COLONY7"
 //`define CORE_NAME "MAYDAY"
-//`define CORE_NAME "JIN"
+`define CORE_NAME "JIN"
 
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
