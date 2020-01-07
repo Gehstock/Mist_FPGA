@@ -84,7 +84,7 @@ always @(*) begin
 		input2 = ~{m_fire3A | m_fire3B, m_fire3A | m_fire3B, m_fire4A | m_fire4B, m_fire4A | m_fire4B, m_down3, m_up3, m_down4, m_up4};
 	end else if (`CORE_NAME == "MAXRPM") begin
 		input0 = ~{service, 3'b000, m_one_player, m_two_players, m_coin1, m_coin2};
-		input1 =  {pedal1[5:2], pedal2[5:2]};
+		input1 = ~{maxrpm_adc_data};
 		input2 = ~{maxrpm_gear1, maxrpm_gear2};
 	end else if (`CORE_NAME == "RAMPAGE") begin
 		// normal controls for 3 players
@@ -388,28 +388,47 @@ always @(posedge clk_sys) begin
 	end
 end
 
-//Pedals for Max RPM
-wire [5:0] pedal1;
-spinner spinner1 (
-	.clock_40(clk_sys),
-	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_up),
-	.btn_right(m_down),
-	.ctc_zc_to_2(vs),
-	.spin_angle(pedal1)
-);
+//Pedals/Steering for Max RPM
+reg [7:0] maxrpm_adc_data;
+reg [3:0] maxrpm_adc_control;
+always @(*) begin
+	case (maxrpm_adc_control[1:0])
+		2'b00: maxrpm_adc_data = gas2;
+		2'b01: maxrpm_adc_data = gas1;
+		2'b10: maxrpm_adc_data = steering2;
+		2'b11: maxrpm_adc_data = steering1;
+	endcase
+end
 
-wire [5:0] pedal2;
-spinner spinner2 (
+always @(posedge clk_sys) if (~output6[6] & ~output6[5]) maxrpm_adc_control <= output5[4:1];
+
+wire [7:0] gas1;
+wire [7:0] steering1;
+spy_hunter_control maxrpm_pl1 (
 	.clock_40(clk_sys),
 	.reset(reset),
-	.btn_acc(),
-	.btn_left(m_up2),
-	.btn_right(m_down2),
-	.ctc_zc_to_2(vs),
-	.spin_angle(pedal2)
-);
+	.vsync(vs),
+	.gas_plus(m_up),
+	.gas_minus(m_down),
+	.steering_plus(m_right),
+	.steering_minus(m_left),
+	.steering(steering1),
+	.gas(gas1)
+	);
+
+wire [7:0] gas2;
+wire [7:0] steering2;
+spy_hunter_control maxrpm_pl2 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.vsync(vs),
+	.gas_plus(m_up2),
+	.gas_minus(m_down2),
+	.steering_plus(m_right2),
+	.steering_minus(m_left2),
+	.steering(steering2),
+	.gas(gas2)
+	);
 
 // MaxRPM gearbox
 wire [3:0] maxrpm_gear_bits[5] = '{ 4'h0, 4'h5, 4'h6, 4'h1, 4'h2 };

@@ -20,8 +20,9 @@ cat cpu_3b.bin cpu_5b.bin spr_8e.bin spr_6e.bin spr_5e.bin spr_4e.bin til_15a.bi
 Max RPM
 =======
 Controls:
-Gear : button1/button2
-Steering/gas: TODO
+Gear : Button1/Button2
+Steering: Left/Right
+Throttle/Brake: Up/Down
 
 Creating MAXRPM.ROM on Linux:
 cat pro.0 pro.1 fg-0 fg-1 fg-2 fg-3 bg-0 bg-1 turbskwk.u5 turbskwk.u4 > MAXRPM.ROM
