@@ -50,7 +50,6 @@ module DDerby_MiST(
 localparam CONF_STR = {
 	"DDERBY;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"O7,Swap Joystick,Off,On;",
@@ -61,6 +60,10 @@ localparam CONF_STR = {
 	"V,v1.1.",`BUILD_DATE
 };
 
+wire   rotate = status[2];
+wire   blend = status[5];
+wire   service = status[6];
+wire   joyswap = status[7];
 wire   players4 = status[8];
 wire   difficulty = status[9];
 wire   girl = status[10];
@@ -82,16 +85,20 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joy_0;
-wire  [7:0] joy_1;
-wire  [7:0] joy_2;
-wire  [7:0] joy_3;
+wire  [7:0] joystick_0;
+wire  [7:0] joystick_1;
+wire  [7:0] joystick_2;
+wire  [7:0] joystick_3;
 wire        scandoublerD;
 wire        ypbpr;
 wire  [9:0] audio;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
+
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire [14:0] snd_addr;
@@ -164,8 +171,9 @@ always @(posedge clk_sys) begin
 			port2_req <= ~port2_req;
 		end
 	end
+
 	// register for better timings
-	cpu2_addr <= ioctl_downl ? 16'hffff : (16'h8000 + snd_addr[14:1]);
+	cpu2_addr <= ioctl_downl ? 16'hffff : {2'b10, snd_addr[14:1]};
 end
 
 // reset signal generation
@@ -190,8 +198,8 @@ spinner spinner1 (
 	.clock_40(clk_sys),
 	.reset(reset),
 	.btn_acc(),
-	.btn_left(m_left1),
-	.btn_right(m_right1),
+	.btn_left(m_left),
+	.btn_right(m_right),
 	.ctc_zc_to_2(vs),
 	.spin_angle(wheel1)
 );
@@ -242,31 +250,31 @@ dderby dderby(
 	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b0),
 	.audio_out(audio),
-	.coin1(btn_coin),
-	.coin2(btn_coin),
-	.coin3(btn_coin),
-	.coin4(btn_coin),
+	.coin1(m_coin1),
+	.coin2(m_coin2),
+	.coin3(m_coin3),
+	.coin4(m_coin4),
 	
-	.start4(btn_four_players),
-	.start3(btn_three_players),
-	.start2(btn_two_players),
-	.start1(btn_one_player),
+	.start4(m_four_players),
+	.start3(m_three_players),
+	.start2(m_two_players),
+	.start1(m_one_player),
 	
-	.p1_fire1(m_fire1),
-	.p1_fire2(m_fire1b),
-	.p2_fire1(m_fire2),
-	.p2_fire2(m_fire2b),
-	.p3_fire1(m_fire3),
-	.p3_fire2(m_fire3b),
-	.p4_fire1(m_fire4),
-	.p4_fire2(m_fire4b),
+	.p1_fire1(m_fireA),
+	.p1_fire2(m_fireB),
+	.p2_fire1(m_fire2A),
+	.p2_fire2(m_fire2B),
+	.p3_fire1(m_fire3A),
+	.p3_fire2(m_fire3B),
+	.p4_fire1(m_fire4A),
+	.p4_fire2(m_fire4B),
 
 	.wheel1(wheel1),
 	.wheel2(wheel2),
 	.wheel3(wheel3),
 	.wheel4(wheel4),
 
-	.service(status[6]),
+	.service(service),
 	.dipsw(~{3'b000, girl, 1'b0, difficulty, players4}), // NU, coins/credit, girl, free play, difficulty, 2player
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
@@ -296,12 +304,12 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( vs_out           ),
 	.VGA_HS         ( hs_out           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.ce_divider     ( 1                ),
-	.blend          ( status[5]        ),
+	.blend          ( blend            ),
 	.scandoubler_disable(1),//scandoublerD ),
 	.no_csync       ( 1'b1             ),
-	.scanlines      ( status[4:3]      ),
+	.scanlines      (                  ),
 	.ypbpr          ( ypbpr            )
 	);
 
@@ -321,10 +329,10 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joy_0          ),
-	.joystick_1     (joy_1          ),
-	.joystick_2     (joy_2          ),
-	.joystick_3     (joy_3          ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.joystick_2     (joystick_2     ),
+	.joystick_3     (joystick_3     ),
 	.status         (status         )
 	);
 
@@ -336,63 +344,30 @@ dac #(10) dac(
 	);
 assign AUDIO_R = AUDIO_L;
 
-wire  [7:0] joystick_0 = status[7] ? joy_1 : joy_0;
-wire  [7:0] joystick_1 = status[7] ? joy_0 : joy_1;
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B;
+wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B;
+wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-//											Rotated														Normal
-wire m_left1   = btn_left  | joystick_0[1];
-wire m_right1  = btn_right | joystick_0[0];
-wire m_fire1   = btn_fire1 | joystick_0[4];
-wire m_fire1b  = btn_fire2 | joystick_0[5];
-
-wire m_left2   = joystick_1[1];
-wire m_right2  = joystick_1[0];
-wire m_fire2   = joystick_1[4];
-wire m_fire2b  = joystick_1[5];
-
-wire m_left3   = joy_2[1];
-wire m_right3  = joy_2[0];
-wire m_fire3   = joy_2[4];
-wire m_fire3b  = joy_2[5];
-
-wire m_left4   = joy_3[1];
-wire m_right4  = joy_3[0];
-wire m_fire4   = joy_3[4];
-wire m_fire4b  = joy_3[5];
-
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_three_players = 0;
-reg btn_four_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-//reg btn_down = 0;
-//reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-//reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-//			'h75: btn_up          <= key_pressed; // up
-//			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h04: btn_three_players  <= key_pressed; // F3
-			'h0C: btn_four_players <= key_pressed; // F4
-//			'h14: btn_fire3       <= key_pressed; // ctrl
-			'h11: btn_fire2       <= key_pressed; // alt
-			'h29: btn_fire1       <= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.joystick_2  ( joystick_2  ),
+	.joystick_3  ( joystick_3  ),
+	.rotate      ( 1'b0        ),
+	.orientation ( 2'b10       ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( 1'b0        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
+	.player3     ( {m_fire3B, m_fire3A, m_up3, m_down3, m_left3, m_right3} ),
+	.player4     ( {m_fire4B, m_fire4A, m_up4, m_down4, m_left4, m_right4} )
+);
 
 endmodule 
