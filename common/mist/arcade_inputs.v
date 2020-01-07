@@ -165,3 +165,20 @@ wire m_left   = ~(orientation[0] ^ rotate) ? keyboard[1] | joystick[1] : ((orien
 wire m_right  = ~(orientation[0] ^ rotate) ? keyboard[0] | joystick[0] : ((orientation[1] ^ orientation[0]) ? keyboard[2] | joystick[2] : keyboard[3] | joystick[3]);
 
 endmodule
+
+// A simple toggle-switch
+module input_toggle(
+	input clk,
+	input reset,
+	input btn,
+	output reg state
+);
+
+reg btn_old;
+always @(posedge clk) begin
+	btn_old <= btn;
+	if (reset) state <= 0;
+	else if (~btn_old & btn) state <= ~state;
+end
+
+endmodule

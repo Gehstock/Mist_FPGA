@@ -13,12 +13,12 @@ down	down 		: Decelerate
 left	left 		: Left
 right	right		: Right
 	ESC		: Coin
-start	TAB		: VAN
-Y	Z		: Shift
-X	shift left	: Oil
-C	ctrl left	: Smoke
-B	alt left	: Missle
+start	TAB,LShift	: VAN
 A	Space		: Gun
+B	LAlt		: Missle
+C	LCtrl		: Shift
+X	Z		: Oil
+Y	X		: Smoke
 
 
 ---------------------------------------------------------------------------------

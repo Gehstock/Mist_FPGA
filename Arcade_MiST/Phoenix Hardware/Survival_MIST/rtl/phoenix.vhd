@@ -19,8 +19,6 @@ generic (
 );
 port(
 	clk          : in std_logic; -- 11 MHz for TV, 25 MHz for VGA
-	clk_28          : in std_logic;
-	clk_ay          : in std_logic;
 	reset        : in std_logic;
 	ce_pix       : out std_logic;
 	dip_switch   : in std_logic_vector(7 downto 0);
@@ -56,6 +54,7 @@ architecture struct of phoenix is
  signal hblank_frgrd : std_logic; 
  signal ce_pix1 : std_logic;
 
+ signal cpu_ce   : std_logic;
  signal cpu_adr  : std_logic_vector(15 downto 0);
  signal cpu_di   : std_logic_vector( 7 downto 0);
  signal cpu_do   : std_logic_vector( 7 downto 0);
@@ -120,12 +119,12 @@ architecture struct of phoenix is
  signal mixed : std_logic_vector(11 downto 0) := (others =>'0');
  signal sound_string : std_logic_vector(31 downto 0);
 
- signal coin         : std_logic;
  signal player_start : std_logic_vector(1 downto 0);
  signal buttons      : std_logic_vector(3 downto 0);
  signal R_autofire   : std_logic_vector(21 downto 0);
 
  signal psg_cs    : std_logic;
+ signal ay_ena_cnt: std_logic_vector(1 downto 0);
  signal ay_ena    : std_logic;
  signal ay_do  : std_logic_vector( 7 downto 0) := (others =>'0');
  signal ay_iob_do : std_logic_vector(7 downto 0);
@@ -153,7 +152,19 @@ begin
   );
   reset_n <= not reset;
   ce_pix <= ce_pix1;
-  
+
+  process(clk,reset)
+  begin
+		if reset = '1' then
+			cpu_ce <= '0';
+			ay_ena_cnt <= "00";
+    elsif rising_edge(clk) then
+			ay_ena_cnt <= ay_ena_cnt + 1;
+      cpu_ce <= not cpu_ce;
+    end if;
+  end process;
+  ay_ena <= '1' when ay_ena_cnt = "11" else '0';
+
 -- microprocessor 8085
 cpu8085 : entity work.T8080se
 generic map
@@ -164,7 +175,7 @@ generic map
 port map(
 	RESET_n => reset_n,
 	CLK     => clk,
-	CLKEN  => '1', -- fixme: use it to make 5.5 MHz clock average
+	CLKEN  => cpu_ce,
 	READY  => rdy,
 	HOLD  => '1',
 	INT   => '1',
@@ -183,8 +194,8 @@ port map(
 cpu_di <= prog_do when cpu_adr(14) = '0' else
           frgnd_ram_do when cpu_adr(13 downto 10) = 2#00_00# else
           bkgnd_ram_do when cpu_adr(13 downto 10) = 2#00_10# else
-			 ay_do when cpu_adr(13 downto 10) = 2#01_00# else
-          btn_dw & btn_le & btn_ri & btn_up & btn_fire & btn_player_start2 & btn_player_start1 & coin when cpu_adr(13 downto 10) = 2#11_00# else
+          ay_do when psg_cs = '1' else
+          not (btn_dw & btn_le & btn_ri & btn_up & btn_fire & btn_player_start2 & btn_player_start1 & btn_coin) when cpu_adr(13 downto 10) = 2#11_00# else
           not vblank & dip_switch(6 downto 0) when cpu_adr(13 downto 10) = 2#11_10# else
           prog_do;
 
@@ -387,25 +398,27 @@ port map(
 --  1    0 : Write
 --  1    1 : Address
 --ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & "000" & not sw1;
+--0x6800-68ff - address write
+--0x6900-69ff - data read/write
+ay_bdir <= not cpu_wr_n;
+ay_bc1  <= not (cpu_wr_n xor cpu_adr(8));
+psg_cs <= '1' when cpu_adr(15 downto 9) = "0110100" else '0';
 
-ay_bdir <= '1' when cpu_wr_n = '0' else '0';
-ay_bc1  <= '1' when ((cpu_wr_n = '1' and cpu_adr(0) = '0')) else '0';
-psg_cs <= '1' when cpu_adr(15 downto 10) = "110100" else '0';--110100000000000
-ym2149 : entity work.ym2149											 --110100100000000
+ym2149 : entity work.ym2149
 port map (
 -- data bus
 	I_DA            => cpu_do,       --: in  std_logic_vector(7 downto 0);
 	O_DA            => ay_do,        --: out std_logic_vector(7 downto 0);
 	O_DA_OE_L       => open,         --: out std_logic;
 -- control
-	I_A9_L          => '1',         --: in  std_logic;
-	I_A8            => '1',          --: in  std_logic;
+	I_A9_L          => '0',          --: in  std_logic;
+	I_A8            => psg_cs,       --: in  std_logic;
 	I_BDIR          => ay_bdir,      --: in  std_logic;
 	I_BC2           => '1',          --: in  std_logic;
 	I_BC1           => ay_bc1,       --: in  std_logic;
 	I_SEL_L         => '1',          --: in  std_logic;
 -- audio
-	O_AUDIO         => audio,     --: out std_logic_vector(7 downto 0);
+	O_AUDIO         => audio,        --: out std_logic_vector(7 downto 0);
 -- port a
 	I_IOA           => ay_ioa_di,    --: in  std_logic_vector(7 downto 0);
 	O_IOA           => open,         --: out std_logic_vector(7 downto 0);
@@ -415,9 +428,9 @@ port map (
 	O_IOB           => ay_iob_do,    --: out std_logic_vector(7 downto 0);
 	O_IOB_OE_L      => open,         --: out std_logic;
 
-	ENA             => '1',       --: in  std_logic; -- clock enable for higher speed operation
-	RESET_L         => '1',          --: in  std_logic;
-	CLK             => clk_ay
+	ENA             => ay_ena,       --: in  std_logic; -- clock enable for higher speed operation
+	RESET_L         => not reset,    --: in  std_logic;
+	CLK             => clk
 );
 
 end struct;

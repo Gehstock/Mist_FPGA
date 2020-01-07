@@ -60,6 +60,7 @@ architecture struct of phoenix is
  signal hblank_frgrd : std_logic; 
  signal ce_pix1 : std_logic;
 
+ signal cpu_ce   : std_logic;
  signal cpu_adr  : std_logic_vector(15 downto 0);
  signal cpu_di   : std_logic_vector( 7 downto 0);
  signal cpu_do   : std_logic_vector( 7 downto 0);
@@ -173,7 +174,14 @@ end generate;
   );
   reset_n <= not reset;
   ce_pix <= ce_pix1;
-  
+
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      cpu_ce <= not cpu_ce;
+    end if;
+  end process;
+
 -- microprocessor 8085
 cpu8085 : entity work.T8080se
 generic map
@@ -184,7 +192,7 @@ generic map
 port map(
 	RESET_n => reset_n,
 	CLK     => clk,
-	CLKEN  => '1', -- fixme: use it to make 5.5 MHz clock average
+	CLKEN  => cpu_ce, -- fixme: use it to make 5.5 MHz clock average
 	READY  => rdy,
 	HOLD  => '1',
 	INT   => '1',
