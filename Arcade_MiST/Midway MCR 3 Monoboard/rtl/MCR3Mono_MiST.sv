@@ -79,24 +79,24 @@ always @(*) begin
 
 	if (`CORE_NAME == "SARGE") begin
 		// Two stick/player like the original
-		input0 = ~{2'b00, service, 1'b0, m_start2, m_start1, m_coin2, m_coin1};
-		input1 = ~{m_fire1 | m_fire1b, m_fire1 | m_fire1b, m_fire2 | m_fire2b, m_fire2 | m_fire2b, m_down1, m_up1, m_down2, m_up2};
-		input2 = ~{m_fire3 | m_fire3b, m_fire3 | m_fire3b, m_fire4 | m_fire4b, m_fire4 | m_fire4b, m_down3, m_up3, m_down4, m_up4};
+		input0 = ~{2'b00, service, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1};
+		input1 = ~{m_fireA | m_fireB, m_fireA | m_fireB, m_fire2A | m_fire2B, m_fire2A | m_fire2B, m_down, m_up, m_down, m_up};
+		input2 = ~{m_fire3A | m_fire3B, m_fire3A | m_fire3B, m_fire4A | m_fire4B, m_fire4A | m_fire4B, m_down3, m_up3, m_down4, m_up4};
 	end else if (`CORE_NAME == "MAXRPM") begin
-		input0 = ~{service, 3'b000, m_start1, m_start2, m_coin1, m_coin2};
+		input0 = ~{service, 3'b000, m_one_player, m_two_players, m_coin1, m_coin2};
 		input1 =  {pedal1[5:2], pedal2[5:2]};
 		input2 = ~{maxrpm_gear1, maxrpm_gear2};
 	end else if (`CORE_NAME == "RAMPAGE") begin
 		// normal controls for 3 players
 		input0 = ~{2'b00, service, 1'b0, 2'b00, m_coin2, m_coin1};
-		input1 = ~{2'b00, m_fire1b, m_fire1, m_left1, m_down1, m_right1, m_up1};
-		input2 = ~{2'b00, m_fire2b, m_fire2, m_left2, m_down2, m_right2, m_up2};
-		input4 = ~{2'b00, m_fire3b, m_fire3, m_left3, m_down3, m_right3, m_up3};
+		input1 = ~{2'b00, m_fireB, m_fireA, m_left, m_down, m_right, m_up};
+		input2 = ~{2'b00, m_fire2B, m_fire2A, m_left2, m_down2, m_right2, m_up2};
+		input4 = ~{2'b00, m_fire3B, m_fire3A, m_left3, m_down3, m_right3, m_up3};
 	end else if (`CORE_NAME == "POWERDRV") begin
 		// Controls for 3 players using 4 buttons/joystick
 		input0 = ~{2'b00, service, 1'b0, 1'b0, m_coin3, m_coin2, m_coin1};
-		input1 = ~{m_fire2b, m_fire2, powerdrv_gear[1], m_fire2c, m_fire1b, m_fire1, powerdrv_gear[0], m_fire1c};
-		input2 = ~{sndstat[0], 3'b000, m_fire3b, m_fire3, powerdrv_gear[2], m_fire3c};
+		input1 = ~{m_fire2B, m_fire2A, powerdrv_gear[1], m_fire2C, m_fireB, m_fireA, powerdrv_gear[0], m_fireC};
+		input2 = ~{sndstat[0], 3'b000, m_fire3B, m_fire3A, powerdrv_gear[2], m_fire3C};
 	end
 end
 
@@ -110,6 +110,7 @@ localparam CONF_STR = {
 	"V,v1.1.",`BUILD_DATE
 };
 
+wire       rotate    = status[2];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
 wire       service   = status[7];
@@ -131,16 +132,19 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joy_0;
-wire  [7:0] joy_1;
-wire  [7:0] joy_2;
-wire  [7:0] joy_3;
+wire  [7:0] joystick_0;
+wire  [7:0] joystick_1;
+wire  [7:0] joystick_2;
+wire  [7:0] joystick_3;
 wire        scandoublerD;
 wire        ypbpr;
 wire  [9:0] audio;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -332,7 +336,7 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( vs_out           ),
 	.VGA_HS         ( hs_out           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.ce_divider     ( 1                ),
 	.blend          ( blend            ),
 	.scandoubler_disable(1),//scandoublerD ),
@@ -356,10 +360,10 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
-	.joystick_0     (joy_0          ),
-	.joystick_1     (joy_1          ),
-	.joystick_2     (joy_2          ),
-	.joystick_3     (joy_3          ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.joystick_2     (joystick_2     ),
+	.joystick_3     (joystick_3     ),
 	.status         (status         )
 	);
 
@@ -371,19 +375,16 @@ dac #(10) dac(
 	);
 assign AUDIO_R = AUDIO_L;
 
-wire  [7:0] joystick_0 = joyswap ? joy_1 : joy_0;
-wire  [7:0] joystick_1 = joyswap ? joy_0 : joy_1;
-
 // Power Drive gear
 reg  [2:0] powerdrv_gear;
 always @(posedge clk_sys) begin
 	reg [2:0] gear_old;
 	if (reset) powerdrv_gear <= 0;
 	else begin
-		gear_old <= {m_fire3d, m_fire2d, m_fire1d};
-		if (~gear_old[0] & m_fire1d) powerdrv_gear[0] <= ~powerdrv_gear[0];
-		if (~gear_old[1] & m_fire2d) powerdrv_gear[1] <= ~powerdrv_gear[1];
-		if (~gear_old[2] & m_fire3d) powerdrv_gear[2] <= ~powerdrv_gear[2];
+		gear_old <= {m_fire3D, m_fire2D, m_fireD};
+		if (~gear_old[0] & m_fireD) powerdrv_gear[0] <= ~powerdrv_gear[0];
+		if (~gear_old[1] & m_fire2D) powerdrv_gear[1] <= ~powerdrv_gear[1];
+		if (~gear_old[2] & m_fire3D) powerdrv_gear[2] <= ~powerdrv_gear[2];
 	end
 end
 
@@ -393,8 +394,8 @@ spinner spinner1 (
 	.clock_40(clk_sys),
 	.reset(reset),
 	.btn_acc(),
-	.btn_left(m_up1),
-	.btn_right(m_down1),
+	.btn_left(m_up),
+	.btn_right(m_down),
 	.ctc_zc_to_2(vs),
 	.spin_angle(pedal1)
 );
@@ -417,140 +418,52 @@ wire [3:0] maxrpm_gear2 = maxrpm_gear_bits[gear2];
 reg  [2:0] gear1;
 reg  [2:0] gear2;
 always @(posedge clk_sys) begin
-	reg m_fire1_last, m_fire1b_last;
-	reg m_fire2_last, m_fire2b_last;
+	reg m_fireA_last, m_fireB_last;
+	reg m_fire2A_last, m_fire2B_last;
 
 	if (reset) begin
 		gear1 <= 0;
 		gear2 <= 0;
 	end else begin
-		m_fire1_last <= m_fire1;
-		m_fire1b_last <= m_fire1b;
-		m_fire2_last <= m_fire2;
-		m_fire2b_last <= m_fire2b;
+		m_fireA_last <= m_fireA;
+		m_fireB_last <= m_fireB;
+		m_fire2A_last <= m_fire2A;
+		m_fire2B_last <= m_fire2B;
 
-		if (m_start1) gear1 <= 0;
-		else if (~m_fire1_last && m_fire1 && gear1 != 3'd4) gear1 <= gear1 + 1'd1;
-		else if (~m_fire1b_last && m_fire1b && gear1 != 3'd0) gear1 <= gear1 - 1'd1;
+		if (m_one_player) gear1 <= 0;
+		else if (~m_fireA_last && m_fireA && gear1 != 3'd4) gear1 <= gear1 + 1'd1;
+		else if (~m_fireB_last && m_fireB && gear1 != 3'd0) gear1 <= gear1 - 1'd1;
 
-		if (m_start2) gear2 <= 0;
-		else if (~m_fire2_last && m_fire2 && gear2 != 3'd4) gear2 <= gear2 + 1'd1;
-		else if (~m_fire2b_last && m_fire2b && gear2 != 3'd0) gear2 <= gear2 - 1'd1;
+		if (m_two_players) gear2 <= 0;
+		else if (~m_fire2A_last && m_fire2A && gear2 != 3'd4) gear2 <= gear2 + 1'd1;
+		else if (~m_fire2B_last && m_fire2B && gear2 != 3'd0) gear2 <= gear2 - 1'd1;
 	end
 end
 
-// Generic controls - make a module from this?
-wire m_coin1   = btn_coin1_mame  | btn_coin;
-wire m_start1  = btn_start1_mame | btn_one_player;
-wire m_up1     = btn_up    | joystick_0[3];
-wire m_down1   = btn_down  | joystick_0[2];
-wire m_left1   = btn_left  | joystick_0[1];
-wire m_right1  = btn_right | joystick_0[0];
-wire m_fire1   = btn_fireA | joystick_0[4];
-wire m_fire1b  = btn_fireB | joystick_0[5];
-wire m_fire1c  = btn_fireC | joystick_0[6];
-wire m_fire1d  = btn_fireD | joystick_0[7];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D;
+wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D;
+wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B, m_fire4C, m_fire4D;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-wire m_coin2   = btn_coin2_mame  | btn_coin;
-wire m_start2  = btn_start2_mame | btn_two_players;
-wire m_left2   = btn_left2  | joystick_1[1];
-wire m_right2  = btn_right2 | joystick_1[0];
-wire m_up2     = btn_up2    | joystick_1[3];
-wire m_down2   = btn_down2  | joystick_1[2];
-wire m_fire2   = btn_fire2A | joystick_1[4];
-wire m_fire2b  = btn_fire2B | joystick_1[5];
-wire m_fire2c  = btn_fire2C | joystick_1[6];
-wire m_fire2d  = btn_fire2D | joystick_1[7];
-
-wire m_coin3   = btn_coin3_mame  | btn_coin;
-wire m_start3  = btn_start3_mame | btn_three_players;
-wire m_left3   = joy_2[1];
-wire m_right3  = joy_2[0];
-wire m_up3     = joy_2[3];
-wire m_down3   = joy_2[2];
-wire m_fire3   = joy_2[4];
-wire m_fire3b  = joy_2[5];
-wire m_fire3c  = joy_2[6];
-wire m_fire3d  = joy_2[7];
-
-wire m_coin4   = btn_coin4_mame  | btn_coin;
-wire m_start4  = btn_start4_mame | btn_four_players;
-wire m_left4   = joy_3[1];
-wire m_right4  = joy_3[0];
-wire m_up4     = joy_3[3];
-wire m_down4   = joy_3[2];
-wire m_fire4   = joy_3[4];
-wire m_fire4b  = joy_3[5];
-
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_three_players = 0;
-reg btn_four_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fireA = 0;
-reg btn_fireB = 0;
-reg btn_fireC = 0;
-reg btn_fireD = 0;
-reg btn_coin  = 0;
-reg btn_start1_mame = 0;
-reg btn_start2_mame = 0;
-reg btn_start3_mame = 0;
-reg btn_start4_mame = 0;
-reg btn_coin1_mame = 0;
-reg btn_coin2_mame = 0;
-reg btn_coin3_mame = 0;
-reg btn_coin4_mame = 0;
-reg btn_up2 = 0;
-reg btn_down2 = 0;
-reg btn_left2 = 0;
-reg btn_right2 = 0;
-reg btn_fire2A = 0;
-reg btn_fire2B = 0;
-reg btn_fire2C = 0;
-reg btn_fire2D = 0;
-
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up            <= key_pressed; // up
-			'h72: btn_down          <= key_pressed; // down
-			'h6B: btn_left          <= key_pressed; // left
-			'h74: btn_right         <= key_pressed; // right
-			'h76: btn_coin          <= key_pressed; // ESC
-			'h05: btn_one_player    <= key_pressed; // F1
-			'h06: btn_two_players   <= key_pressed; // F2
-			'h04: btn_three_players <= key_pressed; // F3
-			'h0C: btn_four_players  <= key_pressed; // F4
-			'h12: btn_fireD         <= key_pressed; // l-shift
-			'h14: btn_fireC         <= key_pressed; // ctrl
-			'h11: btn_fireB         <= key_pressed; // alt
-			'h29: btn_fireA         <= key_pressed; // Space
-			// JPAC/IPAC/MAME Style Codes
-			'h16: btn_start1_mame   <= key_pressed; // 1
-			'h1E: btn_start2_mame   <= key_pressed; // 2
-			'h26: btn_start3_mame   <= key_pressed; // 3
-			'h25: btn_start4_mame   <= key_pressed; // 4
-			'h2E: btn_coin1_mame    <= key_pressed; // 5
-			'h36: btn_coin2_mame    <= key_pressed; // 6
-			'h3D: btn_coin3_mame    <= key_pressed; // 7
-			'h3E: btn_coin4_mame    <= key_pressed; // 8
-			'h2D: btn_up2           <= key_pressed; // R
-			'h2B: btn_down2         <= key_pressed; // F
-			'h23: btn_left2         <= key_pressed; // D
-			'h34: btn_right2        <= key_pressed; // G
-			'h1C: btn_fire2A        <= key_pressed; // A
-			'h1B: btn_fire2B        <= key_pressed; // S
-			'h21: btn_fire2C        <= key_pressed; // Q
-			'h1D: btn_fire2D        <= key_pressed; // W
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.joystick_2  ( joystick_2  ),
+	.joystick_3  ( joystick_3  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b10       ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( 1'b0        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
+	.player3     ( {m_fire3D, m_fire3C, m_fire3B, m_fire3A, m_up3, m_down3, m_left3, m_right3} ),
+	.player4     ( {m_fire4D, m_fire4C, m_fire4B, m_fire4A, m_up4, m_down4, m_left4, m_right4} )
+);
 
 endmodule 
