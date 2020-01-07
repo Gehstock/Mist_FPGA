@@ -231,7 +231,7 @@ spy_hunter spy_hunter(
 	.csd_audio_out(csd_audio),
 	.coin1(m_coin1),
 	.coin2(m_coin2),	
-	.shift(shift),
+	.shift(shift_state),
 	.oil(oil),
 	.missile(missile),
 	.van(van),
@@ -324,10 +324,13 @@ wire  [7:0] steering;
 wire  [7:0] gas;
 wire        gun = m_fireA;
 wire        missile = m_fireB;
-wire        smoke = m_fireC;
+wire        shift = m_fireC;
 wire        van = m_fireD | btn_van;
 wire        oil = m_fireE;
-wire        shift = m_fireF;
+wire        smoke = m_fireF;
+reg         shift_state;
+
+input_toggle gearbox(clk_sys, m_coin1 | m_coin2, shift, shift_state);
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
