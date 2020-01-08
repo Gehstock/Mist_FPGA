@@ -112,7 +112,7 @@ always @(*) begin
 	end
 end
 
-assign LED = 1;
+assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sys;
 assign SDRAM_CKE = 1;
 
@@ -151,7 +151,7 @@ wire  [7:0] ioctl_dout;
 
 /*
 ROM Structure:
-0000-6FFF main cpu 44k (D000-FFFF + page 1,2,3,7)
+0000-6FFF main cpu 28k (D000-FFFF + page 1,2,3,7)
 7000-73FF decoder   1k
 7400-7BFF snd  cpu  2k
 */
