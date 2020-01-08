@@ -53,7 +53,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
-	"V,v1.1.",`BUILD_DATE
+	"V,v1.2.",`BUILD_DATE
 };
 
 wire   rotate  = status[2];
