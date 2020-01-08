@@ -49,8 +49,8 @@ module MCR3Mono_MiST(
 `include "rtl/build_id.v"
 
 // Uncomment one to build with game-specific core name/inputs/sound board
-`define CORE_NAME "SARGE"
-//`define CORE_NAME "MAXRPM"
+//`define CORE_NAME "SARGE"
+`define CORE_NAME "MAXRPM"
 //`define CORE_NAME "RAMPAGE"
 //`define CORE_NAME "POWERDRV"
 
