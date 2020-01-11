@@ -127,12 +127,12 @@ architecture struct of SkySkipper is
  signal cpu_ioreq_n : std_logic;
  signal cpu_nmi_n   : std_logic;
  signal cpu_m1_n    : std_logic;
-  
+ signal cpu_I       : std_logic_vector(7 downto 0);
 -- signal cpu_rom_addr   : std_logic_vector(14 downto 0);
 -- signal cpu_rom_do     : std_logic_vector( 7 downto 0);
  signal cpu_rom_do_swp : std_logic_vector( 7 downto 0);
  
- signal wram_addr   : std_logic_vector(10 downto 0);
+ signal wram_addr   : std_logic_vector(11 downto 0);
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
  signal wram_do_r   : std_logic_vector( 7 downto 0);
@@ -156,11 +156,9 @@ architecture struct of SkySkipper is
  signal voffset      : std_logic_vector( 7 downto 0);
  signal vshift       : std_logic_vector( 9 downto 0);
 
- signal bg_ram_addr    : std_logic_vector(11 downto 0);
- signal bg_ram_lnib_we : std_logic;
- signal bg_ram_lnib_do : std_logic_vector(3 downto 0);
- signal bg_ram_hnib_we : std_logic;
- signal bg_ram_hnib_do : std_logic_vector(3 downto 0);
+ signal bg_ram_addr  : std_logic_vector(12 downto 0);
+ signal bg_ram_we    : std_logic;
+ signal bg_ram_do    : std_logic_vector(3 downto 0);
 
  signal bg_graphx    : std_logic_vector(3 downto 0); 
  signal bg_color     : std_logic_vector(3 downto 0); 
@@ -406,9 +404,9 @@ end process;
 --------------------
 -- players inputs --
 --------------------
-input_0 <= fire12 & "11" & fire11 & down1 & up1 & left1 & right1;
-input_1 <= fire22 & "11" & fire21 & down2 & up2 & left2 & right2;
-input_2 <= coin1 & service & coin2 & '1' & start2 & start1 & "11";
+input_0 <= fire12 & "00" & fire11 & down1 & up1 & left1 & right1;
+input_1 <= fire22 & "00" & fire21 & down2 & up2 & left2 & right2;
+input_2 <= coin1 & service & coin2 & '0' & start2 & start1 & "00";
 
 ------------------------------------------
 -- cpu data input with address decoding --
@@ -431,7 +429,8 @@ cpu_rom_addr <= (cpu_addr(14 downto 10) & cpu_addr(8 downto 7) & cpu_addr(0) & c
 	
 cpu_di <= cpu_rom_do_swp	 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- program rom 0000-7FFF 32Ko
 			 wram_do_r   		 when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"8000" else -- work    ram 8000-87FF  2Ko + mirroring 1800
---			 protection_do     when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E000" else -- protection E000
+			 protection_do     when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E000" else -- protection E000
+			 X"00"             when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E001" else -- protection E001
    		 input_0           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "00") else
    		 input_1           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "01") else
    		 input_2           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "10") else
@@ -441,13 +440,12 @@ cpu_di <= cpu_rom_do_swp	 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8
 ------------------------------------------
 -- write enable / ram access from CPU --
 ------------------------------------------
-wram_addr <= cpu_addr(10 downto 0) when hcnt(0) = '0' else '1' & sp_ram_addr(9 downto 0);
+wram_addr <= cpu_addr(11 downto 0) when hcnt(0) = '0' else "11" & sp_ram_addr(9 downto 0);
 
-wram_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"E000") = x"8000" and hcnt(0) = '0' else '0';
+wram_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"F000") = x"8000" and hcnt(0) = '0' else '0';
 ch_ram_txt_we   <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"EC00") = x"A000" and hcnt(0) = '0' else '0';
 ch_ram_color_we <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"EC00") = x"A400" and hcnt(0) = '0' else '0';
-bg_ram_lnib_we  <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"F000") = x"C000" and hcnt(0) = '0' else '0';
-bg_ram_hnib_we  <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"F000") = x"D000" and hcnt(0) = '0' else '0';--not needed
+bg_ram_we       <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and (cpu_addr and x"F000") = x"C000" and hcnt(0) = '0' else '0';
 -----------------------------------------------------
 -- Transfer sprite data from wram to sprite ram 
 -- once per frame. Read sprite ram on every scanline.
@@ -476,7 +474,7 @@ begin
 		end if;
 		
 		if move_buf = '1' and pix_ena = '1' and hcnt(0) = '1' then
-			if sp_ram_addr >= 640 then 
+			if sp_ram_addr >= 688 then 
 				move_buf <= '0';
 			else 
 				sp_ram_addr <= sp_ram_addr + 1;
@@ -484,7 +482,7 @@ begin
 		end if;
 
 		if read_buf = '1' and pix_ena = '1' and hcnt(0) = '1' then
-			if sp_ram_addr >= 640 then 
+			if sp_ram_addr >= 688 then 
 				read_buf <= '0';
 			else 
 				sp_ram_addr <= sp_ram_addr + 4;
@@ -519,8 +517,9 @@ begin
 	end if;
 end process;
 
-cpu_nmi_n <= video_vs;
-
+--cpu_nmi_n <= video_vs;
+--cpu_nmi_n <= video_vs when cpu_I(0) = '1' else '1';
+cpu_nmi_n <= '0' when cpu_I(0) = '1' and vcnt = 260 else '1';     -- TODO 31kHz
 audio_out <= ay_audio & X"00";
 -- 
 -- bdir bc1 (bc2 = 1)
@@ -533,7 +532,7 @@ ay_bdir <= '1' when cpu_ioreq_n = '0' and  cpu_wr_n = '0' else '0';
 ay_bc1  <= '1' when cpu_ioreq_n = '0' and (cpu_rd_n = '0' or (cpu_wr_n = '0' and cpu_addr(0) = '0')) else '0';
 
 ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & "000" & not sw1;
-
+--ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & not sw1;
 ------------------------------------
 ---------- sprite machine ----------
 ------------------------------------
@@ -563,9 +562,8 @@ sp_code_line0 <=
  (sp_buffer_ram2_do(15) & sp_buffer_ram2_do(17) & sp_buffer_ram2_do(9 downto 0) & sp_vcnt(0)) xor ('0' & x"00F") when sp_buffer_sel = '1' and sp_buffer_ram2_do(16) = '1' else
  (sp_buffer_ram2_do(15) & sp_buffer_ram2_do(17) & sp_buffer_ram2_do(9 downto 0) & sp_vcnt(0)) xor ('0' & x"000");
 				  
-sp_code_line <= sp_code_line0 xor ('1'&x"FFF") when tv15Khz_mode = '1' else -- ok for 15 KHz
-                sp_code_line0 xor ('1'&x"FFE");                             -- ok for 31 KHz
-
+sp_code_line <= sp_code_line0 xor ('1' & x"FFF") when tv15Khz_mode = '1' else -- ok for 15 KHz
+                sp_code_line0 xor ('1' & x"FFE");                             -- ok for 31 KHz
 sp_hflip     <= sp_buffer_ram1_do(10)           when sp_buffer_sel = '0' else sp_buffer_ram2_do(10);
 sp_hoffset   <= sp_buffer_ram1_do(12 downto 11) when sp_buffer_sel = '0' else sp_buffer_ram2_do(12 downto 11);
 sp_color     <= sp_buffer_ram1_do(15 downto 13) when sp_buffer_sel = '0' else sp_buffer_ram2_do(15 downto 13);
@@ -647,7 +645,8 @@ end process;
 ----------------------------
 ---- background machine ----
 ----------------------------
-bg_ram_addr <= cpu_addr(11 downto 0) when hcnt(0) = '0' else vshift(7 downto 2) & hshift(8 downto 3);
+--bg_ram_addr <= cpu_addr(11 downto 0) when hcnt(0) = '0' else vshift(7 downto 2) & hshift(8 downto 3);
+bg_ram_addr <= cpu_addr(11 downto 6) & cpu_do(7) & cpu_addr(5 downto 0) when hcnt(0) = '0' else vshift(8 downto 3) & hshift(9 downto 3);
 
 process (clock_vid)
 begin
@@ -663,18 +662,20 @@ begin
 			
 			if hcnt = 540 then 
 				if tv15Khz_mode = '0' then
-				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"01"); -- tune background v pos w.r.t char
+--				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"01"); -- tune background v pos w.r.t char
+				 vshift <= ('0' & voffset & '0') + vflip + ("00" & x"21"); -- tune background v pos w.r.t char
 				else
-				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"02"); -- tune background v pos w.r.t char
+--				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"02"); -- tune background v pos w.r.t char
+				 vshift <= ('0' & voffset & '0') + vflip + ("00" & x"22"); -- tune background v pos w.r.t char
 				end if;
 			end if;
 				
 			if hcnt(0) = '1' then
 				if hcnt(1) = '1' then
 					if vshift(8) = '1' then 
-						bg_color <= bg_ram_lnib_do;
+						bg_color <= bg_ram_do;
 					else 				
-						bg_color <= bg_ram_hnib_do;
+						bg_color <= bg_ram_do;
 					end if;	
 				end if;
 			end if;
@@ -743,7 +744,8 @@ port map(
   BUSAK_n => open,
   A       => cpu_addr,
   DI      => cpu_di,
-  DO      => cpu_do
+  DO      => cpu_do,
+  I_out   => cpu_I
 );
 
 -- cpu program ROM 0x0000-0xDFFF
@@ -756,11 +758,11 @@ port map(
 
 -- working RAM   8000-87FF/8800-8FFF  2Ko
 wram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 11)
+generic map( dWidth => 8, aWidth => 12)
 port map(
  clk  => clock_vidn,
  we   => wram_we,
- addr => wram_addr(10 downto 0),
+ addr => wram_addr,
  d    => cpu_do,
  q    => wram_do
 );
@@ -787,29 +789,17 @@ port map(
  q    => ch_ram_color_do
 );
 
--- video RAM   C000-CFFF  4K x 4bits 
-video_ram_lnib : entity work.gen_ram
-generic map( dWidth => 4, aWidth => 12)
+-- video RAM   C000-CFFF  4K x 8bits 
+video_ram : entity work.gen_ram
+generic map( dWidth => 4, aWidth => 13)
 port map(
  clk  => clock_vidn,
- we   => bg_ram_lnib_we,
+ we   => bg_ram_we,
  addr => bg_ram_addr,
  d    => cpu_do(3 downto 0),
- q    => bg_ram_lnib_do
+ q    => bg_ram_do
 );
 
--- video RAM   D000-DFFF  4K x 4bits 
-video_ram_hnib : entity work.gen_ram
-generic map( dWidth => 4, aWidth => 12)
-port map(
- clk  => clock_vidn,
- we   => bg_ram_hnib_we,
- addr => bg_ram_addr,
- d    => cpu_do(3 downto 0),
- q    => bg_ram_hnib_do
-);
-
-	
 -- sprite RAMs (no cpu access)
 sprite_ram1 : entity work.gen_ram
 generic map( dWidth => 8, aWidth => 8)

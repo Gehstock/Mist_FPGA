@@ -168,8 +168,10 @@ SkySkipper SkySkipper(
 	.down2(m_down),
 	.fire21(m_fire1),
 	.fire22(m_fire2),
-	.sw1("0000"),
-	.sw2("01000101"),
+//	.sw1("0000"),
+//		.sw2("01000101"),
+	.sw1("1111"),//coining
+	.sw2("00000000"),
 	.service(status[7]),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do(rom_addr[0] ? rom_do[15:8] : rom_do[7:0])

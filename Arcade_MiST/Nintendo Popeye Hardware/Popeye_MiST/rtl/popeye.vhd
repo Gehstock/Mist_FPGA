@@ -435,6 +435,7 @@ protection_do <=
 cpu_di <= cpu_rom_do_swp	 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- program rom 0000-7FFF 32Ko
 			 wram_do_r   		 when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"8000" else -- work    ram 8000-87FF  2Ko + mirroring 1800
 			 protection_do     when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E000" else -- protection E000
+			 X"00"             when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E001" else -- protection E001
    		 input_0           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "00") else
    		 input_1           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "01") else
    		 input_2           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "10") else
