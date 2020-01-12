@@ -345,15 +345,6 @@ port map(
 	test_cc  => open
 );
 
--- cpu program rom
---cpu_prog_rom : entity work.travusa_sound
---port map(
--- clk  => clock_E,
--- addr => cpu_addr(12 downto 0),
--- data => rom_do
---);
- 
- 
 snd_rom_addr <= cpu_addr(12 downto 0);
 
 -- cpu wram
