@@ -1,7 +1,5 @@
 //============================================================================
-//  Arcade: Tropical Angel
-//
-//  DarFPGA's core ported to MiST by (C) 2019 Szombathelyi György
+//  Arcade: Tropical Angel top-level for MiST
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -54,17 +52,19 @@ localparam CONF_STR = {
 	"TROPANG;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"OA,Blending,Off,On;",
-	"O5,Analog Accelarator,Off,On;",
-	"O6,Stop Mode,Off,On;",
+	"O5,Blending,Off,On;",
 	"O7,Invulnerability,Off,On;",
-	"O9,Test mode,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
 
+wire        rotate    = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend     = status[5];
+wire        invuln    = status[7];
+
 assign LED = ~ioctl_downl;
-assign SDRAM_CLK = clk_sd;//sound problems on sys clock
+assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1; 
 
 wire clk_sys, clk_aud, clk_sd;
@@ -85,12 +85,14 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
 wire [10:0] audio;
 wire        hs, vs;
 wire        blankn;
 wire  [2:0] g,b;
 wire  [1:0] r;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
 
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
@@ -98,14 +100,26 @@ wire [12:0] snd_addr;
 wire [15:0] snd_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
+
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
+/* ROM structure
+00000 - 07FFF main CPU    32k  ta-a-3k ta-a-3m ta-a-3n ta-a-3q
+08000 - 09FFF  snd CPU     8k  ta-s-1a
+0A000 - 0FFFF gfx1        24k  ta-a-3e ta-a-3d ta-a-3c
+10000 - 1BFFF gfx2        48k  ta-b-5j ta-b-5h ta-b-5e ta-b-5d ta-b-5c ta-b-5a
+1C000 - 1C0FF chr pal lo 256b  ta-a-5a
+1C100 - 1C1FF chr pal hi 256b  ta-a-5b
+1C200 - 1C2FF spr pal    256b  ta-b-3d
+1C300 - 1C31F spr lut     32b  ta-b-1b
+*/
+
 data_io data_io(
-	.clk_sys       ( clk_sys      ),
+	.clk_sys       ( clk_sd       ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -116,7 +130,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h11000; //SP ROM offset: 0x11000
+wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000; //SP ROM offset: 0x10000
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -133,7 +147,7 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]} ),
 	.cpu1_q        ( rom_do ),
 	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + snd_addr[12:1]) ),
 	.cpu2_q        ( snd_do ),
@@ -141,8 +155,8 @@ sdram sdram(
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {sp_ioctl_addr[15], ~sp_ioctl_addr[15]} ),
+	.port2_a       ( {sp_ioctl_addr[23:16], sp_ioctl_addr[13:0], sp_ioctl_addr[15]} ), // merge sprite roms to 32-bit wide words
+	.port2_ds      ( {sp_ioctl_addr[14], ~sp_ioctl_addr[14]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
@@ -172,54 +186,47 @@ always @(posedge clk_sys) begin
 	reg [15:0] reset_count;
 	ioctl_downlD <= ioctl_downl;
 
-	// generate a second reset signal - needed for some reason
 	if (status[0] | buttons[1] | ~rom_loaded) reset_count <= 16'hffff;
 	else if (reset_count != 0) reset_count <= reset_count - 1'd1;
 
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | buttons[1] | ~rom_loaded | (reset_count == 16'h0001);
+	reset <= reset_count != 16'h0000;
 
 end
 
-wire [7:0] dip1 = "00000010";
-//Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
-wire [7:0] dip2 = { 1'b1, ~status[7],1'b1, ~status[6], ~status[5], 3'b011};
+wire [7:0] dip1 = ~8'b00000010;
+wire [7:0] dip2 = ~{ 1'b0, invuln, 1'b0, 1'b0/*stop*/, 4'b0100 };
 
 TropicalAngel TropicalAngel(
 	.clock_36     ( clk_sys         ),
 	.clock_0p895  ( clk_aud         ),
-	.reset        ( reset 				),
+	.reset        ( reset           ),
 
 	.video_r      ( r               ),
 	.video_g      ( g               ),
 	.video_b      ( b               ),
-    .video_hs     ( hs              ),
+	.video_hs     ( hs              ),
 	.video_vs     ( vs              ),
 	.video_blankn ( blankn          ),
 
 	.audio_out    ( audio           ),
 
 	.cpu_rom_addr ( rom_addr       	),
-	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0]   			),
-	.snd_rom_addr ( snd_addr			),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] 				),
-	
+	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
+	.snd_rom_addr ( snd_addr			  ),
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.sp_addr      ( sp_addr         ),
+	.sp_graphx32_do( sp_do          ),
+
 	.dip_switch_1 ( dip1            ),  
 	.dip_switch_2 ( dip2            ),
+	.input_0      ( ~{4'd0, m_coin1, 1'b0 /*service*/, m_two_players, m_one_player} ),
+	.input_1      ( ~{m_fireA, 1'b0, m_fireB, 1'b0, m_up, m_down, m_left, m_right} ),
+	.input_2      ( ~{m_fire2A, 1'b0, m_fire2B, m_coin2, m_up2, m_down2, m_left2, m_right2} ),
 
-	.start2       ( btn_two_players ),
-	.start1       ( btn_one_player  ),
-	.coin1        ( btn_coin        ),
-	.service		  ( ~status[9]		  ),
-	.right1       ( m_right         ),
-	.left1        ( m_left          ),
-	.brake1       ( m_down          ),
-	.accel1       ( m_up            ),
-
-	.right2       ( m_right         ),
-	.left2        ( m_left          ),
-	.brake2       ( m_down          ),
-	.accel2       ( m_up            )
+	.dl_addr      ( ioctl_addr[16:0]),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr        )
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
@@ -237,9 +244,10 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
+	.scanlines      ( scanlines        ),
+	.blend          ( blend            ),
 	.ypbpr          ( ypbpr            )
 	);
 
@@ -277,43 +285,24 @@ dac(
 	.dac_o(dac_o)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up          <= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h14: btn_fire3       <= key_pressed; // ctrl
-			'h11: btn_fire2       <= key_pressed; // alt
-			'h29: btn_fire1       <= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b10       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule 
