@@ -49,7 +49,7 @@ module TropicalAngel_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {      
-	"TROPANG;;",
+	"TROPANG;ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",

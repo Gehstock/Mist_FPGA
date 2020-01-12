@@ -86,8 +86,9 @@ port(
  down2          : in std_logic;
  fire21         : in std_logic;
  fire22         : in std_logic;
- sw1            : in std_logic_vector(3 downto 0);
+ sw1            : in std_logic_vector(6 downto 0);
  sw2            : in std_logic_vector(7 downto 0);
+
  
  service        : in std_logic;
  cpu_rom_addr   : out std_logic_vector(14 downto 0);
@@ -531,8 +532,7 @@ audio_out <= ay_audio & X"00";
 ay_bdir <= '1' when cpu_ioreq_n = '0' and  cpu_wr_n = '0' else '0';
 ay_bc1  <= '1' when cpu_ioreq_n = '0' and (cpu_rd_n = '0' or (cpu_wr_n = '0' and cpu_addr(0) = '0')) else '0';
 
-ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & "000" & not sw1;
---ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & not sw1;
+ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & not sw1;
 ------------------------------------
 ---------- sprite machine ----------
 ------------------------------------
