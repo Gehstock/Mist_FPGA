@@ -113,8 +113,7 @@ architecture struct of SkySkipper is
  signal hs_cnt, vs_cnt :std_logic_vector(9 downto 0) ;
  signal hsync0, hsync1, hsync2, hsync3, hsync4 : std_logic;
  signal top_frame : std_logic := '0';
- signal init_eo   : std_logic;
- 
+
  signal pix_ena     : std_logic;
  signal cpu_ena     : std_logic;
 
@@ -128,6 +127,7 @@ architecture struct of SkySkipper is
  signal cpu_ioreq_n : std_logic;
  signal cpu_nmi_n   : std_logic;
  signal cpu_m1_n    : std_logic;
+ signal cpu_rfsh_n  : std_logic;
  signal cpu_I       : std_logic_vector(7 downto 0);
 -- signal cpu_rom_addr   : std_logic_vector(14 downto 0);
 -- signal cpu_rom_do     : std_logic_vector( 7 downto 0);
@@ -152,7 +152,7 @@ architecture struct of SkySkipper is
  signal ch_vid       : std_logic;
  signal ch_color     : std_logic_vector( 4 downto 0);
  
- signal hoffset      : std_logic_vector( 7 downto 0);
+ signal hoffset      : std_logic_vector( 8 downto 0);
  signal hshift       : std_logic_vector( 9 downto 0);
  signal voffset      : std_logic_vector( 7 downto 0);
  signal vshift       : std_logic_vector( 9 downto 0);
@@ -475,7 +475,7 @@ begin
 		end if;
 		
 		if move_buf = '1' and pix_ena = '1' and hcnt(0) = '1' then
-			if sp_ram_addr >= 688 then 
+			if sp_ram_addr >= 640 then 
 				move_buf <= '0';
 			else 
 				sp_ram_addr <= sp_ram_addr + 1;
@@ -483,7 +483,7 @@ begin
 		end if;
 
 		if read_buf = '1' and pix_ena = '1' and hcnt(0) = '1' then
-			if sp_ram_addr >= 688 then 
+			if sp_ram_addr >= 640 then 
 				read_buf <= '0';
 			else 
 				sp_ram_addr <= sp_ram_addr + 4;
@@ -502,19 +502,19 @@ begin
 	if rising_edge(clock_vid) then
 		cpu_wr_n_r <= cpu_wr_n;
 		if cpu_mreq_n = '0' and cpu_wr_n = '0' then 
-			if (cpu_addr = x"8C00") then hoffset <= cpu_do; end if;
+			if (cpu_addr = x"8C00") then hoffset(7 downto 0) <= cpu_do; end if;
 			if (cpu_addr = x"8C01") then voffset <= cpu_do; end if;
-			
+			if (cpu_addr = x"8C02") then hoffset(8) <= cpu_do(0); end if;
 			if (cpu_addr = x"8C03") then 
 				sp_palette_addr(7 downto 5) <= cpu_do(2 downto 0);
 				bg_palette_addr(4) <= cpu_do(3);
 			end if;			
-		end if;
 			if (cpu_addr = x"E000") then protection_shift <= cpu_do(2 downto 0); end if;
 			if (cpu_addr = x"E001") and cpu_wr_n_r = '1' then
 				protection_data0 <= protection_data1;
 				protection_data1 <= cpu_do;
-			end if;		
+			end if;	
+		end if;	
 	end if;
 end process;
 
@@ -655,35 +655,28 @@ begin
 		if pix_ena = '1' then
 		
 			if hcnt = 540 then -- tune background h pos w.r.t char (use odd value to keep hshift(0) = hcnt(0))
-				hshift <= '0' & hoffset & '0'; 
+				hshift <= hoffset & '0';
 			else
 				hshift <= hshift + 1 ;
-			end if;
-			
+			end if;		
 			if hcnt = 540 then 
 				if tv15Khz_mode = '0' then
---				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"01"); -- tune background v pos w.r.t char
-				 vshift <= ('0' & voffset & '0') + vflip + ("00" & x"21"); -- tune background v pos w.r.t char
+					vshift <= ('0' & voffset & '0') + vflip + ("00" & x"01"); -- tune background v pos w.r.t char
 				else
---				 vshift <= ('0' & voffset & '0') + vflip + ("01" & x"02"); -- tune background v pos w.r.t char
-				 vshift <= ('0' & voffset & '0') + vflip + ("00" & x"22"); -- tune background v pos w.r.t char
-				end if;
-			end if;
-				
-			if hcnt(0) = '1' then
+               vshift <= ('0' & voffset & '0') + vflip + ("00" & x"02"); -- tune background v pos w.r.t char
+            end if;
+          end if;
+			 if hcnt(0) = '1' then
 				if hcnt(1) = '1' then
-					if vshift(8) = '1' then 
-						bg_color <= bg_ram_do;
-					else 				
-						bg_color <= bg_ram_do;
+					if vshift(9) = '1' then
+                  bg_color <= bg_ram_do;
+               else
+                  bg_color <= (others => '0');
 					end if;	
 				end if;
-			end if;
-		
+			end if;	
 			bg_palette_addr(3 downto 0) <= bg_color;
-
 		end if;
-
 	end if;
 end process;
 	
@@ -694,7 +687,7 @@ process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
 	
-		if hoffset = x"00" then	
+		if voffset = x"00" then	
 			video_r <= "000";
 			video_g <= "000";
 			video_b <= "00";
@@ -739,7 +732,7 @@ port map(
   IORQ_n  => cpu_ioreq_n,
   RD_n    => cpu_rd_n,
   WR_n    => cpu_wr_n,
-  RFSH_n  => open,
+  RFSH_n  => cpu_rfsh_n,
   HALT_n  => open,
   BUSAK_n => open,
   A       => cpu_addr,
@@ -789,7 +782,7 @@ port map(
  q    => ch_ram_color_do
 );
 
--- video RAM   C000-CFFF  4K x 8bits 
+-- video RAM   C000-CFFF  4K x 4bits 
 video_ram : entity work.gen_ram
 generic map( dWidth => 4, aWidth => 13)
 port map(

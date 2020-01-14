@@ -222,6 +222,13 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80a.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SkySkipper_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/SkySkipper.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_4.vhd
@@ -233,13 +240,6 @@ set_global_assignment -name VHDL_FILE rtl/rom/skyskip_palette_gb.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_palette_rgb.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_bits.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/skyskip_bg_palette_rgb.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80a.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
