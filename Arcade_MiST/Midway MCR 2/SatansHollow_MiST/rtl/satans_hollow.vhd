@@ -1,4 +1,5 @@
 ---------------------------------------------------------------------------------
+-- Midway 90010 CPU board, 91399 Video board, 90913 Sound board
 -- Satans Hollow by Dar (darfpga@aol.fr) (09/11/2019)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
@@ -151,26 +152,12 @@ port(
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
-  
- coin1          : in std_logic;
- coin2          : in std_logic;
- start1         : in std_logic; 
- start2         : in std_logic; 
- 
- left           : in std_logic; 
- right          : in std_logic; 
- fire1          : in std_logic;
- fire2          : in std_logic;
- 
- left_c         : in std_logic; 
- right_c        : in std_logic; 
- fire1_c        : in std_logic;
- fire2_c        : in std_logic;
 
- coin_meters    : in std_logic;
- cocktail       : in std_logic;
-
- service        : in std_logic;
+ input_0        : in std_logic_vector( 7 downto 0);
+ input_1        : in std_logic_vector( 7 downto 0);
+ input_2        : in std_logic_vector( 7 downto 0);
+ input_3        : in std_logic_vector( 7 downto 0);
+ input_4        : in std_logic_vector( 7 downto 0);
 
  cpu_rom_addr   : out std_logic_vector(15 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -179,7 +166,10 @@ port(
  snd_rom_addr   : out std_logic_vector(13 downto 0);
  snd_rom_do     : in std_logic_vector(7 downto 0);
  snd_rom_rd     : out std_logic;
- dbg_cpu_addr   : out std_logic_vector(15 downto 0)
+
+ dl_addr        : in  std_logic_vector(16 downto 0);
+ dl_wr          : in  std_logic;
+ dl_data        : in  std_logic_vector( 7 downto 0)
  );
 end satans_hollow;
 
@@ -210,31 +200,19 @@ architecture struct of satans_hollow is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
+ signal cpu_int_ack_n : std_logic;
  
  signal ctc_controler_we  : std_logic;
  signal ctc_controler_do  : std_logic_vector(7 downto 0);
  signal ctc_int_ack       : std_logic;
+ signal ctc_int_ack_phase : std_logic_vector(1 downto 0);
 
- signal ctc_counter_0_we  : std_logic;
--- signal ctc_counter_0_trg : std_logic;
- signal ctc_counter_0_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_0_int : std_logic;
-
- signal ctc_counter_1_we  : std_logic;
--- signal ctc_counter_1_trg : std_logic;
- signal ctc_counter_1_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_1_int : std_logic;
- 
- signal ctc_counter_2_we  : std_logic;
--- signal ctc_counter_2_trg : std_logic;
- signal ctc_counter_2_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_2_int : std_logic;
- 
- signal ctc_counter_3_we  : std_logic;
+ signal ctc_counter_1_trg : std_logic;
  signal ctc_counter_3_trg : std_logic;
- signal ctc_counter_3_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_3_int : std_logic;
  
+ signal ctc_ce            : std_logic;
+ signal ctc_do            : std_logic_vector(7 downto 0);
+
 -- signal cpu_rom_do : std_logic_vector( 7 downto 0);
  
  signal wram_we    : std_logic;
@@ -306,25 +284,16 @@ architecture struct of satans_hollow is
 
  signal ssio_iowe    : std_logic;
  signal ssio_do      : std_logic_vector(7 downto 0);
- 
- signal input_0       : std_logic_vector(7 downto 0);
- signal input_1       : std_logic_vector(7 downto 0);
- signal input_2       : std_logic_vector(7 downto 0);
- signal input_3       : std_logic_vector(7 downto 0);
-   
+
+ signal bg_graphics_1_we    : std_logic;
+ signal bg_graphics_2_we    : std_logic;
+ signal sprite_graphics_we  : std_logic;
+
 begin
 
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
-
--- debug 
-process (reset, clock_vid)
-begin
- if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
-   dbg_cpu_addr<= "000000000000000"&service; --cpu_addr;
- end if;
-end process;
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -356,35 +325,34 @@ begin
 		hcnt  <= (others=>'0');
 		vcnt  <= (others=>'0');
 		top_frame <= '0';
-	else 
-		if rising_edge(clock_vid) then
-			if pix_ena = '1' then
-		
-				hcnt <= hcnt + 1;
-				if hcnt = 633 then
-					hcnt <= (others=>'0');
-					vcnt <= vcnt + 1;
-					if (vcnt = 524 and tv15Khz_mode = '0') or (vcnt = 263 and tv15Khz_mode = '1') then
-						vcnt <= (others=>'0');
-						top_frame <= not top_frame;
-					end if;
+	elsif rising_edge(clock_vid) then
+		if pix_ena = '1' then
+
+			hcnt <= hcnt + 1;
+			if hcnt = 633 then
+				hcnt <= (others=>'0');
+				vcnt <= vcnt + 1;
+				if (vcnt = 524 and tv15Khz_mode = '0') or (vcnt = 263 and tv15Khz_mode = '1') then
+					vcnt <= (others=>'0');
+					top_frame <= not top_frame;
 				end if;
-			
-				if tv15Khz_mode = '0' then 
-							--	progessive mode
-				
-					if vcnt = 490-1 then video_vs <= '0'; end if; -- front porch 10
-					if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
-																				-- back porch  33 
+			end if;
+
+			if tv15Khz_mode = '0' then 
+				--	progessive mode
+
+				if vcnt = 490-1 then video_vs <= '0'; end if; -- front porch 10
+				if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
+				                                              -- back porch  33 
 																		 
-					if hcnt = 512+13+9 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
-					if hcnt = 512+90+9 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
-																				  -- back porch  48/25*20 = 38
-					video_blankn <= '0';
-					if hcnt >= 2+16 and  hcnt < 514+16 and
-						vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
+				if hcnt = 512+13+9 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
+				if hcnt = 512+90+9 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
+                                                                  -- back porch  48/25*20 = 38
+				video_blankn <= '0';
+				if hcnt >= 2+16 and  hcnt < 514+16 and
+					vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
 					
-				else    -- interlaced mode
+			else    -- interlaced mode
 				 
 				if hcnt = 530+18 then 
 					hs_cnt <= (others => '0');
@@ -396,14 +364,17 @@ begin
 				else 
 					hs_cnt <= hs_cnt + 1;
 				end if;
-				
+
+				if vcnt = 260 then video_vs <= '0'; end if;
+				if vcnt = 262 then video_vs <= '1'; end if;
+
 				video_blankn <= '0';				
 				if hcnt >= 2+16 and  hcnt < 514+16 and
 					vcnt >= 1 and  vcnt < 241 then video_blankn <= '1';end if;
 
 				
-				if    hs_cnt =  0 then hsync0 <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1';
+				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
@@ -447,50 +418,29 @@ begin
 				elsif  vs_cnt = 11 then video_csync <= hsync0;
 				else                    video_csync <= hsync0;
 				end if;
-				
-				
-				end if;
 
 			end if;
 		end if;
 	end if;
 end process;
 
---------------------
--- players inputs --
---------------------
--- "111" for test & tilt & unused
-  
-input_0 <= not service & "111" & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= not fire1_c & not fire2_c & not right_c & not left_c & not fire1 & not fire2 & not right & not left; 
-input_2 <= x"FF";
-input_3 <= "111111" & cocktail & coin_meters;
-
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C" else    -- 0000-BFFF
-			 wram_do     	 	 when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"C000" else -- C000-C7FF + mirroring 1800
-			 sp_ram_cache_do_r when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E000" else -- sprite ram  E000-E1FF + mirroring 1600
-			 bg_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E800" else -- video ram   E800-EFFF + mirroring 1000
-			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
-			 ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000" else  -- 0x00-0x1F
- 			 ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
-   		 X"FF";
-		 
+cpu_di <= cpu_rom_do        when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"C"    else -- 0000-BFFF
+          wram_do           when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"C000" else -- C000-C7FF + mirroring 1800
+          sp_ram_cache_do_r when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E000" else -- sprite ram  E000-E1FF + mirroring 1600
+          bg_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"E800") = x"E800" else -- video ram   E800-EFFF + mirroring 1000
+          ctc_do            when cpu_int_ack_n = '0' or ctc_ce = '1'                   else -- ctc (interrupt vector or counter data)
+          ssio_do           when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000"    else -- 0x00-0x1F
+          X"FF";
+
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
 ------------------------------------------------------------------------
-ctc_counter_3_trg <= '1' when (vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')else '0';
-ctc_counter_3_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else '0';
-ctc_counter_2_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else '0';
-ctc_counter_1_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else '0';
-ctc_counter_0_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';
-ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0'; -- only channel 0 receive int vector
-ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
+ctc_counter_3_trg <= '1' when top_frame = '1' and ((vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')) else '0';
+cpu_int_ack_n     <= cpu_ioreq_n or cpu_m1_n;
+ctc_ce            <= '1' when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = x"F" else '0';
 
 ------------------------------------------
 -- write enable / ram access from CPU --
@@ -688,92 +638,28 @@ port map(
   DO      => cpu_do
 );
 
--- CTC interrupt controler Z80-CTC (MK3882)
-ctc_controler : entity work.ctc_controler
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_controler_we,
- int_ack   => ctc_int_ack,
-
- int_pulse_0 => ctc_counter_0_int,
- int_pulse_1 => ctc_counter_1_int,
- int_pulse_2 => ctc_counter_2_int,
- int_pulse_3 => ctc_counter_3_int,
- 
- d_out     => ctc_controler_do,
- int_n     => cpu_irq_n
-);
-
-ctc_counter_0 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_0_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_0_do,
- zc_to     => open, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
- int_pulse => ctc_counter_0_int
- 
-);
-
-ctc_counter_1 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_1_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_1_do,
- zc_to     => open,
- int_pulse => ctc_counter_1_int
- 
-);
-
-ctc_counter_2 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_2_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_2_do,
- zc_to     => open,
- int_pulse => ctc_counter_2_int
- 
-);
-
-ctc_counter_3 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_3_we,
- 
- clk_trg   => ctc_counter_3_trg,
- 
- d_out     => ctc_counter_3_do,
- zc_to     => open,
- int_pulse => ctc_counter_3_int
- 
+-- Z80-CTC (MK3882)
+z80ctc : entity work.z80ctc_top
+port map (
+	clock     => clock_vid,
+	clock_ena => cpu_ena,
+	reset     => reset,
+	din       => cpu_do,
+	cpu_din   => cpu_di,
+	dout      => ctc_do,
+	ce_n      => not ctc_ce,
+	cs        => cpu_addr(1 downto 0),
+	m1_n      => cpu_m1_n,
+	iorq_n    => cpu_ioreq_n,
+	rd_n      => cpu_rd_n,
+	int_n     => cpu_irq_n,
+	trg0      => '0',
+	to0       => ctc_counter_1_trg,
+	trg1      => ctc_counter_1_trg,
+	to1       => open,
+	trg2      => '0',
+	to2       => open,
+	trg3      => ctc_counter_3_trg
 );
 
 -- cpu program ROM 0x0000-0xBFFF
@@ -853,60 +739,46 @@ port map(
 );
 
 -- background graphics ROM G3
-bg_graphics_1 : entity work.satans_hollow_bg_bits_1
+bg_graphics_1 : entity work.dpram
+generic map( dWidth => 8, aWidth => 13)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx1_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx1_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(12 downto 0),
+ we_b   => bg_graphics_1_we,
+ d_b    => dl_data
 );
+bg_graphics_1_we <= '1' when dl_wr = '1' and dl_addr(16 downto 13) = "1000" else '0'; -- 10000-11FFF
 
 -- background graphics ROM G4
-bg_graphics_2 : entity work.satans_hollow_bg_bits_2
+bg_graphics_2 : entity work.dpram
+generic map( dWidth => 8, aWidth => 13)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx2_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx2_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(12 downto 0),
+ we_b   => bg_graphics_2_we,
+ d_b    => dl_data
 );
-
-----sprite graphics ROM 1E
---sprite_graphics_1 : entity work.satans_hollow_sp_bits_1
---port map(
--- clk  => clock_vidn,
--- addr => sp_code_line,
--- data => sp_graphx1_do
---);
---
----- sprite graphics ROM 1D
---sprite_graphics_2 : entity work.satans_hollow_sp_bits_2
---port map(
--- clk  => clock_vidn,
--- addr => sp_code_line,
--- data => sp_graphx2_do
---);
---
----- sprite graphics ROM 1B
---sprite_graphics_3 : entity work.satans_hollow_sp_bits_3
---port map(
--- clk  => clock_vidn,
--- addr => sp_code_line,
--- data => sp_graphx3_do
---);
---
----- sprite graphics ROM 1A
---sprite_graphics_4 : entity work.satans_hollow_sp_bits_4
---port map(
--- clk  => clock_vidn,
--- addr => sp_code_line,
--- data => sp_graphx4_do
---);
+bg_graphics_2_we <= '1' when dl_wr = '1' and dl_addr(16 downto 13) = "1001" else '0'; -- 12000-13FFF
 
 -- sprite graphics ROM 1E/1D/1B/1A
-sprite_graphics : entity work.satans_hollow_sp_bits
+sprite_graphics : entity work.dpram
+generic map( dWidth => 8, aWidth => 15)
 port map(
- clk  => clock_vidn,
- addr => sp_code_line_mux,
- data => sp_graphx_do
+ clk_a  => clock_vidn,
+ addr_a => sp_code_line_mux,
+ q_a    => sp_graphx_do,
+ clk_b  => clock_vid,
+ addr_b => not dl_addr(14) & dl_addr(13 downto 0),
+ we_b   => sprite_graphics_we,
+ d_b    => dl_data
 );
+sprite_graphics_we <= '1' when dl_wr = '1' and dl_addr(16) = '1' else '0'; -- 14000-1BFFF
 
 --satans_hollow_sound_board 
 sound_board : entity work.satans_hollow_sound_board
@@ -924,7 +796,7 @@ port map(
  input_1 => input_1,
  input_2 => input_2,
  input_3 => input_3,
- input_4 => x"FF",
+ input_4 => input_4,
  
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,

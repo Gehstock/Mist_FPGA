@@ -33,8 +33,8 @@ begin
 
 		if ctc_zc_to_2_r ='0' and ctc_zc_to_2 = '1' then
 			if btn_acc = '0' then  -- space -- speed up
-				if btn_left = '1' then spin_count <= spin_count - 40; end if; -- left
-				if btn_right = '1' then spin_count <= spin_count + 40; end if; -- right
+				if btn_left = '1' then spin_count <= spin_count - 20; end if; -- left
+				if btn_right = '1' then spin_count <= spin_count + 20; end if; -- right
 			else
 				if btn_left = '1' then spin_count <= spin_count - 55; end if;
 				if btn_right = '1' then spin_count <= spin_count + 55; end if;

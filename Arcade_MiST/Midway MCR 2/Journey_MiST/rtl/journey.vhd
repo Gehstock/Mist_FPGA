@@ -134,6 +134,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
+-- 91475 CPU board + 91464 video board
 entity journey is
 port(
  clock_40     : in std_logic;
@@ -152,27 +153,11 @@ port(
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
 
- coin1          : in std_logic;
- coin2          : in std_logic;
- start1         : in std_logic;
- start2         : in std_logic;
-
- left1          : in std_logic;
- right1         : in std_logic;
- up1            : in std_logic;
- down1          : in std_logic;
- fire1          : in std_logic;
-
- left2          : in std_logic;
- right2         : in std_logic;
- up2            : in std_logic;
- down2          : in std_logic;
- fire2          : in std_logic;
-
- cocktail       : in std_logic;
- coin_meters    : in std_logic;
-
- service        : in std_logic;
+ input_0        : in  std_logic_vector( 7 downto 0);
+ input_1        : in  std_logic_vector( 7 downto 0);
+ input_2        : in  std_logic_vector( 7 downto 0);
+ input_3        : in  std_logic_vector( 7 downto 0);
+ input_4        : in  std_logic_vector( 7 downto 0);
 
  cpu_rom_addr   : out std_logic_vector(15 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -182,14 +167,11 @@ port(
  snd_rom_do     : in std_logic_vector(7 downto 0);
 
  sp_addr        : out std_logic_vector(14 downto 0);
--- sp_graphx_do   : in std_logic_vector(7 downto 0);
  sp_graphx32_do : in std_logic_vector(31 downto 0);
 
  dl_addr        : in std_logic_vector(16 downto 0);
  dl_data        : in std_logic_vector( 7 downto 0);
- dl_wr          : in std_logic;
-
- dbg_cpu_addr   : out std_logic_vector(15 downto 0)
+ dl_wr          : in std_logic
  );
 end journey;
 
@@ -320,12 +302,6 @@ architecture struct of journey is
  signal ssio_iowe    : std_logic;
  signal ssio_do      : std_logic_vector(7 downto 0);
  
- signal input_0       : std_logic_vector(7 downto 0);
- signal input_1       : std_logic_vector(7 downto 0);
- signal input_2       : std_logic_vector(7 downto 0);
- signal input_3       : std_logic_vector(7 downto 0);
- signal input_4       : std_logic_vector(7 downto 0);
-
  signal bg_graphics_1_we : std_logic;
  signal bg_graphics_2_we : std_logic;
 begin
@@ -333,14 +309,6 @@ begin
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
-
--- debug 
-process (reset, clock_vid)
-begin
-	if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
-		dbg_cpu_addr<= "000000000000000"&service; --cpu_addr;
- end if;
-end process;
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -469,16 +437,6 @@ begin
 		end if;
 	end if;
 end process;
-
---------------------
--- players inputs --
---------------------
--- "111" for test & tilt & unused
-input_0 <= not service & "11" & not fire1 & not start2 & not start1 & not coin2 & not coin1;
-input_1 <= "1111" & not down1 & not up1 & not right1 & not left1;
-input_2 <= "111" & not fire2 & not down2 & not up2 & not right2 & not left2;
-input_3 <= "111111" & cocktail & coin_meters;
-input_4 <= x"FF";
 
 ------------------------------------------
 -- cpu data input with address decoding --
