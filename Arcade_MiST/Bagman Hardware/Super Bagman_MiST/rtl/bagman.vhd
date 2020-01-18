@@ -106,6 +106,7 @@ signal ram_sprite : ram_256x6;
 
 -- Z80 interface 
 signal cpu_clock  : std_logic;
+signal cpu_clock_en : std_logic;
 signal cpu_wr_n   : std_logic;
 signal cpu_addr   : std_logic_vector(15 downto 0);
 signal cpu_do     : std_logic_vector(7 downto 0);
@@ -239,19 +240,20 @@ color_ram_cs      <= '1' when cpu_addr(15 downto 11) = "10011"    else '0'; -- 9
 ---------------------------
 -- enable/disable interrupt
 ---------------------------
-process (cpu_clock)
+process (clock_12)
 begin
-	if falling_edge(cpu_clock) then
-		if misc_we_n = '0' then
+	if rising_edge(clock_12) then
+		if cpu_clock_en = '1' then
+			if misc_we_n = '0' then
 
-			if cpu_addr(2 downto 0) = "000" then
-				raz_int_n <= cpu_do(0);
-			end if;
+				if cpu_addr(2 downto 0) = "000" then
+					raz_int_n <= cpu_do(0);
+				end if;
 			
-			if cpu_addr(2 downto 0) = "111" then
-				sound_cs_n <= cpu_do(0);
+				if cpu_addr(2 downto 0) = "111" then
+					sound_cs_n <= cpu_do(0);
+				end if;
 			end if;
-
 		end if;
 						
 	end if;
@@ -535,7 +537,8 @@ port map (
   x_pixel    => x_pixel,
   y_pixel    => y_pixel,
 	
-  cpu_clock  => cpu_clock
+  cpu_clock  => cpu_clock,
+  cpu_clock_en => cpu_clock_en
 );
 
 -- sprite palette rom
@@ -547,11 +550,12 @@ port map (
 );
 
 -- Z80
-Z80 : entity work.T80s
+Z80 : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clock,
+  CLK_n   => clock_12,
+  CLKEN   => cpu_clock_en,
   WAIT_n  => '1',
   INT_n   => cpu_int_n,
   NMI_n   => '1',

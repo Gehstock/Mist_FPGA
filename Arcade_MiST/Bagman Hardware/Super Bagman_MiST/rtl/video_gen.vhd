@@ -21,7 +21,8 @@ port(
 	x_pixel     : out std_logic_vector(2 downto 0);
 	y_pixel     : out std_logic_vector(2 downto 0);
 
-	cpu_clock   : out std_logic
+	cpu_clock   : out std_logic;
+	cpu_clock_en: out std_logic
 );
 end video_gen;
 
@@ -68,9 +69,10 @@ begin
 
 --		enable_clk <= not enable_clk;
 --		cpu_clock <= not hcnt(0);
+		cpu_clock_en <= '0';
 
 		if ena_pixel = '1' then
-
+			cpu_clock_en <= not hcnt(0);
 			if hcnt = 511 then 
 				hcnt <= to_unsigned (128,9);
 				vcnt_r <= vcnt;
