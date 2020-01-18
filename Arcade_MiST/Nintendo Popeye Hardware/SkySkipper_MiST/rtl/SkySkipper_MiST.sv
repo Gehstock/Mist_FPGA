@@ -35,7 +35,7 @@ localparam CONF_STR = {
 	"SKYSKIP;;",
 //	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"O7,Service,Off,On;",//Beep on REV4 ROM, not needed
+//	"O7,Service,Off,On;",//Beep , not needed
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -168,9 +168,8 @@ SkySkipper SkySkipper(
 	.down2(m_down),
 	.fire21(m_fire1),
 	.fire22(m_fire2),
-	.sw1("0000000"),
-	.sw2("0000000"),
-//	.sw2("01111101"), 
+	.sw1("1111111"),
+	.sw2("11111101"),
 	.service(status[7]),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do(rom_addr[0] ? rom_do[15:8] : rom_do[7:0])

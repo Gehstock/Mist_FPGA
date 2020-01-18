@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 23:56:33  December 30, 2019
+# Date created = 14:30:51  January 18, 2020
 #
 # -------------------------------------------------------------------------- #
 #
@@ -43,6 +43,23 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SkySkipper_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/SkySkipper.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_4.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_3.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_2.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_palette_rg.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_palette_gb.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_palette_rgb.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_bits.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/skyskip_bg_palette_rgb.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -168,81 +185,58 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(Popeye_MiST)
+# -----------------------------
+# start ENTITY(SkySkipper_MiST)
 
 	# Pin & Location Assignments
 	# ==========================
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+	set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 
 	# Fitter Assignments
 	# ==================
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(Popeye_MiST)
-# -----------------------
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
-set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
-set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80a.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SkySkipper_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/SkySkipper.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_4.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_3.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_sp_bits_1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_palette_rg.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_palette_gb.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_palette_rgb.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_ch_bits.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/skyskip_bg_palette_rgb.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+# end ENTITY(SkySkipper_MiST)
+# ---------------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -3,8 +3,8 @@
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 --
--- release rev 00 : initial release
---  (26/12/2019)
+-- release rev -- : beta release
+--  (12/01/2020)
 --
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -31,12 +31,12 @@
 --   Coctail mode : NO
 --   Sound        : OK
 
---  Use with MAME roms from popeye.zip & popeyeu.zip
+--  Use with MAME roms from skyskipr.zip
 --
---  Use make_popeye_proms.bat to build vhd file from binaries
+--  Use make_sky_skipper_proms.bat to build vhd file from binaries
 --  (CRC list included)
 
---  Popeye Hardware caracteristics : TODO
+--  Sky skipper Hardware caracteristics : TODO
 --
 ---------------------------------------------------------------------------------
 --  Schematics remarks :
@@ -128,10 +128,12 @@ architecture struct of SkySkipper is
  signal cpu_nmi_n   : std_logic;
  signal cpu_m1_n    : std_logic;
  signal cpu_rfsh_n  : std_logic;
- signal cpu_I       : std_logic_vector(7 downto 0);
--- signal cpu_rom_addr   : std_logic_vector(14 downto 0);
--- signal cpu_rom_do     : std_logic_vector( 7 downto 0);
+ signal cpu_rfsh_n_r: std_logic;
  signal cpu_rom_do_swp : std_logic_vector( 7 downto 0);
+ 
+ signal nmi_enable  : std_logic;
+ signal no_nmi      : std_logic;
+
  
  signal wram_addr   : std_logic_vector(11 downto 0);
  signal wram_we     : std_logic;
@@ -428,15 +430,18 @@ cpu_rom_addr <= (cpu_addr(14 downto 10) & cpu_addr(8 downto 7) & cpu_addr(0) & c
 	(protection_data1(1 downto 0) & "000000" ) or ( "00" & protection_data0(7 downto 2))  when protection_shift = "110" else
 	(protection_data1(0 downto 0) & "0000000" ) or ( '0' & protection_data0(7 downto 1)); --   protection_shift = "111"
 	
-cpu_di <= cpu_rom_do_swp	 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- program rom 0000-7FFF 32Ko
-			 wram_do_r   		 when cpu_mreq_n = '0' and (cpu_addr and X"E000") = x"8000" else -- work    ram 8000-87FF  2Ko + mirroring 1800
+cpu_di <= cpu_rom_do_swp    when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else    -- program rom 0000-6FFF |32Ko
+          X"FF"             when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"8" else    -- no rom      7000-7FFF |
+          wram_do_r         when cpu_mreq_n = '0' and (cpu_addr and X"F800") = x"8000" else -- work    ram 8000-87FF  2Ko
+          wram_do_r         when cpu_mreq_n = '0' and (cpu_addr and X"FC00") = x"8C00" else -- work    ram 8C00-8FFF  1Ko
 			 protection_do     when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E000" else -- protection E000
 			 X"00"             when cpu_mreq_n = '0' and (cpu_addr and X"FFFF") = x"E001" else -- protection E001
    		 input_0           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "00") else
    		 input_1           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "01") else
    		 input_2           when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "10") else
    		 ay_do             when cpu_ioreq_n = '0' and (cpu_addr(1 downto 0) = "11") else
-   		 X"FF";
+   		 X"00"; 
+			 
 --
 ------------------------------------------
 -- write enable / ram access from CPU --
@@ -501,26 +506,41 @@ process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
 		cpu_wr_n_r <= cpu_wr_n;
+		cpu_rfsh_n_r <= cpu_rfsh_n;
 		if cpu_mreq_n = '0' and cpu_wr_n = '0' then 
 			if (cpu_addr = x"8C00") then hoffset(7 downto 0) <= cpu_do; end if;
 			if (cpu_addr = x"8C01") then voffset <= cpu_do; end if;
 			if (cpu_addr = x"8C02") then hoffset(8) <= cpu_do(0); end if;
-			if (cpu_addr = x"8C03") then 
+         if (cpu_addr = x"8C03") then
 				sp_palette_addr(7 downto 5) <= cpu_do(2 downto 0);
 				bg_palette_addr(4) <= cpu_do(3);
-			end if;			
+         end if;			
 			if (cpu_addr = x"E000") then protection_shift <= cpu_do(2 downto 0); end if;
 			if (cpu_addr = x"E001") and cpu_wr_n_r = '1' then
 				protection_data0 <= protection_data1;
 				protection_data1 <= cpu_do;
 			end if;	
 		end if;	
+-- during rsfh cpu_addr(15 downto 8) contains cpu register I
+-- lsb used to enable/disable nmi signal
+      if cpu_rfsh_n = '0' and cpu_rfsh_n_r = '0' then
+         nmi_enable <= cpu_addr(8);
+      end if;
+-- trick to prevent nmi to occur during call 2f93 @3043
+-- otherwise game crash
+-- maybe not needed when nb scanline = 511 (31kHz) or 255 (15kHz)
+      if (cpu_addr = x"3043") and cpu_m1_n = '0' then
+			no_nmi <= '1';
+      end if;
+		if (cpu_addr = x"3046") and cpu_m1_n = '0' then
+         no_nmi <= '0';
+      end if;
 	end if;
 end process;
 
---cpu_nmi_n <= video_vs;
---cpu_nmi_n <= video_vs when cpu_I(0) = '1' else '1';
-cpu_nmi_n <= '0' when cpu_I(0) = '1' and vcnt = 260 else '1';     -- TODO 31kHz
+cpu_nmi_n <= '0' when nmi_enable = '1' and no_nmi = '0' and hcnt < 20 and
+                                          ((vcnt = 260 and tv15Khz_mode = '1') or (vcnt = 490 and tv15Khz_mode = '0')) else '1';
+
 audio_out <= ay_audio & X"00";
 -- 
 -- bdir bc1 (bc2 = 1)
@@ -737,8 +757,7 @@ port map(
   BUSAK_n => open,
   A       => cpu_addr,
   DI      => cpu_di,
-  DO      => cpu_do,
-  I_out   => cpu_I
+  DO      => cpu_do
 );
 
 -- cpu program ROM 0x0000-0xDFFF
