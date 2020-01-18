@@ -468,8 +468,7 @@ begin
 		if hcnt(0) = '0' then wram_do_r <= wram_do; end if;
 	
 		if move_buf = '0' and read_buf ='0' then 
-			sp_ram_addr <= (others => '0');
-
+			sp_ram_addr <= "00" & X"04";
 			if hcnt = 1 and pix_ena = '1' then
 				if (vcnt = 500 and tv15Khz_mode = '0') or	(vcnt = 250 and tv15Khz_mode = '1') then
 					move_buf <= '1';
