@@ -60,15 +60,10 @@ entity scramble_audio is
     --
     O_AUDIO            : out   std_logic_vector( 9 downto 0);
     --
-    I_1P_CTRL          : in    std_logic_vector( 6 downto 0); -- start, shoot1, shoot2, left,right,up,down
-    I_2P_CTRL          : in    std_logic_vector( 6 downto 0); -- start, shoot1, shoot2, left,right,up,down
-    I_SERVICE          : in    std_logic;
-    I_COIN1            : in    std_logic;
-    I_COIN2            : in    std_logic;
+	IN0                : in    std_logic_vector(7 downto 0);
+	IN1                : in    std_logic_vector(7 downto 0);
+	IN2                : in    std_logic_vector(7 downto 0);
     O_COIN_COUNTER     : out   std_logic;
-    --
-    I_DIP              : in    std_logic_vector( 4 downto 0);
-
     --
     I_RESET_L          : in    std_logic;
     ENA                : in    std_logic; -- 6 MHz
@@ -411,34 +406,11 @@ begin
     ym2149_3D_bc1  <= rd_3d or ad_3d;
 
   end process;
-  
-  i8255_1E_pa(7) <= I_COIN2;--coin1
-  i8255_1E_pa(6) <= I_COIN1;--coin2
-  i8255_1E_pa(5) <= I_1P_CTRL(3); -- left1
-  i8255_1E_pa(4) <= I_1P_CTRL(2); -- right1
-  i8255_1E_pa(3) <= I_1P_CTRL(4); -- down1
-  i8255_1E_pa(2) <= I_1P_CTRL(1); -- up1
-  i8255_1E_pa(1) <= '1';--unused
-  i8255_1E_pa(0) <= I_SERVICE;--unused Test Retract        
-  
-  i8255_1E_pb(7) <= '1';--unused
-  i8255_1E_pb(6) <= '1';--unused
-  i8255_1E_pb(5) <= I_2P_CTRL(3); -- left2
-  i8255_1E_pb(4) <= I_2P_CTRL(2); -- right2
-  i8255_1E_pb(3) <= I_2P_CTRL(0); -- down2
-  i8255_1E_pb(2) <= I_2P_CTRL(1); -- up2
-  i8255_1E_pb(1) <= I_DIP(0);--Table
-  i8255_1E_pb(0) <= I_DIP(1);--Rocket Number
-  
-  i8255_1E_pc(7) <= '1';--unused
-  i8255_1E_pc(6) <= I_2P_CTRL(6); -- 2 Start
-  i8255_1E_pc(5) <= '1';--unused
-  i8255_1E_pc(4) <= '1';--unused
-  i8255_1E_pc(3) <= I_DIP(4);--coining
-  i8255_1E_pc(2) <= I_DIP(3);--coining
-  i8255_1E_pc(1) <= I_DIP(2);--Free Play
-  i8255_1E_pc(0) <= I_1P_CTRL(6); -- start1       
-  
+
+  i8255_1E_pa <= IN0;
+  i8255_1E_pb <= IN1;
+  i8255_1E_pc <= IN2;
+
   --O_COIN_COUNTER <= not I_IOPC7; -- open drain actually
 
   --
