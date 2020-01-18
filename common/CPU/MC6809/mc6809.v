@@ -1,89 +1,80 @@
 `timescale 1ns / 1ps
-module mc6809
-(
-	input         CLK,
-	input         CLKEN,
-	input         nRESET,
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    08:11:34 09/23/2016 
+// Design Name: 
+// Module Name:    mc6809e 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module mc6809(
+    input   [7:0] D,
+    output  [7:0] DOut,
+    output  [15:0] ADDR,
+    output  RnW,
+    output  E,
+    output  Q,
+    output  BS,
+    output  BA,
+    input   nIRQ,
+    input   nFIRQ,
+    input   nNMI,
+    input   EXTAL,
+    input   XTAL,
+    input   nHALT,	 
+    input   nRESET,
+    input   MRDY,
+    input   nDMABREQ
+    
+    , output  [111:0] RegData
 
-	input         CPU,
+    );
 
-	output reg    E,
-	output reg    riseE,
-	output reg    fallE, // everything except interrupts/dma registered/latched here
+reg [1:0] clk_phase=2'b00;
 
-	output reg    Q,
-	output reg    riseQ,
-	output reg    fallQ, // NMI,IRQ,FIRQ,DMA,HALT registered here
+wire CLK;
+assign CLK=EXTAL;
 
-	input   [7:0] Din,
-	output  [7:0] Dout,
-	output [15:0] ADDR,
-	output        RnW,
+wire   LIC;
+wire   BUSY;
+wire   AVMA;
+reg    rE;
+reg    rQ;
+assign E = rE;
+assign Q = rQ;
 
-	input         nIRQ,
-	input         nFIRQ,
-	input         nNMI,
-	input         nHALT
-);
+mc6809i cpucore(.D(D), .DOut(DOut), .ADDR(ADDR), .RnW(RnW), .E(E), .Q(Q), .BS(BS), .BA(BA), .nIRQ(nIRQ), .nFIRQ(nFIRQ), 
+                .nNMI(nNMI), .AVMA(AVMA), .BUSY(BUSY), .LIC(LIC), .nHALT(nHALT), .nRESET(nRESET), .nDMABREQ(nDMABREQ)
+                ,.RegData(RegData)
+                );
 
-cpu09 cpu1
-(
-	.clk(CLK),
-	.ce(fallE),
-	.rst(~nRESET | CPU),
-	.addr(ADDR1),
-	.rw(RnW1),
-	.data_out(Dout1),
-	.data_in(Din),
-	.irq(~nIRQ),
-	.firq(~nFIRQ),
-	.nmi(~nNMI),
-	.halt(~nHALT)
-);
-
-mc6809is cpu2
-(
-	.CLK(CLK),
-	.D(Din),
-	.DOut(Dout2),
-	.ADDR(ADDR2),
-	.RnW(RnW2),
-	.fallE_en(fallE),
-	.fallQ_en(fallQ),
-	.nIRQ(nIRQ),
-	.nFIRQ(nFIRQ),
-	.nNMI(nNMI),
-	.nHALT(nHALT),
-	.nRESET(nRESET & CPU),
-	.nDMABREQ(1)
-);
-
-wire  [7:0] Dout1,Dout2;
-wire [15:0] ADDR1,ADDR2;
-wire        RnW1,RnW2;
-
-assign Dout = CPU ? Dout2 : Dout1;
-assign ADDR = CPU ? ADDR2 : ADDR1;
-assign RnW  = CPU ? RnW2  : RnW1;
-
-always @(posedge CLK)
+always @(negedge CLK)
 begin
-	reg [1:0] clk_phase =0;
-
-	fallE <= 0;
-	fallQ <= 0;
-	riseE <= 0;
-	riseQ <= 0;
-
-	if (CLKEN) begin
-		clk_phase <= clk_phase + 1'd1;
-		case (clk_phase)
-			2'b00: begin E <= 0; fallE <= 1; end
-			2'b01: begin Q <= 1; riseQ <= 1; end
-			2'b10: begin E <= 1; riseE <= 1; end
-			2'b11: begin Q <= 0; fallQ <= 1; end
-		endcase
-	end
+    case (clk_phase)
+        2'b00:
+            rE <= 0;
+        2'b01:
+            rQ <= 1;
+        2'b10:
+            rE <= 1;
+        2'b11:
+            rQ <= 0;
+    endcase
+    
+    if (MRDY == 1'b1) 
+        clk_phase <= clk_phase + 2'b01;
 end
+
 
 endmodule
