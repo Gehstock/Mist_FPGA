@@ -42,7 +42,7 @@
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "12.1 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "09:07:52  FEBRUARY 01, 2013"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
-set_global_assignment -name PROJECT_OUTPUT_DIRECTORY Output
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:src/build_id.tcl"
 

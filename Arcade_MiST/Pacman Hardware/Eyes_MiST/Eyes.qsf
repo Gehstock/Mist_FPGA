@@ -156,12 +156,7 @@ set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/PROM3_DST.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80sed.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE rtl/pll.qip
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/dac.vhd
