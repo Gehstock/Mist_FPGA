@@ -39,11 +39,11 @@ module RobotronFPGA_MiST(
 `include "rtl/build_id.v" 
 
 //`define CORE_NAME "ROBOTRON"
-//`define CORE_NAME "JOUST"
+`define CORE_NAME "JOUST"
 //`define CORE_NAME "SPLAT"
 //`define CORE_NAME "BUBBLES"
 //`define CORE_NAME "STARGATE"
-`define CORE_NAME "SINISTAR"
+//`define CORE_NAME "SINISTAR"
 
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
