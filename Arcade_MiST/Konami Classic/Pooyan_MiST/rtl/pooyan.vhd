@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Time pilot by Dar (darfpga@aol.fr) (29/10/2017)
+-- Pooyan by Dar (darfpga@aol.fr) (29/10/2017)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
@@ -72,6 +72,7 @@ use ieee.numeric_std.all;
 
 entity pooyan is
 port(
+ clock_6      : in std_logic;
  clock_12     : in std_logic;
  clock_14     : in std_logic;
  reset        : in std_logic;
@@ -79,10 +80,10 @@ port(
  video_g        : out std_logic_vector(2 downto 0);
  video_b        : out std_logic_vector(1 downto 0);
  video_clk      : out std_logic;
- video_vblank   : out std_logic;
- video_hblank   : out std_logic;
+ video_blankn   : out std_logic;
  video_hs       : out std_logic;
  video_vs       : out std_logic;
+ video_csync    : out std_logic;
  audio_out      : out std_logic_vector(10 downto 0);
  roms_addr      : out std_logic_vector(14 downto 0);
  roms_do   : in std_logic_vector(7 downto 0);
@@ -106,7 +107,6 @@ port(
  down2          : in std_logic;
  up2            : in std_logic;
  
- sw           : in std_logic_vector(9 downto 0);
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
 end pooyan;
@@ -115,7 +115,6 @@ architecture struct of pooyan is
 
  signal reset_n: std_logic;
  signal clock_12n : std_logic;
- signal clock_6   : std_logic := '0';
  signal clock_6n  : std_logic;
  signal clock_div : std_logic_vector(1 downto 0) := "00";
 
@@ -209,7 +208,7 @@ architecture struct of pooyan is
  signal input_2       : std_logic_vector(7 downto 0);
 
 begin
-video_clk <= clock_6n;
+
 clock_12n <= not clock_12;
 clock_6n  <= not clock_6;
 reset_n   <= not reset;
@@ -221,19 +220,6 @@ begin
    dbg_cpu_addr <= cpu_addr;
  end if;
 end process;
-
--- make 6MHz clock from 12MHz
-process (clock_12)
-begin
-	if reset='1' then
-		clock_6  <= '0';
-	else 
-		if rising_edge(clock_12) then
-			clock_6  <= not clock_6;
-		end if;
-	end if;   		
-end process;
-
 
 --------------------------
 -- Video/sprite scanner --
@@ -546,35 +532,7 @@ begin
 end process;	
 
 -- address char color palette 4 colors, 64 sets => 16 colors
-with sw(4 downto 0) select
-ch_palette_addr <= 
-ch_color_set & ch_pixels(3) & ch_pixels( 7) & ch_pixels(11) & ch_pixels(15) when '0'&X"0",
-ch_color_set & ch_pixels(3) & ch_pixels( 7) & ch_pixels(15) & ch_pixels(11) when '0'&X"1",
-ch_color_set & ch_pixels(3) & ch_pixels(11) & ch_pixels( 7) & ch_pixels(15) when '0'&X"2",
-ch_color_set & ch_pixels(3) & ch_pixels(11) & ch_pixels(15) & ch_pixels( 7) when '0'&X"3",
-ch_color_set & ch_pixels(3) & ch_pixels(15) & ch_pixels( 7) & ch_pixels(11) when '0'&X"4",
-ch_color_set & ch_pixels(3) & ch_pixels(15) & ch_pixels(11) & ch_pixels( 7) when '0'&X"5",
-
-ch_color_set & ch_pixels(7) & ch_pixels( 3) & ch_pixels(11) & ch_pixels(15) when '0'&X"6",
-ch_color_set & ch_pixels(7) & ch_pixels( 3) & ch_pixels(15) & ch_pixels(11) when '0'&X"7",
-ch_color_set & ch_pixels(7) & ch_pixels(11) & ch_pixels( 3) & ch_pixels(15) when '0'&X"8",
-ch_color_set & ch_pixels(7) & ch_pixels(11) & ch_pixels(15) & ch_pixels( 3) when '0'&X"9",
-ch_color_set & ch_pixels(7) & ch_pixels(15) & ch_pixels( 3) & ch_pixels(11) when '0'&X"A",
-ch_color_set & ch_pixels(7) & ch_pixels(15) & ch_pixels(11) & ch_pixels( 3) when '0'&X"B",
-
-ch_color_set & ch_pixels(11) & ch_pixels( 3) & ch_pixels( 7) & ch_pixels(15) when '0'&X"C",
-ch_color_set & ch_pixels(11) & ch_pixels( 3) & ch_pixels(15) & ch_pixels( 7) when '0'&X"D",
-ch_color_set & ch_pixels(11) & ch_pixels( 7) & ch_pixels( 3) & ch_pixels(15) when '0'&X"E",
-ch_color_set & ch_pixels(11) & ch_pixels( 7) & ch_pixels(15) & ch_pixels( 3) when '0'&X"F",
-ch_color_set & ch_pixels(11) & ch_pixels(15) & ch_pixels( 3) & ch_pixels( 7) when '1'&X"0",
-ch_color_set & ch_pixels(11) & ch_pixels(15) & ch_pixels( 7) & ch_pixels( 3) when '1'&X"1",
-
-ch_color_set & ch_pixels(15) & ch_pixels( 3) & ch_pixels( 7) & ch_pixels(11) when '1'&X"2",
-ch_color_set & ch_pixels(15) & ch_pixels( 3) & ch_pixels(11) & ch_pixels( 7) when '1'&X"3",
-ch_color_set & ch_pixels(15) & ch_pixels( 7) & ch_pixels( 3) & ch_pixels(11) when '1'&X"4",
-ch_color_set & ch_pixels(15) & ch_pixels( 7) & ch_pixels(11) & ch_pixels( 3) when '1'&X"5",
-ch_color_set & ch_pixels(15) & ch_pixels(11) & ch_pixels( 3) & ch_pixels( 7) when '1'&X"6",
-ch_color_set & ch_pixels(15) & ch_pixels(11) & ch_pixels( 7) & ch_pixels( 3) when others;
+ch_palette_addr <= ch_color_set & ch_pixels(3) & ch_pixels( 7) & ch_pixels(11) & ch_pixels(15);
 
 ---------------------
 -- mux char/sprite --
@@ -604,23 +562,35 @@ begin
 	end if;
 end process;
 
-video_hblank <= hblank;
-video_vblank <= vblank;
-
 ----------------------------
 -- video syncs and blanks --
 ----------------------------
 
+video_csync <= csync;
+
 process(clock_6)
-	constant hcnt_base : integer := 36;
+	constant hcnt_base : integer := 37;
 	variable vsync_cnt : std_logic_vector(3 downto 0);
 begin
-	if rising_edge(clock_6) and pxcnt = "110" then
+
+if rising_edge(clock_6) and pxcnt = "111" then
 
 		if    hcnt = hcnt_base+0 then hsync0 <= '0';
 		elsif hcnt = hcnt_base+3 then hsync0 <= '1';
 		end if;
 
+  if    hcnt = hcnt_base+0     then hsync1 <= '0';
+  elsif hcnt = hcnt_base+1     then hsync1 <= '1';
+  elsif hcnt = hcnt_base+24-48 then hsync1 <= '0';
+  elsif hcnt = hcnt_base+25-48 then hsync1 <= '1';
+  end if;
+
+  if    hcnt = hcnt_base+0        then hsync2 <= '0';
+  elsif hcnt = hcnt_base+24-1-48  then hsync2 <= '1';
+  elsif hcnt = hcnt_base+24-48    then hsync2 <= '0';
+  elsif hcnt = hcnt_base+0-1      then hsync2 <= '1';
+  end if;
+  
 		if hcnt = hcnt_base then 
 			if vcnt = 500 then
 				vsync_cnt := X"0";
@@ -629,16 +599,28 @@ begin
 			end if;
 		end if;	 
 
-		if hcnt = hcnt_base-4 then
-			hblank <= '1';
-			if vcnt = 496 then
-				vblank <= '1';   -- 492 ok
-			elsif vcnt = 262 then
-				vblank <= '0';   -- 262 ok 
+  if    vsync_cnt = 0 then csync <= hsync1;
+  elsif vsync_cnt = 1 then csync <= hsync1;
+  elsif vsync_cnt = 2 then csync <= hsync1;
+  elsif vsync_cnt = 3 then csync <= hsync2;
+  elsif vsync_cnt = 4 then csync <= hsync2;
+  elsif vsync_cnt = 5 then csync <= hsync2;
+  elsif vsync_cnt = 6 then csync <= hsync1;
+  elsif vsync_cnt = 7 then csync <= hsync1;
+  elsif vsync_cnt = 8 then csync <= hsync1;
+  else                     csync <= hsync0;
 			end if;
-		elsif hcnt = 0 then
-			hblank <= '0';
+
+  if    hcnt = hcnt_base-6  then hblank <= '1'; 
+  elsif hcnt = hcnt_base+10  then hblank <= '0';
+  end if;
+
+  if    vcnt = 496 then vblank <= '1';   -- 492 ok
+  elsif vcnt = 262 then vblank <= '0';   -- 262 ok 
 		end if;
+
+  -- external sync and blank outputs
+  video_blankn <= not (hblank or vblank);
 
 		video_hs <= hsync0;
 	  

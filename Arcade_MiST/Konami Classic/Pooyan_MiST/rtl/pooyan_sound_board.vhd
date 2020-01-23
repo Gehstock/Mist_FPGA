@@ -48,8 +48,8 @@ architecture struct of pooyan_sound_board is
  signal clock_div1 : std_logic_vector(11 downto 0) := (others => '0');
  signal biquinary_div : std_logic_vector(3 downto 0) := (others => '0');
  
- signal cpu_clock  : std_logic;
- signal ayx_clock  : std_logic;
+ signal cpu_clock_en  : std_logic;
+ signal ayx_clock_en  : std_logic;
 
  signal cpu_addr   : std_logic_vector(15 downto 0);
  signal cpu_di     : std_logic_vector( 7 downto 0);
@@ -241,8 +241,8 @@ begin
 end process;
 
 -- make clocks for cpu and sound generators
-cpu_clock <= clock_div1(2);
-ayx_clock <= not clock_div1(2);
+cpu_clock_en <= '1' when clock_div1(2 downto 0) = "011" else '0';
+ayx_clock_en <= '1' when clock_div1(2 downto 0) = "111" else '0';
 
 -- mux rom/ram/devices data ouput to cpu data input w.r.t cpu address
 cpu_di <= cpu_rom_do   when cpu_addr(15 downto 12) = "0000" else -- 0000-0FFF
@@ -277,9 +277,9 @@ ay1_port_b_di <= biquinary_div(0)&biquinary_div(3)&biquinary_div(2)&clock_div1(1
 clr_irq_n <= reset_n and (cpu_m1_n or cpu_iorq_n); 
 
 -- regsiter filters commands (11 bits data are cpu address)
-process (cpu_clock)
+process (clock_14, cpu_clock_en)
 begin
-	if rising_edge(cpu_clock) then
+	if rising_edge(clock_14) and cpu_clock_en = '1' then
 		if filter_cmd_we = '1' then filter_cmd <= cpu_addr(11 downto 0); end if;
 	end if;	
 end process;
@@ -303,9 +303,9 @@ begin
 end process;
 
 -- demux AY chips output
-process (ayx_clock)
+process (clock_14, ayx_clock_en)
 begin
-	if rising_edge(ayx_clock) then
+	if rising_edge(clock_14) and ayx_clock_en = '1' then
 		if ay1_audio_chan = "00" then ay1_chan_a <= ay1_audio_muxed; end if;
 		if ay1_audio_chan = "01" then ay1_chan_b <= ay1_audio_muxed; end if;
 		if ay1_audio_chan = "10" then ay1_chan_c <= ay1_audio_muxed; end if;
@@ -320,8 +320,8 @@ cpu : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clock,
-  CLKEN   => '1',
+  CLK_n   => clock_14,
+  CLKEN   => cpu_clock_en,
   WAIT_n  => '1',
   INT_n   => cpu_irq_n,
   NMI_n   => '1',
@@ -385,9 +385,9 @@ port map(
   O_IOB      => open,            -- out std_logic_vector(7 downto 0);
   O_IOB_OE_L => open,            -- out std_logic;
 
-  ENA        => '1', --cpu_ena,         -- in  std_logic; -- clock enable for higher speed operation
+  ENA        => ayx_clock_en,    -- in  std_logic; -- clock enable for higher speed operation
   RESET_L    => reset_n,         -- in  std_logic;
-  CLK        => ayx_clock        -- in  std_logic  -- note 6 Mhz
+  CLK        => clock_14         -- in  std_logic
 );
 
 -- AY-3-8910 #2
@@ -417,9 +417,9 @@ port map(
   O_IOB      => open,            -- out std_logic_vector(7 downto 0);
   O_IOB_OE_L => open,            -- out std_logic;
 
-  ENA        => '1', --cpu_ena,         -- in  std_logic; -- clock enable for higher speed operation
+  ENA        => ayx_clock_en,    -- in  std_logic; -- clock enable for higher speed operation
   RESET_L    => reset_n,         -- in  std_logic;
-  CLK        => ayx_clock        -- in  std_logic  -- note 6 Mhz
+  CLK        => clock_14         -- in  std_logic
 );
 
 

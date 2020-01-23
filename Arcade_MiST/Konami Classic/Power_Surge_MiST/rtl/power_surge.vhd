@@ -81,6 +81,7 @@ use ieee.numeric_std.all;
 
 entity power_surge is
 port(
+	clock_6      : in std_logic;
 	clock_12     : in std_logic;
 	clock_14     : in std_logic;
 	reset        : in std_logic;
@@ -121,7 +122,6 @@ architecture struct of power_surge is
 
  signal reset_n: std_logic;
  signal clock_12n : std_logic;
- signal clock_6   : std_logic := '0';
  signal clock_6n  : std_logic;
  signal clock_div : std_logic_vector(1 downto 0) := "00";
 
@@ -219,19 +219,6 @@ video_clk <= clock_6n;
 clock_12n <= not clock_12;
 clock_6n  <= not clock_6;
 reset_n   <= not reset;
-
--- make 6MHz clock from 12MHz
-process (clock_12)
-begin
-	if reset='1' then
-		clock_6  <= '0';
-	else 
-		if rising_edge(clock_12) then
-			clock_6  <= not clock_6;
-		end if;
-	end if;   		
-end process;
-
 
 --------------------------
 -- Video/sprite scanner --
@@ -614,7 +601,7 @@ begin
 
 		if hcnt = hcnt_base-4 then
 			hblank <= '1';
-			if vcnt = 496 then
+			if vcnt = 495 then
 				vblank <= '1';   -- 492 ok
 			elsif vcnt = 262 then
 				vblank <= '0';   -- 262 ok 

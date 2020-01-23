@@ -81,6 +81,7 @@ use ieee.numeric_std.all;
 
 entity time_pilot is
 port(
+	clock_6      : in std_logic;
 	clock_12     : in std_logic;
 	clock_14     : in std_logic;
 	reset        : in std_logic;
@@ -123,7 +124,6 @@ architecture struct of time_pilot is
 
  signal reset_n: std_logic;
  signal clock_12n : std_logic;
- signal clock_6   : std_logic := '0';
  signal clock_6n  : std_logic;
  signal clock_div : std_logic_vector(1 downto 0) := "00";
 
@@ -228,19 +228,6 @@ begin
    dbg_cpu_addr <= cpu_addr;
  end if;
 end process;
-
--- make 6MHz clock from 12MHz
-process (clock_12)
-begin
-	if reset='1' then
-		clock_6  <= '0';
-	else 
-		if rising_edge(clock_12) then
-			clock_6  <= not clock_6;
-		end if;
-	end if;   		
-end process;
-
 
 --------------------------
 -- Video/sprite scanner --
