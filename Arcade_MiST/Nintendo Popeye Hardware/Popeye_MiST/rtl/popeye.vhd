@@ -85,7 +85,7 @@ port(
  down2          : in std_logic;
  fire2          : in std_logic;
 
- sw1            : in std_logic_vector(3 downto 0);
+ sw1            : in std_logic_vector(6 downto 0);
  sw2            : in std_logic_vector(7 downto 0);
  
  service        : in std_logic;
@@ -126,7 +126,8 @@ architecture struct of popeye is
  signal cpu_ioreq_n : std_logic;
  signal cpu_nmi_n   : std_logic;
  signal cpu_m1_n    : std_logic;
-  
+ signal cpu_rfsh_n  : std_logic;
+ signal nmi_enable  : std_logic;  
 -- signal cpu_rom_addr   : std_logic_vector(14 downto 0);
 -- signal cpu_rom_do     : std_logic_vector( 7 downto 0);
  signal cpu_rom_do_swp : std_logic_vector( 7 downto 0);
@@ -503,29 +504,45 @@ end process;
 -- Misc registers : write enable / interrupt / ay-3-8910 IF
 ------------------------------------------------------------------------
 
-process (clock_vid)
+process (clock_vid, reset)
 begin
-	if rising_edge(clock_vid) then
-		cpu_wr_n_r <= cpu_wr_n;
-		if cpu_mreq_n = '0' and cpu_wr_n = '0' then 
-			if (cpu_addr = x"8C00") then hoffset <= cpu_do; end if;
-			if (cpu_addr = x"8C01") then voffset <= cpu_do; end if;
-			
-			if (cpu_addr = x"8C03") then 
-				sp_palette_addr(7 downto 5) <= cpu_do(2 downto 0);
-				bg_palette_addr(4) <= cpu_do(3);
-			end if;			
-		end if;
-			if (cpu_addr = x"E000") then protection_shift <= cpu_do(2 downto 0); end if;
-			if (cpu_addr = x"E001") and cpu_wr_n_r = '1' then
-				protection_data0 <= protection_data1;
-				protection_data1 <= cpu_do;
-			end if;		
-	end if;
+      if reset = '1' then
+            nmi_enable <= '0';
+      else
+
+      if rising_edge(clock_vid) then
+
+            cpu_wr_n_r <= cpu_wr_n;
+
+            if cpu_mreq_n = '0' and cpu_wr_n = '0' then
+                  if (cpu_addr = x"8C00") then hoffset <= cpu_do; end if;
+                  if (cpu_addr = x"8C01") then voffset <= cpu_do; end if;
+
+                  if (cpu_addr = x"8C03") then
+                        sp_palette_addr(7 downto 5) <= cpu_do(2 downto 0);
+                        bg_palette_addr(4) <= cpu_do(3);
+                  end if;
+
+                  if (cpu_addr = x"E000") then protection_shift <= cpu_do(2 downto 0); end if;
+                  if (cpu_addr = x"E001") and cpu_wr_n_r = '1' then
+                        protection_data0 <= protection_data1;
+                        protection_data1 <= cpu_do;
+                  end if;
+
+            end if;
+
+
+            -- during rsfh cpu_addr(15 downto 8) contains cpu register I
+            -- lsb used to enable/disable nmi signal
+            if cpu_rfsh_n = '0' and cpu_mreq_n = '0' then
+                  nmi_enable <= cpu_addr(8);
+            end if;
+      end if;
+      end if;
 end process;
 
 
-cpu_nmi_n <= video_vs;
+cpu_nmi_n <= '0' when nmi_enable = '1' and video_vs = '0' else '1';
 
 audio_out <= ay_audio & X"00";
 -- 
@@ -538,8 +555,7 @@ audio_out <= ay_audio & X"00";
 ay_bdir <= '1' when cpu_ioreq_n = '0' and  cpu_wr_n = '0' else '0';
 ay_bc1  <= '1' when cpu_ioreq_n = '0' and (cpu_rd_n = '0' or (cpu_wr_n = '0' and cpu_addr(0) = '0')) else '0';
 
-ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & "000" & not sw1;
-
+ay_ioa_di <= not sw2(to_integer(unsigned(ay_iob_do(3 downto 1)))) & not sw1;
 ------------------------------------
 ---------- sprite machine ----------
 ------------------------------------
@@ -569,9 +585,8 @@ sp_code_line0 <=
  (sp_buffer_ram2_do(15) & sp_buffer_ram2_do(17) & sp_buffer_ram2_do(9 downto 0) & sp_vcnt(0)) xor ('0' & x"00F") when sp_buffer_sel = '1' and sp_buffer_ram2_do(16) = '1' else
  (sp_buffer_ram2_do(15) & sp_buffer_ram2_do(17) & sp_buffer_ram2_do(9 downto 0) & sp_vcnt(0)) xor ('0' & x"000");
 				  
-sp_code_line <= sp_code_line0 xor ('1'&x"FFF") when tv15Khz_mode = '1' else -- ok for 15 KHz
-                sp_code_line0 xor ('1'&x"FFE");                             -- ok for 31 KHz
-
+sp_code_line <= sp_code_line0 xor ('1' & x"FFF") when tv15Khz_mode = '1' else -- ok for 15 KHz
+                sp_code_line0 xor ('1' & x"FFE");                             -- ok for 31 KHz
 sp_hflip     <= sp_buffer_ram1_do(10)           when sp_buffer_sel = '0' else sp_buffer_ram2_do(10);
 sp_hoffset   <= sp_buffer_ram1_do(12 downto 11) when sp_buffer_sel = '0' else sp_buffer_ram2_do(12 downto 11);
 sp_color     <= sp_buffer_ram1_do(15 downto 13) when sp_buffer_sel = '0' else sp_buffer_ram2_do(15 downto 13);
@@ -744,7 +759,7 @@ port map(
   IORQ_n  => cpu_ioreq_n,
   RD_n    => cpu_rd_n,
   WR_n    => cpu_wr_n,
-  RFSH_n  => open,
+  RFSH_n  => cpu_rfsh_n,
   HALT_n  => open,
   BUSAK_n => open,
   A       => cpu_addr,

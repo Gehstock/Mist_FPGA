@@ -165,8 +165,8 @@ popeye popeye(
 	.up2(m_up),
 	.down2(m_down),
 	.fire2(m_fire),
-	.sw1("0000"),
-	.sw2("01000101"),
+	.sw1("1011111"),
+	.sw2("00111101"),
 	.service(status[7]),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do(rom_addr[0] ? rom_do[15:8] : rom_do[7:0])
