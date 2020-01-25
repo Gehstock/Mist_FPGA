@@ -20,7 +20,7 @@ port(
   video_vblank : out std_logic;
   video_hs     : out std_logic;
   video_vs     : out std_logic;
-  audio_out    : out std_logic_vector(15 downto 0);
+  audio_out    : out std_logic_vector(12 downto 0);
   
   start2       : in std_logic;
   start1       : in std_logic;
@@ -139,7 +139,8 @@ signal ym2_we_n  : std_logic;
 -- audio
 signal ym_8910_audio : std_logic_vector(7 downto 0);
 signal ym_8910_audio2 : std_logic_vector(7 downto 0);
-
+signal music         : unsigned(12 downto 0);
+signal music2         : unsigned(12 downto 0);
 
 -- player I/O 
 signal player1  : std_logic_vector(7 downto 0);
@@ -293,8 +294,9 @@ cpu_di <= ym_8910_data when cpu_iorq_n = '0' else cpu_di_mem;
 -----------------------
 -- mux sound and music
 -----------------------
-audio_out <= ym_8910_audio & ym_8910_audio2;
-
+music     <= "0000" & unsigned(ym_8910_audio) & '0';
+music2    <= "0000" & unsigned(ym_8910_audio2) & '0';
+audio_out <= std_logic_vector(music + music2);
 
 -------------------------------------
 -- color ram addressing scheme 
@@ -520,7 +522,7 @@ Z80 : entity work.T80s
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clock,
+  CLK   => not cpu_clock,
   WAIT_n  => '1',
   INT_n   => cpu_int_n,
   NMI_n   => '1',

@@ -39,11 +39,12 @@ module RobotronFPGA_MiST(
 `include "rtl/build_id.v" 
 
 //`define CORE_NAME "ROBOTRON"
-`define CORE_NAME "JOUST"
+//`define CORE_NAME "JOUST"
 //`define CORE_NAME "SPLAT"
 //`define CORE_NAME "BUBBLES"
 //`define CORE_NAME "STARGATE"
 //`define CORE_NAME "SINISTAR"
+`define CORE_NAME "ALIENAR"
 
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
@@ -94,6 +95,15 @@ always @(*) begin
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ m_fireE, m_up, m_down, m_left | m_right, m_fireD, m_fireC, m_fireB, m_fireA };
 		JB  = ~{ m_fire2E, m_up2, m_down2, m_left2 | m_right2, m_fire2D, m_fire2C, m_fire2B, m_fire2A };
+		
+		
+	end else if (`CORE_NAME == "ALIENAR") begin
+		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
+		JA  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
+		JB  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
+	
+
+	
 	end else if (`CORE_NAME == "SINISTAR") begin
 		sinistar = 1;
 		orientation = 2'b01;
