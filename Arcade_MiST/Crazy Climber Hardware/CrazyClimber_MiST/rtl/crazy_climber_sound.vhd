@@ -6,7 +6,8 @@ use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
 entity crazy_climber_sound is
 port	(
-	cpu_clock    : in std_logic;
+	clock_12     : in std_logic;
+	cpu_clock_en : in std_logic;
 	cpu_addr     : in std_logic_vector(15 downto 0);
 	cpu_data     : in std_logic_vector( 7 downto 0);
 	cpu_iorq_n   : in std_logic;
@@ -23,6 +24,8 @@ architecture struct of crazy_climber_sound is
 signal hdiv         : std_logic_vector(1 downto 0);
 signal clock_1_5mhz : std_logic; -- 1.50Mhz
 signal clock_750khz : std_logic; -- 0.75MHz
+signal clock_1_5mhz_en : std_logic; -- 1.50Mhz
+signal clock_750khz_en : std_logic; -- 0.75MHz
 
 signal ym_2149_audio : std_logic_vector(7 downto 0);
 
@@ -42,12 +45,15 @@ signal sample_data     : std_logic_vector(3 downto 0);
 
 begin
 
-clock_1_5mhz <= hdiv(0);
-clock_750khz <= hdiv(1);
+--clock_1_5mhz <= hdiv(0);
+--clock_750khz <= hdiv(1);
 
-process(cpu_clock)
+clock_1_5mhz_en <= cpu_clock_en and hdiv(0);
+clock_750khz_en <= '1' when cpu_clock_en = '1' and hdiv="01" else '0';
+
+process(clock_12, cpu_clock_en)
 begin
-	if falling_edge(cpu_clock) then
+	if rising_edge(clock_12) and cpu_clock_en = '1' then
 
 		if hdiv = "11" then
 			hdiv <= "00";
@@ -76,9 +82,9 @@ end process;
 
 -- Sample machine
 
-process(clock_750khz)
+process(clock_12, clock_750khz_en)
 begin
-	if rising_edge(clock_750khz) then
+	if rising_edge(clock_12) and clock_750khz_en = '1' then
 		if frequency_cnt = "11111111" then
 			frequency_cnt   <= frequency_div;
 			frequency_tick  <= '1';
@@ -114,7 +120,7 @@ sound_sample <= std_logic_vector(( unsigned(ym_2149_audio) & unsigned(ym_2149_au
 sample_rom : entity work.cclimber_samples
 port map (
 	addr  => sample_rom_addr,
-	clk   => cpu_clock, 
+	clk   => clock_12, 
 	data  => sound_data
 );
 
@@ -142,9 +148,9 @@ port map (
 	O_IOB           => sample_start2, --: out std_logic_vector(7 downto 0);
 	O_IOB_OE_L      => open,          --: out std_logic;
 
-	ENA             => '1',           --: in  std_logic; -- clock enable for higher speed operation
+	ENA             => clock_1_5mhz_en,--: in  std_logic; -- clock enable for higher speed operation
 	RESET_L         => '1',           --: in  std_logic;
-	CLK             => clock_1_5mhz   --: in  std_logic  -- note 6 Mhz!
+	CLK             => clock_12       --: in  std_logic
 );
 
 end architecture;
