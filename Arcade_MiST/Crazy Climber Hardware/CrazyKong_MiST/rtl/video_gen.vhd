@@ -20,7 +20,8 @@ port(
 	x_pixel     : out std_logic_vector(2 downto 0);
 	y_pixel     : out std_logic_vector(2 downto 0);
 
-	cpu_clock   : out std_logic
+	cpu_clock   : out std_logic;
+	cpu_clock_en: out std_logic
 );
 end video_gen;
 
@@ -40,6 +41,7 @@ signal enable_clk : std_logic := '0';
 begin
 
 cpu_clock  <= not hcnt(0);
+cpu_clock_en <= ena_pixel and hcnt(0);
 is_sprite  <= not hcnt(8);
 sprite     <= std_logic_vector(hcnt(6 downto 4));
 x_tile     <= std_logic_vector(hcnt(7 downto 3));

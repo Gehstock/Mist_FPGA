@@ -638,11 +638,12 @@ port map (
 );
 
 -- Z80
-Z80 : entity work.T80s
+Z80 : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
   CLK_n   => cpu_clock,
+  CLKEN   => '1',
   WAIT_n  => '1',
   INT_n   => '1',
   NMI_n   => cpu_int_n,

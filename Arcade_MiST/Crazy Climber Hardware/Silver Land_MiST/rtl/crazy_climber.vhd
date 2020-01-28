@@ -9,7 +9,6 @@ use ieee.numeric_std.all;
 entity crazy_climber is
 port(
   clock_12  	: in std_logic;
-  pause  		: in std_logic;
   reset        : in std_logic;
   video_r      : out std_logic_vector(2 downto 0);
   video_g      : out std_logic_vector(2 downto 0);
@@ -118,7 +117,7 @@ signal video_mux              : std_logic_vector(7 downto 0);
 
 -- Z80 interface 
 signal cpu_clock  : std_logic;
-signal cpu_clk  : std_logic;
+signal cpu_clock_en  : std_logic;
 signal cpu_wr_n   : std_logic;
 signal cpu_addr   : std_logic_vector(15 downto 0);
 signal cpu_do     : std_logic_vector(7 downto 0);
@@ -200,7 +199,7 @@ video_vs    <= vsync;
 ------------------
 player1 		<= right1 & left1 & "00000" & fire1;
 player2 		<= right2 & left2 & "00000" & fire2;
-coins 		<=  ("0001" & start2 & start1 & '0' & coin1); -- upright cabinet
+coins 		<=  ("1111" & start2 & start1 & '0' & coin1); -- upright cabinet
 
 -----------------------
 -- cpu write addressing
@@ -219,10 +218,10 @@ reg6_we_n <= '0' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto
 ---------------------------
 -- enable/disable interrupt
 ---------------------------
-process (cpu_clock)
+process (clock_12)
 begin
-	if falling_edge(cpu_clock) then
-		if cpu_addr(2 downto 0) = "000" and reg4_we_n = '0' then
+	if rising_edge(clock_12) then
+		if cpu_clock_en = '1' and cpu_addr(2 downto 0) = "000" and reg4_we_n = '0' then
 			raz_int_n <= cpu_do(0);
 		end if;
 end if;
@@ -608,7 +607,8 @@ port map (
   y_tile     => y_tile,
   x_pixel    => x_pixel,
   y_pixel    => y_pixel,
-  cpu_clock  => cpu_clock
+  cpu_clock  => cpu_clock,
+  cpu_clock_en => cpu_clock_en
 );
 
 
@@ -628,13 +628,13 @@ port map (
 	data  => do_big_sprite_palette 
 );
 
-cpu_clk <= cpu_clock when pause = '0';
 -- Z80
-Z80 : entity work.T80s
+Z80 : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
 port map(
   RESET_n => reset_n,
-  CLK_n   => cpu_clk,
+  CLK_n   => clock_12,
+  CLKEN   => cpu_clock_en,
   WAIT_n  => '1',
   INT_n   => '1',
   NMI_n   => cpu_int_n,
