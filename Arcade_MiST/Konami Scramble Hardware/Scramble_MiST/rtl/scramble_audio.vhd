@@ -398,7 +398,18 @@ begin
     i8255_1D_cs_l <= '1';
     i8255_1E_cs_l <= '1';
 
-    if I_HWSEL = I_HWSEL_SCOBRA or I_HWSEL = I_HWSEL_CALIPSO then
+    if I_HWSEL = I_HWSEL_DARKPLNT then
+        -- the interface one
+        if (I_ADDR(13 downto 11) = "101") and (I_ADDR(15) = '1') then
+          i8255_1D_cs_l <= '0';
+        end if;
+
+        -- the button one
+        if (I_ADDR(13 downto 11) = "100") and (I_ADDR(15) = '1') then
+          i8255_1E_cs_l <= '0';
+        end if;
+        i8255_addr <= I_ADDR(3 downto 2);
+    elsif I_HWSEL = I_HWSEL_SCOBRA or I_HWSEL = I_HWSEL_CALIPSO or I_HWSEL = I_HWSEL_ANTEATER or I_HWSEL = I_HWSEL_LOSTTOMB then
         -- the interface one
         if (I_ADDR(13 downto 11) = "100") and (I_ADDR(15) = '1') then
           i8255_1D_cs_l <= '0';
@@ -489,7 +500,12 @@ begin
 
   i8255_1E_pa <= I_PA;
   i8255_1E_pb <= I_PB;
-  i8255_1E_pc <= I_PC when I_HWSEL = I_HWSEL_SCOBRA or I_HWSEL = I_HWSEL_CALIPSO else I_PC or net_1e10_i&'0'&net_1e12_i&"00000";
+  i8255_1E_pc <= I_PC when I_HWSEL = I_HWSEL_SCOBRA or 
+                           I_HWSEL = I_HWSEL_CALIPSO or 
+                           I_HWSEL = I_HWSEL_DARKPLNT or
+                           I_HWSEL = I_HWSEL_ANTEATER or
+                           I_HWSEL = I_HWSEL_LOSTTOMB
+                      else I_PC or net_1e10_i&'0'&net_1e12_i&"00000";
 
   O_COIN_COUNTER <= not I_IOPC7; -- open drain actually
 

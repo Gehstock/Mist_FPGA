@@ -383,7 +383,9 @@ begin
         cpu_busrq_l <= cpu_addr(15);
       end if;
 
-      if I_HWSEL = I_HWSEL_SCRAMBLE then
+      if I_HWSEL = I_HWSEL_DARKPLNT then
+         if cpu_addr(15) = '1' then page_4to7_l <= '0'; end if;
+      elsif I_HWSEL = I_HWSEL_SCRAMBLE then
         if (cpu_addr(15 downto 14) = "01") then page_4to7_l <= '0'; end if;
       else
         if (cpu_addr(15 downto 14) = "10") then page_4to7_l <= '0'; end if;
@@ -396,7 +398,12 @@ begin
   begin
     waen_l <= '1';
     objen_l <= '1';
-    if I_HWSEL /= I_HWSEL_FROGGER then
+    if I_HWSEL = I_HWSEL_DARKPLNT then
+      if (page_4to7_l = '0') and (cpu_rfsh_l = '1') then
+        if (cpu_addr(13 downto 11) = "010") then waen_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "011") then objen_l <= '0'; end if;
+      end if;
+    elsif I_HWSEL /= I_HWSEL_FROGGER then
       if (page_4to7_l = '0') and (cpu_rfsh_l = '1') then
         if (cpu_addr(13 downto 11) = "001") then waen_l <= '0'; end if;
         if (cpu_addr(13 downto 11) = "010") then objen_l <= '0'; end if;
@@ -412,7 +419,11 @@ begin
     vramrd_l <= '1';
     objramrd_l <= '1';
 
-    if I_HWSEL /= I_HWSEL_FROGGER then
+    if I_HWSEL = I_HWSEL_DARKPLNT then
+      if (page_4to7_l = '0') and (cpu_rd_l = '0') then
+        if (cpu_addr(13 downto 11) = "010") then vramrd_l <= '0'; end if;
+      end if;
+    elsif I_HWSEL /= I_HWSEL_FROGGER then
       if (page_4to7_l = '0') and (cpu_rd_l = '0') then
         if (cpu_addr(13 downto 11) = "001") then vramrd_l <= '0'; end if;
         if (cpu_addr(13 downto 11) = "010") then objramrd_l <= '0'; end if;
@@ -427,7 +438,13 @@ begin
     objramwr_l <= '1';
     select_l <= '1';
 
-    if I_HWSEL /= I_HWSEL_FROGGER then
+    if I_HWSEL = I_HWSEL_DARKPLNT then
+      if (page_4to7_l = '0') and (cpu_wr_l = '0') and (wren = '1') then
+        if (cpu_addr(13 downto 11) = "010") then vramwr_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "001") then objramwr_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "110") then select_l <= '0'; end if; -- control reg
+      end if;
+    elsif I_HWSEL /= I_HWSEL_FROGGER then
       if (page_4to7_l = '0') and (cpu_wr_l = '0') and (wren = '1') then
         if (cpu_addr(13 downto 11) = "001") then vramwr_l <= '0'; end if;
         if (cpu_addr(13 downto 11) = "010") then objramwr_l <= '0'; end if;
@@ -456,7 +473,9 @@ begin
     --6805      ? (POUT2)
     --6806      screen vertical flip
     --6807      screen horizontal flip
-      if I_HWSEL /= I_HWSEL_FROGGER then
+      if I_HWSEL = I_HWSEL_DARKPLNT then
+        addr := cpu_addr(3 downto 1);
+      elsif I_HWSEL /= I_HWSEL_FROGGER then
         addr := cpu_addr(2 downto 0);
       else
         addr := cpu_addr(4 downto 2);
@@ -491,7 +510,14 @@ begin
 
   p_control_reg_assign : process(control_reg, I_HWSEL)
   begin
-    if I_HWSEL /= I_HWSEL_FROGGER then
+    if I_HWSEL = I_HWSEL_DARKPLNT then
+      intst_l <= control_reg(2);
+      iopc7   <= '0';
+      pout1   <= '0';
+      starson <= '0';
+      hcma    <= control_reg(7);
+      vcma    <= not control_reg(6);
+    elsif I_HWSEL /= I_HWSEL_FROGGER then
       -- Scramble
       intst_l <= control_reg(1);
       iopc7   <= control_reg(2);

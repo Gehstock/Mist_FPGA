@@ -8,5 +8,7 @@ package scramble_pack is
     constant I_HWSEL_SCOBRA   : integer := 2; -- SuperCobra, TazzMania
     constant I_HWSEL_CALIPSO  : integer := 3; -- Calipso
 	constant I_HWSEL_DARKPLNT : integer := 4; -- Dark Planet
+	constant I_HWSEL_ANTEATER : integer := 5; -- Ant Eater (SCOBRA with obj_ram address line obfuscation)
+	constant I_HWSEL_LOSTTOMB : integer := 6; -- Lost Tomb (SCOBRA with obj_ram address line obfuscation)
 
 end;

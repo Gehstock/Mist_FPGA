@@ -407,17 +407,33 @@ begin
   end process;
 
   p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_HWSEL)
+  variable obj_rom_addr_base : std_logic_vector(12 downto 0);
   begin
-    obj_rom_addr( 2 downto 0) <= vram_addr_xor(2 downto 0);
+    obj_rom_addr_base( 2 downto 0) := vram_addr_xor(2 downto 0);
     if (h256 = '0') then
-     -- a
-      obj_rom_addr(12 downto 3) <= "00" & vram_dout; -- background objects
+      obj_rom_addr_base(12 downto 3) := "00" & vram_dout; -- background objects
     else
-      obj_rom_addr(12 downto 11) <= "00";
+      obj_rom_addr_base(12 downto 11) := "00";
       if I_HWSEL = I_HWSEL_CALIPSO then
-        obj_rom_addr(12 downto 11) <= objdata(7 downto 6);
+        obj_rom_addr_base(12 downto 11) := objdata(7 downto 6);
       end if;
-      obj_rom_addr(10 downto 3) <= objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
+      obj_rom_addr_base(10 downto 3) := objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
+    end if;
+
+    if I_HWSEL = I_HWSEL_ANTEATER then
+      obj_rom_addr <= "00" & not(obj_rom_addr_base(0) xor obj_rom_addr_base(6)) & 
+                      (obj_rom_addr_base(2) xor obj_rom_addr_base(10)) &
+                      obj_rom_addr_base(8 downto 7) &
+                      (obj_rom_addr_base(4) xor obj_rom_addr_base(9) xor (obj_rom_addr_base(2) and obj_rom_addr_base(10))) &
+                      obj_rom_addr_base(5 downto 0);
+    elsif I_HWSEL = I_HWSEL_LOSTTOMB then
+      obj_rom_addr <= "00" & ((obj_rom_addr_base(1) and obj_rom_addr_base(7)) or (not obj_rom_addr_base(1) and obj_rom_addr_base(8))) & 
+                      obj_rom_addr_base(9) &
+                      (obj_rom_addr_base(7) xor (obj_rom_addr_base(1) and (obj_rom_addr_base(7) xor obj_rom_addr_base(10)))) &
+                      ((obj_rom_addr_base(1) and obj_rom_addr_base(8)) or (not obj_rom_addr_base(1) and obj_rom_addr_base(10))) &
+                      obj_rom_addr_base(6 downto 0);
+    else
+      obj_rom_addr <= obj_rom_addr_base;
     end if;
 
   end process;

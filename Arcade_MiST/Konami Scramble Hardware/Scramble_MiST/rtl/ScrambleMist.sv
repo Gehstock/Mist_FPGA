@@ -60,7 +60,9 @@ module ScrambleMist
 //`define CORE_NAME "MOONWAR"
 //`define CORE_NAME "SPDCOIN"
 //`define CORE_NAME "CALIPSO"
-`define CORE_NAME "DARKPLNT"
+//`define CORE_NAME "DARKPLNT" // video problem
+//`define CORE_NAME "ANTEATER"
+`define CORE_NAME "LOSTTOMB"
 
 integer hwsel = 0;
 reg [7:0] input0;
@@ -98,8 +100,21 @@ always @(*) begin
 		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_two_players, 1'b0, m_one_player, 1'b0 };
 		input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
 		input2 = { 4'hf, 1'b0, 1'b0, 1'b1, 1'b1}; // 4xunused, lives, difficulty, unknown, unused
-	end else if (`CORE_NAME == "SPDCOIN") begin
+	end else if (`CORE_NAME == "DARKPLNT") begin
 		hwsel = 4;
+		input0 = ~{ m_coin1, m_coin2, 3'b000, m_two_players | m_fireB, m_one_player | m_fireA, m_fireC };
+		input1 = 8'h00;
+		input2 = 8'h00;
+	end else if (`CORE_NAME == "ANTEATER") begin
+		hwsel = 5;
+		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
+		input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
+		input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
+	end else if (`CORE_NAME == "LOSTTOMB") begin
+		hwsel = 6;
+		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
+		input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, 2'b01 };
+		input2 = ~{ 4'h0, 1'b0, 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
 	end
 end
 
