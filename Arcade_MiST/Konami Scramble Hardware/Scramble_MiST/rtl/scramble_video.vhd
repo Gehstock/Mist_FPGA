@@ -44,10 +44,11 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_arith.all;
   use ieee.std_logic_unsigned.all;
+  use work.scramble_pack.all;
 
 entity SCRAMBLE_VIDEO is
   port (
-    I_HWSEL_FROGGER       : in    boolean;
+    I_HWSEL               : in  integer;
     --
     I_HCNT                : in  std_logic_vector(8 downto 0);
     I_VCNT                : in  std_logic_vector(8 downto 0);
@@ -78,7 +79,11 @@ entity SCRAMBLE_VIDEO is
     ENA                   : in  std_logic;
     ENAB                  : in  std_logic;
     ENA_12                : in  std_logic;
-    CLK                   : in  std_logic
+    CLK                   : in  std_logic;
+
+    dl_addr               : in  std_logic_vector(15 downto 0);
+    dl_wr                 : in  std_logic;
+    dl_data               : in  std_logic_vector(7 downto 0)
     );
 end;
 
@@ -134,7 +139,7 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal hpla                 : std_logic_vector(7 downto 0);
   signal objdata              : std_logic_vector(7 downto 0);
 
-  signal obj_rom_addr         : std_logic_vector(10 downto 0);
+  signal obj_rom_addr         : std_logic_vector(12 downto 0);
   signal obj_rom_0_dout       : std_logic_vector(7 downto 0);
   signal obj_rom_1_dout       : std_logic_vector(7 downto 0);
   --
@@ -182,7 +187,11 @@ architecture RTL of SCRAMBLE_VIDEO is
   -- scramble blue
   signal pout1_reg            : std_logic;
 
-
+  signal obj_dl_addr          : std_logic_vector(12 downto 0);
+  signal obj_rom_0_wr         : std_logic;
+  signal obj_rom_1_wr         : std_logic;
+  signal col_rom_wr           : std_logic;
+  
 begin
   p_hcnt_decode : process(I_HCNT)
   begin
@@ -212,7 +221,7 @@ begin
         cblank_l <= cblank_s;
         h256_l_s <= h256_l;
 
-        if not I_HWSEL_FROGGER then
+        if I_HWSEL /= I_HWSEL_FROGGER then
           cd     <= col_reg;
         else
           cd     <= col_reg(0) & col_reg(2 downto 1);
@@ -248,9 +257,9 @@ begin
     end loop;
   end process;
 
-  p_video_addr_calc : process(I_HWSEL_FROGGER, vcnt_f, hpla)
+  p_video_addr_calc : process(I_HWSEL, vcnt_f, hpla)
   begin
-    if not I_HWSEL_FROGGER then
+    if I_HWSEL /= I_HWSEL_FROGGER then
       vram_addr_sum <= ('0' & vcnt_f(7 downto 0)) + ('0' & hpla(7 downto 0));
     else
       vram_addr_sum <= ('0' & vcnt_f(7 downto 0)) + ('0' & hpla(3 downto 0) & hpla(7 downto 4));
@@ -277,10 +286,11 @@ begin
     end if;
   end process;
 
-  p_vram_xor : process(vram_addr_reg, objdata, h256)
+  p_vram_xor : process(vram_addr_reg, objdata, h256, I_HWSEL)
     variable flip : std_logic;
   begin
     flip := objdata(7) and h256;
+
     for i in 0 to 3 loop
       vram_addr_xor(i) <= vram_addr_reg(i) xor flip;
     end loop;
@@ -396,27 +406,72 @@ begin
     end if;
   end process;
 
-  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT)
+  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_HWSEL)
   begin
     obj_rom_addr( 2 downto 0) <= vram_addr_xor(2 downto 0);
     if (h256 = '0') then
      -- a
-      obj_rom_addr(10 downto 3) <= vram_dout; -- background objects
+      obj_rom_addr(12 downto 3) <= "00" & vram_dout; -- background objects
     else
+      obj_rom_addr(12 downto 11) <= "00";
+      if I_HWSEL = I_HWSEL_CALIPSO then
+        obj_rom_addr(12 downto 11) <= objdata(7 downto 6);
+      end if;
       obj_rom_addr(10 downto 3) <= objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
     end if;
+
   end process;
 
-  obj_rom0 : entity work.ROM_OBJ_0 -- 5H
-    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_0_dout);
-  obj_rom1 : entity work.ROM_OBJ_1 -- 5F
-    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_1_dout);
+  obj_dl_addr <= dl_addr(12 downto 0) when I_HWSEL = I_HWSEL_CALIPSO else "00"&dl_addr(10 downto 0);
+
+  obj_rom0 : work.dpram generic map (13,8) --5H
+  port map
+  (
+      clk_a_i  => clk,
+      en_a_i   => '1',
+      we_i     => obj_rom_0_wr,
+
+      addr_a_i => obj_dl_addr,
+      data_a_i => dl_data,
+
+      clk_b_i  => clk,
+      addr_b_i => obj_rom_addr,
+      data_b_o => obj_rom_0_dout
+  );
+  obj_rom_0_wr <= '1' when dl_wr = '1' and 
+    ((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 11) = "10100") or -- A000-A7FF
+     (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 13) = "101"))     -- A000-BFFF
+    else '0'; 
+
+  obj_rom1 : work.dpram generic map (13,8) --5F
+  port map
+  (
+      clk_a_i  => clk,
+      en_a_i   => '1',
+      we_i     => obj_rom_1_wr,
+
+      addr_a_i => obj_dl_addr,
+      data_a_i => dl_data,
+
+      clk_b_i  => clk,
+      addr_b_i => obj_rom_addr,
+      data_b_o => obj_rom_1_dout
+  );
+  obj_rom_1_wr <= '1' when dl_wr = '1' and
+    ((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 11) = "10101") or -- A800-AFFF
+     (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 13) = "110"))     -- C000-DFFF
+    else '0'; 
+
+--  obj_rom0 : entity work.ROM_OBJ_0 -- 5H
+--    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_0_dout);
+--  obj_rom1 : entity work.ROM_OBJ_1 -- 5F
+--    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_1_dout);
 
   p_obj_rom_shift : process
     variable obj_rom_0_dout_s : std_logic_vector(7 downto 0);
   begin
     wait until rising_edge (CLK);
-    if not I_HWSEL_FROGGER then
+    if I_HWSEL /= I_HWSEL_FROGGER then
       obj_rom_0_dout_s := obj_rom_0_dout;
     else -- swap bits 0 and 1
       obj_rom_0_dout_s := obj_rom_0_dout(7 downto 2) & obj_rom_0_dout(0) & obj_rom_0_dout(1);
@@ -623,12 +678,31 @@ begin
 --      );
 
 -- BRAM Version
-  col_rom : entity work.ROM_LUT
-    port map(
-		CLK => CLK, 
-      ADDR        => obj_video_out_reg(4 downto 0),
-      DATA        => obj_lut_out
-      );
+  col_rom : work.dpram generic map (5,8)
+  port map
+  (
+      clk_a_i  => clk,
+      en_a_i   => '1',
+      we_i     => col_rom_wr,
+
+      addr_a_i => dl_addr(4 downto 0),
+      data_a_i => dl_data,
+
+      clk_b_i  => clk,
+      addr_b_i => obj_video_out_reg(4 downto 0),
+      data_b_o => obj_lut_out
+	);
+  col_rom_wr <= '1' when dl_wr = '1' and 
+	((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 5) = x"B0"&"000") or -- B000-B01F
+	 (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 5) = x"E0"&"000"))   -- E000-E01F
+	else '0'; 
+
+--  col_rom : entity work.ROM_LUT
+--    port map(
+--      CLK => CLK, 
+--      ADDR        => obj_video_out_reg(4 downto 0),
+--      DATA        => obj_lut_out
+--      );
 
   p_col_rom_ce : process
     variable video : array_3x5;
@@ -655,19 +729,19 @@ begin
       --
       -- end of direct assigns
       --
-      if I_HWSEL_FROGGER then
+      if I_HWSEL = I_HWSEL_FROGGER then
         if (frogger_blue_out_reg = '1') and (vidout_l = '1') then
           video(0) := video(0) + "00010";
         end if;
       end if;
 
-      if not I_HWSEL_FROGGER then
+      if I_HWSEL /= I_HWSEL_FROGGER then
         video(1) := video(1) + ("00" & shell_reg & "00");
         video(2) := video(2) + ("00" & shell_reg & "00");
       end if;
 
       -- add stars, background and video
-      if not I_HWSEL_FROGGER then
+      if I_HWSEL /= I_HWSEL_FROGGER then
         if (star_out_reg = '1') and (vidout_l = '1') then
           video(0) := video(0) + ( '0' & star_shift_t1(13 downto 12) & "00");
           video(1) := video(1) + ( '0' & star_shift_t1(11 downto 10) & "00");
