@@ -51,75 +51,112 @@ module ScrambleMist
 
 `include "rtl\build_id.v"
 
-//`define CORE_NAME "SCRAMBLE"
-//`define CORE_NAME "AMIDAR"
-//`define CORE_NAME "FROGGER"
-//`define CORE_NAME "SCOBRA"
-//`define CORE_NAME "TAZMANIA"
-//`define CORE_NAME "ARMORCAR"
-//`define CORE_NAME "MOONWAR"
-//`define CORE_NAME "SPDCOIN"
-//`define CORE_NAME "CALIPSO"
-//`define CORE_NAME "DARKPLNT" // video problem
-//`define CORE_NAME "ANTEATER"
-`define CORE_NAME "LOSTTOMB"
-
 integer hwsel = 0;
-reg [7:0] input0;
-reg [7:0] input1;
-reg [7:0] input2;
+wire [6:0] core_mod;
+reg  [8*8-1:0] core_name;
+reg  [7:0] input0;
+reg  [7:0] input1;
+reg  [7:0] input2;
 
 always @(*) begin
 	input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, m_fireB, m_up2 };
 	input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, 2'b10 };
 	input2 = ~{ 1'b1, m_down, 1'b1, m_up, 3'b111, m_down2 };
 
-	if (`CORE_NAME == "SCRAMBLE" || `CORE_NAME == "AMIDAR") begin
-		hwsel = 0;
-	end else if (`CORE_NAME == "FROGGER") begin
-		hwsel = 1;
-	end else if (`CORE_NAME == "SCOBRA" || `CORE_NAME == "ARMORCAR") begin
-		hwsel = 2;
-	end else if (`CORE_NAME == "TAZMANIA") begin
-		hwsel = 2;
-		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
-		input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
-		input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
-	end else if (`CORE_NAME == "MOONWAR") begin
-		hwsel = 2;
-		input0 = ~{ m_coin1, m_coin2, 1'b0, dial };
-		input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, 2'b01 }; // lives
-		input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 };                                                // 4xunused, cabinet, coinage, p2fire(cocktail)
-	end else if (`CORE_NAME == "CALIPSO") begin
-		hwsel = 3;
-	    input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, 1'b1, m_two_players|m_fire2A }; // coin1, coin2, left, right, down, up, unused, start 2p / player2 fire
-        input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, 1'b1, 1'b1 };                     // unused, unused, left, right, down, up, demo sounds, lives 3/5
-        input2 = ~{ 5'b0, 2'b10, m_fireA | m_one_player };                                           // unused[7:3], coin dip[2:1], start 1p / player1 fire
-	end else if (`CORE_NAME == "SPDCOIN") begin
-		hwsel = 2;
-		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_two_players, 1'b0, m_one_player, 1'b0 };
-		input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
-		input2 = { 4'hf, 1'b0, 1'b0, 1'b1, 1'b1}; // 4xunused, lives, difficulty, unknown, unused
-	end else if (`CORE_NAME == "DARKPLNT") begin
-		hwsel = 4;
-		input0 = ~{ m_coin1, m_coin2, 3'b000, m_two_players | m_fireB, m_one_player | m_fireA, m_fireC };
-		input1 = 8'h00;
-		input2 = 8'h00;
-	end else if (`CORE_NAME == "ANTEATER") begin
-		hwsel = 5;
-		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
-		input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
-		input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
-	end else if (`CORE_NAME == "LOSTTOMB") begin
-		hwsel = 6;
-		input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
-		input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, 2'b01 };
-		input2 = ~{ 4'h0, 1'b0, 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
-	end
+	case (core_mod)
+		6'h0:
+		begin
+			core_name = "SCRAMBLE";
+			hwsel = 0;
+		end
+		6'h1:
+		begin
+			core_name = "AMIDAR  ";
+			hwsel = 0;
+		end
+		6'h2:
+		begin
+			core_name = "FROGGER ";
+			hwsel = 1;
+		end
+		6'h3:
+		begin
+			core_name = "SCOBRA  ";
+			hwsel = 2;
+		end
+		6'h4:
+		begin
+			core_name = "TAZMANIA";
+			hwsel = 2;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
+			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
+			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
+		end
+		6'h5:
+		begin
+			core_name = "ARMORCAR";
+			hwsel = 2;
+		end
+		6'h6:
+		begin
+			core_name = "MOONWAR";
+			hwsel = 2;
+			input0 = ~{ m_coin1, m_coin2, 1'b0, dial };
+			input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, 2'b01 }; // lives
+			input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 };                                                // 4xunused, cabinet, coinage, p2fire(cocktail)
+		end
+		6'h7:
+		begin
+			core_name = "SPDCOIN ";
+			hwsel = 2;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_two_players, 1'b0, m_one_player, 1'b0 };
+			input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
+			input2 = { 4'hf, 1'b0, 1'b0, 1'b1, 1'b1}; // 4xunused, lives, difficulty, unknown, unused
+		end
+		6'h8:
+		begin
+			core_name = "CALIPSO ";
+			hwsel = 3;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, 1'b1, m_two_players|m_fire2A }; // coin1, coin2, left, right, down, up, unused, start 2p / player2 fire
+			input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, 1'b1, 1'b1 };                     // unused, unused, left, right, down, up, demo sounds, lives 3/5
+			input2 = ~{ 5'b0, 2'b10, m_fireA | m_one_player };                                           // unused[7:3], coin dip[2:1], start 1p / player1 fire
+		end
+		6'h9:
+		begin
+			// buggy
+			core_name = "DARKPLNT";
+			hwsel = 4;
+			input0 = ~{ m_coin1, m_coin2, 3'b000, m_two_players | m_fireB, m_one_player | m_fireA, m_fireC };
+			input1 = 8'h00;
+			input2 = 8'h00;
+		end
+		6'hA:
+		begin
+			core_name = "ANTEATER";
+			hwsel = 5;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
+			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
+			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
+		end
+		6'hB:
+		begin
+			core_name = "LOSTTOMB";
+			hwsel = 6;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
+			input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, 2'b01 };
+			input2 = ~{ 4'h0, 1'b0, 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
+		end
+		default:
+		begin
+			hwsel = 0;
+			core_name = "SCRAMBLE";
+		end
+	endcase
 end
 
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+//	`CORE_NAME,";ROM;",
+	";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
@@ -171,15 +208,16 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
 
 user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
+	.STRLEN(((8*8+$size(CONF_STR))>>3)))
 user_io(
 	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
+	.conf_str       ({core_name, CONF_STR}),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
 	.SPI_MISO       (SPI_DO         ),
@@ -188,6 +226,8 @@ user_io(
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),

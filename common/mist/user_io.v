@@ -46,6 +46,7 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_
 	output              ypbpr,
 	output              no_csync,
 	output reg   [31:0] status,
+	output reg    [6:0] core_mod, // core variant, sent before the config string is requested
 
 	// connection to sd card emulation
 	input        [31:0] sd_lba,
@@ -479,7 +480,10 @@ always @(posedge clk_sys) begin
 				// status, 32bit version
 				8'h1e: if(abyte_cnt<5) status[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 
-				endcase
+				// core variant
+				8'h21: core_mod <= spi_byte_in[6:0];
+
+			endcase
 		end
 	end
 end

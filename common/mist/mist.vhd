@@ -32,6 +32,7 @@ port (
 	scandoubler_disable : out std_logic;
 	ypbpr             : out std_logic;
 	no_csync          : out std_logic;
+	core_mod          : out std_logic_vector(6 downto 0);
 
 	sd_lba            : in  std_logic_vector(31 downto 0) := (others => '0');
 	sd_rd             : in  std_logic := '0';
