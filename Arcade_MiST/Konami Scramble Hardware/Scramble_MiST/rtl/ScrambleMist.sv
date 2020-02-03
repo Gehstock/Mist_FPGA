@@ -51,6 +51,17 @@ module ScrambleMist
 
 `include "rtl\build_id.v"
 
+localparam CONF_STR = {
+	";ROM;",
+	"O2,Rotate Controls,Off,On;",
+	"O34,Scanlines,Off,25%,50%,75%;",
+	"O5,Blending,Off,On;",
+	"O6,Joystick Swap,Off,On;",
+	"DIP;",
+	"T0,Reset;",
+	"V,v1.20.",`BUILD_DATE
+};
+
 integer hwsel = 0;
 wire [6:0] core_mod;
 reg  [8*8-1:0] core_name;
@@ -59,9 +70,9 @@ reg  [7:0] input1;
 reg  [7:0] input2;
 
 always @(*) begin
-	input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, m_fireB, m_up2 };
-	input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, 2'b10 };
-	input2 = ~{ 1'b1, m_down, 1'b1, m_up, 3'b111, m_down2 };
+	input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, /*service*/1'b0, m_fireB, m_up2 };
+	input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, /*lives*/~status[8:7] };
+	input2 = ~{ 1'b1, m_down, 1'b1, m_up, /*cabinet*/1'b1, /*coinage*/2'b11, m_down2 };
 
 	case (core_mod)
 		6'h0:
@@ -73,6 +84,8 @@ always @(*) begin
 		begin
 			core_name = "AMIDAR  ";
 			hwsel = 0;
+			input1[1:0] = ~status[8:7]; // lives345unl
+			//input2[1] = status[10]; // demo sounds - no effect
 		end
 		6'h2:
 		begin
@@ -83,27 +96,31 @@ always @(*) begin
 		begin
 			core_name = "SCOBRA  ";
 			hwsel = 2;
+			input1[0] = status[9]; // allow continue
+			input1[1] = status[7]; // lives34
 		end
 		6'h4:
 		begin
 			core_name = "TAZMANIA";
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
-			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
-			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
+			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosnd*/status[10], /*lives35*/status[7] };
+			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player }; // unknown, start2, 2xunknown, cabinet, 2xcoinage, start1
 		end
 		6'h5:
 		begin
 			core_name = "ARMORCAR";
 			hwsel = 2;
+			input1[0] = ~status[7]; //lives35
+			input1[1] = ~status[10]; // demo sounds
 		end
 		6'h6:
 		begin
-			core_name = "MOONWAR";
+			core_name = "MOONWAR ";
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, 1'b0, dial };
-			input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, 2'b01 }; // lives
-			input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 };                                                // 4xunused, cabinet, coinage, p2fire(cocktail)
+			input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, /*live345*/~status[8:7] };
+			input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 }; // 4xunused, cabinet, coinage, p2fire(cocktail)
 		end
 		6'h7:
 		begin
@@ -111,14 +128,14 @@ always @(*) begin
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_two_players, 1'b0, m_one_player, 1'b0 };
 			input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
-			input2 = { 4'hf, 1'b0, 1'b0, 1'b1, 1'b1}; // 4xunused, lives, difficulty, unknown, unused
+			input2 = { 4'hf, ~status[7], status[11], 1'b1, 1'b1}; // 4xunused, lives35, difficulty, unknown, unused
 		end
 		6'h8:
 		begin
 			core_name = "CALIPSO ";
 			hwsel = 3;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, 1'b1, m_two_players|m_fire2A }; // coin1, coin2, left, right, down, up, unused, start 2p / player2 fire
-			input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, 1'b1, 1'b1 };                     // unused, unused, left, right, down, up, demo sounds, lives 3/5
+			input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, status[10], status[7] };          // unused, unused, left, right, down, up, demo sounds, lives 3/5
 			input2 = ~{ 5'b0, 2'b10, m_fireA | m_one_player };                                           // unused[7:3], coin dip[2:1], start 1p / player1 fire
 		end
 		6'h9:
@@ -135,7 +152,7 @@ always @(*) begin
 			core_name = "ANTEATER";
 			hwsel = 5;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
-			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, 2'b11 };
+			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosdns*/status[10], /*lives35*/status[7] };
 			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
 		end
 		6'hB:
@@ -144,7 +161,7 @@ always @(*) begin
 			hwsel = 6;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
 			input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, 2'b01 };
-			input2 = ~{ 4'h0, 1'b0, 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
+			input2 = ~{ 4'h0, status[10], 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
 		end
 		default:
 		begin
@@ -153,17 +170,6 @@ always @(*) begin
 		end
 	endcase
 end
-
-localparam CONF_STR = {
-//	`CORE_NAME,";ROM;",
-	";ROM;",
-	"O2,Rotate Controls,Off,On;",
-	"O34,Scanlines,Off,25%,50%,75%;",
-	"O5,Blending,Off,On;",
-	"06,Joystick Swap,Off,On;",
-	"T0,Reset;",
-	"V,v1.20.",`BUILD_DATE
-};
 
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
@@ -214,7 +220,7 @@ wire        key_pressed;
 wire  [7:0] key_code;
 
 user_io #(
-	.STRLEN(((8*8+$size(CONF_STR))>>3)))
+	.STRLEN(8+($size(CONF_STR)>>3)))
 user_io(
 	.clk_sys        (clk_sys        ),
 	.conf_str       ({core_name, CONF_STR}),
@@ -224,7 +230,7 @@ user_io(
 	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
+	.scandoubler_disable (scandoublerD ),
 	.ypbpr          (ypbpr          ),
 	.no_csync       (no_csync       ),
 	.core_mod       (core_mod       ),

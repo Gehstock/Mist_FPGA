@@ -24,6 +24,8 @@
  
 module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_UPLOAD=0) (
 	input [(8*STRLEN)-1:0] conf_str,
+	output       [9:0]  conf_addr, // RAM address for config string, if STRLEN=0
+	input        [7:0]  conf_chr,
 
 	input               clk_sys, // clock for system-related messages (kbd, joy, etc...)
 	input               clk_sd,  // clock for SD-card related messages
@@ -100,6 +102,8 @@ assign switches = but_sw[3:2];
 assign scandoubler_disable = but_sw[4];
 assign ypbpr = but_sw[5];
 assign no_csync = but_sw[6];
+
+assign conf_addr = byte_cnt;
 
 // this variant of user_io is for 8 bit cores (type == a4) only
 // bit 4 indicates ROM direct upload capability
@@ -335,7 +339,8 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 			spi_byte_out <= 0;
 			case({(!byte_cnt) ? {sbuf, SPI_MOSI} : cmd})
 			// reading config string
-			8'h14: if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
+			8'h14: if (STRLEN == 0) spi_byte_out <= conf_chr; else
+			       if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
 
 			// reading sd card status
 			8'h16: if(byte_cnt == 0) begin

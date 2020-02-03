@@ -1,1 +1,4 @@
-SCRAMBLE=11
+[ARC]
+RBF=SCRAMBLE
+MOD=11
+CONF=OA,Demo Sounds,Off,On

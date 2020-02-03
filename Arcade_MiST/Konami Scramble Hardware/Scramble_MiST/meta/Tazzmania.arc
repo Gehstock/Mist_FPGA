@@ -1,1 +1,5 @@
-SCRAMBLE=4
+[ARC]
+RBF=SCRAMBLE
+MOD=4
+CONF=O7,Lives,3,5
+CONF=OA,Demo Sounds,Off,On
