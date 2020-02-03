@@ -70,11 +70,15 @@ entity SCRAMBLE_VIDEO is
     I_OBJEN_L             : in  std_logic;
     --
     I_STARSON             : in  std_logic;
-    I_POUT1               : in  std_logic;
+    I_BCB                 : in  std_logic;
+    I_BCG                 : in  std_logic;
+    I_BCR                 : in  std_logic;
     --
-    O_VIDEO_R             : out std_logic_vector(3 downto 0);
-    O_VIDEO_G             : out std_logic_vector(3 downto 0);
-    O_VIDEO_B             : out std_logic_vector(3 downto 0);
+    I_GFXBANK             : in  std_logic_vector(1 downto 0);
+    --
+    O_VIDEO_R             : out std_logic_vector(5 downto 0);
+    O_VIDEO_G             : out std_logic_vector(5 downto 0);
+    O_VIDEO_B             : out std_logic_vector(5 downto 0);
     --
     ENA                   : in  std_logic;
     ENAB                  : in  std_logic;
@@ -159,6 +163,7 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal obj_video_out_reg    : std_logic_vector(4 downto 0);
   signal vidout_l             : std_logic;
   signal obj_lut_out          : std_logic_vector(7 downto 0);
+  signal obj_lut_out2         : std_logic_vector(7 downto 0);
 
   signal cntr_addr            : std_logic_vector(7 downto 0);
   signal cntr_addr_xor        : std_logic_vector(10 downto 0);
@@ -184,14 +189,17 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal frogger_blue_reg     : std_logic;
   signal frogger_blue         : std_logic;
   signal frogger_blue_out_reg : std_logic;
-  -- scramble blue
-  signal pout1_reg            : std_logic;
+  -- background color shade
+  signal bcb_reg              : std_logic;
+  signal bcg_reg              : std_logic;
+  signal bcr_reg              : std_logic;
 
   signal obj_dl_addr          : std_logic_vector(12 downto 0);
   signal obj_rom_0_wr         : std_logic;
   signal obj_rom_1_wr         : std_logic;
   signal col_rom_wr           : std_logic;
-  
+  signal col_rom2_wr           : std_logic;
+
 begin
   p_hcnt_decode : process(I_HCNT)
   begin
@@ -406,14 +414,14 @@ begin
     end if;
   end process;
 
-  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_HWSEL)
+  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_GFXBANK, I_HWSEL)
   variable obj_rom_addr_base : std_logic_vector(12 downto 0);
   begin
     obj_rom_addr_base( 2 downto 0) := vram_addr_xor(2 downto 0);
     if (h256 = '0') then
-      obj_rom_addr_base(12 downto 3) := "00" & vram_dout; -- background objects
+      obj_rom_addr_base(12 downto 3) := I_GFXBANK & vram_dout; -- background objects
     else
-      obj_rom_addr_base(12 downto 11) := "00";
+      obj_rom_addr_base(12 downto 11) := I_GFXBANK;
       if I_HWSEL = I_HWSEL_CALIPSO then
         obj_rom_addr_base(12 downto 11) := objdata(7 downto 6);
       end if;
@@ -432,13 +440,28 @@ begin
                       (obj_rom_addr_base(7) xor (obj_rom_addr_base(1) and (obj_rom_addr_base(7) xor obj_rom_addr_base(10)))) &
                       ((obj_rom_addr_base(1) and obj_rom_addr_base(8)) or (not obj_rom_addr_base(1) and obj_rom_addr_base(10))) &
                       obj_rom_addr_base(6 downto 0);
+    elsif I_HWSEL = I_HWSEL_MINEFLD then
+      obj_rom_addr <= "00" & obj_rom_addr_base(10) & 
+                      (obj_rom_addr_base(0) xor obj_rom_addr_base(5) xor (obj_rom_addr_base(3) and obj_rom_addr_base(7))) &
+                      obj_rom_addr_base(8) &
+                      (obj_rom_addr_base(2) xor obj_rom_addr_base(9) xor (obj_rom_addr_base(0) and obj_rom_addr_base(5)) xor
+                      (obj_rom_addr_base(3) and obj_rom_addr_base(7) and (obj_rom_addr_base(0) xor obj_rom_addr_base(5)))) &
+                      obj_rom_addr_base(6) &
+                      (obj_rom_addr_base(3) xor obj_rom_addr_base(7)) &
+                      obj_rom_addr_base(4 downto 0);
+    elsif I_HWSEL = I_HWSEL_RESCUE then
+      obj_rom_addr <= "00" & (obj_rom_addr_base(0) xor obj_rom_addr_base(8)) & 
+                      obj_rom_addr_base(9) &
+                      (obj_rom_addr_base(1) xor obj_rom_addr_base(7)) &
+                      (obj_rom_addr_base(3) xor obj_rom_addr_base(10)) &
+                      obj_rom_addr_base(6 downto 0);
     else
       obj_rom_addr <= obj_rom_addr_base;
     end if;
 
   end process;
 
-  obj_dl_addr <= dl_addr(12 downto 0) when I_HWSEL = I_HWSEL_CALIPSO else "00"&dl_addr(10 downto 0);
+  obj_dl_addr <= dl_addr(12 downto 0) when I_HWSEL = I_HWSEL_CALIPSO or I_HWSEL = I_HWSEL_MIMONKEY else "00"&dl_addr(10 downto 0);
 
   obj_rom0 : work.dpram generic map (13,8) --5H
   port map
@@ -455,8 +478,8 @@ begin
       data_b_o => obj_rom_0_dout
   );
   obj_rom_0_wr <= '1' when dl_wr = '1' and 
-    ((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 11) = "10100") or -- A000-A7FF
-     (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 13) = "101"))     -- A000-BFFF
+    ((I_HWSEL /= I_HWSEL_CALIPSO and I_HWSEL /= I_HWSEL_MIMONKEY  and dl_addr(15 downto 11) = "10100") or -- A000-A7FF
+    ((I_HWSEL  = I_HWSEL_CALIPSO or  I_HWSEL  = I_HWSEL_MIMONKEY) and dl_addr(15 downto 13) = "101"))     -- A000-BFFF
     else '0'; 
 
   obj_rom1 : work.dpram generic map (13,8) --5F
@@ -474,8 +497,8 @@ begin
       data_b_o => obj_rom_1_dout
   );
   obj_rom_1_wr <= '1' when dl_wr = '1' and
-    ((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 11) = "10101") or -- A800-AFFF
-     (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 13) = "110"))     -- C000-DFFF
+    ((I_HWSEL /= I_HWSEL_CALIPSO and I_HWSEL /= I_HWSEL_MIMONKEY  and dl_addr(15 downto 11) = "10101") or -- A800-AFFF
+    ((I_HWSEL  = I_HWSEL_CALIPSO or  I_HWSEL  = I_HWSEL_MIMONKEY) and dl_addr(15 downto 13) = "110"))     -- C000-DFFF
     else '0'; 
 
 --  obj_rom0 : entity work.ROM_OBJ_0 -- 5H
@@ -665,7 +688,9 @@ begin
         shell_reg <= '0';
         frogger_blue_out_reg <= '0';
         star_out_reg <= '0';
-        pout1_reg <= '0';
+        bcb_reg <= '0';
+        bcg_reg <= '0';
+        bcr_reg <= '0';
       else
 
         obj_video_out_reg(4 downto 2) <= col(2 downto 0);
@@ -680,7 +705,9 @@ begin
           star_out_reg <= (vcnt_f(0) xor hcnt_f(3)) and (not star_shift(16));
         end if;
 
-        pout1_reg <= I_POUT1;
+        bcb_reg <= I_BCB;
+        bcg_reg <= I_BCG;
+        bcr_reg <= I_BCR;
 
       end if;
     end if;
@@ -709,8 +736,8 @@ begin
       data_b_o => obj_lut_out
 	);
   col_rom_wr <= '1' when dl_wr = '1' and 
-	((I_HWSEL /= I_HWSEL_CALIPSO and dl_addr(15 downto 5) = x"B0"&"000") or -- B000-B01F
-	 (I_HWSEL  = I_HWSEL_CALIPSO and dl_addr(15 downto 5) = x"E0"&"000"))   -- E000-E01F
+	((I_HWSEL /= I_HWSEL_CALIPSO and I_HWSEL /= I_HWSEL_MIMONKEY  and dl_addr(15 downto 5) = x"B0"&"000") or -- B000-B01F
+	((I_HWSEL  = I_HWSEL_CALIPSO or  I_HWSEL  = I_HWSEL_MIMONKEY) and dl_addr(15 downto 5) = x"E0"&"000"))   -- E000-E01F
 	else '0'; 
 
 --  col_rom : entity work.ROM_LUT
@@ -720,8 +747,29 @@ begin
 --      DATA        => obj_lut_out
 --      );
 
+  -- 10K
+  col_rom2 : work.dpram generic map (5,8)
+  port map
+  (
+      clk_a_i  => clk,
+      en_a_i   => '1',
+      we_i     => col_rom2_wr,
+
+      addr_a_i => dl_addr(4 downto 0),
+      data_a_i => dl_data,
+
+      clk_b_i  => clk,
+      addr_b_i => cntr_addr_xor(7 downto 3),
+      data_b_o => obj_lut_out2
+	);
+  col_rom2_wr <= '1' when dl_wr = '1' and 
+	(I_HWSEL /= I_HWSEL_CALIPSO and I_HWSEL /= I_HWSEL_MIMONKEY and dl_addr(15 downto 5) = x"B0"&"001") -- B020-B03F
+	else '0'; 
+
   p_col_rom_ce : process
     variable video : array_3x5;
+    variable bgc_dis: std_logic_vector(2 downto 0);
+    variable i_hcnt_adj: std_logic_vector(8 downto 0);
   begin
     wait until rising_edge(CLK);
     if (ENA = '1') then
@@ -763,11 +811,28 @@ begin
           video(1) := video(1) + ( '0' & star_shift_t1(11 downto 10) & "00");
           video(2) := video(2) + ( '0' & star_shift_t1( 9 downto  8) & "00");
         end if;
-
-        if (pout1_reg = '1') and (vidout_l = '1') then
-          video(0) := video(0) + ("00011");
-        end if;
       end if;
+
+      if I_HWSEL = I_HWSEL_STRATGYX then
+        -- bit 1 and 0 from the second LUT ROM disables bcX_regs
+        bgc_dis := obj_lut_out2(1) & obj_lut_out2(1 downto 0);
+      elsif I_HWSEL = I_HWSEL_MINEFLD or I_HWSEL = I_HWSEL_RESCUE or I_HWSEL = I_HWSEL_FROGGER then
+        -- these are handling the bg registers differently
+        bgc_dis := "111";
+      else
+        bgc_dis := "000";
+      end if;
+
+      if (bcb_reg = '1') and (vidout_l = '1') and (bgc_dis(0) = '0') then
+        video(0) := video(0) + ("00011");
+      end if;
+      if (bcg_reg = '1') and (vidout_l = '1') and (bgc_dis(1) = '0') then
+        video(1) := video(1) + ("00011");
+      end if;
+      if (bcr_reg = '1') and (vidout_l = '1') and (bgc_dis(2) = '0') then
+        video(2) := video(2) + ("00011");
+      end if;
+
       -- check for clip
       for i in 0 to 2 loop
         if video(i)(4) = '1' or video(i)(3) = '1' then
@@ -775,9 +840,28 @@ begin
         end if;
       end loop;
 
-      O_VIDEO_B <= video(0)(2 downto 0) & video(0)(2);
-      O_VIDEO_G <= video(1)(2 downto 0) & video(1)(2);
-      O_VIDEO_R <= video(2)(2 downto 0) & video(2)(2);
+      i_hcnt_adj := I_HCNT - "1001";
+      if (I_HWSEL = I_HWSEL_RESCUE or (I_HWSEL = I_HWSEL_MINEFLD and i_hcnt_adj(7) = '0')) and 
+         bcb_reg = '1' and I_HCNT(8) = '1' and
+         video(0) = "0000" and video(1) = "0000" and video(2) = "0000"
+      then
+        -- Rescue and Minefield blue graduated background, no schematics, just guessing
+        O_VIDEO_B <= i_hcnt_adj(6 downto 1);
+        O_VIDEO_G <= '0' & i_hcnt_adj(6 downto 2);
+        O_VIDEO_R <= (others => '0');
+      elsif I_HWSEL = I_HWSEL_MINEFLD and i_hcnt_adj(7) = '1' and
+         bcb_reg = '1' and I_HCNT(8) = '1' and
+         video(0) = "0000" and video(1) = "0000" and video(2) = "0000"
+      then
+        -- Minefield brown graduated background
+        O_VIDEO_B <= (others => '0');
+        O_VIDEO_G <= '0' & i_hcnt_adj(6 downto 2);
+        O_VIDEO_R <= i_hcnt_adj(6 downto 1);
+      else
+        O_VIDEO_B <= video(0)(2 downto 0) & video(0)(2 downto 0);
+        O_VIDEO_G <= video(1)(2 downto 0) & video(1)(2 downto 0);
+        O_VIDEO_R <= video(2)(2 downto 0) & video(2)(2 downto 0);
+      end if;
     end if;
   end process;
 

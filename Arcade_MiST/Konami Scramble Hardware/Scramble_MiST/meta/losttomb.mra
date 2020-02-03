@@ -1,0 +1,24 @@
+<misterromdescription>
+    <name>Lost Tomb</name>
+    <mameversion>0209</mameversion>
+    <rom index="0" zip="losttomb.zip" md5="c62f4d91a165fe79a921e0c6ec85846b" type="merged">
+	<part name="2c"/>
+	<part name="2e"/>
+	<part name="2f"/>
+	<part name="2h-easy"/>
+	<part name="2j"/>
+	<part name="2l"/>
+	<part name="2m"/>
+	<part name="2m"/>
+
+	<part name="5c"/>
+	<part name="5d"/>
+	<part name="5c"/>
+	<part name="5d"/>
+
+	<part name="5h"/>
+	<part name="5f"/>
+
+	<part name="ltprom"/>
+    </rom>
+</misterromdescription>

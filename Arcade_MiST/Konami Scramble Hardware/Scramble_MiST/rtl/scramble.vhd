@@ -50,9 +50,9 @@ entity SCRAMBLE is
   port (
     I_HWSEL               : in    integer;
     --
-    O_VIDEO_R             : out   std_logic_vector(3 downto 0);
-    O_VIDEO_G             : out   std_logic_vector(3 downto 0);
-    O_VIDEO_B             : out   std_logic_vector(3 downto 0);
+    O_VIDEO_R             : out   std_logic_vector(5 downto 0);
+    O_VIDEO_G             : out   std_logic_vector(5 downto 0);
+    O_VIDEO_B             : out   std_logic_vector(5 downto 0);
     O_HSYNC               : out   std_logic;
     O_VSYNC               : out   std_logic;
     O_HBLANK              : out   std_logic;
@@ -134,10 +134,13 @@ architecture RTL of SCRAMBLE is
     signal control_reg      : std_logic_vector(7 downto 0);
     signal intst_l          : std_logic;
     signal iopc7            : std_logic;
-    signal pout1            : std_logic;
+    signal bcb              : std_logic; -- scramble: pout1
+    signal bcg              : std_logic;
+    signal bcr              : std_logic;
     signal starson          : std_logic;
     signal hcma             : std_logic;
     signal vcma             : std_logic;
+    signal gfxbank          : std_logic_vector(1 downto 0);
 
     signal pgm_rom_0_wr     : std_logic;
     signal pgm_rom_1_wr     : std_logic;
@@ -257,7 +260,11 @@ begin
       I_OBJEN_L       => objen_l,
       --
       I_STARSON       => starson,
-      I_POUT1         => pout1,
+      I_BCB           => bcb,
+      I_BCG           => bcg,
+      I_BCR           => bcr,
+      --
+      I_GFXBANK       => gfxbank,
       --
       O_VIDEO_R       => O_VIDEO_R,
       O_VIDEO_G       => O_VIDEO_G,
@@ -267,7 +274,7 @@ begin
       ENAB            => ENAB,
       ENA_12          => ENA_12,
       CLK             => CLK,
-	  --
+      --
       dl_addr         => dl_addr,
       dl_wr           => dl_wr,
       dl_data         => dl_data
@@ -383,9 +390,9 @@ begin
         cpu_busrq_l <= cpu_addr(15);
       end if;
 
-      if I_HWSEL = I_HWSEL_DARKPLNT then
+      if I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
          if cpu_addr(15) = '1' then page_4to7_l <= '0'; end if;
-      elsif I_HWSEL = I_HWSEL_SCRAMBLE then
+      elsif I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY then
         if (cpu_addr(15 downto 14) = "01") then page_4to7_l <= '0'; end if;
       else
         if (cpu_addr(15 downto 14) = "10") then page_4to7_l <= '0'; end if;
@@ -398,10 +405,15 @@ begin
   begin
     waen_l <= '1';
     objen_l <= '1';
-    if I_HWSEL = I_HWSEL_DARKPLNT then
+    if I_HWSEL = I_HWSEL_TURTLES then
       if (page_4to7_l = '0') and (cpu_rfsh_l = '1') then
         if (cpu_addr(13 downto 11) = "010") then waen_l <= '0'; end if;
         if (cpu_addr(13 downto 11) = "011") then objen_l <= '0'; end if;
+      end if;
+    elsif I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
+      if (page_4to7_l = '0') and (cpu_rfsh_l = '1') then
+        if (cpu_addr(13 downto 11) = "010") then waen_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "001") then objen_l <= '0'; end if; -- error on the schematic, should be Y1, not Y3
       end if;
     elsif I_HWSEL /= I_HWSEL_FROGGER then
       if (page_4to7_l = '0') and (cpu_rfsh_l = '1') then
@@ -419,7 +431,7 @@ begin
     vramrd_l <= '1';
     objramrd_l <= '1';
 
-    if I_HWSEL = I_HWSEL_DARKPLNT then
+    if I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX or I_HWSEL = I_HWSEL_TURTLES then
       if (page_4to7_l = '0') and (cpu_rd_l = '0') then
         if (cpu_addr(13 downto 11) = "010") then vramrd_l <= '0'; end if;
       end if;
@@ -438,7 +450,13 @@ begin
     objramwr_l <= '1';
     select_l <= '1';
 
-    if I_HWSEL = I_HWSEL_DARKPLNT then
+    if I_HWSEL = I_HWSEL_TURTLES then
+      if (page_4to7_l = '0') and (cpu_wr_l = '0') and (wren = '1') then
+        if (cpu_addr(13 downto 11) = "010") then vramwr_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "011") then objramwr_l <= '0'; end if;
+        if (cpu_addr(13 downto 11) = "100") then select_l <= '0'; end if; -- control reg
+      end if;
+    elsif I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
       if (page_4to7_l = '0') and (cpu_wr_l = '0') and (wren = '1') then
         if (cpu_addr(13 downto 11) = "010") then vramwr_l <= '0'; end if;
         if (cpu_addr(13 downto 11) = "001") then objramwr_l <= '0'; end if;
@@ -473,8 +491,12 @@ begin
     --6805      ? (POUT2)
     --6806      screen vertical flip
     --6807      screen horizontal flip
-      if I_HWSEL = I_HWSEL_DARKPLNT then
+      if I_HWSEL = I_HWSEL_TURTLES then
+        addr := cpu_addr(5 downto 3);
+      elsif I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
         addr := cpu_addr(3 downto 1);
+      elsif I_HWSEL = I_HWSEL_MARS then
+        addr := cpu_addr(3) & cpu_addr(1 downto 0);
       elsif I_HWSEL /= I_HWSEL_FROGGER then
         addr := cpu_addr(2 downto 0);
       else
@@ -510,25 +532,51 @@ begin
 
   p_control_reg_assign : process(control_reg, I_HWSEL)
   begin
-    if I_HWSEL = I_HWSEL_DARKPLNT then
-      intst_l <= control_reg(2);
-      iopc7   <= '0';
-      pout1   <= '0';
+    bcb <= '0';
+    bcg <= '0';
+    bcr <= '0';
+    gfxbank <= "00";
+
+    if I_HWSEL = I_HWSEL_TURTLES then
+      intst_l <= control_reg(1);
+      bcb     <= control_reg(5);
+      bcg     <= control_reg(4);
+      bcr     <= control_reg(0);
+      iopc7   <= control_reg(6);
       starson <= '0';
-      hcma    <= control_reg(7);
-      vcma    <= not control_reg(6);
+      hcma    <= control_reg(3);
+      vcma    <= control_reg(7);
+    elsif I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
+      intst_l <= control_reg(2);
+      bcg     <= control_reg(0);
+      bcb     <= control_reg(1);
+      bcr     <= control_reg(5);
+      iopc7   <= '0';
+      starson <= '0';
+      hcma    <= '0';--control_reg(7);
+      vcma    <= '0';--control_reg(6);
+    elsif I_HWSEL = I_HWSEL_MARS then
+      iopc7   <= control_reg(0);
+      starson <= control_reg(1);
+      intst_l <= control_reg(2);
+      hcma    <= control_reg(5);
+      vcma    <= control_reg(7);
     elsif I_HWSEL /= I_HWSEL_FROGGER then
       -- Scramble
       intst_l <= control_reg(1);
       iopc7   <= control_reg(2);
-      pout1   <= control_reg(3);
+      bcb     <= control_reg(3); -- pout1
       starson <= control_reg(4);
       hcma    <= control_reg(6);
       vcma    <= control_reg(7);
+      if I_HWSEL = I_HWSEL_MIMONKEY then
+        gfxbank(0) <= control_reg(0);
+        gfxbank(1) <= control_reg(2);
+      end if;
     else
       intst_l <= control_reg(2);
       iopc7   <= control_reg(6);
-      pout1   <= control_reg(7);
+      bcb     <= control_reg(7); -- pout1
       starson <= '0';
       hcma    <= control_reg(4);
       vcma    <= control_reg(3);
@@ -559,7 +607,7 @@ begin
 --      when others => null;
 --    end case;
 --  end process;
-    rom_addr <= cpu_addr(14 downto 0);
+    rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
 
 	u_cpu_ram : work.dpram generic map (11,8)
 	port map
@@ -588,7 +636,7 @@ begin
     variable ram_addr : std_logic_vector(1 downto 0);
   begin
 
-    if I_HWSEL = I_HWSEL_SCRAMBLE then
+    if I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY then
       ram_addr := "01";
     else
       ram_addr := "10";
@@ -602,7 +650,9 @@ begin
       cpu_data_in <= I_DATA;
     --
     elsif (cpu_mreq_l = '0') and (cpu_rfsh_l = '1') then
-      if (cpu_addr(15) = '0') and (I_HWSEL /= I_HWSEL_SCRAMBLE or cpu_addr(14) = '0') and (cpu_rd_l = '0') and (cpu_mreq_l = '0') and (cpu_rfsh_l = '1') then
+      if I_HWSEL = I_HWSEL_MIMONKEY and (cpu_addr(15 downto 14) = "11" or cpu_addr(15 downto 14) = "00") and (cpu_rd_l = '0') then
+        cpu_data_in <= rom_dout;
+      elsif (cpu_addr(15) = '0') and I_HWSEL /= I_HWSEL_MIMONKEY and ((I_HWSEL /= I_HWSEL_SCRAMBLE and I_HWSEL /= I_HWSEL_MARS) or cpu_addr(14) = '0') and (cpu_rd_l = '0') then
         cpu_data_in <= rom_dout;
       --
       elsif (cpu_addr(15 downto 14) = ram_addr) then

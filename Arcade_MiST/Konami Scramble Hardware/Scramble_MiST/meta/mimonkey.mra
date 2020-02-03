@@ -1,0 +1,24 @@
+<misterromdescription>
+    <name>Mighty Monkey</name>
+    <mameversion>0209</mameversion>
+    <rom index="0" zip="mimonkey.zip" md5="21de700d16c4f72771621924f0207533" type="merged">
+	<part name="mimonscr/mm1"/>
+	<part name="mimonscr/mm2"/>
+	<part name="mimonscr/mm3"/>
+	<part name="mimonscr/mm4"/>
+	<part name="mimonscr/mm5"/>
+	<part name="mimonscr/mm6"/>
+	<part name="mimonscr/mm7"/>
+	<part name="mimonscr/mm8"/>
+
+	<part name="mm13.11d"/>
+	<part name="mm14.10d"/>
+
+	<part name="mm11.5f"/>
+	<part name="mm9.5f"/>
+	<part name="mm12.5h"/>
+	<part name="mm10.5h"/>
+
+	<part name="82s123.6e"/>
+    </rom>
+</misterromdescription>

@@ -1,0 +1,4 @@
+[ARC]
+RBF=SCRAMBLE
+MOD=13
+CONF=O7,Lives,3,5

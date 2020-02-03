@@ -48,9 +48,9 @@ library ieee;
 
 entity SCRAMBLE_TOP is
 port (
-	O_VIDEO_R        : out std_logic_vector(3 downto 0);
-	O_VIDEO_G        : out std_logic_vector(3 downto 0);
-	O_VIDEO_B        : out std_logic_vector(3 downto 0);
+	O_VIDEO_R        : out std_logic_vector(5 downto 0);
+	O_VIDEO_G        : out std_logic_vector(5 downto 0);
+	O_VIDEO_B        : out std_logic_vector(5 downto 0);
 	O_HSYNC          : out std_logic;
 	O_VSYNC          : out std_logic;
 	O_HBLANK         : out std_logic;

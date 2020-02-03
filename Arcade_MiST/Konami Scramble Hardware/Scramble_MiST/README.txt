@@ -3,6 +3,14 @@
 -- Arcade: Scramble port to MiST by Gehstock
 -- 10 November 2017
 -- 
+-- Usage:
+-- Copy the RBF and the ARC files to the same folder.
+-- Create ROM files from MAME ROM zip files using the mra utility and the MRA files.
+-- Example: mra -z /path/to/mame/roms scramble.mra
+-- Copy the ROM files to the root of the SD Card.
+--
+-- MRA utilty: https://github.com/sebdel/mra-tools-c
+--
 ---------------------------------------------------------------------------------
 -- A simulation model of Scramble hardware
 -- Copyright (c) MikeJ - Feb 2007

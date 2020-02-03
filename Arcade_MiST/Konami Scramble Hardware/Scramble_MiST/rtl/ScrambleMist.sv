@@ -2,6 +2,9 @@
 //  Scramble Arcade HW top-level for MiST
 //
 //  Scramble/Amidar/Frogger/Super Cobra/Tazzmania/Armored Car
+//  Moon War/Speed Coin/Calipso/Dark Planet/Anteater/Lost Tomb
+//  Mars/Battle Of Attlantis/Strategy X/Turtles/Rescue/Minefield
+//  Mighty Monkey
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -68,38 +71,40 @@ reg  [8*8-1:0] core_name;
 reg  [7:0] input0;
 reg  [7:0] input1;
 reg  [7:0] input2;
+reg  [1:0] orientation;
 
 always @(*) begin
+	orientation = 2'b11; // portrait, left
 	input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, /*service*/1'b0, m_fireB, m_up2 };
 	input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, /*lives*/~status[8:7] };
 	input2 = ~{ 1'b1, m_down, 1'b1, m_up, /*cabinet*/1'b1, /*coinage*/2'b11, m_down2 };
 
 	case (core_mod)
-		6'h0:
+		7'h0:
 		begin
 			core_name = "SCRAMBLE";
 			hwsel = 0;
 		end
-		6'h1:
+		7'h1:
 		begin
 			core_name = "AMIDAR  ";
 			hwsel = 0;
 			input1[1:0] = ~status[8:7]; // lives345unl
 			//input2[1] = status[10]; // demo sounds - no effect
 		end
-		6'h2:
+		7'h2:
 		begin
 			core_name = "FROGGER ";
 			hwsel = 1;
 		end
-		6'h3:
+		7'h3:
 		begin
 			core_name = "SCOBRA  ";
 			hwsel = 2;
 			input1[0] = status[9]; // allow continue
 			input1[1] = status[7]; // lives34
 		end
-		6'h4:
+		7'h4:
 		begin
 			core_name = "TAZMANIA";
 			hwsel = 2;
@@ -107,14 +112,14 @@ always @(*) begin
 			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosnd*/status[10], /*lives35*/status[7] };
 			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player }; // unknown, start2, 2xunknown, cabinet, 2xcoinage, start1
 		end
-		6'h5:
+		7'h5:
 		begin
 			core_name = "ARMORCAR";
 			hwsel = 2;
 			input1[0] = ~status[7]; //lives35
 			input1[1] = ~status[10]; // demo sounds
 		end
-		6'h6:
+		7'h6:
 		begin
 			core_name = "MOONWAR ";
 			hwsel = 2;
@@ -122,7 +127,7 @@ always @(*) begin
 			input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, /*live345*/~status[8:7] };
 			input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 }; // 4xunused, cabinet, coinage, p2fire(cocktail)
 		end
-		6'h7:
+		7'h7:
 		begin
 			core_name = "SPDCOIN ";
 			hwsel = 2;
@@ -130,7 +135,7 @@ always @(*) begin
 			input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
 			input2 = { 4'hf, ~status[7], status[11], 1'b1, 1'b1}; // 4xunused, lives35, difficulty, unknown, unused
 		end
-		6'h8:
+		7'h8:
 		begin
 			core_name = "CALIPSO ";
 			hwsel = 3;
@@ -138,31 +143,85 @@ always @(*) begin
 			input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, status[10], status[7] };          // unused, unused, left, right, down, up, demo sounds, lives 3/5
 			input2 = ~{ 5'b0, 2'b10, m_fireA | m_one_player };                                           // unused[7:3], coin dip[2:1], start 1p / player1 fire
 		end
-		6'h9:
+		7'h9:
 		begin
-			// buggy
 			core_name = "DARKPLNT";
 			hwsel = 4;
 			input0 = ~{ m_coin1, m_coin2, 3'b000, m_two_players | m_fireB, m_one_player | m_fireA, m_fireC };
-			input1 = 8'h00;
-			input2 = 8'h00;
+			input1 = { darkplnt_dial_scrambled, /*lives*/status[7], /*bonus*/1'b0 };
+			input2 = { /*unk*/4'hf, /*bonus life*/1'b0, /*coinage*/ 2'b10, /*unk*/1'b1 };
 		end
-		6'hA:
+		7'hA:
 		begin
 			core_name = "ANTEATER";
-			hwsel = 5;
+			hwsel = 6;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
 			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosdns*/status[10], /*lives35*/status[7] };
 			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
 		end
-		6'hB:
+		7'hB:
 		begin
 			core_name = "LOSTTOMB";
-			hwsel = 6;
+			hwsel = 7;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
-			input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, 2'b01 };
+			input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, /*lives35/free play/invulnerability*/~(status[8:7]+1'd1) };
 			input2 = ~{ 4'h0, status[10], 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
 		end
+		7'hC:
+		begin
+			core_name = "MARS    ";
+			hwsel = 10;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_left2 | m_fireA, m_right2 | m_fireB, 1'b0, 1'b0 };
+			input1 = ~{ m_one_player, m_two_players, 4'h0, /*coinage*/2'b11 };
+			input2 = ~{ m_up2 | m_fireC, m_down, m_down2 | m_fireD, m_up, /*lives*/status[7], /*unk*/1'b0, /*cabinet*/1'b1, 1'b0 };
+		end
+		7'hD:
+		begin
+			core_name = "ATLANTIS";
+			hwsel = 0;
+			input1[0] = 1'b0; // upright
+			input1[1] = ~status[7]; // lives35
+		end
+		7'hE:
+		begin
+			core_name = "STRATGYX";
+			hwsel = 5;
+			orientation = 2'b10;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, m_fireB, m_up2 };
+			input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, ~status[8:7] };
+			input2 = ~{ m_fire2C, m_down, m_fireC, m_up, /*upright*/1'b1, /*coinage*/2'b00, m_down2 };
+		end
+		7'hF:
+		begin
+			core_name = "TURTLES ";
+			hwsel = 11;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, 1'b0, m_up2 };
+			input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, 1'b0, ~status[8:7] };
+			input2 = ~{ 1'b0, m_down, 1'b0, m_up, /*upright*/1'b1, /*coinage*/2'b00, m_down2 };
+		end
+		7'h10:
+		begin
+			core_name = "MINEFLD ";
+			hwsel = 8;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, /*start level*/status[11], m_fireA };
+			input1 = ~{ /*2xunk*/2'b00, m_left2, m_right2, m_down2, m_up2, /*demosnd*/status[10], /*lives35*/status[7] };
+			input2 = ~{ /*unk*/1'b0, m_two_players, /*2xunk*/2'b00, /*difficulty*/status[9:8], /*coinage*/1'b0, m_one_player };
+		end
+		7'h11:
+		begin
+			core_name = "RESCUE  ";
+			hwsel = 9;
+			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, /*start level*/status[9], m_fireA };
+			input1 = ~{ /*2xunk*/2'b00, m_left2, m_right2, m_down2, m_up2, /*demosnd*/status[10], /*lives35*/status[7] };
+			input2 = ~{ /*unk*/1'b0, m_two_players, /*2xunk*/2'b00, /*difficulty*/~status[8], /*coinage*/2'b11, m_one_player };
+		end
+		7'h12:
+		begin
+			core_name = "MIMONKEY";
+			hwsel = 12;
+			input2[5] = status[9]; // infinite lives
+		end
+
 		default:
 		begin
 			hwsel = 0;
@@ -190,6 +249,18 @@ pll pll(
 	.locked(pll_locked)
 	);
 
+// reset generation
+reg reset = 1;
+reg rom_loaded = 0;
+always @(posedge clk_sys) begin
+	reg ioctl_downlD;
+	ioctl_downlD <= ioctl_downl;
+
+	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
+	reset <= status[0] | buttons[1] | ~rom_loaded | ioctl_downl;
+end
+
+// clock enables
 reg ce_6p, ce_6n, ce_12, ce_1p79;
 always @(negedge clk_sys) begin
 	reg [1:0] div = 0;
@@ -207,6 +278,7 @@ always @(negedge clk_sys) begin
 	end
 end
 
+// ARM connection
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -250,7 +322,7 @@ A000-A7FF  2k gfx1 5H
 A800-AFFF  2k gfx2 5F
 B000-B01F 32b palette LUT
 
-Calipso:
+Calipso, Mighty Monkey:
 A000-BFFF  8k gfx1 5H
 C000-DFFF  8k gfx2 5F
 E000-E01F 32b palette LUT
@@ -312,7 +384,7 @@ wire        hs, vs;
 //wire        blankn = ~(hb | vb);
 wire        blankn = ~vb;
 wire        hb, vb;
-wire  [3:0] r,b,g;
+wire  [5:0] r,b,g;
 
 scramble_top scramble(
 	.O_VIDEO_R(r),
@@ -327,7 +399,7 @@ scramble_top scramble(
 	.I_PA(input0),
 	.I_PB(input1),
 	.I_PC(input2),
-	.RESET(status[0] | buttons[1] | ioctl_downl),
+	.RESET(reset),
 	.clk(clk_sys),
 	.ena_12(ce_12),
 	.ena_6(ce_6p),
@@ -342,14 +414,14 @@ scramble_top scramble(
 	.dl_data(ioctl_dout)
 	);
 
-mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(6),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clk_sys),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(blankn ? r : 0),
-	.G(blankn ? g : 0),
-	.B(blankn ? b : 0),
+	.R(blankn ? r : 6'd0),
+	.G(blankn ? g : 6'd0),
+	.B(blankn ? b : 6'd0),
 	.HSync(~hs),
 	.VSync(~vs),
 	.VGA_R(VGA_R),
@@ -357,6 +429,7 @@ mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.no_csync(no_csync),
 	.rotate({1'b1,rotate}),
 	.ce_divider(1'b1),
 	.blend(blend),
@@ -380,6 +453,23 @@ moonwar_dial moonwar_dial (
 	.dialout(dial)
 );
 
+wire [6:0] darkplnt_dial;
+spinner spinner (
+	.clock(clk_sys),
+	.reset(reset),
+	.btn_left(m_left | m_up),
+	.btn_right(m_right | m_down),
+	.strobe(vs),
+	.spin_angle(darkplnt_dial)
+);
+wire [5:0] darkplnt_dial_scrambled = {
+	darkplnt_dial[3],
+	darkplnt_dial[5],
+	darkplnt_dial[6],
+	darkplnt_dial[4],
+	darkplnt_dial[2:1]
+};
+
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
@@ -392,7 +482,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b11       ),
+	.orientation ( orientation ),
 	.joyswap     ( joyswap     ),
 	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
