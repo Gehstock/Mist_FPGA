@@ -1,0 +1,23 @@
+<misterromdescription>
+    <name>Rescue</name>
+    <mameversion>0209</mameversion>
+    <rom index="0" zip="rescue.zip" md5="b12c059c5c50f4e7043b10ee3b021b6d" type="merged|nonmerged">
+	<part name="rb15acpu.bin"/>
+	<part name="rb15bcpu.bin"/>
+	<part name="rb15ccpu.bin"/>
+	<part name="rb15dcpu.bin"/>
+	<part name="rb15ecpu.bin"/>
+	<part name="rb15ecpu.bin"/>
+	<part name="rb15ecpu.bin"/>
+	<part name="rb15ecpu.bin"/>
+
+	<part name="rb15csnd.bin"/>
+	<part name="rb15dsnd.bin"/>
+	<part name="rb15csnd.bin"/>
+	<part name="rb15dsnd.bin"/>
+
+	<part name="rb15hcpu.bin"/>
+	<part name="rb15fcpu.bin"/>
+	<part name="rescue.clr"/>
+    </rom>
+</misterromdescription>

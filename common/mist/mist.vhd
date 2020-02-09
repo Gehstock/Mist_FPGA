@@ -11,26 +11,28 @@ use IEEE.numeric_std.all;
 
 package mist is
 
-component user_io 
-    generic(STRLEN : integer := 0 );
-    port (
-	clk_sys : in std_logic;
-	clk_sd  : in std_logic := '0';
+component user_io
+generic(STRLEN : integer := 0 );
+port (
+	clk_sys           : in std_logic;
+	clk_sd            : in std_logic := '0';
 	SPI_CLK, SPI_SS_IO, SPI_MOSI :in std_logic;
-	SPI_MISO : out std_logic;
-	conf_str : in std_logic_vector(8*STRLEN-1 downto 0);
-	joystick_0 : out std_logic_vector(31 downto 0);
-	joystick_1 : out std_logic_vector(31 downto 0);
-	joystick_2 : out std_logic_vector(31 downto 0);
-	joystick_3 : out std_logic_vector(31 downto 0);
-	joystick_4 : out std_logic_vector(31 downto 0);
+	SPI_MISO          : out std_logic;
+	conf_str          : in std_logic_vector(8*STRLEN-1 downto 0);
+	joystick_0        : out std_logic_vector(31 downto 0);
+	joystick_1        : out std_logic_vector(31 downto 0);
+	joystick_2        : out std_logic_vector(31 downto 0);
+	joystick_3        : out std_logic_vector(31 downto 0);
+	joystick_4        : out std_logic_vector(31 downto 0);
 	joystick_analog_0 : out std_logic_vector(15 downto 0);
 	joystick_analog_1 : out std_logic_vector(15 downto 0);
-	status: out std_logic_vector(31 downto 0);
-	switches : out std_logic_vector(1 downto 0);
-	buttons : out std_logic_vector(1 downto 0);
+	status            : out std_logic_vector(31 downto 0);
+	switches          : out std_logic_vector(1 downto 0);
+	buttons           : out std_logic_vector(1 downto 0);
 	scandoubler_disable : out std_logic;
-	ypbpr : out std_logic;
+	ypbpr             : out std_logic;
+	no_csync          : out std_logic;
+	core_mod          : out std_logic_vector(6 downto 0);
 
 	sd_lba            : in  std_logic_vector(31 downto 0) := (others => '0');
 	sd_rd             : in  std_logic := '0';
@@ -61,18 +63,18 @@ component user_io
 	mouse_y           : out signed(8 downto 0);
 	mouse_flags       : out std_logic_vector(7 downto 0); -- YOvfl, XOvfl, dy8, dx8, 1, mbtn, rbtn, lbtn
 	mouse_strobe      : out std_logic
-    );
+);
 end component user_io;
 
 component mist_video
-    generic (
+generic (
 	OSD_COLOR    : std_logic_vector(2 downto 0) := "110";
 	OSD_X_OFFSET : std_logic_vector(9 downto 0) := (others => '0');
 	OSD_Y_OFFSET : std_logic_vector(9 downto 0) := (others => '0');
 	SD_HCNT_WIDTH: integer := 9;
 	COLOR_DEPTH  : integer := 6
-    );
-    port (
+);
+port (
 	clk_sys     : in std_logic;
 
 	SPI_SCK     : in std_logic;
@@ -84,6 +86,7 @@ component mist_video
 	scandoubler_disable : in std_logic;
 	ypbpr       : in std_logic;
 	rotate      : in std_logic_vector(1 downto 0);
+	no_csync    : in std_logic := '0';
 	blend       : in std_logic := '0';
 
 	HSync       : in std_logic;
@@ -97,7 +100,7 @@ component mist_video
 	VGA_R       : out std_logic_vector(5 downto 0);
 	VGA_G       : out std_logic_vector(5 downto 0);
 	VGA_B       : out std_logic_vector(5 downto 0)
-    );
+);
 end component mist_video;
 
 end package;

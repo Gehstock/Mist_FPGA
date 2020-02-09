@@ -1,0 +1,5 @@
+[ARC]
+RBF=SCRAMBLE
+MOD=18
+CONF=O78,Lives,3,4,5,6
+CONF=O9,Infinite Lives,Off,On

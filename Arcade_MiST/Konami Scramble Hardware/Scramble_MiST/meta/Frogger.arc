@@ -1,0 +1,4 @@
+[ARC]
+RBF=SCRAMBLE
+MOD=2
+CONF=O78,Lives,3,5,7,Unl

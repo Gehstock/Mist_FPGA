@@ -1,0 +1,23 @@
+<misterromdescription>
+    <name>Tazmania</name>
+    <mameversion>0209</mameversion>
+    <rom index="0" zip="tazmania.zip" md5="843f8ffcc008407fd77958d854c3afba" type="merged|nonmerged">
+	<part name="2c.cpu"/>
+	<part name="2e.cpu"/>
+	<part name="2f.cpu"/>
+	<part name="2h.cpu"/>
+	<part name="2j.cpu"/>
+	<part name="2k.cpu"/>
+	<part name="2k.cpu"/>
+	<part name="2k.cpu"/>
+
+	<part name="rom0.snd"/>
+	<part name="rom0.snd"/>
+	<part name="rom0.snd"/>
+	<part name="rom0.snd"/>
+
+	<part name="5h.cpu"/>
+	<part name="5f.cpu"/>
+	<part name="colr6f.cpu"/>
+    </rom>
+</misterromdescription>

@@ -1,0 +1,23 @@
+<misterromdescription>
+    <name>Minefield</name>
+    <mameversion>0209</mameversion>
+    <rom index="0" zip="minefld.zip" md5="8bc2f7bf551354bb767b4996c91a6e32" type="merged|nonmerged">
+	<part name="ma22c"/>
+	<part name="ma22e"/>
+	<part name="ma22f"/>
+	<part name="ma22h"/>
+	<part name="ma22j"/>
+	<part name="ma22l"/>
+	<part name="ma22l"/>
+	<part name="ma22l"/>
+
+	<part name="ma15c"/>
+	<part name="ma15d"/>
+	<part name="ma15c"/>
+	<part name="ma15d"/>
+
+	<part name="ma15h"/>
+	<part name="ma15f"/>
+	<part name="minefld.clr"/>
+    </rom>
+</misterromdescription>

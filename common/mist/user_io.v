@@ -22,8 +22,10 @@
 
 // parameter STRLEN and the actual length of conf_str have to match
  
-module user_io #(parameter STRLEN=0, parameter PS2DIV=100) (
+module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_UPLOAD=0) (
 	input [(8*STRLEN)-1:0] conf_str,
+	output       [9:0]  conf_addr, // RAM address for config string, if STRLEN=0
+	input        [7:0]  conf_chr,
 
 	input               clk_sys, // clock for system-related messages (kbd, joy, etc...)
 	input               clk_sd,  // clock for SD-card related messages
@@ -33,31 +35,33 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100) (
 	output reg          SPI_MISO,
 	input               SPI_MOSI,
 
-	output reg [31:0]   joystick_0,
-	output reg [31:0]   joystick_1,
-	output reg [31:0]   joystick_2,
-	output reg [31:0]   joystick_3,
-	output reg [31:0]   joystick_4,
-	output reg [15:0]   joystick_analog_0,
-	output reg [15:0]   joystick_analog_1,
-	output [1:0]        buttons,
-	output [1:0]        switches,
-	output 		        scandoubler_disable,
+	output reg   [31:0] joystick_0,
+	output reg   [31:0] joystick_1,
+	output reg   [31:0] joystick_2,
+	output reg   [31:0] joystick_3,
+	output reg   [31:0] joystick_4,
+	output reg   [15:0] joystick_analog_0,
+	output reg   [15:0] joystick_analog_1,
+	output        [1:0] buttons,
+	output        [1:0] switches,
+	output              scandoubler_disable,
 	output              ypbpr,
-	output reg [31:0]   status,
+	output              no_csync,
+	output reg   [31:0] status,
+	output reg    [6:0] core_mod, // core variant, sent before the config string is requested
 
 	// connection to sd card emulation
 	input        [31:0] sd_lba,
-	input 		        sd_rd,
-	input 		        sd_wr,
-	output reg 	        sd_ack,
+	input               sd_rd,
+	input               sd_wr,
+	output reg          sd_ack,
 	output reg          sd_ack_conf,
-	input 		        sd_conf,
-	input 		        sd_sdhc,
+	input               sd_conf,
+	input               sd_sdhc,
 	output reg    [7:0] sd_dout, // valid on rising edge of sd_dout_strobe
-	output reg 	        sd_dout_strobe,
+	output reg          sd_dout_strobe,
 	input         [7:0] sd_din,
-	output reg 	        sd_din_strobe,
+	output reg          sd_din_strobe,
 	output reg    [8:0] sd_buff_addr,
 
 	output reg          img_mounted, //rising edge if a new image is mounted
@@ -81,25 +85,29 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100) (
 	output reg    [7:0] mouse_flags,  // YOvfl, XOvfl, dy8, dx8, 1, mbtn, rbtn, lbtn
 	output reg          mouse_strobe, // mouse data is valid on mouse_strobe
 
-	// serial com port 
+	// serial com port
 	input [7:0]         serial_data,
 	input               serial_strobe
 );
 
 reg [6:0]     sbuf;
 reg [7:0]     cmd;
-reg [2:0] 	  bit_cnt;    // counts bits 0-7 0-7 ...
+reg [2:0]     bit_cnt;    // counts bits 0-7 0-7 ...
 reg [9:0]     byte_cnt;   // counts bytes
-reg [7:0] 	  but_sw;
+reg [7:0]     but_sw;
 reg [2:0]     stick_idx;
 
 assign buttons = but_sw[1:0];
 assign switches = but_sw[3:2];
 assign scandoubler_disable = but_sw[4];
 assign ypbpr = but_sw[5];
+assign no_csync = but_sw[6];
+
+assign conf_addr = byte_cnt;
 
 // this variant of user_io is for 8 bit cores (type == a4) only
-wire [7:0] core_type = 8'ha4;
+// bit 4 indicates ROM direct upload capability
+wire [7:0] core_type = ROM_DIRECT_UPLOAD ? 8'hb4 : 8'ha4;
 
 // command byte read by the io controller
 wire [7:0] sd_cmd = { 4'h5, sd_conf, sd_sdhc, sd_wr, sd_rd };
@@ -331,7 +339,8 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 			spi_byte_out <= 0;
 			case({(!byte_cnt) ? {sbuf, SPI_MOSI} : cmd})
 			// reading config string
-			8'h14: if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
+			8'h14: if (STRLEN == 0) spi_byte_out <= conf_chr; else
+			       if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
 
 			// reading sd card status
 			8'h16: if(byte_cnt == 0) begin
@@ -476,7 +485,10 @@ always @(posedge clk_sys) begin
 				// status, 32bit version
 				8'h1e: if(abyte_cnt<5) status[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 
-				endcase
+				// core variant
+				8'h21: core_mod <= spi_byte_in[6:0];
+
+			endcase
 		end
 	end
 end
