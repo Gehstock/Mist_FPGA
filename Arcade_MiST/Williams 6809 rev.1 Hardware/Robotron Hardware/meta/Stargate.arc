@@ -1,0 +1,3 @@
+[ARC]
+RBF=ROBOTRON
+MOD=4
