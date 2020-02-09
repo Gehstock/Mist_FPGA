@@ -1,12 +1,26 @@
 robotron-fpga MiST port
 =======================
 
-Supported games: Robotron 2048, Joust, Sinistar, Bubbles, Splat, Stargate
+Supported games: Robotron 2048, Joust, Sinistar, Bubbles, Splat, Stargate, Alien Arena
 
 After loading the RBF, a CMOS clearing will happen. Reset the core to start
 the game.
 
 Sinistar has some graphics issues, and the speech chip is not implemented.
+
+Usage:
+------
+- Copy the RBF and the ARC files to the same folder.
+- Create ROM files from MAME ROM zip files using the mra utility and the MRA files.
+- Example: mra -z /path/to/mame/roms scramble.mra
+- Copy the ROM files to the root of the SD Card.
+
+- MRA utilty: https://github.com/sebdel/mra-tools-c
+
+Note: the MRA files contains a dump of the CMOS RAM. It will be included in the genearted ROM file.
+Change it for permanent settings (search for the format online). It's possible to change these values
+inside the core, with turning on "Auto-up" switch, and activate the "Advance" trigger in the OSD.
+Refer to the arcade's user manual for further info.
 
 robotron-fpga
 =============

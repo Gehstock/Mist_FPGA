@@ -38,20 +38,14 @@ module RobotronFPGA_MiST(
 
 `include "rtl/build_id.v" 
 
-//`define CORE_NAME "ROBOTRON"
-//`define CORE_NAME "JOUST"
-//`define CORE_NAME "SPLAT"
-//`define CORE_NAME "BUBBLES"
-//`define CORE_NAME "STARGATE"
-//`define CORE_NAME "SINISTAR"
-`define CORE_NAME "ALIENAR"
-
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+	";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
+	"O7,Auto up,Off,On;",
+	"T8,Advance,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -60,57 +54,98 @@ wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
+wire       autoup    = status[7];
+wire       adv       = status[8];
 
-reg  [7:0] SW;
-reg  [7:0] JA;
-reg  [7:0] JB;
-reg  [3:0] BTN;
-reg        blitter_sc2, sinistar;
-reg  [1:0] orientation; // [left/right, landscape/portrait]
+reg   [7:0] SW;
+reg   [7:0] JA;
+reg   [7:0] JB;
+reg   [3:0] BTN;
+reg         blitter_sc2, sinistar;
+
+wire  [6:0] core_mod;
+reg   [8*8-1:0] core_name;
+reg   [1:0] orientation; // [left/right, landscape/portrait]
+
+// advance button
+reg  [23:0] adv_counter;
+wire        advance = (adv_counter != 0);
+
+always @(posedge clk_sys) begin
+	reg adv_d;
+
+	adv_d <= adv;
+	if (~adv_d & adv) adv_counter <= 24'hfffff;
+	if (adv_counter != 0) adv_counter <= adv_counter - 1'd1;
+end
 
 always @(*) begin
 	orientation = 2'b10;
-	SW = 8'h00;
+	SW = {6'h0, advance, autoup};
+	JA = 8'hFF;
+	JB = 8'hFF;
+	BTN = 4'hF;
+	core_name = "ROBOTRON";
 	blitter_sc2 = 0;
 	sinistar = 0;
 
-	if (`CORE_NAME == "ROBOTRON") begin
+	case (core_mod)
+	7'h0:
+	begin
+		core_name = "ROBOTRON";
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
-		JA  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
-		JB  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
-	end else if (`CORE_NAME == "JOUST") begin
+		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
+		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+	end
+	7'h1:
+	begin
+		core_name = "JOUST   ";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ 5'b00000, m_fireA, m_right, m_left };
 		JB  = ~{ 5'b00000, m_fire2A, m_right2, m_left2 };
-	end	else if (`CORE_NAME == "SPLAT") begin
+	end
+	7'h2:
+	begin
+		core_name = "SPLAT   ";
 		blitter_sc2 = 1;
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
-		JA  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
-		JB  = ~{ m_right4, m_left4, m_down4, m_up4, m_right3, m_left3, m_down3, m_up3 };
-	end else if (`CORE_NAME == "BUBBLES") begin
+		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
+		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+	end
+	7'h3:
+	begin
+		core_name = "BUBBLES ";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ 4'b0000, m_right, m_left, m_down, m_up };
 		JB  = ~{ 4'b0000, m_right2, m_left2, m_down2, m_up2 };
-	end else if (`CORE_NAME == "STARGATE") begin
+	end
+	7'h4:
+	begin
+		core_name = "STARGATE";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ m_fireE, m_up, m_down, m_left | m_right, m_fireD, m_fireC, m_fireB, m_fireA };
 		JB  = ~{ m_fire2E, m_up2, m_down2, m_left2 | m_right2, m_fire2D, m_fire2C, m_fire2B, m_fire2A };
-		
-		
-	end else if (`CORE_NAME == "ALIENAR") begin
-		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
-		JA  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
-		JB  = ~{ m_right2, m_left2, m_down2, m_up2, m_right, m_left, m_down, m_up };
-	
-
-	
-	end else if (`CORE_NAME == "SINISTAR") begin
+	end
+	7'h5:
+	begin
+		core_name = "ALIENAR ";
+		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
+		JA  = ~{ 1'b0, 1'b0, m_fireB, m_fireA, m_right, m_left, m_down, m_up };
+		JB  = ~{ 1'b0, 1'b0, m_fire2B, m_fire2A, m_right2, m_left2, m_down2, m_up2 };
+	end
+	7'h6:
+	begin
+		core_name = "SINISTAR";
 		sinistar = 1;
 		orientation = 2'b01;
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
 		JB  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
 	end
+	default: ;
+	endcase
 end
 
 assign LED = ~ioctl_downl;
@@ -134,6 +169,7 @@ wire  [1:0] switches;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
+wire        no_csync;
 wire        ypbpr;
 wire  [7:0] audio;
 wire        hs, vs;
@@ -143,6 +179,29 @@ wire  [1:0] b;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN(8+($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        ( clk_sys          ),
+	.conf_str       ( {core_name, CONF_STR} ),
+	.SPI_CLK        ( SPI_SCK          ),
+	.SPI_SS_IO      ( CONF_DATA0       ),
+	.SPI_MISO       ( SPI_DO           ),
+	.SPI_MOSI       ( SPI_DI           ),
+	.buttons        ( buttons          ),
+	.switches       ( switches         ),
+	.scandoubler_disable (scandoublerD ),
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         ),
+	.core_mod       ( core_mod         ),
+	.key_strobe     ( key_strobe       ),
+	.key_pressed    ( key_pressed      ),
+	.key_code       ( key_code         ),
+	.joystick_0     ( joystick_0       ),
+	.joystick_1     ( joystick_1       ),
+	.status         ( status           )
+	);
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -154,7 +213,9 @@ wire  [7:0] ioctl_dout;
 ROM Structure:
 0000-BFFF main cpu 48k
 C000-CFFF snd  cpu  4k
+D000-D3FF CMOS RAM  1k
 */
+
 data_io data_io (
 	.clk_sys       ( clk_mem      ),
 	.SPI_SCK       ( SPI_SCK      ),
@@ -167,7 +228,7 @@ data_io data_io (
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-reg         port1_req, port2_req;
+reg         port1_req;
 wire [23:1] mem_addr;
 wire [15:0] mem_do;
 wire [15:0] mem_di;
@@ -190,7 +251,7 @@ sdram #(.MHZ(96)) sdram(
 	// ROM upload
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
-	.port1_a       ( ioctl_addr[22:0] ),
+	.port1_a       ( downl_addr ),
 	.port1_ds      ( 2'b11 ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout[7:4], ioctl_dout[7:4], ioctl_dout[3:0], ioctl_dout[3:0]} ),
@@ -200,7 +261,7 @@ sdram #(.MHZ(96)) sdram(
 	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : sdram_addr ),
 	.cpu1_d        ( mem_di  ),
 	.cpu1_q        ( mem_do  ),
-    .cpu1_oe       ( ~mem_oe & ~(ramcs & romcs) ),
+	.cpu1_oe       ( ~mem_oe & ~(ramcs & romcs) ),
 	.cpu1_we       ( ~mem_we & ~(ramcs & romcs) ),
 	.cpu1_ds       ( ~romcs ? 2'b11 : ~{ramub, ramlb} )
 );
@@ -210,6 +271,11 @@ sdram #(.MHZ(96)) sdram(
 // DXXX-FXXX -> 9xxx-Bxxx
 wire [17:1] sdram_addr = ~romcs ? {1'b0, mem_addr[16], ~mem_addr[16] & mem_addr[15], mem_addr[14:1]} : { 1'b1, mem_addr[16:1] };
 
+// IOCTL address to SDRAM address:
+// D000-D3FF -> 1CC00-1CFFF (CMOS), otherwise direct mapping
+
+wire [22:0] downl_addr = (ioctl_addr[22:10] == { 7'h0, 4'hD, 2'b00 }) ? { 1'b1, 4'hC, 2'b11, ioctl_addr[9:0] } : ioctl_addr;
+
 always @(posedge clk_mem) begin
 	reg        ioctl_wr_last = 0;
 
@@ -217,7 +283,6 @@ always @(posedge clk_mem) begin
 	if (ioctl_downl) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
 		end
 	end
 end
@@ -285,30 +350,10 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
 	.rotate         ( {orientation[1],rotate} ),
 	.scandoubler_disable( scandoublerD ),
 	.ce_divider     ( 1'b1             ),
+	.no_csync       ( no_csync         ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        ( clk_sys          ),
-	.conf_str       ( CONF_STR         ),
-	.SPI_CLK        ( SPI_SCK          ),
-	.SPI_SS_IO      ( CONF_DATA0       ),
-	.SPI_MISO       ( SPI_DO           ) ,
-	.SPI_MOSI       ( SPI_DI           ),
-	.buttons        ( buttons          ),
-	.switches       ( switches         ),
-	.scandoubler_disable (scandoublerD ),
-	.ypbpr          ( ypbpr            ),
-	.key_strobe     ( key_strobe       ),
-	.key_pressed    ( key_pressed      ),
-	.key_code       ( key_code         ),
-	.joystick_0     ( joystick_0       ),
-	.joystick_1     ( joystick_1       ),
-	.status         ( status           )
 	);
 
 wire dac_o;
@@ -316,11 +361,11 @@ assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
 dac #(
-	.C_bits(8))
+	.C_bits(11))
 dac(
 	.clk_i(clk_aud),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({3'd0, audio}),  // silence by 9dB
 	.dac_o(dac_o)
 	);
 
