@@ -156,9 +156,9 @@ BEGIN
 	altpll_component : altpll
 	GENERIC MAP (
 		bandwidth_type => "AUTO",
-		clk0_divide_by => 1,
+		clk0_divide_by => 3,
 		clk0_duty_cycle => 50,
-		clk0_multiply_by => 2,
+		clk0_multiply_by => 8,
 		clk0_phase_shift => "0",
 		clk1_divide_by => 9,
 		clk1_duty_cycle => 50,
@@ -255,7 +255,7 @@ END SYN;
 -- Retrieval info: PRIVATE: DUTY_CYCLE0 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE2 STRING "50.00000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "54.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "72.000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "6.000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "0.890110"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
@@ -284,14 +284,14 @@ END SYN;
 -- Retrieval info: PRIVATE: MIRROR_CLK0 STRING "0"
 -- Retrieval info: PRIVATE: MIRROR_CLK1 STRING "0"
 -- Retrieval info: PRIVATE: MIRROR_CLK2 STRING "0"
--- Retrieval info: PRIVATE: MULT_FACTOR0 NUMERIC "6"
+-- Retrieval info: PRIVATE: MULT_FACTOR0 NUMERIC "4"
 -- Retrieval info: PRIVATE: MULT_FACTOR1 NUMERIC "2"
 -- Retrieval info: PRIVATE: MULT_FACTOR2 NUMERIC "3"
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
--- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "36.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "72.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "6.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "0.89000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "0"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "0"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE2 STRING "0"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT0 STRING "MHz"
@@ -343,9 +343,9 @@ END SYN;
 -- Retrieval info: PRIVATE: ZERO_DELAY_RADIO STRING "0"
 -- Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 -- Retrieval info: CONSTANT: BANDWIDTH_TYPE STRING "AUTO"
--- Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "1"
+-- Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "3"
 -- Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "2"
+-- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "8"
 -- Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "9"
 -- Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
