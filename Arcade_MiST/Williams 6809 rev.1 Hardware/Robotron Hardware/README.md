@@ -10,8 +10,8 @@ Sinistar has some graphics issues, and the speech chip is not implemented.
 
 Usage:
 ------
+- Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
 - Copy the RBF and the ARC files to the same folder.
-- Create ROM files from MAME ROM zip files using the mra utility and the MRA files.
 - Example: mra -z /path/to/mame/roms scramble.mra
 - Copy the ROM files to the root of the SD Card.
 

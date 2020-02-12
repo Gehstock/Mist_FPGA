@@ -1,6 +1,9 @@
 <misterromdescription>
     <name>Sinistar</name>
     <mameversion>0209</mameversion>
+    <rbf>robotron</rbf>
+    <setname>sinistar</setname>
+    <rom index="1"><part>6</part></rom>
     <rom index="0" zip="sinistar.zip" md5="60b465866ccf143727ff2ce9027e0886" type="merged">
 	<part name="sinistar.01"/>
 	<part name="sinistar.02"/>
