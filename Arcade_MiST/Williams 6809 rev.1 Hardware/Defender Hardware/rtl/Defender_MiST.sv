@@ -310,11 +310,11 @@ assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
 dac #(
-	.C_bits(8))
+	.C_bits(11))
 dac(
 	.clk_i(clk_0p89),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({3'd0, audio}),  // silence by 9dB
 	.dac_o(dac_o)
 	);
 
