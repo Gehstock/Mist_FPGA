@@ -1,0 +1,30 @@
+<misterromdescription>
+    <name>Green Beret</name>
+    <mameversion>0216</mameversion>
+    <setname>gberet</setname>
+    <mratimestamp>201911270000</mratimestamp>
+    <year>1985</year>
+    <manufacturer>Konami</manufacturer>
+    <category>Army / Fighter</category>
+    <rbf>gberet</rbf>
+
+    <rom index="1"><part>0</part></rom>
+
+    <rom index="0" zip="gberet.zip" md5="886c929e6db35548e44cfdd8d168bdb1" type="merged|nonmerged">
+	<part name="577l03.10c"/>
+	<part name="577l02.8c"/>
+	<part name="577l01.7c"/>
+	<part name="577l01.7c"/>
+
+	<part name="577l06.5e"/>
+	<part name="577l05.4e"/>
+	<part name="577l08.4f"/>
+	<part name="577l04.3e"/>
+
+	<part name="577l07.3f"/>
+
+	<part name="577h10.5f"/>
+	<part name="577h11.6f"/>
+	<part name="577h09.2f"/>
+    </rom>
+</misterromdescription>
