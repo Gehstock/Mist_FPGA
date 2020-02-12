@@ -1,6 +1,11 @@
 <misterromdescription>
     <name>Turtles</name>
     <mameversion>0209</mameversion>
+    <rbf>scramble</rbf>
+    <switches>
+	<dip bits="7,8" name="Lives"       ids="3,4,5,Unl"/>
+    </switches>
+    <rom index="1"><part>0F</part></rom>
     <rom index="0" zip="turtles.zip" md5="f0331f77098da57363e1fe323829c875" type="merged|nonmerged">
 	<part name="turt_vid.2c"/>
 	<part name="turt_vid.2e"/>

@@ -585,7 +585,11 @@ begin
     if (ENA = '1') then
 
       if (sld_l = '0') then
-        shell_cnt <= hpla;
+        if I_HWSEL = I_HWSEL_DARKPLNT then
+          shell_cnt <= 240 - hpla;
+        else
+          shell_cnt <= hpla;
+        end if;
       elsif (cblank_l = '1') then
         shell_cnt <= shell_cnt + "1";
       else
@@ -781,10 +785,14 @@ begin
       video(2)(3) := '0'; -- r
 
       if (vidout_l = '0') then -- cs_l on col rom
-
-        video(0)(2 downto 0) := obj_lut_out(7 downto 6) & '0';
-        video(1)(2 downto 0) := obj_lut_out(5 downto 3);
-        video(2)(2 downto 0) := obj_lut_out(2 downto 0);
+        if I_HWSEL = I_HWSEL_DARKPLNT then
+          video(0) := "00" & obj_lut_out(5 downto 3);
+          video(2) := "00" & obj_lut_out(2 downto 0);
+        else
+          video(0)(2 downto 0) := obj_lut_out(7 downto 6) & '0';
+          video(1)(2 downto 0) := obj_lut_out(5 downto 3);
+          video(2)(2 downto 0) := obj_lut_out(2 downto 0);
+        end if;
       else
         video(0)(2 downto 0) := "000";
         video(1)(2 downto 0) := "000";

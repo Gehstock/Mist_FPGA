@@ -1,4 +1,0 @@
-[ARC]
-RBF=SCRAMBLE
-MOD=9
-
