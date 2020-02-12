@@ -1,0 +1,29 @@
+<misterromdescription>
+  <name>Motos</name>
+  <setname>motos</setname>
+  <rbf>Druaga</rbf>
+  <switches>
+    <dip bits="24"    name="Rank"       ids="A,B"/>
+    <dip bits="23"    name="Lives"      ids="3,5"/>
+    <dip bits="25,26" name="Extend"     ids="10k/30k/ev.50k,20k/ev.50k,30k/ev.70k,20k/70k"/>
+    <dip bits="27"    name="Demo Sound" ids="On,Off"/>
+  </switches>
+  <rom index="1">
+        <part>04</part>
+  </rom>
+  <rom index="0" zip="motos.zip" md5="446203961cff53598233d2c50db390d8">
+        <part name="mo1_3.1d"/>
+        <part name="mo1_1.1b"/>
+        <part name="mo1_6.3m"/>
+        <part name="mo1_7.3n"/>
+        <part name="mo1_4.1k"/>
+        <part name="mo1_5.3b"/>
+        <part name="mo1-7.5k"/>
+        <part name="mo1-7.5k"/>
+        <part name="mo1-7.5k"/>
+        <part name="mo1-7.5k"/>
+        <part name="mo1-6.4c"/>
+        <part name="mo1-3.3m"/>
+        <part name="mo1-5.5b"/>
+  </rom>
+</misterromdescription>

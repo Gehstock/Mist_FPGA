@@ -1,0 +1,34 @@
+<misterromdescription>
+  <name>Mappy</name>
+  <setname>mappy</setname>
+  <switches>
+    <dip bits="10,12"    name="Rank"           ids="A,B,C,D,E,F,G,H"/>
+    <dip bits="17,18"    name="Lives"          ids="3,5,1,2"/>
+    <dip bits="14,16"    name="Extend"         ids="M1,M2,M3,M4,M5,M6,M7,None"/>
+    <dip bits="13"       name="Demo Sound"     ids="On,Off"/>
+    <dip bits="6"        name="Round Progress" ids="Off,On"/>
+  </switches>
+  <rbf>Druaga</rbf>
+  <rom index="1">
+        <part>02</part>
+  </rom>
+  <rom index="0" zip="mappy.zip" md5="b276d97b0dc61ca668d140793fac44bf">
+        <part name="mpx_3.1d"/>
+        <part name="mpx_3.1d"/>
+        <part name="mp1_2.1c"/>
+        <part name="mpx_1.1b"/>
+        <part name="mp1_6.3m"/>
+        <part name="mp1_6.3m"/>
+        <part name="mp1_7.3n"/>
+        <part name="mp1_7.3n"/>
+        <part name="mp1_4.1k"/>
+        <part name="mp1_5.3b"/>
+        <part name="mp1-7.5k"/>
+        <part name="mp1-7.5k"/>
+        <part name="mp1-7.5k"/>
+        <part name="mp1-7.5k"/>
+        <part name="mp1-6.4c"/>
+        <part name="mp1-3.3m"/>
+        <part name="mp1-5.5b"/>
+  </rom>
+</misterromdescription>

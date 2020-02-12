@@ -28,27 +28,98 @@ module TheTowerofDruaga_mist (
 
 );
 
-// Uncomment one of these to load the default ROM:
-
-`define CORE_NAME "DRUAGA"
-//`define CORE_NAME "MAPPY"
-//`define CORE_NAME "MOTOS"
-//`define CORE_NAME "DIGDUG2"
-
-//`define CORE_NAME "GROBDA"
-//`define CORE_NAME "PHOZON"
-
-
 `include "rtl\build_id.v" 
 
+`define CORE_NAME "DRUAGA"
+wire  [6:0] core_mod;
+
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+	`CORE_NAME, ";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"DIP;",
+	"OU,Service Mode,Off,On;",
+	"OT,Freeze,Off,On;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
+
+wire        rotate    = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend     = status[5];
+
+wire        dcFreeze   = status[29];
+wire        dcService  = status[30];
+wire        dcCabinet  = 1'b0; // (upright only)
+
+// The Tower of Druaga [t]
+wire  [1:0] dtLives = status[9:8];
+
+// Mappy [m]
+wire        dmRoundP   = status[6];
+wire  [2:0] dmRank		 = status[12:10];
+wire        dmDemoSnd	 = status[13];
+wire  [2:0] dmExtend	 = status[16:14];
+wire  [1:0] dmLives    = status[18:17];
+
+// DigDug2 [d]
+wire        ddLives    = status[19];
+wire  [1:0] ddExtend   = status[21:20];
+wire        ddLevelSel = status[22];
+
+// Motos [o]
+wire       doLives    = status[23];
+wire       doRank     = status[24];
+wire [1:0] doExtend   = status[26:25];
+wire       doDemoSnd  = status[27];
+
+reg   [7:0] DSW0;
+reg   [7:0] DSW1;
+reg   [7:0] DSW2;
+
+reg   [5:0] INP0;
+reg   [5:0] INP1;
+reg   [2:0] INP2;
+
+always @(*) begin
+	INP0 = { m_fireB, m_fireA, m_left, m_down, m_right, m_up};
+	INP1 = { m_fire2B, m_fire2A, m_left2, m_down2, m_right2, m_up2 };
+	INP2 = { m_coin1 | m_coin2, m_two_players, m_one_player };
+	DSW0 = 0;
+	DSW1 = 0;
+	DSW2 = 0;
+
+	case (core_mod)
+	7'h0, 7'h1: // DRUAGA
+	begin
+		DSW0 = {2'd0,dtLives,4'd0};
+		DSW1 = {dcCabinet,6'd0,dcFreeze};
+		DSW2 = {DSW1[3:0],dcService,3'd0};
+	end
+	7'h2: // MAPPY
+	begin
+		DSW0 = {dcFreeze,dmRoundP,dmDemoSnd,2'd0,dmRank};
+		DSW1 = {dmLives,dmExtend,3'd0};
+		DSW2 = {{2{dcService,dcCabinet,2'd0}}};
+	end
+	7'h3: // DIGDUG2
+	begin
+		DSW0 = {2'd0,ddLives,5'd0};
+		DSW1 = {dcCabinet,3'd0,dcFreeze,ddLevelSel,ddExtend};
+		DSW2 = {DSW1[3:0],dcService,3'd0};
+	end
+	7'h4: // MOTOS
+	begin
+		DSW0 = {doDemoSnd,doExtend,doRank,doLives,3'd0};
+		DSW1 = {dcService,dcCabinet,6'd0};
+		DSW2 = {8'd0};
+	end
+	7'h5: ;// GROBDA
+	7'h6: ;// PHOZON
+	default: ;
+	endcase
+end
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
@@ -70,24 +141,50 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [7:0] audio;
-wire 			hs, vs;
-wire 			hb, vb;
-wire 			blankn = ~(hb | vb);
-wire [2:0] 	r, g;
-wire [1:0] 	b;
-wire [14:0] rom_addr;
-wire [15:0] rom_do;
-wire [12:0] snd_addr;
-wire [15:0] snd_do;
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
+user_io #(.STRLEN($size(CONF_STR)>>3))user_io(
+	.clk_sys        (clock_48       ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire        key_strobe;
-wire        key_pressed;
-wire  [7:0] key_code;
+
+/*
+ROM map
+00000-07FFF   cpu0     32k 3.1d+1.1b (+2.1c in Mappy)
+08000-0BFFF   spchip0  16k 6.3m
+0C000-0FFFF   spchip1  16k 7.3m
+10000-11FFF   cpu1      8k 4.1k
+12000-12FFF   bgchip    4k 5.3b
+13000-133FF   spclut    1k 7.5k
+13400-134FF   bgclut  256b 6.4c
+13500-135FF   wave    256b 3.3m
+13600-1361F   palet    32b 5.5b
+*/
 
 data_io data_io(
 	.clk_sys       ( clock_48     ),
@@ -102,6 +199,11 @@ data_io data_io(
 );
 
 reg port1_req, port2_req;
+wire [14:0] rom_addr;
+wire [15:0] rom_do;
+wire [12:0] snd_addr;
+wire [15:0] snd_do;
+
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
@@ -154,16 +256,15 @@ always @(posedge clock_48) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
-wire  [7:0] DSW0 = 0;//{2'h0,status[7:6],4'h0};
-wire  [7:0] DSW1 = 0;
-wire	[7:0] DSW2 = 0;//{4'h0,status[8],3'h0};
-
-wire  [5:0]	INP0 = { m_bomb, m_fire, m_left, m_down, m_right, m_up};
-wire  [5:0]	INP1 = { m_bomb, m_fire, m_left, m_down, m_right, m_up};
-wire	[2:0]	INP2 = { btn_coin, btn_two_players, btn_one_player };
-
 wire			PCLK, PCLK_EN;
 wire  [8:0] HPOS,VPOS;
+
+wire  [7:0] audio;
+wire        hs, vs;
+wire        hb, vb;
+wire        blankn = ~(hb | vb);
+wire [2:0] 	r, g;
+wire [1:0] 	b;
 
 fpga_druaga fpga_druaga(
 	.MCLK(clock_48),
@@ -218,30 +319,11 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
-	.blend          ( status[5]        ),
+	.scanlines      ( scanlines        ),
+	.blend          ( blend            ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clock_48       ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 dac #(.C_bits(16))dac(
@@ -251,40 +333,24 @@ dac #(.C_bits(16))dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-//reg btn_fire3 = 0;
-reg btn_coin  = 0;
-
-always @(posedge clock_48) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      		<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-//			'h14: btn_fire3 			<= key_pressed; // ctrl
-			'h11: btn_fire2 			<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clock_48    ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule
