@@ -50,24 +50,8 @@ module TraverseUSA_MiST(
 
 `include "rtl/build_id.v" 
 
-`define CORE_NAME "SHTRIDER"
-//`define CORE_NAME "TRAVRUSA"
-
-reg shtrider = 0;
-wire [7:0] dip1 = 8'hff;
-reg  [7:0] dip2;
-
-always @(*) begin
-	if (`CORE_NAME == "SHTRIDER") begin
-		shtrider = 1;
-		// Cocktail(3) / M-Km(1) / Flip(0)
-		dip2 = { 4'b1111, 2'b11, status[5], 1'b0 };
-	end else begin
-		shtrider = 0;
-		// Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
-		dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
-	end
-end
+`define CORE_NAME "TRAVRUSA"
+wire [6:0] core_mod;
 
 localparam CONF_STR = {
 	`CORE_NAME,";;",
@@ -82,6 +66,26 @@ localparam CONF_STR = {
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
+
+wire       rotate = status[2];
+wire [1:0] scanlines = status[4:3];
+wire       blend = status[10];
+
+reg        shtrider = 0;
+wire [7:0] dip1 = 8'hff;
+reg  [7:0] dip2;
+
+always @(*) begin
+	if (core_mod == 7'h1) begin
+		shtrider = 1;
+		// Cocktail(3) / M-Km(1) / Flip(0)
+		dip2 = { 4'b1111, 2'b11, status[5], 1'b0 };
+	end else begin
+		shtrider = 0;
+		// Diag(7) / Demo(6) / Zippy(5) / Freeze (4) / M-Km(3) / Coin mode (2) / Cocktail(1) / Flip(0)
+		dip2 = { ~status[9], ~status[8], ~status[7], ~status[6], ~status[5], 3'b110 };
+	end
+end
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -105,13 +109,34 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
-wire [10:0] audio;
-wire        hs, vs;
-wire        blankn;
-wire  [2:0] g,b;
-wire  [1:0] r;
+wire        no_csync;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
 
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+	
 wire [14:0] cart_addr;
 wire [15:0] sdram_do;
 wire        cart_rd;
@@ -198,6 +223,11 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
+wire [10:0] audio;
+wire        hs, vs;
+wire        blankn;
+wire  [2:0] g,b;
+wire  [1:0] r;
 
 // Traverse_usa
 traverse_usa traverse_usa (
@@ -219,19 +249,19 @@ traverse_usa traverse_usa (
 	.dip_switch_1 ( dip1            ),  
 	.dip_switch_2 ( dip2            ),
 
-	.start2       ( btn_two_players ),
-	.start1       ( btn_one_player  ),
-	.coin1        ( btn_coin        ),
+	.start2       ( m_two_players   ),
+	.start1       ( m_one_player    ),
+	.coin1        ( m_coin1         ),
 
 	.right1       ( m_right         ),
 	.left1        ( m_left          ),
 	.brake1       ( m_down          ),
 	.accel1       ( m_up            ),
 
-	.right2       ( m_right         ),
-	.left2        ( m_left          ),
-	.brake2       ( m_down          ),
-	.accel2       ( m_up            ),
+	.right2       ( m_right2        ),
+	.left2        ( m_left2         ),
+	.brake2       ( m_down2         ),
+	.accel2       ( m_up2           ),
 
 	.cpu_rom_addr ( cart_addr       ),
 	.cpu_rom_do   ( cart_addr[0] ? sdram_do[15:8] : sdram_do[7:0] ),
@@ -258,33 +288,13 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
+	.scanlines      ( scanlines        ),
 	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         ),
 	.ce_divider     ( 1'b0             ),
-	.blend          ( status[10]       )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.blend          ( blend            )
 	);
 
 dac #(
@@ -296,43 +306,24 @@ dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up          <= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h14: btn_fire3       <= key_pressed; // ctrl
-			'h11: btn_fire2       <= key_pressed; // alt
-			'h29: btn_fire1       <= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule 
