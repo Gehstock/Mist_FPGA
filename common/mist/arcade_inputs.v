@@ -112,10 +112,10 @@ always @(posedge clk) begin
 			'h06: btn_two_players   <= key_pressed; // F2
 			'h04: btn_three_players <= key_pressed; // F3
 			'h0C: btn_four_players  <= key_pressed; // F4
-			'h12: btn_fireD         <= key_pressed; // l-shift
-			'h14: btn_fireC         <= key_pressed; // ctrl
+			'h14: btn_fireA         <= key_pressed; // ctrl
 			'h11: btn_fireB         <= key_pressed; // alt
-			'h29: btn_fireA         <= key_pressed; // Space
+			'h29: btn_fireC         <= key_pressed; // Space
+			'h12: btn_fireD         <= key_pressed; // l-shift
 			'h1A: btn_fireE         <= key_pressed; // Z
 			'h22: btn_fireF         <= key_pressed; // X
 			'h21: btn_fireG         <= key_pressed; // C
