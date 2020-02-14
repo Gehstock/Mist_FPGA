@@ -34,21 +34,31 @@ module Defender_MiST(
 
 `include "rtl/build_id.v" 
 
-//`define CORE_NAME "DEFENDER"
-//`define CORE_NAME "COLONY7"
-//`define CORE_NAME "MAYDAY"
-`define CORE_NAME "JIN"
+`define CORE_NAME "DEFENDER"
 
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v1.2.",`BUILD_DATE
 };
 
-wire       rotate  = status[2];
+wire        rotate    = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend     = status[5];
+wire        autoup    = status[7];
+wire        adv       = status[8];
+wire        hsr       = status[9];
+
+wire advance, hsreset;
+trigger adv_button(clk_sys, adv, advance);
+trigger hsr_button(clk_sys, hsr, hsreset);
+
+wire [6:0] core_mod;
+reg  [8*8-1:0] core_name;
 reg  [7:0] input0;
 reg  [7:0] input1;
 reg  [7:0] input2;
@@ -61,7 +71,10 @@ always @(*) begin
 	input1 = 0;
 	input2 = 0;
 	orientation = 2'b10;
-	if (`CORE_NAME == "DEFENDER") begin
+
+	case (core_mod)
+	7'h0: // DEFENDER
+	begin 
 /*
 -- pia rom board port a - input0
 --      bit 0  Auto Up / manual Down
@@ -73,7 +86,7 @@ always @(*) begin
 --      bit 6  led 2 (output)
 --      bit 7  led 1 (output)
 */
-		input0 = { 3'b000, m_coin1, 1'b0/*btn_score_reset*/, 1'b0, m_fireF, m_fireE };
+		input0 = { 3'b000, m_coin1, /*btn_score_reset*/hsreset, 1'b0, advance, autoup };
 /*
 -- pia io port a - input1
 --      bit 0  Fire
@@ -93,36 +106,45 @@ always @(*) begin
 --      other <= GND
 */
 		input2 = { 7'b000000, m_up };
-	end else if (`CORE_NAME == "COLONY7") begin
+	end
+	7'h1: // COLONY7
+	begin
 		orientation = 2'b01;
-		input0 = { 3'b000, m_coin1, 4'b0001 };
+		input0 = { 3'b000, m_coin1, 2'b00, /*bonus at*/status[11], /*lives23*/status[10] };
 		input1 = { m_fireB, m_fireA, m_one_player, m_two_players, m_up, m_left, m_right, m_down };
 		input2 = { 7'b000000, m_fireC };
-	end else if (`CORE_NAME == "MAYDAY") begin
+	end
+	7'h2: // MAYDAY
+	begin
 		mayday = 1;
-		input0 = { 2'b00, m_coin2, m_coin1, 1'b0, 1'b0/*service*/, m_fireF, m_fireE };
+		input0 = { 2'b00, m_coin2, m_coin1, 1'b0, hsreset, advance, autoup };
 		input1 = { m_down, 1'b0, m_one_player, m_two_players, m_fireB, m_fireC, m_right, m_fireA };
 		input2 = { 7'b000000, m_up };
-	end else if (`CORE_NAME == "JIN") begin
+	end
+	7'h3: // JIN
+	begin
 		orientation = 2'b11;
 		input0 = { 3'b000, m_coin2, m_coin1, 3'b000 };
 		input1 = { m_fireB, m_fireA, m_one_player, m_two_players, m_right, m_left, m_down, m_up };
 		//unknown/Level completed/Level completed/unknown/Lives/Coinage/Coinage/Coinage
-		input2 = 0;
+		input2 = { 1'b0, ~status[12:11], 1'b0, status[10], 3'b000 };
 	end
+	default: ;
+	endcase
+
 end
 
 assign LED = ~ioctl_downl;
-assign SDRAM_CLK = clk_sys;
+assign SDRAM_CLK = clk_mem;
 assign SDRAM_CKE = 1;
 
-wire clk_sys, clk_6, clk_0p89;
+wire clk_sys, clk_vid, clk_mem = clk_vid, clk_0p89;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys),//54
-	.c1(clk_6),//6
+	.c0(clk_vid),//72
+	.c1(clk_sys),//6
 	.c2(clk_0p89),//0.89
 	.locked(pll_locked)
 	);
@@ -134,14 +156,33 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [7:0] audio;
-wire        hs, vs;
-wire        blankn;
-wire  [2:0] r,g;
-wire  [1:0] b;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN($size(CONF_STR)>>3))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -179,7 +220,7 @@ wire [15:0] snd_do;
 sdram #(.MHZ(54)) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clk_sys      ),
+	.clk           ( clk_mem      ),
 
 	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
@@ -231,8 +272,14 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
+wire  [7:0] audio;
+wire        hs, vs;
+wire        blankn;
+wire  [2:0] r,g;
+wire  [1:0] b;
+
 defender defender (
-	.clock_6          ( clk_6           ),
+	.clock_6          ( clk_sys         ),
 	.clk_0p89         ( clk_0p89        ),
 	.reset            ( reset           ),
 	.video_r      		( r               ),
@@ -263,7 +310,7 @@ defender defender (
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
-	.clk_sys        ( clk_sys          ),
+	.clk_sys        ( clk_vid          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
@@ -279,30 +326,10 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( {orientation[1],rotate} ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
-	.blend          ( status[5]        ),
+	.no_csync       ( no_csync         ),
+	.scanlines      ( scanlines        ),
+	.blend          ( blend            ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 wire dac_o;
@@ -310,11 +337,11 @@ assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
 dac #(
-	.C_bits(8))
+	.C_bits(11))
 dac(
 	.clk_i(clk_0p89),
 	.res_n_i(1),
-	.dac_i(audio),
+	.dac_i({3'b000, audio}), // silence by 9dB
 	.dac_o(dac_o)
 	);
 
@@ -338,4 +365,24 @@ arcade_inputs inputs (
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
 );
 
-endmodule 
+endmodule
+
+module trigger (
+	input clk,
+	input btn,
+	output trigger
+);
+
+reg  [23:0] counter;
+assign      trigger = (counter != 0);
+
+always @(posedge clk) begin
+	reg btn_d;
+
+	btn_d <= btn;
+	if (~btn_d & btn) counter <= 24'hfffff;
+	if (counter != 0) counter <= counter - 1'd1;
+	
+end
+
+endmodule

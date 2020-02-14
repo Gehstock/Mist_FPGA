@@ -1,6 +1,11 @@
 <misterromdescription>
     <name>Frogger (Sega set 2)</name>
     <mameversion>0209</mameversion>
+    <rbf>scramble</rbf>
+    <switches>
+	<dip bits="7,8"  name="Lives"   ids="3,5,7,Unl"/>
+    </switches>
+    <rom index="1"><part>2</part></rom>
     <rom index="0" zip="frogger.zip" md5="e4dafd9989624989f0bef5874a7d6b16" type="merged">
 	<part name="froggers2/epr-1012.ic5"/>
 	<part name="froggers2/epr-1013a.ic6"/>

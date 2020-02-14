@@ -1,0 +1,25 @@
+<misterromdescription>
+  <name>The Tower of Druaga</name>
+  <setname>druaga</setname>
+  <rbf>Druaga</rbf>
+  <switches>
+    <dip bits="8,9" name="Lives" ids="3,2,1,5"/>
+  </switches>
+  <rom index="1">
+        <part>01</part>
+  </rom>
+  <rom index="0" zip="todruaga.zip" md5="ef0d64d4d3fc4f594389d2b28c677c20">
+        <part name="td2_3.1d"/>
+        <part name="td2_1.1b"/>
+        <part name="td1_6.3m"/>
+        <part name="td1_6.3m"/>
+        <part name="td1_7.3n"/>
+        <part name="td1_7.3n"/>
+        <part name="td1_4.1k"/>
+        <part name="td1_5.3b"/>
+        <part name="td1-7.5k"/>
+        <part name="td1-6.4c"/>
+        <part name="td1-3.3m"/>
+        <part name="td1-5.5b"/>
+  </rom>
+</misterromdescription>

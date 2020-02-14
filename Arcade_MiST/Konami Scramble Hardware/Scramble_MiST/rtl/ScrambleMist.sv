@@ -54,8 +54,11 @@ module ScrambleMist
 
 `include "rtl\build_id.v"
 
+`define CORE_NAME "SCRAMBLE"
+wire [6:0] core_mod;
+
 localparam CONF_STR = {
-	";ROM;",
+	`CORE_NAME, ";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
@@ -66,8 +69,6 @@ localparam CONF_STR = {
 };
 
 integer hwsel = 0;
-wire [6:0] core_mod;
-reg  [8*8-1:0] core_name;
 reg  [7:0] input0;
 reg  [7:0] input1;
 reg  [7:0] input2;
@@ -80,144 +81,125 @@ always @(*) begin
 	input2 = ~{ 1'b1, m_down, 1'b1, m_up, /*cabinet*/1'b1, /*coinage*/2'b11, m_down2 };
 
 	case (core_mod)
-		7'h0:
+		7'h0: // SCRAMBLE
 		begin
-			core_name = "SCRAMBLE";
 			hwsel = 0;
 		end
-		7'h1:
+		7'h1: // AMIDAR
 		begin
-			core_name = "AMIDAR  ";
 			hwsel = 0;
 			input1[1:0] = ~status[8:7]; // lives345unl
 			//input2[1] = status[10]; // demo sounds - no effect
 		end
-		7'h2:
+		7'h2: // FROGGER
 		begin
-			core_name = "FROGGER ";
 			hwsel = 1;
 		end
-		7'h3:
+		7'h3: // SCOBRA
 		begin
-			core_name = "SCOBRA  ";
 			hwsel = 2;
 			input1[0] = status[9]; // allow continue
 			input1[1] = status[7]; // lives34
 		end
-		7'h4:
+		7'h4: // TAZMANIA
 		begin
-			core_name = "TAZMANIA";
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
 			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosnd*/status[10], /*lives35*/status[7] };
 			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player }; // unknown, start2, 2xunknown, cabinet, 2xcoinage, start1
 		end
-		7'h5:
+		7'h5: // ARMORCAR
 		begin
-			core_name = "ARMORCAR";
 			hwsel = 2;
 			input1[0] = ~status[7]; //lives35
 			input1[1] = ~status[10]; // demo sounds
 		end
-		7'h6:
+		7'h6: // MOONWAR
 		begin
-			core_name = "MOONWAR ";
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, 1'b0, dial };
 			input1 = ~{ m_fireA, m_fireB, m_fireC, m_fireD, m_two_players, m_one_player, /*live345*/~status[8:7] };
 			input2 = ~{ 4'h0, 1'b1, 2'b11, 1'b0 }; // 4xunused, cabinet, coinage, p2fire(cocktail)
 		end
-		7'h7:
+		7'h7: // SPDCOIN
 		begin
-			core_name = "SPDCOIN ";
 			hwsel = 2;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_two_players, 1'b0, m_one_player, 1'b0 };
 			input1 = { 4'hf, 2'b00, 1'b0, 1'b0 };     // 6xunused, freeplay, freeze
 			input2 = { 4'hf, ~status[7], status[11], 1'b1, 1'b1}; // 4xunused, lives35, difficulty, unknown, unused
 		end
-		7'h8:
+		7'h8: // CALIPSO
 		begin
-			core_name = "CALIPSO ";
 			hwsel = 3;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, 1'b1, m_two_players|m_fire2A }; // coin1, coin2, left, right, down, up, unused, start 2p / player2 fire
 			input1 = ~{ 1'b1, 1'b1, m_left2, m_right2, m_down2, m_up2, status[10], status[7] };          // unused, unused, left, right, down, up, demo sounds, lives 3/5
 			input2 = ~{ 5'b0, 2'b10, m_fireA | m_one_player };                                           // unused[7:3], coin dip[2:1], start 1p / player1 fire
 		end
-		7'h9:
+		7'h9: // DARKPLNT
 		begin
-			core_name = "DARKPLNT";
 			hwsel = 4;
 			input0 = ~{ m_coin1, m_coin2, 3'b000, m_two_players | m_fireB, m_one_player | m_fireA, m_fireC };
 			input1 = { darkplnt_dial_scrambled, /*lives*/status[7], /*bonus*/1'b0 };
 			input2 = { /*unk*/4'hf, /*bonus life*/1'b0, /*coinage*/ 2'b10, /*unk*/1'b1 };
 		end
-		7'hA:
+		7'hA: // ANTEATER
 		begin
-			core_name = "ANTEATER";
 			hwsel = 6;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_fireA, m_fireB };
 			input1 = ~{ m_fire2A, m_fire2B, m_left2, m_right2, m_up2, m_down2, /*demosdns*/status[10], /*lives35*/status[7] };
 			input2 = ~{ 1'b1, m_two_players, 2'b10, 3'b111, m_one_player };
 		end
-		7'hB:
+		7'hB: // LOSTTOMB
 		begin
-			core_name = "LOSTTOMB";
 			hwsel = 7;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, m_one_player, m_two_players };
 			input1 = ~{ 1'b0, m_fireA, m_left2, m_right2, m_down2, m_up2, /*lives35/free play/invulnerability*/~(status[8:7]+1'd1) };
 			input2 = ~{ 4'h0, status[10], 2'b10, 1'b0 }; //4xunused, demo sounds, 2xcoinage, unused
 		end
-		7'hC:
+		7'hC: // MARS
 		begin
-			core_name = "MARS    ";
 			hwsel = 10;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_left2 | m_fireA, m_right2 | m_fireB, 1'b0, 1'b0 };
 			input1 = ~{ m_one_player, m_two_players, 4'h0, /*coinage*/2'b11 };
 			input2 = ~{ m_up2 | m_fireC, m_down, m_down2 | m_fireD, m_up, /*lives*/status[7], /*unk*/1'b0, /*cabinet*/1'b1, 1'b0 };
 		end
-		7'hD:
+		7'hD: // ATLANTIS
 		begin
-			core_name = "ATLANTIS";
 			hwsel = 0;
 			input1[0] = 1'b0; // upright
 			input1[1] = ~status[7]; // lives35
 		end
-		7'hE:
+		7'hE: // STRATGYX
 		begin
-			core_name = "STRATGYX";
 			hwsel = 5;
 			orientation = 2'b10;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, m_fireB, m_up2 };
 			input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, m_fire2B, ~status[8:7] };
 			input2 = ~{ m_fire2C, m_down, m_fireC, m_up, /*upright*/1'b1, /*coinage*/2'b00, m_down2 };
 		end
-		7'hF:
+		7'hF: // TURTLES
 		begin
-			core_name = "TURTLES ";
 			hwsel = 11;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_fireA, 1'b0, 1'b0, m_up2 };
 			input1 = ~{ m_one_player, m_two_players, m_left2, m_right2, m_fire2A, 1'b0, ~status[8:7] };
 			input2 = ~{ 1'b0, m_down, 1'b0, m_up, /*upright*/1'b1, /*coinage*/2'b00, m_down2 };
 		end
-		7'h10:
+		7'h10: // MINEFLD
 		begin
-			core_name = "MINEFLD ";
 			hwsel = 8;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, /*start level*/status[11], m_fireA };
 			input1 = ~{ /*2xunk*/2'b00, m_left2, m_right2, m_down2, m_up2, /*demosnd*/status[10], /*lives35*/status[7] };
 			input2 = ~{ /*unk*/1'b0, m_two_players, /*2xunk*/2'b00, /*difficulty*/status[9:8], /*coinage*/1'b0, m_one_player };
 		end
-		7'h11:
+		7'h11: // RESCUE
 		begin
-			core_name = "RESCUE  ";
 			hwsel = 9;
 			input0 = ~{ m_coin1, m_coin2, m_left, m_right, m_down, m_up, /*start level*/status[9], m_fireA };
 			input1 = ~{ /*2xunk*/2'b00, m_left2, m_right2, m_down2, m_up2, /*demosnd*/status[10], /*lives35*/status[7] };
 			input2 = ~{ /*unk*/1'b0, m_two_players, /*2xunk*/2'b00, /*difficulty*/~status[8], /*coinage*/2'b11, m_one_player };
 		end
-		7'h12:
+		7'h12: // MIMONKEY
 		begin
-			core_name = "MIMONKEY";
 			hwsel = 12;
 			input2[5] = status[9]; // infinite lives
 		end
@@ -225,7 +207,6 @@ always @(*) begin
 		default:
 		begin
 			hwsel = 0;
-			core_name = "SCRAMBLE";
 		end
 	endcase
 end
@@ -292,10 +273,10 @@ wire        key_pressed;
 wire  [7:0] key_code;
 
 user_io #(
-	.STRLEN(8+($size(CONF_STR)>>3)))
+	.STRLEN($size(CONF_STR)>>3))
 user_io(
 	.clk_sys        (clk_sys        ),
-	.conf_str       ({core_name, CONF_STR}),
+	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
 	.SPI_MISO       (SPI_DO         ),
@@ -462,13 +443,20 @@ spinner spinner (
 	.strobe(vs),
 	.spin_angle(darkplnt_dial)
 );
-wire [5:0] darkplnt_dial_scrambled = {
-	darkplnt_dial[3],
-	darkplnt_dial[5],
-	darkplnt_dial[6],
-	darkplnt_dial[4],
-	darkplnt_dial[2:1]
+
+wire [5:0] dp_remap[64] = 
+'{
+	6'h03, 6'h02, 6'h00, 6'h01, 6'h21, 6'h20, 6'h22, 6'h23,
+	6'h33, 6'h32, 6'h30, 6'h31, 6'h11, 6'h10, 6'h12, 6'h13,
+	6'h17, 6'h16, 6'h14, 6'h15, 6'h35, 6'h34, 6'h36, 6'h37,
+	6'h3f, 6'h3e, 6'h3c, 6'h3d, 6'h1d, 6'h1c, 6'h1e, 6'h1f,
+	6'h1b, 6'h1a, 6'h18, 6'h19, 6'h39, 6'h38, 6'h3a, 6'h3b,
+	6'h2b, 6'h2a, 6'h28, 6'h29, 6'h09, 6'h08, 6'h0a, 6'h0b,
+	6'h0f, 6'h0e, 6'h0c, 6'h0d, 6'h2d, 6'h2c, 6'h2e, 6'h2f,
+	6'h27, 6'h26, 6'h24, 6'h25, 6'h05, 6'h04, 6'h06, 6'h07
 };
+
+wire [5:0] darkplnt_dial_scrambled = dp_remap[darkplnt_dial[6:1]];
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;

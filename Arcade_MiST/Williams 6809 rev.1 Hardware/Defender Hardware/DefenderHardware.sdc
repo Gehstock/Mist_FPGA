@@ -119,8 +119,8 @@ set_clock_groups -asynchronous -group [get_clocks $sdram_clk] -group [get_clocks
 
 set_multicycle_path -from [get_clocks $game_clk] -to [get_clocks $sdram_clk] -setup 2
 set_multicycle_path -from [get_clocks $game_clk] -to [get_clocks $sdram_clk] -hold 1
-set_multicycle_path -to {VGA_*[*]} -setup 2
-set_multicycle_path -to {VGA_*[*]} -hold 1
+set_multicycle_path -to {VGA_*[*]} -setup 3
+set_multicycle_path -to {VGA_*[*]} -hold 2
 
 #**************************************************************
 # Set Maximum Delay

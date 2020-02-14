@@ -1,13 +1,15 @@
 The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
 
-Appropriate ROMs are required at the root of the SD Card:
-DRUAGA.ROM
-MAPPY.ROM
-MOTOS.ROM
-DIGDUG2.ROM
-
-
-
+-- Usage:
+-- - Create ROM and ARC files from the MRA files in the meta directory
+--   using the MRA utility.
+--   Example: mra -A -z /path/to/mame/roms motos.mra
+-- - Copy the ROM files to the root of the SD Card
+-- - Copy the RBF and ARC files to the same folder on the SD Card
+--
+-- MRA utility: https://github.com/sebdel/mra-tools-c/
+--
+--
 ---------------------------------------------------------------------------------
 -- 
 -- Arcade: The Tower of Druaga  port to MiSTer by MiSTer-X

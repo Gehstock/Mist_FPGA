@@ -27,10 +27,11 @@ module MCR3Mono_MiST(
 	output        AUDIO_L,
 	output        AUDIO_R,
 	input         SPI_SCK,
-	output        SPI_DO,
+	inout         SPI_DO,
 	input         SPI_DI,
 	input         SPI_SS2,
 	input         SPI_SS3,
+	input         SPI_SS4,
 	input         CONF_DATA0,
 	input         CLOCK_27,
 	output [12:0] SDRAM_A,
@@ -48,11 +49,24 @@ module MCR3Mono_MiST(
 
 `include "rtl/build_id.v"
 
-// Uncomment one to build with game-specific core name/inputs/sound board
-//`define CORE_NAME "SARGE"
-`define CORE_NAME "MAXRPM"
-//`define CORE_NAME "RAMPAGE"
-//`define CORE_NAME "POWERDRV"
+`define CORE_NAME "RAMPAGE"
+wire [6:0] core_mod;
+
+localparam CONF_STR = {
+	`CORE_NAME,";ROM;",
+	"O2,Rotate Controls,Off,On;",
+	"O5,Blend,Off,On;",
+	"O6,Swap Joystick,Off,On;",
+	"DIP;",
+	"O7,Service,Off,On;",
+	"T0,Reset;",
+	"V,v1.1.",`BUILD_DATE
+};
+
+wire       rotate    = status[2];
+wire       blend     = status[5];
+wire       joyswap   = status[6];
+wire       service   = status[7];
 
 reg       sg; // Sounds Good board
 reg [7:0] input0;
@@ -65,8 +79,7 @@ reg [7:0] output6;
 
 // Game specific sound board/DIP/input settings
 always @(*) begin
-	if (`CORE_NAME == "SARGE" ||
-	    `CORE_NAME == "MAXRPM")
+	if (core_mod == 7'h1 || core_mod == 7'h3)
 		sg = 0;
 	else
 		sg = 1;
@@ -77,43 +90,42 @@ always @(*) begin
 	input3 = 8'hff;
 	input4 = 8'hff;
 
-	if (`CORE_NAME == "SARGE") begin
-		// Two stick/player like the original
-		input0 = ~{2'b00, service, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1};
-		input1 = ~{m_fireA | m_fireB, m_fireA | m_fireB, m_fire2A | m_fire2B, m_fire2A | m_fire2B, m_down, m_up, m_down, m_up};
-		input2 = ~{m_fire3A | m_fire3B, m_fire3A | m_fire3B, m_fire4A | m_fire4B, m_fire4A | m_fire4B, m_down3, m_up3, m_down4, m_up4};
-	end else if (`CORE_NAME == "MAXRPM") begin
-		input0 = ~{service, 3'b000, m_one_player, m_two_players, m_coin1, m_coin2};
-		input1 = ~{maxrpm_adc_data};
-		input2 = ~{maxrpm_gear1, maxrpm_gear2};
-	end else if (`CORE_NAME == "RAMPAGE") begin
+	case (core_mod)
+	7'h0: // RAMPAGE
+	begin
 		// normal controls for 3 players
 		input0 = ~{2'b00, service, 1'b0, 2'b00, m_coin2, m_coin1};
 		input1 = ~{2'b00, m_fireB, m_fireA, m_left, m_down, m_right, m_up};
 		input2 = ~{2'b00, m_fire2B, m_fire2A, m_left2, m_down2, m_right2, m_up2};
+		input3 = ~{/*cheat*/status[11], /*coin B*/3'b000, /*coin A*/1'b0, /*score opt*/status[10], /*difficulty*/status[9:8]};
 		input4 = ~{2'b00, m_fire3B, m_fire3A, m_left3, m_down3, m_right3, m_up3};
-	end else if (`CORE_NAME == "POWERDRV") begin
+	end
+	7'h1: // SARGE
+	begin
+		// Two stick/player like the original
+		input0 = ~{2'b00, service, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1};
+		input1 = ~{m_fireA | m_fireB, m_fireA | m_fireB, m_fire2A | m_fire2B, m_fire2A | m_fire2B, m_down, m_up, m_down, m_up};
+		input2 = ~{m_fire3A | m_fire3B, m_fire3A | m_fire3B, m_fire4A | m_fire4B, m_fire4A | m_fire4B, m_down3, m_up3, m_down4, m_up4};
+		input3 = ~{2'b00, /*coinage*/2'b00, /*free play*/status[8], 3'b000};
+	end
+	7'h2: //POWERDRV
+	begin
 		// Controls for 3 players using 4 buttons/joystick
 		input0 = ~{2'b00, service, 1'b0, 1'b0, m_coin3, m_coin2, m_coin1};
 		input1 = ~{m_fire2B, m_fire2A, powerdrv_gear[1], m_fire2C, m_fireB, m_fireA, powerdrv_gear[0], m_fireC};
 		input2 = ~{sndstat[0], 3'b000, m_fire3B, m_fire3A, powerdrv_gear[2], m_fire3C};
+		input3 = ~{/*cheat*/status[11], /*demosnd*/status[10], /*difficulty*/status[9:8], 1'b0, /*coinage*/2'b00};
 	end
+	7'h3: // MAXRPM
+	begin
+		input0 = ~{service, 3'b000, m_one_player, m_two_players, m_coin1, m_coin2};
+		input1 = ~{maxrpm_adc_data};
+		input2 = ~{maxrpm_gear1, maxrpm_gear2};
+		input3[0] = ~status[8]; // free play
+	end
+	default: ;
+	endcase
 end
-
-localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
-	"O2,Rotate Controls,Off,On;",
-	"O5,Blend,Off,On;",
-	"O6,Swap Joystick,Off,On;",
-	"O7,Service,Off,On;",
-	"T0,Reset;",
-	"V,v1.1.",`BUILD_DATE
-};
-
-wire       rotate    = status[2];
-wire       blend     = status[5];
-wire       joyswap   = status[6];
-wire       service   = status[7];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
@@ -138,13 +150,36 @@ wire  [7:0] joystick_2;
 wire  [7:0] joystick_3;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [9:0] audio;
-wire        hs, vs, cs;
-wire        blankn;
-wire  [2:0] g, r, b;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)),
+	.ROM_DIRECT_UPLOAD(1))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.joystick_2     (joystick_2     ),
+	.joystick_3     (joystick_3     ),
+	.status         (status         )
+	);
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -168,11 +203,13 @@ Rampage, Power Drive (Sounds Good board):
 58000-      SG   128k
 */
 
-data_io data_io(
+data_io #(.ROM_DIRECT_UPLOAD(1)) data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_SS4       ( SPI_SS4      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
@@ -278,7 +315,11 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded | (reset_count == 16'h0001);
 end
 
-wire [1:0] sndstat;
+wire  [1:0] sndstat;
+wire  [9:0] audio;
+wire        hs, vs, cs;
+wire        blankn;
+wire  [2:0] g, r, b;
 
 mcr3mono mcr3mono (
 	.clock_40(clk_sys),
@@ -318,8 +359,8 @@ mcr3mono mcr3mono (
 
 wire vs_out;
 wire hs_out;
-assign VGA_VS = scandoublerD | vs_out;
-assign VGA_HS = scandoublerD ? cs : hs_out;
+assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
+assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -342,29 +383,6 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.scandoubler_disable(1),//scandoublerD ),
 	.no_csync       ( 1'b1             ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.joystick_2     (joystick_2     ),
-	.joystick_3     (joystick_3     ),
-	.status         (status         )
 	);
 
 dac #(10) dac(

@@ -38,8 +38,10 @@ module RobotronFPGA_MiST(
 
 `include "rtl/build_id.v" 
 
+`define CORE_NAME "ROBOTRON"
+
 localparam CONF_STR = {
-	";ROM;",
+	`CORE_NAME,";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
@@ -64,7 +66,6 @@ reg   [3:0] BTN;
 reg         blitter_sc2, sinistar;
 
 wire  [6:0] core_mod;
-reg   [8*8-1:0] core_name;
 reg   [1:0] orientation; // [left/right, landscape/portrait]
 
 // advance button
@@ -85,59 +86,51 @@ always @(*) begin
 	JA = 8'hFF;
 	JB = 8'hFF;
 	BTN = 4'hF;
-	core_name = "ROBOTRON";
 	blitter_sc2 = 0;
 	sinistar = 0;
 
 	case (core_mod)
-	7'h0:
+	7'h0: // ROBOTRON
 	begin
-		core_name = "ROBOTRON";
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
 		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
 		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
 		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
 	end
-	7'h1:
+	7'h1: // JOUST
 	begin
-		core_name = "JOUST   ";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ 5'b00000, m_fireA, m_right, m_left };
 		JB  = ~{ 5'b00000, m_fire2A, m_right2, m_left2 };
 	end
-	7'h2:
+	7'h2: // SPLAT
 	begin
-		core_name = "SPLAT   ";
 		blitter_sc2 = 1;
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
 		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
 		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
 		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
 	end
-	7'h3:
+	7'h3: // BUBBLES
 	begin
-		core_name = "BUBBLES ";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ 4'b0000, m_right, m_left, m_down, m_up };
 		JB  = ~{ 4'b0000, m_right2, m_left2, m_down2, m_up2 };
 	end
-	7'h4:
+	7'h4: // STARGATE
 	begin
-		core_name = "STARGATE";
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = ~{ m_fireE, m_up, m_down, m_left | m_right, m_fireD, m_fireC, m_fireB, m_fireA };
 		JB  = ~{ m_fire2E, m_up2, m_down2, m_left2 | m_right2, m_fire2D, m_fire2C, m_fire2B, m_fire2A };
 	end
-	7'h5:
+	7'h5: // ALIENAR
 	begin
-		core_name = "ALIENAR ";
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
 		JA  = ~{ 1'b0, 1'b0, m_fireB, m_fireA, m_right, m_left, m_down, m_up };
 		JB  = ~{ 1'b0, 1'b0, m_fire2B, m_fire2A, m_right2, m_left2, m_down2, m_up2 };
 	end
-	7'h6:
+	7'h6: // SINISTAR
 	begin
-		core_name = "SINISTAR";
 		sinistar = 1;
 		orientation = 2'b01;
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
@@ -181,10 +174,10 @@ wire  [7:0] key_code;
 wire        key_strobe;
 
 user_io #(
-	.STRLEN(8+($size(CONF_STR)>>3)))
+	.STRLEN($size(CONF_STR)>>3))
 user_io(
 	.clk_sys        ( clk_sys          ),
-	.conf_str       ( {core_name, CONF_STR} ),
+	.conf_str       ( CONF_STR         ),
 	.SPI_CLK        ( SPI_SCK          ),
 	.SPI_SS_IO      ( CONF_DATA0       ),
 	.SPI_MISO       ( SPI_DO           ),
@@ -274,7 +267,7 @@ wire [17:1] sdram_addr = ~romcs ? {1'b0, mem_addr[16], ~mem_addr[16] & mem_addr[
 // IOCTL address to SDRAM address:
 // D000-D3FF -> 1CC00-1CFFF (CMOS), otherwise direct mapping
 
-wire [22:0] downl_addr = (ioctl_addr[22:10] == { 7'h0, 4'hD, 2'b00 }) ? { 1'b1, 4'hC, 2'b11, ioctl_addr[9:0] } : ioctl_addr;
+wire [22:0] downl_addr = (ioctl_addr[22:10] == { 7'h0, 4'hD, 2'b00 }) ? { 1'b1, 4'hC, 2'b11, ioctl_addr[9:0] } : ioctl_addr[22:0];
 
 always @(posedge clk_mem) begin
 	reg        ioctl_wr_last = 0;
