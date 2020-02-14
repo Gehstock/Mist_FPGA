@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		SatansHollow_assignment_defaults.qdf
+#		mcr2_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -158,7 +158,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY SatansHollow_MiST
+set_global_assignment -name TOP_LEVEL_ENTITY MCR2_MiST
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
@@ -213,7 +213,7 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 # end ENTITY(SatansHollow_MiST)
 # -----------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SatansHollow_MiST.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/MCR2_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/satans_hollow.vhd
 set_global_assignment -name VHDL_FILE rtl/satans_hollow_sound_board.vhd
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd

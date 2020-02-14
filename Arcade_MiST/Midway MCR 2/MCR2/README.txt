@@ -10,6 +10,12 @@
 -- Wacko: control Captain Krooz'r with the mouse, shoot with the joystick
 -- Kozmik Krooz'r: use the mouse for movement and shoot, rotate the turret with the joystick
 
+-- Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
+-- Copy the RBF and the ARC files to the same folder.
+-- Example: mra -z /path/to/mame/roms Tron.mra
+-- Copy the ROM files to the root of the SD Card.
+--
+-- MRA utilty: https://github.com/sebdel/mra-tools-c
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Satan Hollow (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr

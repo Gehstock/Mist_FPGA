@@ -17,15 +17,15 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module SatansHollow_MiST(
-	output        LED,						
+module MCR2_MiST(
+	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
 	output  [5:0] VGA_B,
 	output        VGA_HS,
 	output        VGA_VS,
 	output        AUDIO_L,
-	output        AUDIO_R,	
+	output        AUDIO_R,
 	input         SPI_SCK,
 	output        SPI_DO,
 	input         SPI_DI,
@@ -48,19 +48,15 @@ module SatansHollow_MiST(
 
 `include "rtl/build_id.v" 
 
-// Uncomment one to choose core name/inputs
 `define CORE_NAME "SHOLLOW"
-//`define CORE_NAME "TRON"
-//`define CORE_NAME "TWOTIGER"
-//`define CORE_NAME "WACKO"
-//`define CORE_NAME "KROOZR"
-//`define CORE_NAME "DOMINO"
+wire [6:0] core_mod;
 
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
+	"DIP;",
 	"O7,Service,Off,On;",
 	"T0,Reset;",
 	"V,v2.0.",`BUILD_DATE
@@ -80,49 +76,67 @@ reg  [7:0] input_3;
 reg  [7:0] input_4;
 
 always @(*) begin
+	input_0 = 8'hFF;
+	input_1 = 8'hFF;
+	input_2 = 8'hFF;
+	input_3 = 8'hFF;
 	input_4 = 8'hFF;
 	oneplayer = 1'b1;
 	orientation = 2'b10;
 
-	if (`CORE_NAME == "SHOLLOW") begin
+	case (core_mod)
+	7'h0: // SHOLLOW
+	begin
 		orientation = 2'b11;
 		input_0 = ~{ service, 1'b0, m_tilt, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = ~{ m_fire2A, m_fire2B, m_right2, m_left2, m_fireA, m_fireB, m_right, m_left };
 		input_2 = 8'hFF;
 		input_3 = ~{ 8'b00000010 };
-	end else if (`CORE_NAME == "TRON") begin
+	end
+	7'h1: // TRON
+	begin
 		orientation = 2'b11;
 		oneplayer = 1'b0;
 		input_0 = ~{ service, 1'b0, m_tilt, m_fireA, m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = ~{ 1'b0, spin_angle2 };
 		input_2 = ~{ m_down, m_up, m_right, m_left, m_down, m_up, m_right, m_left };
-		input_3 = ~{ m_fireA, 7'b00000010 };
+		input_3 = ~{ m_fireA, 4'b0000,/*allow cont*/status[8], 2'b10 };
 		input_4 = ~{ 1'b0, spin_angle2 };
-	end else if (`CORE_NAME == "TWOTIGER") begin
+	end
+	7'h2: // TWOTIGER
+	begin
 		oneplayer = 1'b0;
 		input_0 = ~{ service, 1'b0, m_tilt, m_three_players, m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = ~{ 1'b0, spin_angle1 };
 		input_2 = ~{ 4'b0000, m_fire2B, m_fire2A, m_fireB, m_fireA };
 		input_3 = 8'hFF;
 		input_4 = ~{ 1'b0, spin_angle2 };
-	end else if (`CORE_NAME == "WACKO") begin
+	end
+	7'h3: // WACKO
+	begin
 		input_0 = ~{ service, 1'b0, m_tilt, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = x_pos[10:3];
 		input_2 = y_pos[10:3];
 		input_3 = ~{ 8'b01000000 };
 		input_4 = ~{ m_up2, m_down2, m_left2, m_right2, m_up, m_down, m_left, m_right };
-	end else if (`CORE_NAME == "KROOZR") begin
+	end
+	7'h4: // KROOZR
+	begin
 		input_0 = ~{ service, 1'b0, m_tilt, m_fireA | mouse_btns[0], m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = ~{ (m_fireB | mouse_btns[1]), spin_angle1[6], 3'b111, spin_angle1[5:3] };
 		input_2 = { x_pos_kroozr[9], x_pos_kroozr[9], x_pos_kroozr[7:2] };
 		input_3 = ~{ 8'b01000000 };
 		input_4 = { y_pos_kroozr[9], y_pos_kroozr[9], y_pos_kroozr[7:2] };
-	end else if (`CORE_NAME == "DOMINO") begin
+	end
+	7'h5: // DOMINO
+	begin
 		input_0 = ~{ service, 1'b0, m_tilt, m_fireA, m_two_players, m_one_player, m_coin2, m_coin1 };
 		input_1 = ~{ 4'b0000, m_down, m_up, m_right, m_left };
 		input_2 = ~{ 3'b000, m_fire2A, m_down2, m_up2, m_right2, m_left2 };
-		input_3 = ~{ 8'b01000000 };
+		input_3 = ~{ 6'b010000,/*skin*/status[9], /*music*/status[8] };
 	end
+	default: ;
+	endcase
 end
 
 assign LED = ~ioctl_downl;
@@ -145,10 +159,7 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [15:0] audio_l, audio_r;
-wire        hs, vs, cs;
-wire        blankn;
-wire  [2:0] g, r, b;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
@@ -156,6 +167,33 @@ wire signed [8:0] mouse_x;
 wire signed [8:0] mouse_y;
 wire        mouse_strobe;
 reg   [7:0] mouse_flags;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.mouse_x        (mouse_x        ),
+	.mouse_y        (mouse_y        ),
+	.mouse_strobe   (mouse_strobe   ),
+	.mouse_flags    (mouse_flags    ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
@@ -238,6 +276,11 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
+wire [15:0] audio_l, audio_r;
+wire        hs, vs, cs;
+wire        blankn;
+wire  [2:0] g, r, b;
+
 satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
@@ -271,8 +314,8 @@ satans_hollow satans_hollow(
 
 wire vs_out;
 wire hs_out;
-assign VGA_VS = scandoublerD | vs_out;
-assign VGA_HS = scandoublerD ? cs : hs_out;
+assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
+assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -296,31 +339,6 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.no_csync       ( 1'b1             ),
 	.scanlines      (                  ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.mouse_x        (mouse_x        ),
-	.mouse_y        (mouse_y        ),
-	.mouse_strobe   (mouse_strobe   ),
-	.mouse_flags    (mouse_flags    ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 dac #(
