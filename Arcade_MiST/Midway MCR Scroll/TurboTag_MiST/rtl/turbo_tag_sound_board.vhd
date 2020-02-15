@@ -101,7 +101,7 @@ architecture struct of turbo_tag_sound_board is
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
  
--- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
+ signal cpu_rom_do  : std_logic_vector( 7 downto 0) := x"FF";
  
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
@@ -214,16 +214,16 @@ ena_4Mhz <= '1' when clock_cnt1 = "00000" or
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= --cpu_rom_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 14) = "00" else -- 0x0000-0x3FFF
-			 wram_do     when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"8" else -- 0x8000-0x83FF
-			 iram_0_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9000" else
-			 iram_1_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9001" else
-			 iram_2_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9002" else
-			 iram_3_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9003" else
-			 ay1_do      when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"A" else
-			 ay2_do      when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"B" else
-			 x"FF"       when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"F" else -- 0xF000  (sw3 dip - D14)
-   		 X"FF";
+cpu_di <= cpu_rom_do  when cpu_mreq_n = '0' and cpu_addr(15 downto 14) = "00" else -- 0x0000-0x3FFF
+          wram_do     when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"8" else -- 0x8000-0x83FF
+          iram_0_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9000" else
+          iram_1_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9001" else
+          iram_2_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9002" else
+          iram_3_do   when cpu_mreq_n = '0' and cpu_addr(15 downto  0)=  X"9003" else
+          ay1_do      when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"A" else
+          ay2_do      when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"B" else
+          x"FF"       when cpu_mreq_n = '0' and cpu_addr(15 downto 12)=  X"F" else -- 0xF000  (sw3 dip - D14)
+          X"FF";
 
 ------------------------------------------
 -- write enable to working ram from CPU --
@@ -442,8 +442,6 @@ port map(
 -- addr => cpu_addr(12 downto 0),
 -- data => cpu_rom_do
 --);
-
---cpu_rom_addr <= cpu_addr(12 downto 0);
 
 -- working RAM   0x8000-0x83FF
 wram : entity work.gen_ram

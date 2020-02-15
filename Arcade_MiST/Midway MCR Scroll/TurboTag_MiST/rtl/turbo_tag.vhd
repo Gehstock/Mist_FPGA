@@ -168,8 +168,11 @@ port(
   csd_rom_addr   : out std_logic_vector(14 downto 1);
   csd_rom_do     : in std_logic_vector(15 downto 0);
   sp_addr        : out std_logic_vector(14 downto 0);
-  sp_graphx32_do : in std_logic_vector(31 downto 0); 
-  dbg_cpu_addr : out std_logic_vector(15 downto 0)
+  sp_graphx32_do : in std_logic_vector(31 downto 0);
+  -- internal ROM download
+  dl_addr        : in std_logic_vector(18 downto 0);
+  dl_data        : in std_logic_vector(7 downto 0);
+  dl_wr          : in std_logic
  );
 end turbo_tag;
 
@@ -193,6 +196,7 @@ architecture struct of turbo_tag is
  signal cpu_ena     : std_logic;
 
  signal cpu_addr    : std_logic_vector(15 downto 0);
+ signal cpu_pc      : std_logic_vector(15 downto 0);
  signal cpu_di      : std_logic_vector( 7 downto 0);
  signal cpu_do      : std_logic_vector( 7 downto 0);
  signal cpu_wr_n    : std_logic;
@@ -201,31 +205,15 @@ architecture struct of turbo_tag is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
- 
- signal ctc_controler_we  : std_logic;
- signal ctc_controler_do  : std_logic_vector(7 downto 0);
- signal ctc_int_ack       : std_logic;
+ signal cpu_int_ack_n : std_logic;
 
- signal ctc_counter_0_we  : std_logic;
--- signal ctc_counter_0_trg : std_logic;
- signal ctc_counter_0_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_0_int : std_logic;
+ signal ctc_ce      : std_logic;
+ signal ctc_do      : std_logic_vector(7 downto 0);
 
- signal ctc_counter_1_we  : std_logic;
--- signal ctc_counter_1_trg : std_logic;
- signal ctc_counter_1_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_1_int : std_logic;
- 
- signal ctc_counter_2_we  : std_logic;
--- signal ctc_counter_2_trg : std_logic;
- signal ctc_counter_2_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_2_int : std_logic;
- 
- signal ctc_counter_3_we  : std_logic;
+ signal ctc_counter_1_trg : std_logic;
+ signal ctc_counter_2_trg : std_logic;
  signal ctc_counter_3_trg : std_logic;
- signal ctc_counter_3_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_3_int : std_logic;
- 
+
 -- signal cpu_rom_addr: std_logic_vector(15 downto 0);
 -- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
  
@@ -335,6 +323,10 @@ architecture struct of turbo_tag is
  signal input_4   : std_logic_vector(7 downto 0);
  signal output_4  : std_logic_vector(7 downto 0);
 
+ signal bg_graphics_1_we : std_logic;
+ signal bg_graphics_2_we : std_logic;
+ signal ch_graphics_we   : std_logic;
+
 begin
 
 clock_vid  <= clock_40;
@@ -421,8 +413,8 @@ begin
 				if hcnt >= 2+16+16 and  hcnt < 514+16-1 and
 					vcnt >= 1    and  vcnt < 241 then video_blankn <= '1';end if;
 				
-				if    hs_cnt =  0 then hsync0 <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1';
+				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
@@ -479,7 +471,7 @@ end process;
 --------------------
 -- "11" for test & tilt & unused
 input_0 <= not service & "11" & not shift & "11" & not coin2 & not coin1;
-input_1 <= not service & "11" & not right & not start2 & not center & not left & not start1;
+input_1 <= "111" & not right & not start2 & not center & not left & not start1;
 input_2 <= steering when output_4(7) = '1' else gas;
 input_3 <= x"FF";
 input_4 <= x"FF";
@@ -495,19 +487,15 @@ input_4 <= x"FF";
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		 when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"E" else    -- 0000-DFFF             56Ko
-			 bg_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"F800") = x"E000" else -- video  ram  E000-E7FF  2Ko
-			 ch_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"FC00") = x"E800" else -- char   ram  E800-EBFF  1Ko + mirroring 0400
-			 wram_do     		 when cpu_mreq_n = '0' and (cpu_addr and X"F800") = x"F000" else -- work   ram  F000-F7FF  2Ko
-			 sp_ram_cache_do_r when cpu_mreq_n = '0' and (cpu_addr and x"FE00") = x"F800" else -- sprite ram  F800-F9FF 512o  
-			 
-			 ctc_controler_do  when cpu_ioreq_n = '0' and cpu_m1_n = '0'                  else -- ctc ctrl (interrupt vector)
-			 ssio_do           when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000" else    -- 0x00-0x1F
- 			 ctc_counter_3_do  when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do  when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do  when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do  when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
-   		 X"FF";
+cpu_di <=  x"82"             when cpu_mreq_n = '0' and cpu_addr = x"0b53" and cpu_pc = x"0b2a" else -- checksum hack for bad ROM dump
+           cpu_rom_do        when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"E"    else -- 0000-DFFF             56Ko
+           bg_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"F800") = x"E000" else -- video  ram  E000-E7FF  2Ko
+           ch_ram_do_r       when cpu_mreq_n = '0' and (cpu_addr and x"FC00") = x"E800" else -- char   ram  E800-EBFF  1Ko + mirroring 0400
+           wram_do           when cpu_mreq_n = '0' and (cpu_addr and X"F800") = x"F000" else -- work   ram  F000-F7FF  2Ko
+           sp_ram_cache_do_r when cpu_mreq_n = '0' and (cpu_addr and x"FE00") = x"F800" else -- sprite ram  F800-F9FF 512o  
+           ctc_do            when cpu_int_ack_n = '0' or ctc_ce = '1'                   else -- ctc (interrupt vector or counter data)
+           ssio_do           when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000"    else -- 0x00-0x1F
+           X"FF";
 
 cpu_rom_addr <= cpu_addr when cpu_addr < x"A000" else cpu_addr xor x"6000"; -- last rom has upper/lower part swapped
 
@@ -525,14 +513,10 @@ ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
 ------------------------------------------------------------------------
-ctc_counter_3_trg <= '1' when (vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')else '0';
-ctc_counter_3_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else '0';
-ctc_counter_2_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else '0';
-ctc_counter_1_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else '0';
-ctc_counter_0_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';
-ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0'; -- only channel 0 receive int vector
-ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
-
+cpu_int_ack_n     <= cpu_ioreq_n or cpu_m1_n;
+ctc_ce            <= '1' when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = x"F" else '0';
+ctc_counter_2_trg <= '1' when (vcnt >= 240 and vcnt <= 262 and tv15Khz_mode = '1') or (vcnt >= 480 and tv15Khz_mode = '0') else '0';
+ctc_counter_3_trg <= '1' when top_frame = '1' and ((vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')) else '0';
 
 process (clock_vid)
 begin
@@ -598,7 +582,7 @@ begin
 				sp_byte_cnt <= (others => '0');
 			when "000001" => 
 				sp_attr <= sp_ram_do;
-when "000010" => 
+			when "000010" => 
 				sp_code <= sp_ram_do;
 				sp_addr <= sp_ram_do(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt xor sp_hflip); -- graphics rom addr
 			when "000011" => 
@@ -607,10 +591,10 @@ when "000010" =>
 				sp_graphx32_do_r <= sp_graphx32_do; -- latch incoming sprite data
 				sp_addr <= sp_code(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt+1 xor sp_hflip); -- advance graphics rom addr
 				sp_on_line <= '1';
-      when "010010"|"011010"|"100010" => -- 18,26,34
+			when "010010"|"011010"|"100010" => -- 18,26,34
 				sp_graphx32_do_r <= sp_graphx32_do; -- latch incoming sprite data
 				sp_addr <= sp_code(7 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt+2 xor sp_hflip); -- advance graphics rom addr
-			  sp_byte_cnt <= sp_byte_cnt + 1;
+				sp_byte_cnt <= sp_byte_cnt + 1;
 			when "101010" => -- 42
 				sp_on_line <= '0';
 				sp_input_phase <= (others => '0');
@@ -621,7 +605,7 @@ when "000010" =>
 		end case;
 		sp_mux_roms <= sp_input_phase(2 downto 1);
 	end if;
-		
+
 	if pix_ena = '1' then 
 		if hcnt(0) = '0' then
 			sp_buffer_ram1_do_r <= sp_buffer_ram1b_do & sp_buffer_ram1a_do;
@@ -800,6 +784,17 @@ end process;
 -- components & sound board --
 ------------------------------
 
+process (clock_vid)
+begin
+	if rising_edge(clock_vid) then
+		if cpu_ena = '1' then
+			if cpu_m1_n = '0' and cpu_mreq_n = '0' then
+				cpu_pc <= cpu_addr;
+			end if;
+		end if;
+	end if;
+end process;
+
 -- microprocessor Z80
 cpu : entity work.T80se
 generic map(Mode => 0, T2Write => 1, IOWait => 1)
@@ -824,92 +819,28 @@ port map(
   DO      => cpu_do
 );
 
--- CTC interrupt controler Z80-CTC (MK3882)
-ctc_controler : entity work.ctc_controler
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_controler_we,
- int_ack   => ctc_int_ack,
-
- int_pulse_0 => ctc_counter_0_int,
- int_pulse_1 => ctc_counter_1_int,
- int_pulse_2 => ctc_counter_2_int,
- int_pulse_3 => ctc_counter_3_int,
- 
- d_out     => ctc_controler_do,
- int_n     => cpu_irq_n
-);
-
-ctc_counter_0 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_0_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_0_do,
- zc_to     => open, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
- int_pulse => ctc_counter_0_int
- 
-);
-
-ctc_counter_1 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_1_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_1_do,
- zc_to     => open,
- int_pulse => ctc_counter_1_int
- 
-);
-
-ctc_counter_2 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_2_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_2_do,
- zc_to     => open,
- int_pulse => ctc_counter_2_int
- 
-);
-
-ctc_counter_3 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_3_we,
- 
- clk_trg   => ctc_counter_3_trg,
- 
- d_out     => ctc_counter_3_do,
- zc_to     => open,
- int_pulse => ctc_counter_3_int
- 
+-- Z80-CTC (MK3882)
+z80ctc : entity work.z80ctc_top
+port map (
+	clock     => clock_vid,
+	clock_ena => cpu_ena,
+	reset     => reset,
+	din       => cpu_do,
+	cpu_din   => cpu_di,
+	dout      => ctc_do,
+	ce_n      => not ctc_ce,
+	cs        => cpu_addr(1 downto 0),
+	m1_n      => cpu_m1_n,
+	iorq_n    => cpu_ioreq_n,
+	rd_n      => cpu_rd_n,
+	int_n     => cpu_irq_n,
+	trg0      => '0',
+	to0       => ctc_counter_1_trg,
+	trg1      => ctc_counter_1_trg,
+	to1       => open,
+	trg2      => '0',
+	to2       => open,
+	trg3      => ctc_counter_3_trg
 );
 
 -- cpu program ROM 0x0000-0xDFFF
@@ -1020,28 +951,46 @@ port map(
 );
 
 -- char graphics ROM 10G
-ch_graphics : entity work.ttag_ch_bits
+ch_graphics : entity work.dpram
+generic map( dWidth => 8, aWidth => 12)
 port map(
- clk  => clock_vidn,
- addr => ch_code_line,
- data => ch_graphx_do
+ clk_a  => clock_vidn,
+ addr_a => ch_code_line,
+ q_a    => ch_graphx_do,
+ clk_b  => clock_vid,
+ we_b   => ch_graphics_we,
+ addr_b => dl_addr(11 downto 0),
+ d_b    => dl_data
 );
-
+ch_graphics_we <= '1' when dl_addr(18 downto 12) = "1000000" and dl_wr = '1' else '0'; -- 40000 - 40FFF
+ 
 -- background graphics ROM 3A/4A
-bg_graphics_1 : entity work.ttag_bg_bits_1
+bg_graphics_1 : entity work.dpram
+generic map( dWidth => 8, aWidth => 14)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx1_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx1_do,
+ clk_b  => clock_vid,
+ we_b   => bg_graphics_1_we,
+ addr_b => dl_addr(13 downto 0),
+ d_b    => dl_data
 );
+bg_graphics_1_we <= '1' when dl_addr(18 downto 14) = "01110" and dl_wr = '1' else '0'; -- 38000 - 3BFFF
 
 -- background graphics ROM 5A/6A
-bg_graphics_2 : entity work.ttag_bg_bits_2
+bg_graphics_2 : entity work.dpram
+generic map( dWidth => 8, aWidth => 14)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx2_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx2_do,
+ clk_b  => clock_vid,
+ we_b   => bg_graphics_2_we,
+ addr_b => dl_addr(13 downto 0),
+ d_b    => dl_data
 );
+bg_graphics_2_we <= '1' when dl_addr(18 downto 14) = "01111" and dl_wr = '1' else '0'; -- 3C000 - 3FFFF
 
 -- background & sprite palette
 palette : entity work.gen_ram
