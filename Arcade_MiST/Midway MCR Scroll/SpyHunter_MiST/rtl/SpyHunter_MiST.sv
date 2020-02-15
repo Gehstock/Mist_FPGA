@@ -48,7 +48,7 @@ module SpyHunter_MiST(
 `include "rtl/build_id.v"
 
 localparam CONF_STR = {
-	"SHUNTER;;",
+	"SPYHUNT;;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
@@ -85,14 +85,32 @@ wire [15:0] joystick_0;
 wire [15:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [15:0] audio_l, audio_r;
-wire  [9:0] csd_audio;
-wire        hs, vs, cs;
-wire        blankn;
-wire  [2:0] g, r, b;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
+wire        no_csync;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
@@ -125,12 +143,16 @@ data_io data_io(
 //  0000 -  DFFF - Main ROM (8 bit)
 //  E000 -  FFFF - Super Sound board ROM (8 bit)
 // 10000 - 17FFF - CSD ROM (16 bit)
-// 18000 -         Sprite ROMs (32 bit)
+// 18000 - 37FFF - Sprite ROMs (32 bit)
+// 38000 - 3FFFF - BG
+// 40000 - 40FFF - Char
 
 // spy-hunter_cpu_pg0_2-9-84.6d spy-hunter_cpu_pg1_2-9-84.7d spy-hunter_cpu_pg2_2-9-84.8d spy-hunter_cpu_pg3_2-9-84.9d spy-hunter_cpu_pg4_2-9-84.10d spy-hunter_cpu_pg5_2-9-84.11d
 // spy-hunter_snd_0_sd_11-18-83.a7 spy-hunter_snd_1_sd_11-18-83.a8
 // spy-hunter_cs_deluxe_u17_b_11-18-83.u17 spy-hunter_cs_deluxe_u18_d_11-18-83.u18 spy-hunter_cs_deluxe_u7_a_11-18-83.u7 spy-hunter_cs_deluxe_u8_c_11-18-83.u8
 // spy-hunter_video_1fg_11-18-83.a7 spy-hunter_video_0fg_11-18-83.a8 spy-hunter_video_3fg_11-18-83.a5 spy-hunter_video_2fg_11-18-83.a6 spy-hunter_video_5fg_11-18-83.a3 spy-hunter_video_4fg_11-18-83.a4 spy-hunter_video_7fg_11-18-83.a1 spy-hunter_video_6fg_11-18-83.a2
+// spy-hunter_cpu_bg0_11-18-83.3a spy-hunter_cpu_bg1_11-18-83.4a spy-hunter_cpu_bg2_11-18-83.5a spy-hunter_cpu_bg3_11-18-83.6a
+// spy-hunter_cpu_alpha-n_11-18-83
 
 wire [24:0] rom_ioctl_addr = ~ioctl_addr[16] ? ioctl_addr : // 8 bit ROMs
                              {ioctl_addr[24:16], ioctl_addr[15], ioctl_addr[13:0], ioctl_addr[14]}; // 16 bit ROM
@@ -162,7 +184,7 @@ sdram sdram(
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
+	.port2_a       ( {sp_ioctl_addr[23:17], sp_ioctl_addr[14:0], sp_ioctl_addr[16]} ), // merge sprite roms to 32-bit wide words
 	.port2_ds      ( {sp_ioctl_addr[15], ~sp_ioctl_addr[15]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
@@ -201,6 +223,12 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded | (reset_count == 16'h0001);
 
 end
+
+wire [15:0] audio_l, audio_r;
+wire  [9:0] csd_audio;
+wire        hs, vs, cs;
+wire        blankn;
+wire  [2:0] g, r, b;
 
 spy_hunter_control spy_hunter_control(
 	.clock_40(clk_sys),
@@ -250,13 +278,16 @@ spy_hunter spy_hunter(
 	.csd_rom_addr ( csd_addr        ),
 	.csd_rom_do   ( csd_do          ),
 	.sp_addr      ( sp_addr         ),
-	.sp_graphx32_do ( sp_do         )
+	.sp_graphx32_do ( sp_do         ),
+	.dl_addr      ( ioctl_addr[18:0]),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr        )
 );
 
 wire vs_out;
 wire hs_out;
-assign VGA_VS = scandoublerD | vs_out;
-assign VGA_HS = scandoublerD ? cs : hs_out;
+assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
+assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -279,27 +310,6 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.scandoubler_disable(1),//scandoublerD ),
 	.no_csync       ( 1'b1             ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 dac #(
