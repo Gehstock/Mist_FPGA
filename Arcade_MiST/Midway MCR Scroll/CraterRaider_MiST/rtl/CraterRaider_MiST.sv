@@ -52,6 +52,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
+	"O7,Spinner Speed,Low,High;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -59,6 +60,7 @@ localparam CONF_STR = {
 wire   rotate = status[2];
 wire   blend  = status[5];
 wire   service = status[6];
+wire   spinspd = status[7];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
@@ -81,13 +83,32 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [15:0] audio_l, audio_r;
-wire        hs, vs, cs;
-wire        blankn;
-wire  [2:0] g, r, b;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       ( no_csync      ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
@@ -185,12 +206,17 @@ wire [7:0] spin_angle;
 spinner spinner (
 	.clock_40(clk_sys),
 	.reset(reset),
-	.btn_acc(),
+	.btn_acc(spinspd),
 	.btn_left(m_left),
 	.btn_right(m_right),
 	.ctc_zc_to_2(vs),
 	.spin_angle(spin_angle)
 );
+
+wire [15:0] audio_l, audio_r;
+wire        hs, vs, cs;
+wire        blankn;
+wire  [2:0] g, r, b;
 
 Crater_Raider Crater_Raider(
 	.clock_40(clk_sys),
@@ -230,8 +256,8 @@ Crater_Raider Crater_Raider(
 
 wire vs_out;
 wire hs_out;
-assign VGA_VS = scandoublerD | vs_out;
-assign VGA_HS = scandoublerD ? cs : hs_out;
+assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
+assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -255,27 +281,6 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.no_csync       ( 1'b1             ),
 	.scanlines      (                  ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 dac #(
