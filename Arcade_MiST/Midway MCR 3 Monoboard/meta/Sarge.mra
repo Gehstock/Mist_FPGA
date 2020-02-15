@@ -8,6 +8,7 @@
     <rbf>MCR3Mono</rbf>
     <setname>sarge</setname>
     <switches>
+	<dip bits="9" name="Controls"  ids="2 sticks, 1 stick"/>
 	<dip bits="8" name="Free Play" ids="On,Off"/>
     </switches>
     <rom index="1">

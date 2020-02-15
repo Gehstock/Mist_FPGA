@@ -11,11 +11,8 @@ Supported games:
 Sarge
 =====
 Controls:
-Player 1: joystick 1 and joystick 2
-Player 2: joystick 3 and joystick 4
-
-Creating SARGE.ROM on Linux:
-cat cpu_3b.bin cpu_5b.bin spr_8e.bin spr_6e.bin spr_5e.bin spr_4e.bin til_15a.bin til_15a.bin til_14b.bin til_14b.bin tcs_u5.bin tcs_u4.bin tcs_u5.bin tcs_u4.bin > SARGE.ROM
+Player 1: joystick 1 and joystick 2 (two sticks mode), joystick1 only(one stick mode)
+Player 2: joystick 3 and joystick 4 (two sticks mode), joystick2 only(one stick mode)
 
 Max RPM
 =======
@@ -24,18 +21,9 @@ Gear : Button1/Button2
 Steering: Left/Right
 Throttle/Brake: Up/Down
 
-Creating MAXRPM.ROM on Linux:
-cat pro.0 pro.1 fg-0 fg-1 fg-2 fg-3 bg-0 bg-1 turbskwk.u5 turbskwk.u4 > MAXRPM.ROM
-
 Rampage
 =======
 Normal controls for maximum of 3 players.
-
-Creating RAMPAGE.ROM on Linux:
-cat pro-0_3b_rev_3_8-27-86.3b pro-1_5b_rev_3_8-27-86.5b \
- fg-0_8e_6-30-86.8e fg-1_6e_6-30-86.6e fg-2_5e_6-30-86.5e fg-3_4e_6-30-86.4e \
- bg-0_u15_7-23-86.15a bg-1_u14_7-23-86.14b \
- u-17_rev.2_8-14-86.u17 u-18_rev.2_8-14-86.u18 u-7_rev.2_8-14-86.u7 u-8_rev.2_8-14-86.u8 > RAMPAGE.ROM
 
 Power Drive
 ===========
@@ -44,10 +32,15 @@ Buttons 1,2 - Gas
 Button  3   - Wheelie
 Button  4   - Shift
 
-Creating POWERDRV.ROM on Linux:
-cat pdrv3b.bin pdrv5b.bin pdrv8e.bin pdrv6e.bin pdrv5e.bin pdrv4e.bin \
- pdrv15a.bin pdrv14b.bin \
- power_drive_snd_u17.u17 power_drive_snd_u18.u18 power_drive_snd_u7.u7 power_drive_snd_u8.u8 > POWERDRV.ROM
+Usage:
+======
+
+Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
+Copy the RBF and the ARC files to the same folder.
+Example: mra -z /path/to/mame/roms Tron.mra
+Copy the ROM files to the root of the SD Card.
+
+MRA utilty: https://github.com/sebdel/mra-tools-c
 
 Based on Darfpga's work:
 ---------------------------------------------------------------------------------
