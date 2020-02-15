@@ -59,6 +59,9 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"O6,Initial Energy,4,6;",
+	"O78,Lives,3,4,5,6;",
+	"O9,Stop at Junctions,Off,On;",
 	"T0,Reset;",
 	"V,v1.15.",`BUILD_DATE
 };
@@ -66,6 +69,9 @@ localparam CONF_STR = {
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
+wire       energy = status[6];
+wire [1:0] lives = ~status[8:7];
+wire       stpatjunct = ~status[9];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -88,12 +94,31 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-reg	[10:0] audio;
-wire 			hb, vb;
-wire        blankn = ~(hb | vb);
-wire 			ce_vid;
-wire 			hs, vs;
-wire  [4:0] r,g,b;
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
+user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
+	.clk_sys        (clock_12       ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
@@ -102,12 +127,9 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire        key_strobe;
-wire        key_pressed;
-wire  [7:0] key_code;
 
 data_io data_io(
-	.clk_sys       ( clock_48      ),
+	.clk_sys       ( clock_48     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -140,6 +162,13 @@ always @(posedge clock_12) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
+reg	 [10:0] audio;
+wire        hb, vb;
+wire        blankn = ~(hb | vb);
+wire        ce_vid;
+wire        hs, vs;
+wire  [4:0] r,g,b;
+
 power_surge power_surge(
 	.clock_6(clock_6),
 	.clock_12(clock_12),
@@ -156,12 +185,12 @@ power_surge power_surge(
 	.roms_addr(rom_addr),
 	.roms_do(rom_do[7:0]),
 	.roms_rd(rom_rd),
-	.dip_switch_1(8'b0111_1000), // Cabinet Unknown Lives Lives Initial_Energy Unknown Unknown Unknown
-	.dip_switch_2(8'b1110_0000), // Stop_at_Junctions, Unknown, Unknown, Cheat, Coin_B Coin_B Coin_A Coin_A
+	.dip_switch_1({2'b11,lives,energy,3'b000}), // Cabinet Unknown Lives Lives Initial_Energy Unknown Unknown Unknown
+	.dip_switch_2({stpatjunct,7'b110_1111}), // Stop_at_Junctions, Unknown, Unknown, Cheat, Coin_B Coin_B Coin_A Coin_A
 	.start2(m_two_players),
 	.start1(m_one_player),
 	.coin1(m_coin1),
-	
+
 	.fire1(m_fireA),
 	.right1(m_right),
 	.left1(m_left),
@@ -174,7 +203,7 @@ power_surge power_surge(
 	.up2(m_up2)
 	);
 	
-mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(//Wrong Colors have no Idea
+mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clock_48         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
@@ -193,32 +222,14 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(//Wrong Colors have
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
-	.ypbpr          ( ypbpr            )
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
 	);
 
-user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clock_12       ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
-	);
-
-dac #(.C_bits(16))dac(
+dac #(.C_bits(11))dac(
 	.clk_i(clock_14),
 	.res_n_i(1),
-	.dac_i({audio, 5'b00000}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 
