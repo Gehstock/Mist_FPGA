@@ -3,8 +3,11 @@
 -- Arcade: Spy Hunter port to MiST by Gehstock
 -- 16 November 2019
 -- 
-
-SHUNTER.ROM is required at the root of the SD-Card.
+-- Usage:
+-- Create ROM file from MRA file and MAME spyhunt.zip file using the MRA utility
+-- Copy the ROM and the RBF to the SD Card
+-- Example: mra -z /path/to/mame/roms "Spy Hunter.mra"
+-- MRA utility: https://github.com/sebdel/mra-tools-c
 
 Controls
 Joy	Keyboard
@@ -14,9 +17,9 @@ left	left 		: Left
 right	right		: Right
 	ESC		: Coin
 start	TAB,LShift	: VAN
-A	Space		: Gun
+A	LCtrl		: Gun
 B	LAlt		: Missle
-C	LCtrl		: Shift
+C	SPACE		: Shift
 X	Z		: Oil
 Y	X		: Smoke
 

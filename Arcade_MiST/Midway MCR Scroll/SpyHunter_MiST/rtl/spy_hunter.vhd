@@ -180,7 +180,12 @@ port(
   csd_rom_addr   : out std_logic_vector(14 downto 1);
   csd_rom_do     : in std_logic_vector(15 downto 0);
   sp_addr        : out std_logic_vector(14 downto 0);
-  sp_graphx32_do : in std_logic_vector(31 downto 0); 
+  sp_graphx32_do : in std_logic_vector(31 downto 0);
+	 -- internal ROM download
+  dl_addr        : in std_logic_vector(18 downto 0);
+  dl_data        : in std_logic_vector(7 downto 0);
+  dl_wr          : in std_logic;
+
   dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
 end spy_hunter;
@@ -335,7 +340,11 @@ architecture struct of spy_hunter is
  signal lamp_van       : std_logic;
  signal lamp_smoke     : std_logic;
  signal lamp_gun       : std_logic;
- 
+
+ signal bg_graphics_1_we : std_logic;
+ signal bg_graphics_2_we : std_logic;
+ signal ch_graphics_we   : std_logic;
+
  type texte is array(0 to  31) of std_logic_vector(7 downto 0);
  signal lamp_text: texte := (
 	x"00", x"49", x"48", x"00",                             -- hi/lo
@@ -1028,28 +1037,46 @@ port map(
 );
 
 -- char graphics ROM 10G
-ch_graphics : entity work.spy_hunter_ch_bits
+ch_graphics : entity work.dpram
+generic map( dWidth => 8, aWidth => 12)
 port map(
- clk  => clock_vidn,
- addr => ch_code_line,
- data => ch_graphx_do
+ clk_a  => clock_vidn,
+ addr_a => ch_code_line,
+ q_a    => ch_graphx_do,
+ clk_b  => clock_vid,
+ we_b   => ch_graphics_we,
+ addr_b => dl_addr(11 downto 0),
+ d_b    => dl_data
 );
+ch_graphics_we <= '1' when dl_addr(18 downto 12) = "1000000" and dl_wr = '1' else '0'; -- 40000 - 40FFF
 
 -- background graphics ROM 3A/4A
-bg_graphics_1 : entity work.spy_hunter_bg_bits_1
+bg_graphics_1 : entity work.dpram
+generic map( dWidth => 8, aWidth => 14)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx1_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx1_do,
+ clk_b  => clock_vid,
+ we_b   => bg_graphics_1_we,
+ addr_b => dl_addr(13 downto 0),
+ d_b    => dl_data
 );
+bg_graphics_1_we <= '1' when dl_addr(18 downto 14) = "01110" and dl_wr = '1' else '0'; -- 38000 - 3BFFF
 
 -- background graphics ROM 5A/6A
-bg_graphics_2 : entity work.spy_hunter_bg_bits_2
+bg_graphics_2 : entity work.dpram
+generic map( dWidth => 8, aWidth => 14)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx2_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx2_do,
+ clk_b  => clock_vid,
+ we_b   => bg_graphics_2_we,
+ addr_b => dl_addr(13 downto 0),
+ d_b    => dl_data
 );
+bg_graphics_2_we <= '1' when dl_addr(18 downto 14) = "01111" and dl_wr = '1' else '0'; -- 3C000 - 3FFFF
 
 -- sprite graphics ROM A7-A8/A5-A6/A3-A4/A1-A2
 --sprite_graphics : entity work.timber_sp_bits     -- full size sprite rom
