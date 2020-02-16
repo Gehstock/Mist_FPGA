@@ -59,6 +59,10 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"O67,Lives,3,4,5,Unl.;",
+	"O8,Bonus Life,10K 50k,20K 60K;",
+	"O9B,Difficulty,1,2,3,4,5,6,7,8;",
+	"OC,Demo Sounds,Off,On;",
 	"T0,Reset;",
 	"V,v1.15.",`BUILD_DATE
 };
@@ -66,6 +70,10 @@ localparam CONF_STR = {
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
+wire [1:0] lives = status[7:6];
+wire       bonus = status[8];
+wire [2:0] difficulty = status[11:9];
+wire       demosnd = status[12];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -88,9 +96,31 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-reg	 [10:0] audio;
-wire        hs, vs;
-wire  [4:0] r,g,b;
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
+user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
+	.clk_sys        (clock_12       ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 wire        rom_rd;
@@ -99,9 +129,6 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire        key_strobe;
-wire        key_pressed;
-wire  [7:0] key_code;
 
 data_io data_io(
 	.clk_sys       ( clock_48      ),
@@ -138,6 +165,10 @@ always @(posedge clock_12) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
+reg	 [10:0] audio;
+wire        hs, vs;
+wire  [4:0] r,g,b;
+
 time_pilot time_pilot(
 	.clock_6(clock_6),
 	.clock_12(clock_12),
@@ -152,8 +183,8 @@ time_pilot time_pilot(
 	.roms_addr(rom_addr),
 	.roms_do(rom_do[7:0]),
 	.roms_rd(rom_rd),
-	.dip_switch_1(8'hFF), // Coinage_B / Coinage_A
-	.dip_switch_2(8'h4B), // Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
+	.dip_switch_1(8'b11111111),// Coinage_B / Coinage_A
+	.dip_switch_2(~{demosnd, difficulty, bonus, 1'b1, lives}),// Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
 	.start2(m_two_players),
 	.start1(m_one_player),
 	.coin1(m_coin1),
@@ -189,32 +220,14 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
-	.ypbpr          ( ypbpr            )
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
 	);
 
-user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clock_12       ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
-	);
-
-dac #(.C_bits(16))dac(
+dac #(.C_bits(11))dac(
 	.clk_i(clock_14),
 	.res_n_i(1),
-	.dac_i({audio, 5'b00000}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 
@@ -224,19 +237,19 @@ wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, 
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
         
 arcade_inputs inputs (
-        .clk         ( clock_12    ),
-        .key_strobe  ( key_strobe  ),
-        .key_pressed ( key_pressed ),
-        .key_code    ( key_code    ),
-        .joystick_0  ( joystick_0  ),
-        .joystick_1  ( joystick_1  ),
-        .rotate      ( rotate      ),
-        .orientation ( 2'b11       ),
-        .joyswap     ( 1'b0        ),
-        .oneplayer   ( 1'b1        ),
-        .controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
-        .player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-        .player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+	.clk         ( clock_12    ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
 );
 
 endmodule 

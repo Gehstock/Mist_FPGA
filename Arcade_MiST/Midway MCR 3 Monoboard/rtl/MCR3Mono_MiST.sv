@@ -104,8 +104,8 @@ always @(*) begin
 	begin
 		// Two stick/player like the original
 		input0 = ~{2'b00, service, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1};
-		input1 = ~{m_fireA | m_fireB, m_fireA | m_fireB, m_fire2A | m_fire2B, m_fire2A | m_fire2B, m_down, m_up, m_down, m_up};
-		input2 = ~{m_fire3A | m_fire3B, m_fire3A | m_fire3B, m_fire4A | m_fire4B, m_fire4A | m_fire4B, m_down3, m_up3, m_down4, m_up4};
+		input1 = ~{{2{sarge_fire1B}}, {2{sarge_fire1A}}, sarge_down2, sarge_up2, sarge_down1, sarge_up1};
+		input2 = ~{{2{sarge_fire2B}}, {2{sarge_fire2A}}, sarge_down3, sarge_up3, sarge_down4, sarge_up4};
 		input3 = ~{2'b00, /*coinage*/2'b00, /*free play*/status[8], 3'b000};
 	end
 	7'h2: //POWERDRV
@@ -392,6 +392,42 @@ dac #(10) dac(
 	.dac_o(AUDIO_L)
 	);
 assign AUDIO_R = AUDIO_L;
+
+// Sarge controls
+wire       onestick = status[9];
+wire       sarge_up1, sarge_up2, sarge_up3, sarge_up4;
+wire       sarge_down1, sarge_down2, sarge_down3, sarge_down4;
+wire       sarge_fire1A, sarge_fire1B, sarge_fire2A, sarge_fire2B;
+
+always @(*) begin
+	if (~onestick) begin
+		sarge_up1 = m_up;
+		sarge_up2 = m_up2;
+		sarge_up3 = m_up3;
+		sarge_up4 = m_up4;
+		sarge_down1 = m_down;
+		sarge_down2 = m_down2;
+		sarge_down3 = m_down3;
+		sarge_down4 = m_down4;
+		sarge_fire1A = m_fireA | m_fire2A;
+		sarge_fire1B = m_fireB | m_fire2B;
+		sarge_fire2A = m_fire3A | m_fire4A;
+		sarge_fire2B = m_fire3B | m_fire4B;
+	end else begin
+		sarge_up1 =   (m_up & ~m_left)      | (m_right & ~m_down);
+		sarge_up2 =   (m_up & ~m_right)     | (m_left  & ~m_down);
+		sarge_down1 = (m_down & ~m_right)   | (m_left  & ~m_up);
+		sarge_down2 = (m_down & ~m_left)    | (m_right & ~m_up);
+		sarge_up3   = (m_up2 & ~m_left2)    | (m_right2 & ~m_down2);
+		sarge_up4 =   (m_up2 & ~m_right2)   | (m_left2  & ~m_down2);
+		sarge_down3 = (m_down2 & ~m_right2) | (m_left2  & ~m_up2);
+		sarge_down4 = (m_down2 & ~m_left2)  | (m_right2 & ~m_up2);
+		sarge_fire1A = m_fireA;
+		sarge_fire1B = m_fireB;
+		sarge_fire2A = m_fire2A;
+		sarge_fire2B = m_fire2B;
+	end
+end
 
 // Power Drive gear
 reg  [2:0] powerdrv_gear;

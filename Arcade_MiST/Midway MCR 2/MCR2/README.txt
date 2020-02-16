@@ -6,7 +6,7 @@
 -- Coin: ESC, 5, 6
 -- Start: F1, F2, 1, 2
 
--- Tron: Joystick 1 for movement, Joystick 2 (MAME keys: D, G) for turret
+-- Tron: Joystick 1 for movement, Joystick 2 (MAME keys: D, G) or Buttons B and C for turret
 -- Wacko: control Captain Krooz'r with the mouse, shoot with the joystick
 -- Kozmik Krooz'r: use the mouse for movement and shoot, rotate the turret with the joystick
 

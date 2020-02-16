@@ -56,6 +56,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
+	"O4,Spinner speed,Low,High;",
 	"DIP;",
 	"O7,Service,Off,On;",
 	"T0,Reset;",
@@ -66,6 +67,7 @@ wire       rotate  = status[2];
 wire       blend   = status[5];
 wire       joyswap = status[6];
 wire       service = status[7];
+wire       spinspd = status[4];
 
 reg        oneplayer;
 reg  [1:0] orientation; //left/right / portrait/landscape
@@ -397,7 +399,7 @@ wire [6:0] spin_angle1;
 spinner spinner1 (
 	.clock_40(clk_sys),
 	.reset(reset),
-	.btn_acc(1),
+	.btn_acc(spinspd),
 	.btn_left(m_left | m_up),
 	.btn_right(m_right | m_down),
 	.ctc_zc_to_2(vs),
@@ -408,9 +410,9 @@ wire [6:0] spin_angle2;
 spinner spinner2 (
 	.clock_40(clk_sys),
 	.reset(reset),
-	.btn_acc(1),
-	.btn_left(m_left2 | m_up2),
-	.btn_right(m_right2 | m_down2),
+	.btn_acc(spinspd),
+	.btn_left(m_left2 | m_up2 | (core_mod == 7'h1 && m_fireB)), // fireB for Tron
+	.btn_right(m_right2 | m_down2 | (core_mod == 7'h1 && m_fireC)), // fireC for Tron
 	.ctc_zc_to_2(vs),
 	.spin_angle(spin_angle2)
 );
