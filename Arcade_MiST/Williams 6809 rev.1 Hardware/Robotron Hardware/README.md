@@ -3,16 +3,17 @@ robotron-fpga MiST port
 
 Supported games: Robotron 2048, Joust, Sinistar, Bubbles, Splat, Stargate, Alien Arena
 
-After loading the RBF, a CMOS clearing will happen. Reset the core to start
-the game.
+After loading the RBF (Core), a CMOS clearing happens. When the message 
+"Factory Settings Restored" appears, press the MiST soft RESET button (right).
 
 Sinistar has some graphics issues, and the speech chip is not implemented.
 
 Usage:
 ------
+- Make sure you use firmware 200215 or later.
 - Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
+- Example: mra -A -z /path/to/mame/roms Stargate.mra
 - Copy the RBF and the ARC files to the same folder.
-- Example: mra -z /path/to/mame/roms scramble.mra
 - Copy the ROM files to the root of the SD Card.
 
 - MRA utilty: https://github.com/sebdel/mra-tools-c
@@ -22,7 +23,18 @@ Change it for permanent settings (search for the format online). It's possible t
 inside the core, with turning on "Auto-up" switch, and activate the "Advance" trigger in the OSD.
 Refer to the arcade's user manual for further info.
 
-robotron-fpga
+
+Joystick Remaps
+---------------
+
+Some of the Williams cores use more buttons than usual and require remaps to be useful.
+
+The file [README-joystick-remaps.txt](https://github.com/Gehstock/Mist_FPGA_Cores/blob/master/Arcade_MiST/Williams%206809%20rev.1%20Hardware/README-joystick-remaps.txt) contains joystick remaps for the Williams cores.
+
+
+---
+
+robotron-fpga (Original Documentation)
 =============
 
 An implementation of the classic Robotron: 2084 video arcade game from 1982.

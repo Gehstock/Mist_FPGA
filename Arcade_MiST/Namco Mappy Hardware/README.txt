@@ -3,7 +3,7 @@ The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
 -- Usage:
 -- - Create ROM and ARC files from the MRA files in the meta directory
 --   using the MRA utility.
---   Example: mra -A -z /path/to/mame/roms motos.mra
+--   Example: mra -A -z /path/to/mame/roms Motos.mra
 -- - Copy the ROM files to the root of the SD Card
 -- - Copy the RBF and ARC files to the same folder on the SD Card
 --
