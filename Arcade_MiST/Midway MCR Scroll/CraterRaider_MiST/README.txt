@@ -3,6 +3,7 @@
 -- Usage:
 -- Create ROM file from MRA file and MAME crater.zip file using the MRA utility
 -- Copy the ROM and the RBF to the SD Card
+-- Example: mra -z /path/to/mame/roms "Crater Raider.mra"
 -- MRA utility: https://github.com/sebdel/mra-tools-c
 --
 ---------------------------------------------------------------------------------
