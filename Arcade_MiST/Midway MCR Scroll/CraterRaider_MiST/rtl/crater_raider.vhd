@@ -417,7 +417,7 @@ begin
 					vcnt >= 1    and  vcnt < 241 then video_blankn <= '1';end if;
 				
 				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1'; video_vs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
