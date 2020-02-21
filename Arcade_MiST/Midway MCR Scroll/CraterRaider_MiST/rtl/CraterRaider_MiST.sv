@@ -256,8 +256,8 @@ Crater_Raider Crater_Raider(
 
 wire vs_out;
 wire hs_out;
-assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
-assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
+assign VGA_HS = (~no_csync & scandoublerD & ~ypbpr)? cs : hs_out;
+assign VGA_VS = (~no_csync & scandoublerD & ~ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),

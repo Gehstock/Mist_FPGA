@@ -37,7 +37,7 @@ Usage:
 
 Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
 Copy the RBF and the ARC files to the same folder.
-Example: mra -z /path/to/mame/roms Tron.mra
+Example: mra -A -z /path/to/mame/roms Rampage.mra
 Copy the ROM files to the root of the SD Card.
 
 MRA utilty: https://github.com/sebdel/mra-tools-c
