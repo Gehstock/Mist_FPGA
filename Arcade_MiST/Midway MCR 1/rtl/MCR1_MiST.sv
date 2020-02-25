@@ -1,5 +1,6 @@
 //============================================================================
-//  Arcade: Solar Fox by DarFPGA
+//  Arcade: MCR1 for MiST top-level
+//  Using Kickman by DarFPGA
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -16,15 +17,15 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module SolarFox_MiST(
-	output        LED,						
+module MCR1_MiST(
+	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
 	output  [5:0] VGA_B,
 	output        VGA_HS,
 	output        VGA_VS,
 	output        AUDIO_L,
-	output        AUDIO_R,	
+	output        AUDIO_R,
 	input         SPI_SCK,
 	output        SPI_DO,
 	input         SPI_DI,
@@ -32,7 +33,6 @@ module SolarFox_MiST(
 	input         SPI_SS3,
 	input         CONF_DATA0,
 	input         CLOCK_27,
-
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
@@ -48,10 +48,14 @@ module SolarFox_MiST(
 
 `include "rtl/build_id.v" 
 
+`define CORE_NAME "KICKMAN"
+wire [6:0] core_mod;
+
 localparam CONF_STR = {
-	"SOLARFOX;;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
+	"DIP;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
@@ -61,9 +65,54 @@ wire   rotate  = status[2];
 wire   blend   = status[5];
 wire   service = status[6];
 
+reg  [7:0] input_0;
+reg  [7:0] input_1;
+reg  [7:0] input_2;
+reg  [7:0] input_3;
+reg signed [7:0] spr_offset;
+reg vflip_sel;
+reg dpoker_lamp;
+
+always @(*) begin
+	input_0 = 8'hff;
+	input_1 = 8'hff;
+	input_2 = 8'hff;
+	input_3 = 8'hff;
+	spr_offset = 8'd3;
+	vflip_sel = 0;
+	dpoker_lamp = 0;
+
+	case (core_mod)
+	7'h0: // KICK(MAN)
+	begin
+		input_0 = ~{ service, 2'b00, m_down, m_two_players, m_one_player, m_coin2, m_coin1 };
+		input_1 = ~{ 4'h0, spin_angle };
+		input_3 =  { /*music*/status[7], 7'd0 };
+	end
+	7'h1: // SOLARFOX
+	begin
+		spr_offset = -8'd3;
+		input_0 = ~{ service, 2'b00, m_fireA, m_two_players | m_fire2B, m_one_player | m_fireB, m_coin2, m_coin1 };
+		input_1 = ~{ m_up2, m_down2, m_left2, m_right2, m_up, m_down, m_left, m_right };
+		input_2 = ~{ 7'd0, m_fire2A };
+		input_3 = ~{ /*cocktail*/1'b0, /*ign.hw fail*/1'b0, /*demo snd*/status[9], /*unk*/2'b00, /*bonus*/&(~status[8:7]), status[8] };
+	end
+	7'h2: // DPOKER
+	begin
+		vflip_sel = 1;
+		dpoker_lamp = status[7];
+		input_0 = ~{ 2'b11, m_down, m_up, dpoker_hopper_release_status, 1'b0, dpoker_coin_release_status, dpoker_coin_in_status };
+		input_1 = ~{ /*stand*/m_fireA, /*cancel*/m_fireB, /*deal*/m_fireC, btn_hold5, btn_hold4, btn_hold3, btn_hold2, btn_hold1 };
+		input_3 = ~{ /*backgr.*/status[12], /*currency*/status[11], /*faceup*/status[10], /*2xunused*/2'b11, /*novelty*/status[9], /*music*/status[8], /*hopper*/1'b0 };
+	end
+	default : ;
+	endcase
+
+end
+
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sys;
-assign SDRAM_CKE= 1;
+assign SDRAM_CKE = 1;
 
 wire clk_sys;
 wire pll_locked;
@@ -81,13 +130,33 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [15:0] audio_l, audio_r;
-wire        hs, vs, cs;
-wire        blankn;
-wire  [3:0] g, r, b;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
@@ -99,6 +168,12 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
+/* ROM structure
+00000-07FFF CPU1
+08000-0BFFF CPU2
+0C000-13FFF gfx2
+14000-15FFF gfx1
+*/
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
@@ -164,7 +239,13 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-solarfox solarfox(
+wire [15:0] audio_l, audio_r;
+wire        hs, vs, cs;
+wire        blankn;
+wire  [3:0] g, r, b;
+wire [24:0] dl_addr = ioctl_addr - 16'hC000;
+
+kick kick(
 	.clock_40(clk_sys),
 	.reset(reset),
 	.video_r(r),
@@ -175,34 +256,35 @@ solarfox solarfox(
 	.video_vs(vs),
 	.video_csync(cs),
 	.tv15Khz_mode(scandoublerD),
-	.separate_audio(1'b0),
+	.separate_audio(1'b1),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
-	.coin1(m_coin1),
-	.coin2(m_coin2),
-	.fast1(m_one_player),
-	.fast2(m_two_players),
-	.service(service),
-	.fire1(m_fireA),
-	.fire2(m_fire2A),
-	.left1(m_left),
-	.right1(m_right),
-	.up1(m_up),
-	.down1(m_down),
-	.left2(m_left2),
-	.right2(m_right2),
-	.up2(m_up2),
-	.down2(m_down2),
+
+	.ctc_zc_to_2(ctc_zc_to2),
+	.input_0(input_0),
+	.input_1(input_1),
+	.input_2(input_2),
+	.input_3(input_3),
+
+	.spr_offset(spr_offset),
+	.vflip_sel(vflip_sel),
+	.dpoker_lamp(dpoker_lamp),
+	.hopper(dpoker_hopper),
+
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] )
- );
+	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+
+	.dl_addr      ( dl_addr[16:0]   ),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr        )
+);
 
 wire vs_out;
 wire hs_out;
-assign VGA_VS = scandoublerD | vs_out;
-assign VGA_HS = scandoublerD ? cs : hs_out;
+assign VGA_HS = (~no_csync & scandoublerD & ~ypbpr)? cs : hs_out;
+assign VGA_VS = (~no_csync & scandoublerD & ~ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -220,33 +302,11 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( vs_out           ),
 	.VGA_HS         ( hs_out           ),
 	.rotate         ( { 1'b1, rotate } ),
-	.ce_divider     ( 1                ),
+	.ce_divider     ( 1'b1             ),
 	.blend          ( blend            ),
 	.scandoubler_disable( 1'b1         ),
 	.no_csync       ( 1'b1             ),
-	.scanlines      (                  ),
 	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
 	);
 
 dac #(
@@ -257,7 +317,7 @@ dac_l(
 	.dac_i(audio_l),
 	.dac_o(AUDIO_L)
 	);
-	
+
 dac #(
 	.C_bits(16))
 dac_r(
@@ -267,6 +327,49 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
+// Draw poker coin in detector
+wire dpoker_coin_in_status, dpoker_coin_release_status;
+coin_flow coin_in(clk_sys, reset, m_coin1, dpoker_coin_in_status, dpoker_coin_release_status);
+
+// Draw poker hopper control
+wire dpoker_hopper;
+wire dpoker_hopper_in_status, dpoker_hopper_release_status;
+coin_flow hopper(clk_sys, reset, dpoker_hopper, dpoker_hopper_in_status, dpoker_hopper_release_status);
+
+// Draw poker extra buttons
+reg btn_hold1 = 0;
+reg btn_hold2 = 0;
+reg btn_hold3 = 0;
+reg btn_hold4 = 0;
+reg btn_hold5 = 0;
+
+always @(posedge clk_sys) begin
+	if(key_strobe) begin
+		case(key_code)
+			'h1A: btn_hold1       <= key_pressed; // Z
+			'h22: btn_hold2       <= key_pressed; // X
+			'h21: btn_hold3       <= key_pressed; // C
+			'h2A: btn_hold4       <= key_pressed; // V
+			'h32: btn_hold5       <= key_pressed; // B
+		endcase
+	end
+end
+
+// Kick spinner
+wire       ctc_zc_to2;
+wire [3:0] spin_angle;
+
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(m_fireA),
+	.btn_left(m_left),
+	.btn_right(m_right),
+	.ctc_zc_to_2(ctc_zc_to2),
+	.spin_angle(spin_angle)
+);
+
+// General controls
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
@@ -287,4 +390,55 @@ arcade_inputs inputs (
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
 );
 
-endmodule 
+endmodule
+
+module coin_flow(
+	input  clk,
+	input  reset,
+	input  coin_in,
+	output reg in_status,
+	output reg release_status
+);
+
+reg [23:0] timer;
+reg  [1:0] state;
+
+always @(posedge clk) begin
+
+	if (reset) begin
+		state <= 0;
+		in_status <= 0;
+		release_status <= 0;
+	end else begin
+
+		case (state)
+		0:
+		if (coin_in) begin
+			timer <= 24'h3fffff;
+			in_status <= 1;
+			state <= 1;
+		end
+
+		1:
+		if (timer != 0) timer <= timer - 1'd1;
+		else begin
+			in_status <= 0;
+			release_status <= 1;
+			timer <= 24'h3fffff;
+			state <= 2;
+		end
+
+		2:
+		if (timer != 0) timer <= timer - 1'd1;
+		else begin
+			release_status <= 0;
+			state <= 0;
+		end
+
+		default : ;
+		endcase
+
+	end
+end
+
+endmodule

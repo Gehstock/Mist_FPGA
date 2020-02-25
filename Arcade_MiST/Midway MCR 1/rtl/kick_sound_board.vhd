@@ -67,15 +67,16 @@ port(
  input_1 : in std_logic_vector(7 downto 0);
  input_2 : in std_logic_vector(7 downto 0);
  input_3 : in std_logic_vector(7 downto 0);
- input_4 : in std_logic_vector(7 downto 0);
+ 
  separate_audio : in std_logic;
+ 
+ audio_out_l : out std_logic_vector(15 downto 0);
+ audio_out_r : out std_logic_vector(15 downto 0);
+
  cpu_rom_addr : out std_logic_vector(13 downto 0);
  cpu_rom_do   : in std_logic_vector(7 downto 0);
  cpu_rom_rd   : out std_logic;
 
- audio_out_l : out std_logic_vector(15 downto 0);
- audio_out_r : out std_logic_vector(15 downto 0);
-  
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
 end kick_sound_board;
@@ -101,6 +102,8 @@ architecture struct of kick_sound_board is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
+ 
+-- signal cpu_rom_do  : std_logic_vector( 7 downto 0);
  
  signal wram_we     : std_logic;
  signal wram_do     : std_logic_vector( 7 downto 0);
@@ -238,15 +241,14 @@ ay1_bc1  <= not (not ay1_cs or cpu_addr(1) );
 ay2_bdir <= not (not ay2_cs or cpu_addr(0) );
 ay2_bc1  <= not (not ay2_cs or cpu_addr(1) );
 
-ssio_do <= input_0     when main_cpu_addr(2 downto 0) = "000" else -- Input 0 -- players, coins, ...
-           input_1     when main_cpu_addr(2 downto 0) = "001" else -- Input 1 
-           input_2     when main_cpu_addr(2 downto 0) = "010" else -- Input 2
-		     input_3     when main_cpu_addr(2 downto 0) = "011" else -- Input 3 -- sw1 dip 
-		     input_4     when main_cpu_addr(2 downto 0) = "100" else -- Input 4 
-		     ssio_status when main_cpu_addr(2 downto 0) = "111" else -- ssio status
-		     x"FF";
+ssio_do <= input_0     when main_cpu_addr = X"00" else -- Input 0 -- players, coins, ...
+           input_1     when main_cpu_addr = X"01" else -- Input 1 -- angle decoder
+           input_2     when main_cpu_addr = X"02" else -- Input 2
+           input_3     when main_cpu_addr = X"03" else -- Input 3 -- sw1 dip 
+           x"FF"       when main_cpu_addr = X"04" else -- Input 4 -- sw2 dip 
+           ssio_status when main_cpu_addr = X"07" else -- ssio status
+           x"FF";
 
-		
 process (clock_snd)
 begin
 	if rising_edge(clock_snd) then
@@ -436,6 +438,12 @@ port map(
 cpu_rom_addr <= cpu_addr(13 downto 0);
 cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 14) = "00" else '0'; -- 0x0000-0x3FFF
 
+--rom_cpu : entity work.kick_sound_cpu
+--port map(
+-- clk  => clock_sndn,
+-- addr => cpu_addr(13 downto 0),
+-- data => cpu_rom_do
+--);
 
 -- working RAM   0x8000-0x83FF
 wram : entity work.gen_ram
