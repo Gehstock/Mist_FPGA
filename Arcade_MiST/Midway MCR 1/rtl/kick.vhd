@@ -163,25 +163,21 @@ port(
  video_hs       : out std_logic;
  video_vs       : out std_logic;
 
+ spr_offset     : in  std_logic_vector(7 downto 0) := x"03"; -- -3 for SolarFox, +3 for Kick
+ vflip_sel      : in  std_logic := '0'; -- 0 - inv, 1 - norm
+ dpoker_lamp    : in  std_logic;
+ hopper         : out std_logic; -- dpoker coin hopper control
+
  separate_audio : in  std_logic;
  audio_out_l    : out std_logic_vector(15 downto 0);
  audio_out_r    : out std_logic_vector(15 downto 0);
 
- STAND          : in std_logic;
- CANCEL          : in std_logic;
- DEAL          : in std_logic;
- HOLD5          : in std_logic;
- HOLD4          : in std_logic;
- HOLD3          : in std_logic;
- HOLD2          : in std_logic;
- HOLD1          : in std_logic;
- COIN1          : in std_logic;
- COIN2          : in std_logic;
- GAMBLE_IN      : in std_logic;
- GAMBLE_OUT     : in std_logic;
- SERVICE        : in std_logic;
- show_lamps     : in std_logic;
- bgcolor        : in std_logic;
+ input_0        : in std_logic_vector(7 downto 0);
+ input_1        : in std_logic_vector(7 downto 0);
+ input_2        : in std_logic_vector(7 downto 0);
+ input_3        : in std_logic_vector(7 downto 0);
+ 
+ ctc_zc_to_2    : out std_logic;
 
  cpu_rom_addr   : out std_logic_vector(14 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -190,9 +186,11 @@ port(
  snd_rom_addr   : out std_logic_vector(13 downto 0);
  snd_rom_do     : in std_logic_vector(7 downto 0);
  snd_rom_rd     : out std_logic;
- 
- dbg_cpu_addr : out std_logic_vector(15 downto 0)
- );
+
+ dl_addr        : in std_logic_vector(16 downto 0);
+ dl_data        : in std_logic_vector( 7 downto 0);
+ dl_wr          : in std_logic
+);
 end kick;
 
 architecture struct of kick is
@@ -204,6 +202,7 @@ architecture struct of kick is
 
  signal hcnt    : std_logic_vector(9 downto 0) := (others=>'0'); -- horizontal counter
  signal vcnt    : std_logic_vector(9 downto 0) := (others=>'0'); -- vertical counter
+ signal vflip_inv: std_logic_vector(9 downto 0) := (others=>'0'); -- vertical counter inverse
  signal vflip   : std_logic_vector(9 downto 0) := (others=>'0'); -- vertical counter flip
 
  signal hs_cnt, vs_cnt :std_logic_vector(9 downto 0) ;
@@ -222,30 +221,14 @@ architecture struct of kick is
  signal cpu_ioreq_n : std_logic;
  signal cpu_irq_n   : std_logic;
  signal cpu_m1_n    : std_logic;
- 
- signal ctc_controler_we  : std_logic;
- signal ctc_controler_do  : std_logic_vector(7 downto 0);
- signal ctc_int_ack       : std_logic;
+ signal cpu_int_ack_n : std_logic;
 
- signal ctc_counter_0_we  : std_logic;
--- signal ctc_counter_0_trg : std_logic;
- signal ctc_counter_0_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_0_int : std_logic;
+ signal ctc_ce      : std_logic;
+ signal ctc_do      : std_logic_vector(7 downto 0);
 
- signal ctc_counter_1_we  : std_logic;
--- signal ctc_counter_1_trg : std_logic;
- signal ctc_counter_1_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_1_int : std_logic;
- 
- signal ctc_counter_2_we  : std_logic;
--- signal ctc_counter_2_trg : std_logic;
- signal ctc_counter_2_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_2_int : std_logic;
- 
- signal ctc_counter_3_we  : std_logic;
- signal ctc_counter_3_trg : std_logic;
- signal ctc_counter_3_do  : std_logic_vector(7 downto 0);
- signal ctc_counter_3_int : std_logic;
+ signal ctc_counter_1_trg : std_logic;
+ signal ctc_counter_2_trg : std_logic;
+ signal ctc_counter_3_trg : std_logic; 
  
 -- signal cpu_rom_do : std_logic_vector( 7 downto 0);
  
@@ -329,51 +312,28 @@ architecture struct of kick is
 
  signal ssio_iowe    : std_logic;
  signal ssio_do      : std_logic_vector(7 downto 0);
- 
- signal input_0      : std_logic_vector(7 downto 0);
- signal input_1      : std_logic_vector(7 downto 0);
- signal input_2      : std_logic_vector(7 downto 0);
- signal input_3      : std_logic_vector(7 downto 0);
- signal input_4      : std_logic_vector(7 downto 0);
- signal mram_we      : std_logic;
- signal mram_do      : std_logic_vector(7 downto 0);
- signal output_1     : std_logic_vector(7 downto 0);
- signal Lamp_Hold    : std_logic;
- signal Lamp_Deal    : std_logic;
- signal Lamp_Cancel  : std_logic;
- signal Lamp_Stand   : std_logic;
- 
- type texte is array(0 to  24) of std_logic_vector(7 downto 0);
+
+ signal sp_graphics_we : std_logic;
+ signal bg_graphics_1_we : std_logic;
+ signal bg_graphics_2_we : std_logic;
+
+ signal lamps : std_logic_vector(7 downto 0);
+ signal lamp_on : std_logic;
+
+ type texte is array(0 to  31) of std_logic_vector(7 downto 0);
  signal lamp_text: texte := (
-	x"44", x"4C", x"4F", x"48", x"00",                      -- HOLD
-	x"4C", x"41", x"45", x"44", x"00",                      -- DEAL
-	x"4C", x"45", x"43", x"4E", x"41", x"43", x"00",        -- CANCEL
-	x"44", x"4E", x"41", x"54", x"53", x"00",               -- STAND
-	x"00", x"00");
-	
---	WRITE8_MEMBER(mcr_dpoker_state::lamps1_w)(
---	// cpanel button lamps (white)
---	m_lamps[0] = BIT(data, 0); // hold 1
---	m_lamps[1] = BIT(data, 4); // hold 2
---	m_lamps[2] = BIT(data, 5); // hold 3
---	m_lamps[3] = BIT(data, 6); // hold 4
---	m_lamps[4] = BIT(data, 7); // hold 5
---	m_lamps[5] = BIT(data, 1); // deal
---	m_lamps[6] = BIT(data, 2); // cancel
---	m_lamps[7] = BIT(data, 3); // stand)
+  x"36", x"36", x"36", x"36",
+	x"14", x"15", x"02", x"0F", x"05", x"36",               -- STAND
+	x"04", x"02", x"0F", x"04", x"06", x"0D", x"36", x"36", -- CANCEL
+	x"05", x"06", x"02", x"0D", x"36", x"36",               -- DEAL
+	x"09", x"10", x"0D", x"05", x"36", x"36",               -- HOLD
+	x"36", x"36");
+
 begin
 
 clock_vid  <= clock_40;
 clock_vidn <= not clock_40;
 reset_n    <= not reset;
-
--- debug 
-process (reset, clock_vid)
-begin
- if rising_edge(clock_vid) and cpu_ena ='1' and cpu_mreq_n ='0' then
-   dbg_cpu_addr<= cpu_addr;
- end if;
-end process;
 
 -- make enables clock from clock_vid
 process (clock_vid, reset)
@@ -396,7 +356,7 @@ pix_ena <= '1' when (clock_cnt(1 downto 0) = "11" and tv15Khz_mode = '1') or    
 						  (clock_cnt(0) = '1'           and tv15Khz_mode = '0') else '0';  -- (20MHz)
 
 -----------------------------------
--- Video scanner  634x525 @20Mhz --
+-- Video scanner  634x512 @20Mhz --
 -- display 512x480               --
 -----------------------------------
 process (reset, clock_vid)
@@ -405,36 +365,37 @@ begin
 		hcnt      <= (others=>'0');
 		vcnt      <= (others=>'0');
 		top_frame <= '0';
-	else 
-		if rising_edge(clock_vid) then
-			if pix_ena = '1' then
-		
-				hcnt <= hcnt + 1;
-				if hcnt = 633 then
-					hcnt <= (others=>'0');
-					vcnt <= vcnt + 1;
-					if (vcnt = 524 and tv15Khz_mode = '0') or (vcnt = 263 and tv15Khz_mode = '1') then
-						vcnt <= (others=>'0');
-						top_frame <= not top_frame;
-					end if;
+	elsif rising_edge(clock_vid) then
+		if pix_ena = '1' then
+
+			hcnt <= hcnt + 1;
+			if hcnt = 633 then
+				hcnt <= (others=>'0');
+			end if;
+			if hcnt = 633 then -- TODO: Should be 511, but then need to adjust sprite machine
+				vcnt <= vcnt + 1;
+				if (vcnt = 511 and tv15Khz_mode = '0') or (vcnt = 255 and tv15Khz_mode = '1') then
+					vcnt <= (others=>'0');
+					top_frame <= not top_frame;
 				end if;
-			
-				if tv15Khz_mode = '0' then 
-							--	progessive mode
-				
+			end if;
+
+			if tv15Khz_mode = '0' then 
+				--	progessive mode
+
 				if vcnt = 490-1 then video_vs <= '0'; end if; -- front porch 10
 				if vcnt = 492-1 then video_vs <= '1'; end if; -- sync pulse   2
 																			 -- back porch  33 
-																		 
+
 				if hcnt = 512+13-8 then video_hs <= '0'; end if;  -- front porch 16/25*20 = 13
 				if hcnt = 512+90-8 then video_hs <= '1'; end if;  -- sync pulse  96/25*20 = 77
 																				  -- back porch  48/25*20 = 38
 				video_blankn <= '0';
-				if hcnt >= 2 and  hcnt < 514 and
-					vcnt >= 1 and  vcnt < 481 then video_blankn <= '1';end if;
-				
-				else    -- interlaced mode
-				 
+				if hcnt >= 0 and  hcnt < 512 and
+					vcnt >= 0 and  vcnt < 480 then video_blankn <= '1';end if;
+
+			else    -- interlaced mode
+
 				if hcnt = 530 then 
 					hs_cnt <= (others => '0');
 					if (vcnt = 240) then
@@ -442,17 +403,20 @@ begin
 					else
 						vs_cnt <= vs_cnt +1;
 					end if;
+
+					if vcnt = 250 then video_vs <= '0'; end if;
+					if vcnt = 253 then video_vs <= '1'; end if;
+
 				else 
 					hs_cnt <= hs_cnt + 1;
 				end if;
-				
-				video_blankn <= '0';				
-				if hcnt >= 2 and  hcnt < 514 and
-					vcnt >= 1 and  vcnt < 241 then video_blankn <= '1';end if;
 
-				
-				if    hs_cnt =  0 then hsync0 <= '0';
-				elsif hs_cnt = 47 then hsync0 <= '1';
+				video_blankn <= '0';				
+				if hcnt >= 0 and  hcnt < 512 and
+					vcnt >= 0 and  vcnt < 240 then video_blankn <= '1';end if;
+
+				if    hs_cnt =  0 then hsync0 <= '0'; video_hs <= '0';
+				elsif hs_cnt = 47 then hsync0 <= '1'; video_hs <= '1';
 				end if;
 
 				if    hs_cnt =      0  then hsync1 <= '0';
@@ -460,14 +424,13 @@ begin
 				elsif hs_cnt = 317+ 0  then hsync1 <= '0';
 				elsif hs_cnt = 317+23  then hsync1 <= '1';
 				end if;
-		
+
 				if    hs_cnt =      0  then hsync2 <= '0';
 				elsif hs_cnt = 317-47  then hsync2 <= '1';
 				elsif hs_cnt = 317     then hsync2 <= '0';
 				elsif hs_cnt = 634-47  then hsync2 <= '1';
 				end if;
 
-				
 				if    hs_cnt =      0  then hsync3 <= '0';
 				elsif hs_cnt =     23  then hsync3 <= '1';
 				elsif hs_cnt = 317     then hsync3 <= '0';
@@ -479,8 +442,7 @@ begin
 				elsif hs_cnt = 317     then hsync4 <= '0';
 				elsif hs_cnt = 317+23  then hsync4 <= '1';
 				end if;
-				
-				
+
 				if     vs_cnt =  1 then video_csync <= hsync1;
 				elsif  vs_cnt =  2 then video_csync <= hsync1;
 				elsif  vs_cnt =  3 then video_csync <= hsync1;
@@ -496,68 +458,34 @@ begin
 				elsif  vs_cnt = 11 then video_csync <= hsync0;
 				else                    video_csync <= hsync0;
 				end if;
-				
-				
-				end if;
 
 			end if;
 		end if;
 	end if;
 end process;
 
---------------------
--- players inputs --
---------------------
---READ8_MEMBER(mcr_dpoker_state::ip0_r){
---	// d0: Coin-in Hit
---	// d1: Coin-in Release
---	// d2: Coin-out Up
---	// d3: Coin-out Down
---	// d6: Coin-drop Hit
---	// d7: Coin-drop Release
---	uint8_t p0 = ioport("ssio:IP0")->read();
---	p0 |= (m_coin_status >> 1 & 1);
---	p0 ^= (p0 << 1 & 0x80) | m_coin_status;
---	return p0;}
--- p0 <= input_0;
-input_0 <= '1' & not COIN2 & not GAMBLE_OUT & not GAMBLE_IN & "111" & not COIN1;
-input_1 <= not STAND & not CANCEL & not DEAL & not HOLD5 & not HOLD4 & not HOLD3 & not HOLD2 & not HOLD1;
-input_2 <= x"FF";                    -- only in test mode input test
-input_3 <= not bgcolor & "1111111";  -- Background Color, Currency, Cards After 5th Coin, Unused, Unused, Novelty, Music, Hopper
-input_4 <= x"FF";                    -- Unused
-
 ------------------------------------------
 -- cpu data input with address decoding --
 ------------------------------------------
-cpu_di <= cpu_rom_do   		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else      -- 0000-6FFF
-			 wram_do     		when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"7" else      -- 7000-7FFF
-			 mram_do          when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1000000" else -- 8000-81FF
-			 sp_ram_cache_do  when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1111000" else -- sprite ram  0xF000-0xF1FF
-			 bg_ram_do        when cpu_mreq_n = '0' and cpu_addr(15 downto 10) = "111111"  else -- video ram   0xFC00-0xFFFF
-			 ctc_controler_do when cpu_ioreq_n = '0' and cpu_m1_n = '0'                    else -- ctc ctrl (interrupt vector)
-			 ssio_do          when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = X"0"  else
- 			 ctc_counter_3_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else
- 			 ctc_counter_2_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else
- 			 ctc_counter_1_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else
- 			 ctc_counter_0_do when cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else
-   		 X"FF";
-		 
+cpu_di <= cpu_rom_do      when cpu_mreq_n = '0' and cpu_addr(15 downto 12) < X"7" else      -- 0000-6FFF
+          wram_do         when cpu_mreq_n = '0' and cpu_addr(15 downto 12) = X"7" else      -- 7000-7FFF
+          sp_ram_cache_do when cpu_mreq_n = '0' and cpu_addr(15 downto  9) = "1111000" else -- sprite ram  0xF000-0xF1FF
+          bg_ram_do       when cpu_mreq_n = '0' and cpu_addr(15 downto 10) = "111111"  else -- video ram   0xFC00-0xFFFF
+          ctc_do          when cpu_int_ack_n = '0' or ctc_ce = '1'                     else -- ctc (interrupt vector or counter data)
+          ssio_do         when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = X"0"  else
+          X"FF";
+
 ------------------------------------------------------------------------
 -- Misc registers : ctc write enable / interrupt acknowledge
 ------------------------------------------------------------------------
-ctc_counter_3_trg <= '1' when (vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')else '0';
-ctc_counter_3_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F3" else '0';
-ctc_counter_2_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F2" else '0';
-ctc_counter_1_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F1" else '0';
-ctc_counter_0_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0';
-ctc_controler_we  <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_addr(7 downto 0) = X"F0" else '0'; -- F0
-ctc_int_ack       <= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '0' else '0';
+cpu_int_ack_n     <= cpu_ioreq_n or cpu_m1_n;
+ctc_ce            <= '1' when cpu_ioreq_n = '0' and cpu_addr(7 downto 4) = x"F" else '0';
+ctc_counter_3_trg <= '1' when top_frame = '1' and ((vcnt = 246 and tv15Khz_mode = '1') or (vcnt = 493 and tv15Khz_mode = '0')) else '0';
 
 ------------------------------------------
 -- write enable / ram access from CPU --
 ------------------------------------------
 wram_we                 <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"7" else '0';
-mram_we                 <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 9) = "1000000" else '0';
 sp_ram_cache_we         <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto  9) = "1111000" else '0';
 bg_ram_we               <= '1' when cpu_mreq_n = '0' and cpu_wr_n = '0' and cpu_addr(15 downto 10) = "111111" else '0';
 sp_ram_cache_cpu_access <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_rd_n = '0') and cpu_addr(15 downto  9) = "1111000" else '0';
@@ -565,12 +493,35 @@ bg_ram_cpu_access       <= '1' when cpu_mreq_n = '0' and (cpu_wr_n = '0' or cpu_
 
 ssio_iowe <= '1' when cpu_wr_n = '0' and cpu_ioreq_n = '0' else '0';
 
+--------------------------------
+-- dpoker lamps & coin hopper --
+--------------------------------
+process (reset,clock_vid)
+begin
+	if reset = '1' then
+		lamps <= (others => '0');
+		hopper <= '0';
+	elsif rising_edge(clock_vid) then
+		if cpu_wr_n = '0' and cpu_ioreq_n = '0' and cpu_wr_n = '0' then
+			if cpu_addr(7 downto 0) = x"2c" then lamps <= cpu_do; end if;
+			if cpu_addr(7 downto 0) = x"34" then hopper <= cpu_do(6); end if;
+		end if;
+	end if;
+end process;
+
+lamp_on <= '1' when 
+  (hcnt(8 downto 4) >= 4  and hcnt(8 downto 4) <= 8  and lamps(3) = '1') or -- STAND
+  (hcnt(8 downto 4) >= 10 and hcnt(8 downto 4) <= 15 and lamps(2) = '1') or -- CANCEL
+  (hcnt(8 downto 4) >= 18 and hcnt(8 downto 4) <= 21 and lamps(1) = '1') or -- DEAL
+  (hcnt(8 downto 4) >= 24 and hcnt(8 downto 4) <= 27 and lamps(7 downto 4)&lamps(0) /= "00000") -- HOLD
+  else '0';
+
 ----------------------
 --- sprite machine ---
 ----------------------
 
---vflip <= (240-vcnt(8 downto 0)) & top_frame when tv15Khz_mode = '1' else 480-vcnt; -- apply mirror flip
-vflip <= vcnt; -- don't apply mirror flip
+vflip_inv <= (240-vcnt(8 downto 0)) & top_frame when tv15Khz_mode = '1' else 480-vcnt; -- apply mirror flip
+vflip <= vflip_inv when vflip_sel = '0' else vcnt;
 
 sp_buffer_sel <= vflip(1) when tv15Khz_mode = '1' else vflip(0);
 
@@ -585,7 +536,7 @@ begin
 			sp_on_line <= '0';
 			sp_done <= '0';
 		end if;
-			
+
 		if sp_done = '0' then
 			sp_input_phase <= sp_input_phase + 1 ;
 			sp_hcnt <= sp_hcnt + 1;
@@ -616,12 +567,12 @@ begin
 			end case;
 			sp_mux_roms <= sp_input_phase(2 downto 1);
 		end if;
-		
+
 		if hcnt(0) = '0' then
 			sp_buffer_ram1_do_r <= sp_buffer_ram1_do;
 			sp_buffer_ram2_do_r <= sp_buffer_ram2_do;
 		end if;
-		
+
 	end if;
 
 	end if;
@@ -630,7 +581,7 @@ end process;
 sp_ram_cache_addr <= cpu_addr(8 downto 0) when sp_ram_cache_cpu_access = '1' else sp_ram_addr;
 
 
-move_buf    <= '1' when (vcnt(8 downto 1) = 250 and tv15Khz_mode = '0') or (vcnt(7 downto 1) = 125 and tv15Khz_mode = '1') else '0'; -- line 500-501
+move_buf    <= '1' when top_frame ='1' and ((vcnt(8 downto 1) = 250 and tv15Khz_mode = '0') or (vcnt(7 downto 1) = 125 and tv15Khz_mode = '1')) else '0'; -- line 500-501
 
 sp_ram_addr <= vcnt(0) & hcnt(8 downto 1) when move_buf = '1' else sp_cnt & sp_input_phase(1 downto 0);
 sp_ram_we   <= hcnt(0) when move_buf = '1' else '0';
@@ -643,53 +594,62 @@ sp_vflip <= (others => sp_code(7));
 sp_code_line <= sp_code(5 downto 0) & (sp_line xor sp_vflip) & (sp_byte_cnt xor sp_hflip); -- sprite graphics roms addr
 
 sp_code_line_mux <= "00" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "01") or
-															(sp_hflip(0) = '1' and sp_mux_roms = "00") else
-					     "01" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "10") or
-															(sp_hflip(0) = '1' and sp_mux_roms = "11") else
-					     "10" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "11") or
-															(sp_hflip(0) = '1' and sp_mux_roms = "10") else
-					     "11" & sp_code_line;-- when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
-															--(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
-															
+                          (sp_hflip(0) = '1' and sp_mux_roms = "00") else
+                    "01" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "10") or
+                          (sp_hflip(0) = '1' and sp_mux_roms = "11") else
+                    "10" & sp_code_line when (sp_hflip(0) = '0' and sp_mux_roms = "11") or
+                          (sp_hflip(0) = '1' and sp_mux_roms = "10") else
+                    "11" & sp_code_line;-- when (sp_hflip(0) = '0' and sp_mux_roms = "00") or
+                          --(sp_hflip(0) = '1' and sp_mux_roms = "01") ;
+
 sp_graphx_flip <= sp_graphx_do when sp_hflip(0) = '0' else
-						sp_graphx_do(3 downto 0) & sp_graphx_do(7 downto 4);		
+                  sp_graphx_do(3 downto 0) & sp_graphx_do(7 downto 4);
 
 sp_buffer_ram1_di   <= sp_buffer_ram1_do or sp_graphx_flip       when sp_buffer_sel = '1' else "00000000";
-sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '1' else hcnt(8 downto 1) + X"03";
+sp_buffer_ram1_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '1' else hcnt(8 downto 1) + spr_offset;
 sp_buffer_ram1_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when sp_buffer_sel = '1' else hcnt(0);
 
 sp_buffer_ram2_di   <= sp_buffer_ram2_do or sp_graphx_flip       when sp_buffer_sel = '0' else "00000000";
-sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '0' else hcnt(8 downto 1) + X"03";
+sp_buffer_ram2_addr <= sp_hcnt(8 downto 1)                       when sp_buffer_sel = '0' else hcnt(8 downto 1) + spr_offset;
 sp_buffer_ram2_we   <= not sp_hcnt(0) and sp_on_line and pix_ena when sp_buffer_sel = '0' else hcnt(0);
 
 sp_vid <= sp_buffer_ram1_do_r(7 downto 4) when (sp_buffer_sel = '0') and (hcnt(0) = '1') else
-		    sp_buffer_ram1_do_r(3 downto 0) when (sp_buffer_sel = '0') and (hcnt(0) = '0') else
-		    sp_buffer_ram2_do_r(7 downto 4) when (sp_buffer_sel = '1') and (hcnt(0) = '1') else
-			 sp_buffer_ram2_do_r(3 downto 0);-- when (sp_buffer_sel = '1') and (hcnt(0) = '0');			  
+          sp_buffer_ram1_do_r(3 downto 0) when (sp_buffer_sel = '0') and (hcnt(0) = '0') else
+          sp_buffer_ram2_do_r(7 downto 4) when (sp_buffer_sel = '1') and (hcnt(0) = '1') else
+          sp_buffer_ram2_do_r(3 downto 0);-- when (sp_buffer_sel = '1') and (hcnt(0) = '0');
 
 --------------------
 --- char machine ---
 --------------------
 bg_ram_addr <= cpu_addr(9 downto 0) when bg_ram_cpu_access = '1' else vflip(8 downto 4) & hcnt(8 downto 4);
-bg_code_line <=  bg_ram_do & vflip(3 downto 1) & hcnt(3);
+process (bg_ram_do, vflip, hcnt, dpoker_lamp, lamp_text)
+begin
+	if vflip(8 downto 4) = 1 and dpoker_lamp = '1' then
+	  -- lamp text in line 1
+		bg_code_line <= lamp_text(to_integer(unsigned(hcnt(8 downto 4)))) & vflip(3 downto 1) & hcnt(3);
+	else
+		bg_code_line <=  bg_ram_do & vflip(3 downto 1) & hcnt(3);
+	end if;
+end process;
 
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
-		if pix_ena = '1' then
---		if hcnt(0) = '1' then
+
+		if hcnt(0) = '1' then
 			case hcnt(2 downto 1) is
 				when "00"   => bg_palette_addr <= bg_graphx2_do(7 downto 6) & bg_graphx1_do(7 downto 6);
 				when "01"   => bg_palette_addr <= bg_graphx2_do(5 downto 4) & bg_graphx1_do(5 downto 4);
 				when "10"   => bg_palette_addr <= bg_graphx2_do(3 downto 2) & bg_graphx1_do(3 downto 2);
 				when others => bg_palette_addr <= bg_graphx2_do(1 downto 0) & bg_graphx1_do(1 downto 0);
 			end case;
-		end if;		
+		end if;
+
 	end if;
 end process;
-	
+
 bg_vid <= bg_palette_addr;
-	
+
 ---------------------------
 -- mux char/sprite video --
 ---------------------------
@@ -706,79 +666,28 @@ sp_palette_red_we    <= '1' when palette_F8_we = '1' and cpu_addr(4) = '1' else 
 sp_palette_green_we  <= '1' when palette_F4_we = '1' and cpu_addr(4) = '1' else '0'; -- 0xF410-1F d0-d3 ( G8)
 sp_palette_blue_we   <= '1' when palette_F4_we = '1' and cpu_addr(4) = '1' else '0'; -- 0xF410-1F d4-d7 (F10)
 
---process (clock_vid)
---begin
---	if rising_edge(clock_vid) then
---		if sp_vid = "0000" then 
---			video_r <= bg_palette_red_do;
---			video_g <= bg_palette_green_do;
---			video_b <= bg_palette_blue_do;
---		else
---			video_r <= sp_palette_red_do;
---			video_g <= sp_palette_green_do;
---			video_b <= sp_palette_blue_do;
---		end if;
---	end if;
---end process;		
-
 process (clock_vid)
 begin
 	if rising_edge(clock_vid) then
 		if sp_vid = "0000" then 
-			video_r <= bg_palette_red_do;
-			video_g <= bg_palette_green_do;
-			video_b <= bg_palette_blue_do;
+			if vflip(8 downto 4) = 1 and dpoker_lamp = '1' and bg_vid /= x"1" and lamp_on = '0' then
+				-- grey text for dark lamps in dpoker
+				video_r <= "0011";
+				video_g <= "0011";
+				video_b <= "0011";
+			else
+				video_r <= bg_palette_red_do;
+				video_g <= bg_palette_green_do;
+				video_b <= bg_palette_blue_do;
+			end if;
 		else
 			video_r <= sp_palette_red_do;
 			video_g <= sp_palette_green_do;
 			video_b <= sp_palette_blue_do;
 		end if;
-		
-		if hcnt(9 downto 4) >= 32 then -- set lamp text line colors
-		
-			if show_lamps = '1' then 
-			  if (vflip >  1*16 and vflip <  4*16) then 
-					video_g <= "0000";
-					video_b <= "1110";
-					video_r <= "0000";			  
-			  elsif
-				  (vflip >  4*16 and vflip <  8*16 and Lamp_Hold = '1') or
-				  (vflip >  8*16 and vflip < 14*16 and Lamp_Deal = '1') or
-				  (vflip > 14*16 and vflip < 18*16 and Lamp_Cancel = '1') or
-				  (vflip > 18*16 and vflip < 26*16 and Lamp_Stand = '1') then
-					video_g <= "0000";
-					video_b <= "0000";
-					video_r <= "1111";
-				else
-					video_g <= "0100";  -- light grey for light OFF text
-					video_b <= "0100";
-					video_r <= "0100";
-				end if;
-			end if;
-					
-		else
-		
---			case ch_color is
---				when "01" =>
---					video_g <= "111";
---					video_b <= "000";
---					video_r <= "000";
---				when "10" =>
---					video_g <= "000";
---					video_b <= "111";
---					video_r <= "000";
---				when "11" =>
---					video_g <= "111";
---					video_b <= "111";
---					video_r <= "111";
---				when others => null;	
---			end case;
-
-		end if;
-		
 	end if;
-end process;
-		
+end process;		
+
 ------------------------------
 -- components & sound board --
 ------------------------------
@@ -807,92 +716,28 @@ port map(
   DO      => cpu_do
 );
 
--- CTC interrupt controler Z80-CTC (MK3882)
-ctc_controler : entity work.ctc_controler
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_controler_we,
- int_ack   => ctc_int_ack,
-
- int_pulse_0 => ctc_counter_0_int,
- int_pulse_1 => ctc_counter_1_int,
- int_pulse_2 => ctc_counter_2_int,
- int_pulse_3 => ctc_counter_3_int,
- 
- d_out     => ctc_controler_do,
- int_n     => cpu_irq_n
-);
-
-ctc_counter_0 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_0_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_0_do,
- zc_to     => open, -- zc/to #0 (pin 7) connected to clk_trg #1 (pin 22) on schematics (seems to be not used)
- int_pulse => ctc_counter_0_int
- 
-);
-
-ctc_counter_1 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_1_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_1_do,
- zc_to     => open,
- int_pulse => ctc_counter_1_int
- 
-);
-
-ctc_counter_2 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_2_we,
- 
- clk_trg   => '0',
- 
- d_out     => ctc_counter_2_do,
- zc_to     => open, -- used for spin angle decoder simulation
- int_pulse => ctc_counter_2_int
- 
-);
-
-ctc_counter_3 : entity work.ctc_counter
-port map(
- clock     => clock_vid,
- clock_ena => cpu_ena,
- reset     => reset,
- 
- d_in      => cpu_do,
- load_data => ctc_counter_3_we,
- 
- clk_trg   => ctc_counter_3_trg,
- 
- d_out     => ctc_counter_3_do,
- zc_to     => open,
- int_pulse => ctc_counter_3_int
- 
+-- Z80-CTC (MK3882)
+z80ctc : entity work.z80ctc_top
+port map (
+	clock     => clock_vid,
+	clock_ena => cpu_ena,
+	reset     => reset,
+	din       => cpu_do,
+	cpu_din   => cpu_di,
+	dout      => ctc_do,
+	ce_n      => not ctc_ce,
+	cs        => cpu_addr(1 downto 0),
+	m1_n      => cpu_m1_n,
+	iorq_n    => cpu_ioreq_n,
+	rd_n      => cpu_rd_n,
+	int_n     => cpu_irq_n,
+	trg0      => '0',
+	to0       => ctc_counter_1_trg,
+	trg1      => ctc_counter_1_trg,
+	to1       => open,
+	trg2      => '0',
+	to2       => ctc_zc_to_2,
+	trg3      => ctc_counter_3_trg
 );
 
 -- cpu program ROM 0x0000-0x6FFF
@@ -907,7 +752,7 @@ cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downt
 --);
 
 -- working RAM   0x7000-0x77FF
-wram : entity work.gen_ram
+wram : entity work.cmos_ram
 generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_vidn,
@@ -915,17 +760,6 @@ port map(
  addr => cpu_addr(10 downto 0),
  d    => cpu_do,
  q    => wram_do
-);
-
--- meter ram, 0x8000 - 0x81ff
-meter_ram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 9)
-port map(
- clk  => clock_vidn,
- we   => mram_we,
- addr => cpu_addr(8 downto 0),
- d    => cpu_do,
- q    => mram_do
 );
 
 -- video RAM   0xFC00-0xFFFF
@@ -984,58 +818,66 @@ port map(
 );
 
 -- background graphics ROM G4
-bg_graphics_1 : entity work.draw_bg_bits_1
+--bg_graphics_1 : entity work.kick_bg_bits_1
+--port map(
+-- clk  => clock_vidn,
+-- addr => bg_code_line,
+-- data => bg_graphx1_do
+--);
+bg_graphics_1 : entity work.dpram
+generic map( dWidth => 8, aWidth => 12)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx1_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx1_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(11 downto 0),
+ we_b   => bg_graphics_1_we,
+ d_b    => dl_data
 );
-
+bg_graphics_1_we <= '1' when dl_wr = '1' and dl_addr(16 downto 12) = "01000" else '0';
+ 
 -- background graphics ROM G5
-bg_graphics_2 : entity work.draw_bg_bits_2
+--bg_graphics_2 : entity work.kick_bg_bits_2
+--port map(
+-- clk  => clock_vidn,
+-- addr => bg_code_line,
+-- data => bg_graphx2_do
+--);
+bg_graphics_2 : entity work.dpram
+generic map( dWidth => 8, aWidth => 12)
 port map(
- clk  => clock_vidn,
- addr => bg_code_line,
- data => bg_graphx2_do
+ clk_a  => clock_vidn,
+ addr_a => bg_code_line,
+ q_a    => bg_graphx2_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(11 downto 0),
+ we_b   => bg_graphics_2_we,
+ d_b    => dl_data
 );
+bg_graphics_2_we <= '1' when dl_wr = '1' and dl_addr(16 downto 12) = "01001" else '0';
 
 -- sprite graphics ROM 1E/1D/1B/1A
-sprite_graphics : entity work.draw_sp_bits
+--sprite_graphics : entity work.kick_sp_bits
+--port map(
+-- clk  => clock_vidn,
+-- addr => sp_code_line_mux,
+-- data => sp_graphx_do
+--);
+sprite_graphics : entity work.dpram
+generic map( dWidth => 8, aWidth => 15)
 port map(
- clk  => clock_vidn,
- addr => sp_code_line_mux,
- data => sp_graphx_do
+ clk_a  => clock_vidn,
+ addr_a => sp_code_line_mux,
+ q_a    => sp_graphx_do,
+ clk_b  => clock_vid,
+ addr_b => dl_addr(14 downto 0),
+ we_b   => sp_graphics_we,
+ d_b    => dl_data
 );
 
---kick_sound_board 
-sound_board : entity work.kick_sound_board
-port map(
- clock_40    => clock_40,
- reset       => reset,
- 
- main_cpu_addr => cpu_addr(7 downto 0),
- 
- ssio_iowe => ssio_iowe,
- ssio_di   => cpu_do,
- ssio_do   => ssio_do,
- 
- input_0 => input_0,
- input_1 => input_1,
- input_2 => input_2,
- input_3 => input_3,
- input_4 => input_4,
- 
- separate_audio => separate_audio,
- audio_out_l    => audio_out_l,
- audio_out_r    => audio_out_r,
+sp_graphics_we <= '1' when dl_wr = '1' and dl_addr(16 downto 15) = "00" else '0';
 
- cpu_rom_addr   => snd_rom_addr,
- cpu_rom_do     => snd_rom_do,
- cpu_rom_rd     => snd_rom_rd,
-
- dbg_cpu_addr => open --dbg_cpu_addr
-);
- 
 -- background palette red
 bg_palette_red : entity work.gen_ram
 generic map( dWidth => 4, aWidth => 4)
@@ -1100,6 +942,34 @@ port map(
  addr => palette_addr,
  d    => cpu_do(7 downto 4),
  q    => sp_palette_blue_do
+);
+
+--kick_sound_board
+sound_board : entity work.kick_sound_board
+port map(
+ clock_40    => clock_40,
+ reset       => reset,
+ 
+ main_cpu_addr => cpu_addr(7 downto 0),
+ 
+ ssio_iowe => ssio_iowe,
+ ssio_di   => cpu_do,
+ ssio_do   => ssio_do,
+
+ input_0 => input_0,
+ input_1 => input_1,
+ input_2 => input_2,
+ input_3 => input_3,
+
+ separate_audio => separate_audio,
+ audio_out_l    => audio_out_l,
+ audio_out_r    => audio_out_r,
+
+ cpu_rom_addr   => snd_rom_addr,
+ cpu_rom_do     => snd_rom_do,
+ cpu_rom_rd     => snd_rom_rd,
+
+ dbg_cpu_addr => open --dbg_cpu_addr
 );
 
 end struct;

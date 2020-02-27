@@ -1,16 +1,29 @@
 ---------------------------------------------------------------------------------
--- 
--- Arcade: Draw Poker port to MiST by Gehstock
--- x November 2019
--- 
--- VGA Only
-
-Controls : 	Gamble In/Out 	- Arrow Up/Down
-		Hold Card 1-5 	- 1-5
-		Deal 		- Space
-		Stand		- left ALT
-		Cancel		- left Ctrl
-		Insert Coin	- ESC
+--
+-- Arcade: Midway MCR1 (Kick/man, Solar Fox, Draw Poker)
+-- Based on Kickman by Dar port to MiST by Gehstock
+-- 3 November 2019
+--
+-- 15kHz interlaced/VGA
+--
+-- Generic controls:
+-- ESC/5/6 - coin
+-- 1,2     - start 1,2 players
+--
+-- Draw Poker controls:
+-- Button A (LCtrl) - Stand
+-- Button B (LAlt)  - Cancel
+-- Button C (Space) - Deal
+-- Z,X,C,V,B        - Hold
+--
+-- Usage:
+-- Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
+-- Example: mra -A -z /path/to/mame/roms Kick.mra
+-- Copy the RBF and the ARC files to the same folder.
+-- Copy the ROM files to the root of the SD Card.
+--
+-- MRA utilty: https://github.com/sebdel/mra-tools-c
+--
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Kick (Midway MCR) by Dar (darfpga@aol.fr) (19/10/2019)
 -- http://darfpga.blogspot.fr
