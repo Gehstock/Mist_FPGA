@@ -2,7 +2,16 @@
 -- 
 -- Arcade: Galaxian port to MiST by Gehstock
 -- 18 December 2017
--- 
+--
+--
+-- Usage:
+-- Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
+-- Example: mra -A -z /path/to/mame/roms Galaxian.mra
+-- Copy the RBF and the ARC files to the same folder.
+-- Copy the ROM files to the root of the SD Card.
+--
+-- MRA utilty: https://github.com/sebdel/mra-tools-c
+--
 ---------------------------------------------------------------------------------
 -- A simulation model of Galaxian hardware
 -- Copyright(c) 2004 Katsumi Degawa

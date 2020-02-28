@@ -22,9 +22,6 @@ library ieee;
 --  use UNISIM.Vcomponents.all;
 
 entity MC_COL_PAL is
-generic (
-	name         : string
-);
 port (
 	I_CLK_12M    : in  std_logic;
 	I_CLK_6M     : in  std_logic;
@@ -32,6 +29,10 @@ port (
 	I_COL        : in  std_logic_vector(2 downto 0);
 	I_C_BLnX     : in  std_logic;
 	I_H_BLnX     : in  std_logic;
+
+	I_DL_ADDR    : in  std_logic_vector(15 downto 0);
+	I_DL_DATA    : in  std_logic_vector(7 downto 0);
+	I_DL_WR      : in  std_logic;
 
 	O_C_BLXn     : out std_logic;
 	O_H_BLXn     : out std_logic;
@@ -50,6 +51,8 @@ architecture RTL of MC_COL_PAL is
 	signal W_6M_CLR     : std_logic := '0';
 	signal W_6M_HBL     : std_logic := '0';
 	signal W_6M_HBLCLR  : std_logic := '0';
+
+	signal W_COL_ROM_WR : std_logic := '0';
 
 begin
 	W_6M_DI      <= I_COL(2 downto 0) & I_VID(1 downto 0) & not (I_VID(0) or I_VID(1)) & I_C_BLnX;
@@ -79,15 +82,26 @@ begin
 		end if;
 	end process;
 
-	clut : entity work.ROM_6L
-	generic map (
-		name => name
-	)
-	port map (
-		CLK  => I_CLK_12M,
-		ADDR => W_6M_DO(6 downto 2),
-		DATA => W_COL_ROM_DO
+--	clut : entity work.ROM_6L
+--	port map (
+--		CLK  => I_CLK_12M,
+--		ADDR => W_6M_DO(6 downto 2),
+--		DATA => W_COL_ROM_DO
+--	);
+
+	clut : work.dpram generic map (5,8)
+	port map
+	(
+		clock_a   => I_CLK_12M,
+		wren_a    => W_COL_ROM_WR,
+		address_a => I_DL_ADDR(4 downto 0),
+		data_a    => I_DL_DATA,
+
+		clock_b   => I_CLK_12M,
+		address_b => W_6M_DO(6 downto 2),
+		q_b       => W_COL_ROM_DO
 	);
+        W_COL_ROM_WR <= '1' when I_DL_WR = '1' and I_DL_ADDR(15 downto 5) = X"60"&"000" else '0'; -- 6000-601F
 
 	---    VID OUT     --------------------------------------------------------
 	O_R <= W_COL_ROM_DO(2 downto 0);

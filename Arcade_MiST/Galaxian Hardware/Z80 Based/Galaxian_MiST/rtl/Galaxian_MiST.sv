@@ -38,34 +38,16 @@ module Galaxian_MiST(
 
 `include "rtl\build_id.v" 
 
-// Choose one for name/built-in ROMset/features
 `define NAME "GALAXIAN"
-//`define NAME "MOONCR"
-//`define NAME "AZURIAN"
-//`define NAME "BLACKHOLE"
-//`define NAME "CATACOMB"
-//`define NAME "CHEWINGG"
-//`define NAME "DEVILFSH"
-//`define NAME "KINGBAL"
-//`define NAME "MRDONIGH"
-//`define NAME "OMEGA"
-//`define NAME "ORBITRON"
-//`define NAME "PISCES"
-//`define NAME "UNIWARS"
-//`define NAME "VICTORY"
-//`define NAME "WAROFBUG"
-//`define NAME "ZIGZAG" -- doesn't work, video gen issues
-//`define NAME "TRIPLEDR"
-
+wire [6:0] core_mod;
 reg rotate_dir;
 
 always @(*) begin
-	if (`NAME == "MOONCR" ||
-	    `NAME == "DEVILFSH" ||
-			`NAME == "KINGBAL" ||
-			`NAME == "OMEGA" ||
-			`NAME == "ORBITRON" ||
-			`NAME == "VICTORY")
+	if (core_mod == 7'd1  || // "MOONCR"
+	    core_mod == 7'd6  || // "DEVILFSH"
+	    core_mod == 7'd9  || // "OMEGA"
+	    core_mod == 7'd10 || // "ORBITRON"
+	    core_mod == 7'd13)   // "VICTORY"
 	begin
 		rotate_dir = 1'b0;
 	end else begin
@@ -75,12 +57,17 @@ end
 
 localparam CONF_STR = {
 	`NAME,";;",
-	"O2,Rotate Controls,Off,On;",
-	"O34,Scanlines,Off,25%,50%,75%;",
-	"O5,Blend,Off,On;",
+	"O1,Rotate Controls,Off,On;",
+	"O23,Scanlines,Off,25%,50%,75%;",
+	"O4,Blend,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v2.00.",`BUILD_DATE
 };
+
+wire       rotate    = status[1];
+wire [1:0] scanlines = status[3:2];
+wire       blend     = status[4];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -94,7 +81,7 @@ pll pll(
 	.c2(clk_12),
 	.c3(clk_6)
 	);
-	
+
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -102,20 +89,85 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_12         ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
+/* ROM Structure
+0000 - 3FFF PGM ROM 16k
+4000 - 4FFF ROM 1K   4k
+5000 - 5FFF ROM 1H   4k
+6000 - 601F ROM 6L  32b
+*/
+
+wire        ioctl_downl;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
+
+data_io data_io(
+	.clk_sys       ( clk_12       ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
+	.ioctl_download( ioctl_downl  ),
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
+);
+
 wire  [7:0] audio_a, audio_b, audio_c;
 wire [10:0] audio = {1'b0, audio_b, 2'b0} + {3'b0, audio_a} + {2'b00, audio_c, 1'b0};
-wire 			hs, vs;
-wire 			hb, vb;
+wire        hs, vs;
+wire        hb, vb;
 wire        blankn = ~(hb | vb);
 wire  [2:0] r,g,b;
 
-galaxian #(.name(`NAME)) galaxian
+galaxian galaxian
 (
 	.W_CLK_12M(clk_12),
 	.W_CLK_6M(clk_6),
 	.I_RESET(status[0] | buttons[1]),
-	.P1_CSJUDLR({btn_coin,btn_one_player,m_fire,m_up,m_down,m_left,m_right}),
-	.P2_CSJUDLR({1'b0,btn_two_players,m_fire,m_up,m_down,m_left,m_right}),
+	.I_HWSEL(core_mod),
+
+	.I_DL_ADDR(ioctl_addr[15:0]),
+	.I_DL_WR(ioctl_wr),
+	.I_DL_DATA(ioctl_dout),
+
+	.I_TABLE(status[5]),
+	.I_TEST(status[6]),
+	.I_SERVICE(status[7]),
+	.I_SW1_67(status[15:14]),
+	.I_DIP(status[23:16]),
+	.P1_CSJUDLR({m_coin1,m_one_player,m_fireA,m_up,m_down,m_left,m_right}),
+	.P2_CSJUDLR({m_coin2,m_two_players,m_fire2A,m_up2,m_down2,m_left2,m_right2}),
+
 	.W_R(r),
 	.W_G(g),
 	.W_B(b),
@@ -123,9 +175,11 @@ galaxian #(.name(`NAME)) galaxian
 	.W_V_SYNC(vs),
 	.HBLANK(hb),
 	.VBLANK(vb),
+
 	.W_SDAT_A(audio_a),
 	.W_SDAT_B(audio_b),
 	.W_SDAT_C(audio_c)
+
 );
 
 mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
@@ -144,32 +198,12 @@ mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.ce_divider(1'b1),
-	.rotate({rotate_dir,status[2]}),
+	.rotate({rotate_dir,rotate}),
 	.scandoubler_disable(scandoublerD),
-	.scanlines(status[4:3]),
-	.blend(status[5]),
-	.ypbpr(ypbpr)
-	);
-	
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_12         ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.scanlines(scanlines),
+	.blend(blend),
+	.ypbpr(ypbpr),
+	.no_csync(no_csync)
 	);
 
 dac #(11)
@@ -179,44 +213,25 @@ dac(
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
-	
-//                                                         Rotated                                                                                        Normal
-wire m_up     = ~status[2] ? (rotate_dir ? btn_left  | joystick_0[1] | joystick_1[1] : btn_right | joystick_0[0] | joystick_1[0] ) : btn_up    | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? (rotate_dir ? btn_right | joystick_0[0] | joystick_1[0] : btn_left  | joystick_0[1] | joystick_1[1] ) : btn_down  | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? (rotate_dir ? btn_down  | joystick_0[2] | joystick_1[2] : btn_up    | joystick_0[3] | joystick_1[3] ) : btn_left  | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? (rotate_dir ? btn_up    | joystick_0[3] | joystick_1[3] : btn_down  | joystick_0[2] | joystick_1[2] ) : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_strobe;
-wire       key_pressed;
-wire [7:0] key_code;	
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-always @(posedge clk_12) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      		<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-			'h14: btn_fire3 			<= key_pressed; // ctrl
-			'h11: btn_fire2 			<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_12      ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( {rotate_dir, 1'b1 }),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
-endmodule 	
+endmodule
