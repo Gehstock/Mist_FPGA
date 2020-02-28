@@ -28,14 +28,13 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
   use ieee.numeric_std.all;
+  use work.mc_pack.all;
 
 entity MC_VIDEO is
-  generic (
-		name          : string
-	);
 	port(
 		I_CLK_12M     : in  std_logic;
 		I_CLK_6M      : in  std_logic;
+		I_HWSEL       : in  integer;
 		I_H_CNT       : in  std_logic_vector(8 downto 0);
 		I_V_CNT       : in  std_logic_vector(7 downto 0);
 		I_H_FLIP      : in  std_logic;
@@ -53,6 +52,10 @@ entity MC_VIDEO is
 		I_VID_RAM_RD  : in  std_logic;
 		I_VID_RAM_WR  : in  std_logic;
 		I_DRIVER_WR   : in  std_logic;
+
+		I_DL_ADDR     : in  std_logic_vector(15 downto 0);
+		I_DL_DATA     : in  std_logic_vector(7 downto 0);
+		I_DL_WR       : in  std_logic;
 
 		O_C_BLnX      : out std_logic;
 		O_H_BLnX      : out std_logic;
@@ -150,6 +153,9 @@ architecture RTL of MC_VIDEO is
 	signal W_SRLD         : std_logic := '0';
 	signal W_VID_RAM_CS   : std_logic := '0';
 
+	signal W_K_ROM_WR     : std_logic := '0';
+	signal W_H_ROM_WR     : std_logic := '0';
+
 	type bank_a is array(0 to 3) of std_logic_vector(7 downto 0);
 	signal bank     : bank_a;
 	signal pisces_gfxbank : std_logic;
@@ -227,26 +233,49 @@ begin
 	);
 
 	-- 1K VID-Rom
-	k_rom : entity work.ROM_1K
-	generic map (
-		name => name
-	)
-	port map (
-		CLK  => I_CLK_12M,
-		ADDR => W_O_OBJ_ROM_A,
-		DATA => W_1K_D
+--	k_rom : entity work.ROM_1K
+--	port map (
+--		CLK  => I_CLK_12M,
+--		ADDR => W_O_OBJ_ROM_A,
+--		DATA => W_1K_D
+--	);
+	k_rom : work.dpram generic map (12,8)
+	port map
+	(
+		clock_a   => I_CLK_12M,
+		wren_a    => W_K_ROM_WR,
+		address_a => I_DL_ADDR(11 downto 0),
+		data_a    => I_DL_DATA,
+
+		clock_b   => I_CLK_12M,
+		address_b => W_O_OBJ_ROM_A,
+		q_b       => W_1K_D
 	);
 
+	W_K_ROM_WR <= '1' when I_DL_WR = '1' and I_DL_ADDR(15 downto 12) = "0100" else '0'; -- 4000-4FFF
+
 	-- 1H VID-Rom
-	h_rom : entity work.ROM_1H
-	generic map (
-		name => name
-	)
-	port map(
-		CLK  => I_CLK_12M,
-		ADDR => W_O_OBJ_ROM_A,
-		DATA => W_1H_D
+--	h_rom : entity work.ROM_1H
+--	port map(
+--		CLK  => I_CLK_12M,
+--		ADDR => W_O_OBJ_ROM_A,
+--		DATA => W_1H_D
+--	);
+
+	h_rom : work.dpram generic map (12,8)
+	port map
+	(
+		clock_a   => I_CLK_12M,
+		wren_a    => W_H_ROM_WR,
+		address_a => I_DL_ADDR(11 downto 0),
+		data_a    => I_DL_DATA,
+
+		clock_b   => I_CLK_12M,
+		address_b => W_O_OBJ_ROM_A,
+		q_b       => W_1H_D
 	);
+
+	W_H_ROM_WR <= '1' when I_DL_WR = '1' and I_DL_ADDR(15 downto 12) = "0101" else '0'; -- 5000-5FFF
 
 -----------------------------------------------------------------------------------
 
@@ -339,19 +368,24 @@ begin
 	W_OBJ_ROM_AB  <= W_OBJ_D(5 downto 0) & W_1M(3) & (W_OBJ_D(6) xor I_H_CNT(3));
 	W_OBJ_ROM_A   <= W_OBJ_ROM_AB when I_H_CNT(8) = '1' else W_VID_RAM_DOB;
 
-	rom_a : if name = "MOONCR" generate
-		W_O_OBJ_ROM_A <= '1' & bank(0)(0) & bank(1)(0) & W_OBJ_ROM_A(5 downto 0) & W_1M(2 downto 0)
-                   when (bank(2) /= X"00" and W_OBJ_ROM_A(7 downto 6) = "10") else
-                   '0' & W_OBJ_ROM_A & W_1M(2 downto 0);
-	elsif name = "DEVILFSH" generate
-		W_O_OBJ_ROM_A <=  not I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
-	elsif name = "ZIGZAG" generate
-		W_O_OBJ_ROM_A <=  I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
-	elsif name = "PISCES" or name = "UNIWARS" generate
-		W_O_OBJ_ROM_A <=  pisces_gfxbank & W_OBJ_ROM_A & W_1M(2 downto 0);
-	else generate
-		W_O_OBJ_ROM_A <= '0' & W_OBJ_ROM_A & W_1M(2 downto 0);
-	end generate;
+	rom_a : process(I_HWSEL, W_OBJ_ROM_A, W_1M, I_H_CNT, bank, pisces_gfxbank)
+	begin
+		if I_HWSEL = HW_MOONCR then
+			if (bank(2) /= X"00" and W_OBJ_ROM_A(7 downto 6) = "10") then
+				W_O_OBJ_ROM_A <= '1' & bank(0)(0) & bank(1)(0) & W_OBJ_ROM_A(5 downto 0) & W_1M(2 downto 0);
+			else
+				W_O_OBJ_ROM_A <='0' & W_OBJ_ROM_A & W_1M(2 downto 0);
+			end if;
+		elsif I_HWSEL = HW_DEVILFSH then
+			W_O_OBJ_ROM_A <=  not I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
+		elsif I_HWSEL = HW_ZIGZAG then
+			W_O_OBJ_ROM_A <=  I_H_CNT(8) & W_OBJ_ROM_A & W_1M(2 downto 0);
+		elsif I_HWSEL = HW_PISCES or I_HWSEL = HW_UNIWARS then
+			W_O_OBJ_ROM_A <=  pisces_gfxbank & W_OBJ_ROM_A & W_1M(2 downto 0);
+		else
+			W_O_OBJ_ROM_A <= '0' & W_OBJ_ROM_A & W_1M(2 downto 0);
+		end if;
+	end process;
 
 -----------------------------------------------------------------------------------
 

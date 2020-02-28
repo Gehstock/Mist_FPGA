@@ -16,44 +16,32 @@
 -- 2004- 8-23  Improvement with T80-IP.
 -- 2004- 9-22  The problem which missile didn't sometimes come out from was improved.
 --
--- 2019-12 Multi-machine support added
--- "GALAXIAN"
--- "MOONCR"
--- "AZURIAN"
--- "BLACKHOLE"
--- "CATACOMB"
--- "CHEWINGG"
--- "DEVILFSH"
--- "KINGBAL"
--- "MRDONIGH"
--- "OMEGA"
--- "ORBITRON"
--- "PISCES"
--- "UNIWARS"
--- "VICTORY"
--- "WAROFBUG"
--- "ZIGZAG" -- doesn't work yet
--- "TRIPLEDR"
+-- 2019-12 Multi-machine support added (see mc_pack.vhd)
 
 ------------------------------------------------------------------------------
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
   use ieee.numeric_std.all;
-
---use work.pkg_galaxian.all;
+  use work.mc_pack.all;
 
 entity galaxian is
-	generic (
-		name       : string := "GALAXIAN"
-	);
 	port(
 		W_CLK_12M  : in  std_logic;
 		W_CLK_6M   : in  std_logic;
+		I_RESET    : in  std_logic;
+		I_HWSEL    : in  integer;
+		I_DL_ADDR  : in  std_logic_vector(15 downto 0);
+		I_DL_DATA  : in  std_logic_vector(7 downto 0);
+		I_DL_WR    : in  std_logic;
 
+		I_TABLE    : in  std_logic;   -- UP = 0
+		I_TEST     : in  std_logic;
+		I_SERVICE  : in  std_logic;
+		I_DIP      : in  std_logic_vector(7 downto 0);
+		I_SW1_67   : in  std_logic_vector(1 downto 0);
 		P1_CSJUDLR : in  std_logic_vector(6 downto 0);
 		P2_CSJUDLR : in  std_logic_vector(6 downto 0);
-		I_RESET    : in  std_logic;
 
 		W_R        : out std_logic_vector(2 downto 0);
 		W_G        : out std_logic_vector(2 downto 0);
@@ -102,11 +90,13 @@ architecture RTL of galaxian is
 	-------- CPU RAM  ----------------------------
 	signal W_CPU_RAM_DO       : std_logic_vector(7 downto 0) := (others => '0');
 	-------- ADDRESS DECDER ----------------------
+  signal W_MOONCR           : std_logic := '0';
 	signal W_BD_G             : std_logic := '0';
 	signal W_CPU_RAM_CS       : std_logic := '0';
 	signal W_CPU_RAM_RD       : std_logic := '0';
 	signal W_CPU_ROM_ADDR     : std_logic_vector(13 downto 0);
 --	signal W_CPU_RAM_WR       : std_logic := '0';
+	signal W_CPU_ROM_WR       : std_logic := '0'; -- rom upload
 	signal W_CPU_ROM_CS       : std_logic := '0';
 	signal W_DIP_OE           : std_logic := '0';
 	signal W_H_FLIP           : std_logic := '0';
@@ -118,6 +108,8 @@ architecture RTL of galaxian is
 	signal W_SOUND_WE         : std_logic := '0';
 	signal W_MISC_WE          : std_logic := '0';
 	signal W_SPEECH_IN        : std_logic_vector(1 downto 0);
+	signal W_SPEECH_OUT       : std_logic_vector(7 downto 0);
+	signal W_SPEECH_DIP       : std_logic := '0';
 	signal W_STARS_ON         : std_logic := '0';
 	signal W_STARS_ON_ADJ     : std_logic := '0';
 	signal W_STARS_OFFn       : std_logic := '0';
@@ -175,7 +167,7 @@ architecture RTL of galaxian is
 	signal W_WAV_D1           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_WAV_D2           : std_logic_vector( 7 downto 0) := (others => '0');
 	signal W_DAC              : std_logic_vector( 3 downto 0) := (others => '0');
-	
+
 	signal PSG_EN             : std_logic;
 	signal PSG_D              : std_logic_vector(7 downto 0);
 	signal PSG_A,PSG_B,PSG_C  : std_logic_vector(7 downto 0);
@@ -199,12 +191,10 @@ architecture RTL of galaxian is
 begin
 
 	mc_vid : entity work.MC_VIDEO
-	generic map(
-		name          => name
-	)
 	port map(
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
+		I_HWSEL       => I_HWSEL,
 		I_H_CNT       => W_H_CNT,
 		I_V_CNT       => W_V_CNT,
 		I_H_FLIP      => W_H_FLIP,
@@ -221,6 +211,11 @@ begin
 		I_VID_RAM_RD  => W_VID_RAM_RD,
 		I_VID_RAM_WR  => W_VID_RAM_WR,
 		I_DRIVER_WR   => W_DRIVER_WE,
+
+		I_DL_ADDR     => I_DL_ADDR,
+		I_DL_DATA     => I_DL_DATA,
+		I_DL_WR       => I_DL_WR,
+
 		O_C_BLnX      => W_C_BLnX,
 		O_H_BLnX      => W_H_BLnX,
 		O_8HF         => W_8HF,
@@ -233,13 +228,16 @@ begin
 		O_COL         => W_COL
 	);
 
-	int_gen: if name = "DEVILFSH" generate
-		CPU_INT_n <= W_CPU_NMIn;
-		CPU_NMI_n <= '1';
-	else generate
-		CPU_INT_n <= '1';
-		CPU_NMI_n <= W_CPU_NMIn;
-	end generate;
+	cpu_int : process(I_HWSEL, W_CPU_NMIn)
+	begin
+		if I_HWSEL = HW_DEVILFSH then
+			CPU_INT_n <= W_CPU_NMIn;
+			CPU_NMI_n <= '1';
+		else
+			CPU_INT_n <= '1';
+			CPU_NMI_n <= W_CPU_NMIn;
+		end if;
+	end process;
 
 	cpu : entity work.T80se
 	port map (
@@ -275,11 +273,15 @@ begin
 		O_D           => W_CPU_RAM_DO
 	);
 
+	-- Kingball only now, original Moon Cresta ROM is scrambled
+  W_MOONCR <= '1' when I_HWSEL = HW_KINGBAL else '0';
+
 	mc_adec : entity work.MC_ADEC
 	port map(
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
 		I_RSTn        => W_RESETn,
+		I_MOONCR      => W_MOONCR,
 
 		I_CPU_A       => W_A,
 		I_CPU_D       => W_BDI(0),
@@ -312,6 +314,7 @@ begin
 		O_H_FLIP      => W_H_FLIP,
 		O_V_FLIP      => W_V_FLIP,
 		O_SPEECH      => W_SPEECH_IN,
+		O_SPEECH_DIP  => W_SPEECH_DIP,
 		O_BD_G        => W_BD_G,
 		O_STARS_ON    => W_STARS_ON,
 		O_ROM_SWP     => W_ROM_SWP
@@ -319,10 +322,12 @@ begin
 
 	-- active high buttons
 	mc_inport : entity work.MC_INPORT
-	generic map(
-		name          => name
-	)
 	port map (
+		I_HWSEL       => I_HWSEL,
+		I_TABLE       => I_TABLE,
+		I_TEST        => I_TEST,
+		I_SERVICE     => I_SERVICE,
+		I_SW1_67      => I_SW1_67,
 		I_COIN1       => P1_CSJUDLR(6),
 		I_COIN2       => P2_CSJUDLR(6),
 		I_1P_START    => P1_CSJUDLR(5),
@@ -340,6 +345,9 @@ begin
 		I_SW0_OE      => W_SW0_OE,
 		I_SW1_OE      => W_SW1_OE,
 		I_DIP_OE      => W_DIP_OE,
+		I_DIP         => I_DIP,
+		I_SPEECH_DIP  => W_SPEECH_DIP,
+		I_RAND        => W_V_CNT(0),
 		O_D           => W_SW_DO
 	);
 
@@ -359,9 +367,6 @@ begin
 	);
 
 	mc_col_pal : entity work.MC_COL_PAL
-	generic map(
-		name          => name
-	)
 	port map(
 		I_CLK_12M     => W_CLK_12M,
 		I_CLK_6M      => W_CLK_6M,
@@ -369,6 +374,11 @@ begin
 		I_COL         => W_COL,
 		I_C_BLnX      => W_C_BLnX,
 		I_H_BLnX      => W_H_BLnX,
+
+		I_DL_ADDR     => I_DL_ADDR,
+		I_DL_DATA     => I_DL_DATA,
+		I_DL_WR       => I_DL_WR,
+
 		O_C_BLXn      => W_C_BLXn,
 		O_H_BLXn      => W_H_BLXn,
 		O_STARS_OFFn  => W_STARS_OFFn,
@@ -376,8 +386,6 @@ begin
 		O_G           => W_VIDEO_G,
 		O_B           => W_VIDEO_B
 	);
-
-	comps: if name /= "ZIGZAG" generate
 
 	mc_stars : entity work.MC_STARS
 	port map (
@@ -419,24 +427,34 @@ begin
 		I_FS          => W_FS,
 		O_SDAT        => W_SDAT_B
 	);
-end generate;
 
 --------- ROM           -------------------------------------------------------
-	mc_roms : entity work.ROM_PGM_0
-	generic map (
-		name => name
-	)
-	port map (
-		CLK  => W_CLK_12M,
-		ADDR => W_CPU_ROM_ADDR,
-		DATA => W_CPU_ROM_DO
+
+--	mc_roms : entity work.ROM_PGM_0
+--	port map (
+--		CLK  => W_CLK_12M,
+--		ADDR => W_CPU_ROM_ADDR,
+--		DATA => W_CPU_ROM_DO
+--	);
+
+	mc_roms : work.dpram generic map (14,8)
+	port map
+	(
+		clock_a   => W_CLK_12M,
+		wren_a    => W_CPU_ROM_WR,
+		address_a => I_DL_ADDR(13 downto 0),
+		data_a    => I_DL_DATA,
+
+		clock_b   => W_CLK_12M,
+		address_b => W_CPU_ROM_ADDR(13 downto 0),
+		q_b       => W_CPU_ROM_DO
 	);
 
-	romaddr: if name = "ZIGZAG" generate
-		W_CPU_ROM_ADDR <=  W_A(13) & (W_A(12) xor (W_ROM_SWP and W_A(13))) & W_A(11 downto 0);
-	else generate
-		W_CPU_ROM_ADDR <=  W_A(13 downto 0);
-	end generate;
+	W_CPU_ROM_WR <= '1' when I_DL_WR = '1' and I_DL_ADDR(15 downto 14) = "00" else '0'; -- 0000-3FFF
+	W_CPU_ROM_ADDR <=  W_A(13) & (W_A(12) xor (W_ROM_SWP and W_A(13))) & W_A(11 downto 0) when I_HWSEL = HW_ZIGZAG else
+	                   W_A(13 downto 11) & (W_A(10) xor (not W_A(13))) & (W_A(9) xor (not W_A(13))) & W_A(8 downto 0) when I_HWSEL = HW_ORBITRON else
+	                   W_A(12) & W_A(11) & not W_A(13) & W_A(10 downto 0) when I_HWSEL = HW_DEVILFSH else
+	                   W_A(13 downto 0);
 
 -------- VIDEO  -----------------------------
 	blx_comb <= not ( W_C_BLXn and W_V_BL2n );
@@ -538,8 +556,8 @@ end generate;
 	end process;
 
 -------------------------------------------------------------------------------
--- King & Balloon speech board
-kb_speech: if name = "KINGBAL" generate
+
+	-- King & Balloon speech board
 	speech : entity work.kb_synth
 	port map(
 		reset_n       => W_RESETn,
@@ -548,17 +566,11 @@ kb_speech: if name = "KINGBAL" generate
 		in1           => W_SPEECH_IN(1),
 		in2           => '0', -- GND
 		in3           => '0', -- GND
-		speech_out    => W_SDAT_C
+		speech_out    => W_SPEECH_OUT
 	);
-	
-		W_STARS_ON_ADJ <= '0'; -- no stars in this game
-else generate
-		W_STARS_ON_ADJ <= W_STARS_ON;
-end generate;
 
--- AY8910 for ZigZag
-psg: if name = "ZIGZAG" generate
-	PSG_EN <= '1' when W_A(15 downto 11) = "01001" and W_A(9) = '0' and W_CPU_MREQn = '0' and W_CPU_WRn = '0' else '0';
+	-- AY8910 for ZigZag
+	PSG_EN <= '1' when I_HWSEL = HW_ZIGZAG and W_A(15 downto 11) = "01001" and W_A(9) = '0' and W_CPU_MREQn = '0' and W_CPU_WRn = '0' else '0';
 
 	process(W_CLK_6M)
 	begin
@@ -568,9 +580,6 @@ psg: if name = "ZIGZAG" generate
 			end if;
 		end if;
 	end process;
-
-	PSG_OUT <= ("00" & PSG_A) + ("00" & PSG_B) + ("00" & PSG_C);
-	W_SDAT_C <= PSG_OUT(9 downto 2);
 
 	psg : ym2149
 	port map (
@@ -586,6 +595,21 @@ psg: if name = "ZIGZAG" generate
 		CHANNEL_B => PSG_B,
 		CHANNEL_C => PSG_C
 	);
-end generate;
+
+	PSG_OUT <= ("00" & PSG_A) + ("00" & PSG_B) + ("00" & PSG_C);
+
+	process(I_HWSEL, W_SPEECH_OUT, PSG_OUT, W_STARS_ON)
+	begin
+		if I_HWSEL = HW_KINGBAL then
+			W_STARS_ON_ADJ <= '0'; -- no stars in this game
+			W_SDAT_C <= W_SPEECH_OUT;
+		elsif I_HWSEL = HW_ZIGZAG then
+			W_STARS_ON_ADJ <= '0';
+			W_SDAT_C <= PSG_OUT(9 downto 2);
+		else
+			W_STARS_ON_ADJ <= W_STARS_ON;
+			W_SDAT_C <= (others => '0');
+		end if;
+	end process;
 
 end RTL;
