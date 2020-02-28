@@ -219,6 +219,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/sounds_good.vhd
 set_global_assignment -name VHDL_FILE rtl/turbo_cheap_squeak.vhd
+set_global_assignment -name VHDL_FILE rtl/spinner.vhd
 set_global_assignment -name VHDL_FILE rtl/spy_hunter_control.vhd
 set_global_assignment -name QIP_FILE ../../common/IO/Z80CTC/z80ctc.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/68000/FX68k/fx68k.qip

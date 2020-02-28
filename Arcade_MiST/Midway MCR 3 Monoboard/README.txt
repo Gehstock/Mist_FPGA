@@ -2,8 +2,8 @@ Midway MCR Monoboard MiST port
 
 Common controls:
 ESC - coin for all players
-5,6,7 - coin for player 1,2,3 (MAME compatible)
-F1,F2,F3 (or 1,2,3) - player 1,2,3 start
+5,6,7,8 - coin for player 1,2,3,4 (MAME compatible)
+F1,F2,F3 (or 1,2,3) - player 1,2,3,4 start
 Controller 1 and 2 can be substitued with MAME-keys
 
 Supported games:
@@ -32,12 +32,19 @@ Buttons 1,2 - Gas
 Button  3   - Wheelie
 Button  4   - Shift
 
+Demolition Derby
+================
+4 players support
+Gas: Button 1
+Brake: Button 2
+Steering: Left/Right
+
 Usage:
 ======
 
 Create ROM and ARC files from MAME ROM zip files using the mra utility and the MRA files.
-Copy the RBF and the ARC files to the same folder.
 Example: mra -A -z /path/to/mame/roms Rampage.mra
+Copy the RBF and the ARC files to the same folder.
 Copy the ROM files to the root of the SD Card.
 
 MRA utilty: https://github.com/sebdel/mra-tools-c

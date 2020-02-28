@@ -355,7 +355,7 @@ begin
 			if hcnt = 633 then
 				hcnt <= (others=>'0');
 				vcnt <= vcnt + 1;
-				if (vcnt = 524 and tv15Khz_mode = '0') or (vcnt = 263 and tv15Khz_mode = '1') then
+				if (vcnt = 511 and tv15Khz_mode = '0') or (vcnt = 255 and tv15Khz_mode = '1') then
 					vcnt <= (others=>'0');
 					top_frame <= not top_frame;
 				end if;
@@ -455,7 +455,7 @@ cpu_di <= cpu_rom_do        when cpu_mreq_n  = '0' and cpu_addr(15 downto 12) < 
           wram_do           when cpu_mreq_n  = '0' and (cpu_addr and X"F800") = x"E000"   else -- E000-E7FF
           sp_ram_cache_do_r when cpu_mreq_n  = '0' and (cpu_addr and x"FC00") = x"E800"   else -- sprite ram  E800-E9FF + mirroring 0200
           bg_ram_do_r       when cpu_mreq_n  = '0' and (cpu_addr and x"F800") = x"F000"   else -- video ram   F000-F7FF
-          ctc_do           when cpu_int_ack_n = '0' or ctc_ce = '1'                       else -- ctc (interrupt vector or counter data)
+          ctc_do            when cpu_int_ack_n = '0' or ctc_ce = '1'                      else -- ctc (interrupt vector or counter data)
           ssio_do           when cpu_ioreq_n = '0' and cpu_addr(7 downto 5) = "000"       else -- 0x00-0x1F
           X"FF";
 

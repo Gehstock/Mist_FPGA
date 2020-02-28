@@ -79,7 +79,7 @@ reg [7:0] output6;
 
 // Game specific sound board/DIP/input settings
 always @(*) begin
-	if (core_mod == 7'h1 || core_mod == 7'h3)
+	if (core_mod == 7'h1 || core_mod == 7'h3 || core_mod == 7'h4)
 		sg = 0;
 	else
 		sg = 1;
@@ -122,6 +122,14 @@ always @(*) begin
 		input1 = ~{maxrpm_adc_data};
 		input2 = ~{maxrpm_gear1, maxrpm_gear2};
 		input3[0] = ~status[8]; // free play
+	end
+	7'h4: // DEMODERB
+	begin
+		input0 = ~{2'b00, service, 1'b0, m_two_players, m_one_player, m_coin2, m_coin1};
+		input1 = dderby_input_sel ? ~{wheel3, m_fireB,  m_fireA}  : ~{wheel1, m_fireB,  m_fireA};
+		input2 = dderby_input_sel ? ~{wheel4, m_fire2B, m_fire2A} : ~{wheel2, m_fire2B, m_fire2A};
+		input3 = ~{3'b000, status[11], status[10], status[9], status[8]}; // NU, coins/credit, girl, free play, difficulty, 2player
+		input4 = ~{m_fire4B, m_fire4A, m_fire3B, m_fire3A, m_four_players, m_three_players, m_coin4, m_coin3};
 	end
 	default: ;
 	endcase
@@ -190,7 +198,7 @@ wire  [7:0] ioctl_dout;
 /*
 ROM structure:
 
-Sarge, MaxRPM (Turbo Cheap Squeak board):
+Sarge, MaxRPM, Demolition Derby (Turbo Cheap Squeak board):
 00000-0FFFF MAIN CPU 64k
 10000-2FFFF GFX2 (Sprites) 128k
 30000-37FFF GFX1 32k
@@ -359,8 +367,8 @@ mcr3mono mcr3mono (
 
 wire vs_out;
 wire hs_out;
-assign VGA_HS = ((~no_csync & scandoublerD) || ypbpr)? cs : hs_out;
-assign VGA_VS = ((~no_csync & scandoublerD) || ypbpr)? 1'b1 : vs_out;
+assign VGA_HS = (~no_csync & scandoublerD & ~ypbpr)? cs : hs_out;
+assign VGA_VS = (~no_csync & scandoublerD & ~ypbpr)? 1'b1 : vs_out;
 
 mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -513,6 +521,24 @@ always @(posedge clk_sys) begin
 	end
 end
 
+// Demolition Derby
+reg dderby_input_sel;
+always @(posedge clk_sys) begin
+	if (reset)
+		dderby_input_sel <= 0;
+	else begin
+		if (output6[7]) dderby_input_sel <= 0;
+		else if (output6[6]) dderby_input_sel <= 1;
+	end
+end
+
+wire [5:0] wheel1, wheel2, wheel3, wheel4;
+spinner spinner1 (clk_sys, reset, m_left,  m_right,  1'b0, vs, wheel1);
+spinner spinner2 (clk_sys, reset, m_left2, m_right2, 1'b0, vs, wheel2);
+spinner spinner3 (clk_sys, reset, m_left3, m_right3, 1'b0, vs, wheel3);
+spinner spinner4 (clk_sys, reset, m_left4, m_right4, 1'b0, vs, wheel4);
+
+// Common inputs
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D;
 wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D;
