@@ -80,7 +80,7 @@ begin
         if video_ctl.hblank = '1' then
 
           x := unsigned(reg_i.x) - M62_VIDEO_H_OFFSET + PACE_VIDEO_PIPELINE_DELAY - 3;
-          y := 256 + 128 - 15 - unsigned(reg_i.y);
+          y := 256 + 128 - 18 - unsigned(reg_i.y);
 
           -- hande sprite height, placement
           prom_i := to_integer(unsigned(reg_i.n(9 downto 5)));
