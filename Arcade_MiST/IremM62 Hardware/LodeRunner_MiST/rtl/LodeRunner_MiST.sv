@@ -40,7 +40,10 @@ localparam CONF_STR = {
 	"V,v1.0.",`BUILD_DATE
 };
 
-
+wire       rotate    = status[2];
+wire [1:0] scanlines = status[4:3];
+wire       blend     = status[5];
+wire       service   = status[6];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
@@ -65,20 +68,38 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [11:0] audio;
-wire        hs, vs;
-wire        blankn = 1'b1;//todo
-wire  [3:0] g,b,r;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
-
 
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
@@ -165,15 +186,20 @@ always @(posedge clk_sys) begin
 
 end
 
+wire [11:0] audio;
+wire        hs, vs;
+wire        blankn = 1'b1;//todo
+wire  [3:0] g,b,r;
+
 target_top target_top(
-   .clock_50(clk_sys),//40MHz
-	.clock_vid(clk_vid),//25.263158MHz
+	.clock_sys(clk_sys),//4xclk_vid
+	.clock_vid(clk_vid),//11MHz
 	.clk_aud(clk_aud),//0.895MHz
 	.reset_in(reset),
 	.audio_out(audio),
 	.usr_coin1(m_coin1),
 	.usr_coin2(m_coin2),
-	.usr_service(status[6]),
+	.usr_service(service),
 	.usr_start1(m_one_player),
 	.usr_start2(m_two_players),
 	.p1_up(m_up),
@@ -188,18 +214,18 @@ target_top target_top(
 	.p2_rt(m_right2),
 	.p2_f1(m_fire2A),
 	.p2_f2(m_fire2B),
-   .VGA_VS(hs),
-   .VGA_HS(vs),
-   .VGA_R(r),
-   .VGA_G(g),
-   .VGA_B(b),
+	.VGA_VS(vs),
+	.VGA_HS(hs),
+	.VGA_R(r),
+	.VGA_G(g),
+	.VGA_B(b),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr(snd_addr),
-   .snd_rom_do(snd_addr[0] ? snd_do[15:8] : snd_do[7:0])
+	.snd_rom_do(snd_addr[0] ? snd_do[15:8] : snd_do[7:0])
   ); 
 
-mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(9)) mist_video(
+mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
@@ -214,33 +240,13 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(9)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( { 1'b1, status[2] } ),
-	.ce_divider     ( 1'b1                ),
-	.scandoubler_disable( 1),//scandoublerD ),
-	.scanlines      ( status[4:3]        ),
-	.blend          ( status[5]            ),
-	.ypbpr          ( ypbpr            )
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.rotate         ( { 1'b1, rotate } ),
+	.ce_divider     ( 1'b0             ),
+	.scandoubler_disable( scandoublerD ),
+	.scanlines      ( scanlines        ),
+	.blend          ( blend            ),
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
 	);
 
 wire dac_o;
@@ -267,7 +273,7 @@ arcade_inputs inputs (
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
-	.rotate      ( status[2]   ),
+	.rotate      ( rotate      ),
 	.orientation ( 2'b10       ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),

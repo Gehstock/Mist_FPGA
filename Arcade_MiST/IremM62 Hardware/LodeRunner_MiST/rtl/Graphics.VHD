@@ -269,5 +269,4 @@ begin
 
   sprite_ctl_o <= sprite_ctl_o_s;
 
-
 end SYN;
