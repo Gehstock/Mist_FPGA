@@ -45,15 +45,15 @@ entity platform is
     -- various graphics information
     graphics_i      : in from_GRAPHICS_t;
     graphics_o      : out to_GRAPHICS_t;
-	 sound_data_o    : out std_logic_vector(7 downto 0);
+    sound_data_o    : out std_logic_vector(7 downto 0);
 
     -- custom i/o
 --    project_i       : in from_PROJECT_IO_t;
 --    project_o       : out to_PROJECT_IO_t;
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
-	 cpu_rom_addr          : out std_logic_vector(14 downto 0);
-	 cpu_rom_do          : in std_logic_vector(7 downto 0)
+    cpu_rom_addr    : out std_logic_vector(14 downto 0);
+    cpu_rom_do      : in std_logic_vector(7 downto 0)
   );
 
 end platform;
@@ -164,25 +164,24 @@ begin
   -- RAM $E000-$EFFF
   wram_cs <=    '1' when STD_MATCH(cpu_a, X"E"&"------------") else '0';
 
-  -- OUTPUT $DXX0
-  snd_cs <=      '1' when STD_MATCH(cpu_a(7 downto 0), X"0"&"00--") else '0';
+  -- OUTPUT $XX00
+	snd_cs <=      '1' when cpu_a(7 downto 0) = X"00" else '0';
 
   -- INPUTS (I/O) $00-$04
   in_cs <=      '1' when STD_MATCH(cpu_a(7 downto 0), X"0"&"00--") else 
                 '1' when STD_MATCH(cpu_a(7 downto 0), X"04") else
                 '0';
-					 
-process (clk_sys, rst_sys) begin
-	if rst_sys = '1' then
-		sound_data_o <= X"00";
-	elsif rising_edge(clk_sys) then
-      if cpu_clk_en = '1' and cpu_mem_wr = '1' and snd_cs = '1' then
-			sound_data_o <= cpu_d_o;
-		end if;
-	end if; 
-  end process;
 
-  
+	process (clk_sys, rst_sys) begin
+		if rst_sys = '1' then
+			sound_data_o <= X"FF";
+		elsif rising_edge(clk_sys) then
+			if cpu_clk_en = '1' and cpu_io_wr = '1' and snd_cs = '1' then
+				sound_data_o <= cpu_d_o;
+			end if;
+		end if; 
+	end process;
+
 	-- memory read mux
 	cpu_d_i <=  in_d_o when (cpu_io_rd = '1' and in_cs = '1') else
 					cpu_rom_do when rom_cs = '1' else

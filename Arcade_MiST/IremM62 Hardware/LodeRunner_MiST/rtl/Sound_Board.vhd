@@ -1,4 +1,5 @@
 ---------------------------------------------------------------------------------
+-- Irem M62 sound board, based on
 -- Moon patrol sound board by Dar (darfpga@aol.fr)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
@@ -31,8 +32,9 @@ port(
 
  select_sound : in std_logic_vector(7 downto 0);
  audio_out    : out std_logic_vector(11 downto 0);
- snd_rom_addr      : out std_logic_vector(13 downto 0);
- snd_rom_do        : in std_logic_vector(7 downto 0);
+ snd_rom_addr : out std_logic_vector(13 downto 0);
+ snd_rom_do   : in std_logic_vector(7 downto 0);
+ snd_vma      : out std_logic;
 
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
@@ -76,6 +78,7 @@ architecture struct of Sound_Board is
  signal cpu_rw     : std_logic;
  signal cpu_irq    : std_logic;
  signal cpu_nmi    : std_logic;
+ signal cpu_vma    : std_logic;
  
  signal irqraz_cs : std_logic;
  signal irqraz_we : std_logic;
@@ -161,9 +164,9 @@ dbg_cpu_addr <= cpu_addr;
 -- cs
 wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
 ports_cs  <= '1' when cpu_addr(15 downto  4) = X"000"    else '0'; -- 0000-000F
-adpcm_cs  <= '1' when cpu_addr(14 downto 11) = "0001"    else '0'; -- 0800-0FFF / 8800-8FFF
-irqraz_cs <= '1' when cpu_addr(14 downto 12) = "001"     else '0'; -- 1000-1FFF / 9000-9FFF
-rom_cs    <= '1' when cpu_addr(14 downto 12) = "111"     else '0'; -- 7000-7FFF / F000-FFFF
+adpcm_cs  <= '1' when cpu_addr(14) = '0' and cpu_addr(11) = '1' and cpu_addr(1 downto 0) /= "00" else '0'; -- 0801-0802
+irqraz_cs <= '1' when cpu_addr(14) = '0' and cpu_addr(11) = '1' and cpu_addr(1 downto 0)  = "00" else '0'; -- 0800
+rom_cs    <= '1' when cpu_addr(14) = '1'                 else '0'; -- 4000-7FFF / C000-FFFF
 	
 -- write enables
 wram_we <=   '1' when cpu_rw = '0' and wram_cs =   '1' else '0';
@@ -178,7 +181,7 @@ cpu_di <=
 	port2_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"1" else
 	port1_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"2" else
 	port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
-	rom_do when rom_cs = '1' else X"55";
+	snd_rom_do when rom_cs = '1' else X"55";
 
 process (clock_E)
 begin
@@ -334,7 +337,7 @@ port map(
 	clk      => clock_E,   -- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
 	rw       => cpu_rw,   -- read not write output
-	vma      => open,     -- valid memory address (active high)
+	vma      => cpu_vma,  -- valid memory address (active high)
 	address  => cpu_addr, -- address bus output
 	data_in  => cpu_di,   -- data bus input
 	data_out => cpu_do,   -- data bus output
@@ -346,14 +349,15 @@ port map(
 	test_cc  => open
 );
 
-rom_cpu : entity work.snd_prg
-port map(
-	clk   => clock_E,   -- E clock input (falling edge)
-	addr  => cpu_addr(13 downto 0),
-	data  => rom_do
-);
+--rom_cpu : entity work.snd_prg
+--port map(
+--	clk   => clock_E,   -- E clock input (falling edge)
+--	addr  => cpu_addr(13 downto 0),
+--	data  => rom_do
+--);
 
--- snd_rom_addr <= cpu_addr(13 downto 0);
+snd_vma <= rom_cs and cpu_vma;
+snd_rom_addr <= cpu_addr(13 downto 0);
 
  
 -- cpu wram

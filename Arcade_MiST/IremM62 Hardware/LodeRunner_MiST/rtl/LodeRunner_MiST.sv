@@ -98,8 +98,10 @@ user_io(
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 
-wire [13:0] snd_addr;
+wire [16:0] snd_addr;
+wire [13:0] snd_rom_addr;
 wire [15:0] snd_do;
+wire        snd_vma;
 
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
@@ -111,7 +113,7 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 data_io data_io(
-	.clk_sys       ( clk_sd       ),
+	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -141,7 +143,7 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + snd_addr[13:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : snd_addr[16:1] ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -158,8 +160,9 @@ sdram sdram(
 );
 
 // ROM download controller
-always @(posedge clk_sd) begin
+always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
+	reg        snd_vma_r, snd_vma_r2;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
@@ -168,6 +171,10 @@ always @(posedge clk_sd) begin
 			port2_req <= ~port2_req;
 		end
 	end
+
+	// clock domain crossing here (clk_snd -> clk_sys)
+	snd_vma_r <= snd_vma; snd_vma_r2 <= snd_vma_r;
+	if (snd_vma_r2) snd_addr <= snd_rom_addr + 16'h8000;
 end
 
 // reset signal generation
@@ -221,8 +228,9 @@ target_top target_top(
 	.VGA_B(b),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.snd_rom_addr(snd_addr),
-	.snd_rom_do(snd_addr[0] ? snd_do[15:8] : snd_do[7:0])
+	.snd_rom_addr(snd_rom_addr),
+	.snd_rom_do(snd_rom_addr[0] ? snd_do[15:8] : snd_do[7:0]),
+	.snd_vma(snd_vma)
   ); 
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(

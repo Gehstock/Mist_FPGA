@@ -41,7 +41,8 @@ entity target_top is port(
 		cpu_rom_addr    : out std_logic_vector(14 downto 0);
 		cpu_rom_do      : in std_logic_vector(7 downto 0);
 		snd_rom_addr    : out std_logic_vector(13 downto 0);
-		snd_rom_do      : in std_logic_vector(7 downto 0)
+		snd_rom_do      : in std_logic_vector(7 downto 0);
+		snd_vma         : out std_logic
   );
 end target_top;
 
@@ -86,17 +87,18 @@ end generate GEN_RESETS;
  VGA_HS <= video_o.hsync;
  VGA_VS <= video_o.vsync;
 
---Sound_Board : entity work.Sound_Board
---	port map(
---		clock_E    		=> clk_aud,
---		areset     		=> clkrst_i.rst(1),
---		select_sound  	=> sound_data,
---		audio_out     	=> audio_out,
---		snd_rom_addr   => snd_rom_addr,
---      snd_rom_do     => snd_rom_do,
---		dbg_cpu_addr  	=> open
---	);
- 
+Sound_Board : entity work.Sound_Board
+	port map(
+		clock_E       => clk_aud,
+		areset        => clkrst_i.rst(1),
+		select_sound  => sound_data,
+		audio_out     => audio_out,
+		snd_rom_addr  => snd_rom_addr,
+		snd_rom_do    => snd_rom_do,
+		snd_vma       => snd_vma,
+		dbg_cpu_addr  => open
+	);
+
 pace_inst : entity work.pace                                            
 	port map(
 		clkrst_i				=> clkrst_i,
@@ -106,10 +108,10 @@ pace_inst : entity work.pace
 		video_i           => video_i,
 		video_o           => video_o,
 		sound_data_o 		=> sound_data,
-      platform_i        => platform_i,
-      platform_o        => platform_o,
+		platform_i        => platform_i,
+		platform_o        => platform_o,
 		cpu_rom_addr      => cpu_rom_addr,
-	   cpu_rom_do        => cpu_rom_do
+		cpu_rom_do        => cpu_rom_do
     );
 
 		inputs_i.jamma_n.coin(1) <= not usr_coin1;

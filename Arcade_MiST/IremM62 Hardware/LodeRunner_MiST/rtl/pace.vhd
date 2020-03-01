@@ -26,15 +26,15 @@ entity PACE is
     -- video
     video_i         : in from_VIDEO_t;
     video_o         : out to_VIDEO_t;
-	 sound_data_o    : out std_logic_vector(7 downto 0);
+    sound_data_o    : out std_logic_vector(7 downto 0);
 
     -- custom i/o
  --   project_i       : in from_PROJECT_IO_t;
  --   project_o       : out to_PROJECT_IO_t;
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
-	 cpu_rom_addr          : out std_logic_vector(14 downto 0);
-	 cpu_rom_do          : in std_logic_vector(7 downto 0)
+    cpu_rom_addr    : out std_logic_vector(14 downto 0);
+    cpu_rom_do      : in std_logic_vector(7 downto 0)
   );
 end entity PACE;
 
