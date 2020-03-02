@@ -17,7 +17,7 @@
 -- Use at your own risk
 ---------------------------------------------------------------------------------
 -- Version 0.0 -- 24/11/2017 -- 
---		    initial version
+--    initial version
 ---------------------------------------------------------------------------------
 
 library ieee;
@@ -167,7 +167,7 @@ ports_cs  <= '1' when cpu_addr(15 downto  4) = X"000"    else '0'; -- 0000-000F
 adpcm_cs  <= '1' when cpu_addr(14) = '0' and cpu_addr(11) = '1' and cpu_addr(1 downto 0) /= "00" else '0'; -- 0801-0802
 irqraz_cs <= '1' when cpu_addr(14) = '0' and cpu_addr(11) = '1' and cpu_addr(1 downto 0)  = "00" else '0'; -- 0800
 rom_cs    <= '1' when cpu_addr(14) = '1'                 else '0'; -- 4000-7FFF / C000-FFFF
-	
+
 -- write enables
 wram_we <=   '1' when cpu_rw = '0' and wram_cs =   '1' else '0';
 ports_we <=  '1' when cpu_rw = '0' and ports_cs =  '1' else '0';
@@ -176,42 +176,42 @@ irqraz_we <= '1' when cpu_rw = '0' and irqraz_cs = '1' else '0';
 
 -- mux cpu in data between roms/io/wram
 cpu_di <=
-	wram_do when wram_cs = '1' else
-	port1_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"0" else
-	port2_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"1" else
-	port1_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"2" else
-	port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
-	snd_rom_do when rom_cs = '1' else X"55";
+  wram_do when wram_cs = '1' else
+  port1_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"0" else
+  port2_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"1" else
+  port1_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"2" else
+  port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
+  snd_rom_do when rom_cs = '1' else X"55";
 
 process (clock_E)
 begin
-	if rising_edge(clock_E) then
-		reset <= '0';
-		if reset_cnt /= 0 then
-			reset_cnt <= reset_cnt - 1;
-			reset <= '1';
-		end if;
-		if areset = '1' then
-		   reset_cnt <= 1000000;
-		end if;
-	end if;
+  if rising_edge(clock_E) then
+    reset <= '0';
+    if reset_cnt /= 0 then
+      reset_cnt <= reset_cnt - 1;
+      reset <= '1';
+    end if;
+    if areset = '1' then
+     reset_cnt <= 1000000;
+    end if;
+  end if;
 end process;
 
 -- irq to cpu
 process (reset, clock_E)
 begin
-	if reset='1' then
-		cpu_irq <= '0';
-		select_sound_r(7) <= '1';
-	elsif rising_edge(clock_E) then
-		select_sound_r <= select_sound;
-		if select_sound_r(7) = '0' then
-			cpu_irq  <= '1';
-		end if;
-		if irqraz_we = '1' then
-			cpu_irq  <= '0';
-		end if;
-	end if;
+  if reset='1' then
+    cpu_irq <= '0';
+    select_sound_r(7) <= '1';
+  elsif rising_edge(clock_E) then
+    select_sound_r <= select_sound;
+    if select_sound_r(7) = '0' then
+      cpu_irq  <= '1';
+    end if;
+    if irqraz_we = '1' then
+      cpu_irq  <= '0';
+    end if;
+  end if;
 end process;
 
 -- cpu nmi
@@ -272,7 +272,7 @@ begin
 		if clock_div_a = 37 then   -- 24kHz
 			clock_div_a := 0;
 			
-			case ay1_port_b_do(3 downto 2) is				
+			case ay1_port_b_do(3 downto 2) is
 			when "00" => if clock_div_b = 5 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 4kHz
 			when "01" => if clock_div_b = 2 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 8kHz
 			when "10" => if clock_div_b = 3 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 6kHz
@@ -281,7 +281,7 @@ begin
 							
 			if clock_div_b = 0 then adpcm_vclk <= '1'; else adpcm_vclk <= '0'; end if;
 		else
-			clock_div_a := clock_div_a + 1;			
+			clock_div_a := clock_div_a + 1;
 		end if;
 			
 		if ay1_port_b_do(0) = '1' then
@@ -330,23 +330,23 @@ end process;
 -- audio mux
 audio <= ("000"&ay1_audio) + ("000"&ay2_audio) + ('0'&std_logic_vector(to_unsigned((adpcm_signal)+2048,12)));
 audio_out <= audio(12 downto 1);
-				 
+ 
 -- microprocessor 6800/01/03
 main_cpu : entity work.cpu68
 port map(	
-	clk      => clock_E,   -- E clock input (falling edge)
-	rst      => reset,    -- reset input (active high)
-	rw       => cpu_rw,   -- read not write output
-	vma      => cpu_vma,  -- valid memory address (active high)
-	address  => cpu_addr, -- address bus output
-	data_in  => cpu_di,   -- data bus input
-	data_out => cpu_do,   -- data bus output
-	hold     => '0',      -- hold input (active high) extend bus cycle
-	halt     => '0',      -- halt input (active high) grants DMA
-	irq      => cpu_irq,  -- interrupt request input (active high)
-	nmi      => cpu_nmi,  -- non maskable interrupt request input (active high)
-	test_alu => open,
-	test_cc  => open
+ clk      => clock_E,   -- E clock input (falling edge)
+ rst      => reset,    -- reset input (active high)
+ rw       => cpu_rw,   -- read not write output
+ vma      => cpu_vma,  -- valid memory address (active high)
+ address  => cpu_addr, -- address bus output
+ data_in  => cpu_di,   -- data bus input
+ data_out => cpu_do,   -- data bus output
+ hold     => '0',      -- hold input (active high) extend bus cycle
+ halt     => '0',      -- halt input (active high) grants DMA
+ irq      => cpu_irq,  -- interrupt request input (active high)
+ nmi      => cpu_nmi,  -- non maskable interrupt request input (active high)
+ test_alu => open,
+ test_cc  => open
 );
 
 --rom_cpu : entity work.snd_prg

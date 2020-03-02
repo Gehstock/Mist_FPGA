@@ -8,31 +8,31 @@ use work.video_controller_pkg.all;
 entity pace_video_controller is
   generic
   (
-		CONFIG		  : PACEVideoController_t := PACE_VIDEO_NONE;
-		DELAY       : integer := 1;
-		H_SIZE      : integer;
-		V_SIZE      : integer;
+    CONFIG		  : PACEVideoController_t := PACE_VIDEO_NONE;
+    DELAY       : integer := 1;
+    H_SIZE      : integer;
+    V_SIZE      : integer;
     L_CROP      : integer range 0 to 255;
     R_CROP      : integer range 0 to 255;
-		H_SCALE     : integer;
-		V_SCALE     : integer;
+    H_SCALE     : integer;
+    V_SCALE     : integer;
     H_SYNC_POL  : std_logic := '1';
     V_SYNC_POL  : std_logic := '1';
-		BORDER_RGB  : RGB_t := RGB_BLACK
+    BORDER_RGB  : RGB_t := RGB_BLACK
   );
   port
   (
     -- clocking etc
     video_i       : in from_VIDEO_t;
 
-		-- register interface
-		reg_i			    : in VIDEO_REG_t;
+    -- register interface
+    reg_i         : in VIDEO_REG_t;
     
     -- video input data
     rgb_i         : in RGB_t;
 
-		-- control signals (out)
-		video_ctl_o   : out from_VIDEO_CTL_t;
+    -- control signals (out)
+    video_ctl_o   : out from_VIDEO_CTL_t;
 
     -- video output control & data
     video_o       : out to_VIDEO_t
@@ -43,8 +43,8 @@ architecture SYN of pace_video_controller is
 
   constant SIM_DELAY          : time := 2 ns;
 
-	constant VIDEO_H_SIZE				: integer := H_SIZE * H_SCALE;
-	constant VIDEO_V_SIZE				: integer := V_SIZE * V_SCALE;
+  constant VIDEO_H_SIZE       : integer := H_SIZE * H_SCALE;
+  constant VIDEO_V_SIZE       : integer := V_SIZE * V_SCALE;
 
   subtype reg_t is integer range 0 to 2047;
 
@@ -100,13 +100,13 @@ architecture SYN of pace_video_controller is
 begin
 
   -- registers
-	reg_proc: process (reset, clk)
+  reg_proc: process (reset, clk)
 
-	begin
-		--if reset = '1' then
-			case CONFIG is
+  begin
+    --if reset = '1' then
+    case CONFIG is
 
-        when PACE_VIDEO_VGA_240x320_60Hz =>
+       when PACE_VIDEO_VGA_240x320_60Hz =>
           -- P3M, clk=11.136MHz, clk_ena=5.568MHz
           h_front_porch_r <= 272-240;
           h_sync_r <= 5;
@@ -258,26 +258,27 @@ begin
           v_back_porch_r <= 13;
           v_border_r <= (240-VIDEO_V_SIZE)/2;
 
-				when PACE_VIDEO_PAL_576x288_50Hz =>
-					-- pixclk=11 MHz
-					h_front_porch_r <= 2*6;
-					h_sync_r <= 2*28;
-					h_back_porch_r <= 2*30;
-					h_border_r <= (576-VIDEO_H_SIZE)/2;
-					v_front_porch_r <= 8;
-					v_sync_r <= 3;
-					v_back_porch_r <= 13;
-					v_border_r <= (288-VIDEO_V_SIZE)/2;
-				when others =>
-					null;
-			end case;
+        when PACE_VIDEO_PAL_576x288_50Hz =>
+          -- pixclk=11 MHz
+          h_front_porch_r <= 2*6;
+          h_sync_r <= 2*28;
+          h_back_porch_r <= 2*30;
+          h_border_r <= (576-VIDEO_H_SIZE)/2;
+          v_front_porch_r <= 8;
+          v_sync_r <= 3;
+          v_back_porch_r <= 13;
+          v_border_r <= (288-VIDEO_V_SIZE)/2;
 
-      h_video_r <= VIDEO_H_SIZE;
-      v_video_r <= VIDEO_V_SIZE;
-      border_rgb_r <= BORDER_RGB;
+        when others =>
+          null;
+    end case;
+
+    h_video_r <= VIDEO_H_SIZE;
+    v_video_r <= VIDEO_V_SIZE;
+    border_rgb_r <= BORDER_RGB;
       
-		--end if;
-	end process reg_proc;
+    --end if;
+  end process reg_proc;
 
   -- register some arithmetic
   init_proc: process (reset, clk, clk_ena)

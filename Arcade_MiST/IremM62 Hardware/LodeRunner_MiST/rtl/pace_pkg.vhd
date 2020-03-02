@@ -6,9 +6,9 @@ library work;
 
 package pace_pkg is
 
-	--  
-	-- PACE constants which *MUST* be defined
-	--
+  --  
+  -- PACE constants which *MUST* be defined
+  --
 
   type PACETargetType is
   (
@@ -51,26 +51,26 @@ package pace_pkg is
     PACE_TARGET_S6M_A0
   );
 
-	type PACEFpgaVendor_t is
-	(
-		PACE_FPGA_VENDOR_ALTERA,
-		PACE_FPGA_VENDOR_XILINX,
-		PACE_FPGA_VENDOR_LATTICE
-	);
+  type PACEFpgaVendor_t is
+  (
+    PACE_FPGA_VENDOR_ALTERA,
+    PACE_FPGA_VENDOR_XILINX,
+    PACE_FPGA_VENDOR_LATTICE
+  );
 
-	type PACEFpgaFamily_t is
-	(
-		PACE_FPGA_FAMILY_CYCLONE1,
-		PACE_FPGA_FAMILY_CYCLONE2,
-		PACE_FPGA_FAMILY_CYCLONE3,
-		PACE_FPGA_FAMILY_CYCLONE4,
-		PACE_FPGA_FAMILY_CYCLONE5,
-		PACE_FPGA_FAMILY_CYCLONE6,
-		PACE_FPGA_FAMILY_STRATIX_III,
-		PACE_FPGA_FAMILY_SPARTAN3,
-		PACE_FPGA_FAMILY_SPARTAN3A,
-		PACE_FPGA_FAMILY_SPARTAN3E
-	);
+  type PACEFpgaFamily_t is
+  (
+    PACE_FPGA_FAMILY_CYCLONE1,
+    PACE_FPGA_FAMILY_CYCLONE2,
+    PACE_FPGA_FAMILY_CYCLONE3,
+    PACE_FPGA_FAMILY_CYCLONE4,
+    PACE_FPGA_FAMILY_CYCLONE5,
+    PACE_FPGA_FAMILY_CYCLONE6,
+    PACE_FPGA_FAMILY_STRATIX_III,
+    PACE_FPGA_FAMILY_SPARTAN3,
+    PACE_FPGA_FAMILY_SPARTAN3A,
+    PACE_FPGA_FAMILY_SPARTAN3E
+  );
 
   type PACEJamma_t is
   (
@@ -82,7 +82,7 @@ package pace_pkg is
 
   -- Types
 
-	type ByteArrayType is array (natural range <>) of std_logic_vector(7 downto 0);
+  type ByteArrayType is array (natural range <>) of std_logic_vector(7 downto 0);
 
   type from_CLKRST_t is record
     arst      : std_logic;
@@ -103,30 +103,30 @@ package pace_pkg is
   constant PACE_NUM_LEDS      : natural := 18;
   subtype to_LEDS_t is std_logic_vector(PACE_NUM_LEDS-1 downto 0);
   
-	--
-	-- JAMMA interface data structures
-	-- - note: all signals are active LOW
-	--
+  --
+  -- JAMMA interface data structures
+  -- - note: all signals are active LOW
+  --
 
-	type from_JAMMA_player_t is record
-		start			: std_logic;
-		up				: std_logic;
-		down			: std_logic;
-		left			: std_logic;
-		right			: std_logic;
-		button		: std_logic_vector(1 to 5);
-	end record;
+  type from_JAMMA_player_t is record
+    start     : std_logic;
+    up        : std_logic;
+    down      : std_logic;
+    left      : std_logic;
+    right     : std_logic;
+    button    : std_logic_vector(1 to 5);
+  end record;
 
-	type from_JAMMA_player_a is array (natural range <>) of from_JAMMA_player_t;
-	
-	type from_JAMMA_t is record
-		coin_cnt	: std_logic_vector(1 to 2);
-		service		: std_logic;
-		tilt			: std_logic;
-		test			: std_logic;
-		coin			: std_logic_vector(1 to 2);
-		p					: from_JAMMA_player_a(1 to 2);
-	end record;
+  type from_JAMMA_player_a is array (natural range <>) of from_JAMMA_player_t;
+
+  type from_JAMMA_t is record
+    coin_cnt  : std_logic_vector(1 to 2);
+    service   : std_logic;
+    tilt      : std_logic;
+    test      : std_logic;
+    coin      : std_logic_vector(1 to 2);
+    p         : from_JAMMA_player_a(1 to 2);
+  end record;
 
   --
   -- INPUTS
@@ -134,7 +134,7 @@ package pace_pkg is
   subtype analogue_in_t is std_logic_vector(9 downto 0);
   type analogue_in_a is array (natural range <>) of analogue_in_t;
   
-	type from_INPUTS_t is record
+  type from_INPUTS_t is record
     ps2_kclk  : std_logic;
     ps2_kdat  : std_logic;
     ps2_mclk  : std_logic;
@@ -150,38 +150,38 @@ package pace_pkg is
   
   type from_MAPPED_INPUTS_t is array (natural range <>) of in8_t;
   
-	--
-	-- SRAM interface data structure
-	--
-	type from_SRAM_t is record
-		d					: std_logic_vector(31 downto 0);
-	end record;
-	
-	type to_SRAM_t is record
-		a					: std_logic_vector(23 downto 0);
-		d					: std_logic_vector(31 downto 0);
-		be				: std_logic_vector(3 downto 0);
-		cs				: std_logic;
-		oe				: std_logic;
-		we				: std_logic;
-	end record;
+  --
+  -- SRAM interface data structure
+  --
+  type from_SRAM_t is record
+    d         : std_logic_vector(31 downto 0);
+  end record;
+
+  type to_SRAM_t is record
+    a         : std_logic_vector(23 downto 0);
+    d         : std_logic_vector(31 downto 0);
+    be        : std_logic_vector(3 downto 0);
+    cs        : std_logic;
+    oe        : std_logic;
+    we        : std_logic;
+  end record;
 
   function NULL_TO_SRAM return to_SRAM_t;
-	
-	--
-	-- FLASH interface data structure
-	--
-	type from_FLASH_t is record
-		d					: std_logic_vector(15 downto 0);
-	end record;
-	
-	type to_FLASH_t is record
-		a					: std_logic_vector(21 downto 0);
-		d					: std_logic_vector(15 downto 0);
-		we				: std_logic;
-		cs				: std_logic;
-		oe				: std_logic;
-	end record;
+
+  --
+  -- FLASH interface data structure
+  --
+  type from_FLASH_t is record
+    d         : std_logic_vector(15 downto 0);
+  end record;
+  
+  type to_FLASH_t is record
+    a         : std_logic_vector(21 downto 0);
+    d         : std_logic_vector(15 downto 0);
+    we        : std_logic;
+    cs        : std_logic;
+    oe        : std_logic;
+  end record;
 
   function NULL_TO_FLASH return to_FLASH_t;
 
@@ -250,7 +250,7 @@ package pace_pkg is
 
   function NULL_TO_SOUND return to_SOUND_t;
   
- 	--
+  --
   -- OSD interface data structure
   --
   type from_OSD_t is record
@@ -268,13 +268,13 @@ package pace_pkg is
 
   function NULL_TO_OSD return to_OSD_t;
 
-	-- create a constant that automatically determines 
-	-- whether this is simulation or synthesis
-	constant IN_SIMULATION : BOOLEAN := false
-	-- synthesis translate_off
-	or true
-	-- synthesis translate_on
-	;
-	constant IN_SYNTHESIS : boolean := not IN_SIMULATION;
-	
-end;
+  -- create a constant that automatically determines 
+  -- whether this is simulation or synthesis
+  constant IN_SIMULATION : BOOLEAN := false
+  -- synthesis translate_off
+  or true
+  -- synthesis translate_on
+  ;
+  constant IN_SYNTHESIS : boolean := not IN_SIMULATION;
+
+ end;

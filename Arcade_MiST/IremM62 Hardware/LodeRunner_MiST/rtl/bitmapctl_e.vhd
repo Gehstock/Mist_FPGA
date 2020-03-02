@@ -16,7 +16,7 @@ entity bitmapCtl is
   );
   port               
   (
-    reset					: in std_logic;
+    reset         : in std_logic;
 
     -- video control signals		
     video_ctl     : in from_VIDEO_CTL_t;

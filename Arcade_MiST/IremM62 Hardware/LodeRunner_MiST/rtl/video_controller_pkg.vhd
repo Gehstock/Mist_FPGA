@@ -52,10 +52,10 @@ package video_controller_pkg is
   constant RGB_CYAN     : RGB_t := ((others=>'0'),(others=>'1'),(others=>'1'));
   constant RGB_WHITE    : RGB_t := ((others=>'1'),(others=>'1'),(others=>'1'));
   
-	type VIDEO_REG_t is record
-		h_scale		: std_logic_vector(2 downto 0);
-		v_scale		: std_logic_vector(2 downto 0);
-	end record;
+  type VIDEO_REG_t is record
+    h_scale   : std_logic_vector(2 downto 0);
+    v_scale   : std_logic_vector(2 downto 0);
+  end record;
 
   type from_VIDEO_t is record
     clk       : std_logic;
@@ -187,25 +187,25 @@ package video_controller_pkg is
     );
   end component pace_video_controller;
 
-	component tilemapCtl is          
-	  generic
-	  (
-	    DELAY       : integer
-	  );
-	  port               
-	  (
-	    reset				: in std_logic;
-	
-	    -- video control signals		
-	    video_ctl   : in from_VIDEO_CTL_t;
-	
-	    -- tilemap controller signals
-	    ctl_i       : in to_TILEMAP_CTL_t;
-	    ctl_o       : out from_TILEMAP_CTL_t;
-	
-	    graphics_i  : in to_GRAPHICS_t
-	  );
-	end component tilemapCtl;
+  component tilemapCtl is
+    generic
+    (
+      DELAY       : integer
+    );
+    port
+    (
+      reset       : in std_logic;
+
+      -- video control signals
+      video_ctl   : in from_VIDEO_CTL_t;
+
+      -- tilemap controller signals
+      ctl_i       : in to_TILEMAP_CTL_t;
+      ctl_o       : out from_TILEMAP_CTL_t;
+
+      graphics_i  : in to_GRAPHICS_t
+    );
+  end component tilemapCtl;
 
   component bitmapCtl is
     generic
@@ -214,7 +214,7 @@ package video_controller_pkg is
     );
     port               
     (
-      reset					: in std_logic;
+      reset         : in std_logic;
 
       -- video control signals		
       video_ctl     : in from_VIDEO_CTL_t;

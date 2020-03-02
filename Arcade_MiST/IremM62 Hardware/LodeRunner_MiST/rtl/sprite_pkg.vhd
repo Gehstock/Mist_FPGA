@@ -57,7 +57,7 @@ package sprite_pkg is
     );
     port
     (
-      reset				: in std_logic;
+      reset       : in std_logic;
 
       -- register interface
       reg_i       : in to_SPRITE_REG_t;

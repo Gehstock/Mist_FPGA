@@ -11,13 +11,13 @@ use work.platform_pkg.all;
 use work.platform_variant_pkg.all;
 
 entity spritectl is
-	generic
-	(
-		INDEX		: natural;
-		DELAY   : integer
-	);
-	port               
-	(
+  generic
+  (
+    INDEX   : natural;
+    DELAY   : integer
+  );
+  port               
+  (
     -- sprite registers
     reg_i       : in from_SPRITE_REG_t;
     
@@ -28,8 +28,8 @@ entity spritectl is
     ctl_i       : in to_SPRITE_CTL_t;
     ctl_o       : out from_SPRITE_CTL_t;
     
-		graphics_i  : in to_GRAPHICS_t
-	);
+    graphics_i  : in to_GRAPHICS_t
+  );
 end entity spritectl;
 
 architecture SYN of spritectl is
@@ -47,22 +47,22 @@ begin
   flipData(31 downto 16) <= flip_1 (ctl_i.d(31 downto 16), reg_i.xflip);
   flipData(15 downto 0) <= flip_1 (ctl_i.d(15 downto 0), reg_i.xflip);
   
-	process (clk, clk_ena)
+  process (clk, clk_ena)
 
-   	variable rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
-		variable pel      : std_logic_vector(2 downto 0);
-    variable x        : unsigned(video_ctl.x'range);
-    variable y        : unsigned(video_ctl.y'range);
-    variable yMat     : boolean;      -- raster is between first and last line of sprite
-    variable xMat     : boolean;      -- raster in between left edge and end of line
+  variable rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
+  variable pel      : std_logic_vector(2 downto 0);
+  variable x        : unsigned(video_ctl.x'range);
+  variable y        : unsigned(video_ctl.y'range);
+  variable yMat     : boolean;      -- raster is between first and last line of sprite
+  variable xMat     : boolean;      -- raster in between left edge and end of line
 
-    variable height     : unsigned(6 downto 0);
-		-- the width of rowCount determines the scanline multipler
-		-- - eg.	(4 downto 0) is 1:1
-		-- 				(5 downto 0) is 2:1 (scan-doubling)
---  	variable rowCount : unsigned(3+PACE_VIDEO_V_SCALE downto 0);
---    alias row         : unsigned(4 downto 0) is 
---                          rowCount(rowCount'left downto rowCount'left-4);
+  variable height     : unsigned(6 downto 0);
+  -- the width of rowCount determines the scanline multipler
+  -- - eg. (4 downto 0) is 1:1
+  --       (5 downto 0) is 2:1 (scan-doubling)
+  -- variable rowCount : unsigned(3+PACE_VIDEO_V_SCALE downto 0);
+  -- alias row         : unsigned(4 downto 0) is 
+  --                     rowCount(rowCount'left downto rowCount'left-4);
     variable rowCount   : unsigned(height'range);
     alias row           : unsigned(rowCount'range) is rowCount;
     -- which part of the sprite is being drawn
@@ -71,11 +71,11 @@ begin
     variable prom_i     : integer range sprite_prom'range;
     variable code       : std_logic_vector(9 downto 0);
     variable pal_i      : std_logic_vector(7 downto 0);
-		variable pal_rgb    : pal_rgb_t;
+    variable pal_rgb    : pal_rgb_t;
     
   begin
 
-		if rising_edge(clk) then
+    if rising_edge(clk) then
       if clk_ena = '1' then
         if video_ctl.hblank = '1' then
 
@@ -104,7 +104,7 @@ begin
             rowCount := (others => '0');
             yMat := true;
           elsif row = height then
-            yMat := false;				
+            yMat := false;
           end if;
 
           case sprite_prom(prom_i) is
@@ -132,19 +132,19 @@ begin
             yMat := false;
           end if;
           
-          -- sprites not visible before row 16				
+          -- sprites not visible before row 16
           if ctl_i.ld = '1' then
             if yMat then
-              rowStore := flipData;			-- load sprite data
+              rowStore := flipData; -- load sprite data
             else
               rowStore := (others => '0');
             end if;
           end if;
-              
+
         end if; -- hblank='1'
-        
+
         if video_ctl.stb = '1' then
-      
+
           if x = unsigned(video_ctl.x) then
             -- count up at left edge of sprite
             rowCount := rowCount + 1;
@@ -153,7 +153,7 @@ begin
               xMat := true;
             --end if;
           end if;
-          
+
           if xMat then
             -- shift in next pixel
             pel := rowStore(rowStore'left-32) & rowStore(rowStore'left-16) & rowStore(rowStore'left);

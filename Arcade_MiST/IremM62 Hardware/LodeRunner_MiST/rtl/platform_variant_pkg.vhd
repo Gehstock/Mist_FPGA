@@ -36,11 +36,11 @@ package platform_variant_pkg is
                                             2 => "lr-b-4c"
                                           );
 
-	type pal_rgb_t is array (0 to 2) of std_logic_vector(7 downto 0);
-	type pal_a is array (natural range <>) of pal_rgb_t;
+  type pal_rgb_t is array (0 to 2) of std_logic_vector(7 downto 0);
+  type pal_a is array (natural range <>) of pal_rgb_t;
 
-	constant tile_pal : pal_a(0 to 255) :=
-	(
+  constant tile_pal : pal_a(0 to 255) :=
+  (
     17 => (0=>"00000011", 1=>"11111111", 2=>"11111111"),  -- 03FFFF
     25 => (0=>"11111111", 1=>"11111111", 2=>"00000011"),  -- FFFF03
     33 => (0=>"11111111", 1=>"11111111", 2=>"11111111"),  -- FFFFFF
@@ -200,11 +200,11 @@ package platform_variant_pkg is
     251 => (0=>"10110111", 1=>"01110000", 2=>"01100010"),  -- B77062
     252 => (0=>"11001100", 1=>"01110000", 2=>"10000100"),  -- CC7084
     253 => (0=>"11110000", 1=>"10100110", 2=>"10010100"),  -- F0A694
-		others => (others => "00000011")
+    others => (others => "00000011")
   );
                                           
-	constant sprite_pal : pal_a(0 to 255) :=
-	(
+  constant sprite_pal : pal_a(0 to 255) :=
+  (
     1 => (0=>"11111111", 1=>"00000011", 2=>"00000011"),  -- FF0303
     2 => (0=>"00000011", 1=>"11111111", 2=>"00000011"),  -- 03FF03
     3 => (0=>"11111111", 1=>"11111111", 2=>"00000011"),  -- FFFF03
@@ -411,8 +411,8 @@ package platform_variant_pkg is
     253 => (0=>"11111111", 1=>"11111111", 2=>"11111111"),  -- FFFFFF
     254 => (0=>"00000011", 1=>"10010100", 2=>"00000011"),  -- 039403
     255 => (0=>"11110000", 1=>"11110000", 2=>"11110000"),  -- F0F0F0
-		others => (others => "00000011")
-	);
+    others => (others => "00000011")
+  );
 
   -- table of sprite heights
   type prom_a is array (natural range <>) of integer range 0 to 3;

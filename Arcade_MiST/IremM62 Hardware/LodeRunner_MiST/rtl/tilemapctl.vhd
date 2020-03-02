@@ -10,9 +10,9 @@ use work.platform_variant_pkg.all;
 use work.video_controller_pkg.all;
 
 --
---	Irem M62 Tilemap Controller
+--  Irem M62 Tilemap Controller
 --
---	Tile data is 2 BPP.
+--  Tile data is 2 BPP.
 --
 
 architecture TILEMAP_1 of tilemapCtl is
@@ -32,7 +32,7 @@ architecture TILEMAP_1 of tilemapCtl is
 begin
 
   -- not used
-	ctl_o.map_a(ctl_o.map_a'left downto 11) <= (others => '0');
+  ctl_o.map_a(ctl_o.map_a'left downto 11) <= (others => '0');
   ctl_o.attr_a(ctl_o.attr_a'left downto 11) <= (others => '0');
   ctl_o.tile_a(ctl_o.tile_a'left downto 13) <= (others => '0');
 
@@ -48,13 +48,13 @@ begin
 
     variable tile_d_r   : std_logic_vector(23 downto 0);
     variable attr_d_r   : std_logic_vector(7 downto 0);
-		variable pel        : std_logic_vector(2 downto 0);
+    variable pel        : std_logic_vector(2 downto 0);
     variable pal_i      : std_logic_vector(7 downto 0);
-		variable pal_rgb    : pal_rgb_t;
+    variable pal_rgb    : pal_rgb_t;
 
   begin
   
-  	if rising_edge(clk) then
+    if rising_edge(clk) then
       if clk_ena = '1' then
 
         -- 1st stage of pipeline
@@ -99,7 +99,7 @@ begin
 --        end if;
 
       end if; -- clk_ena
-		end if; -- rising_edge_clk
+    end if; -- rising_edge_clk
 
   end process;
 

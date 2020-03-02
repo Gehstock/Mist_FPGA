@@ -40,7 +40,7 @@ entity platform is
     sprite_reg_o    : out to_SPRITE_REG_t;
     sprite_i        : in from_SPRITE_CTL_t;
     sprite_o        : out to_SPRITE_CTL_t;
-		spr0_hit				: in std_logic;
+    spr0_hit        : in std_logic;
 
     -- various graphics information
     graphics_i      : in from_GRAPHICS_t;
@@ -60,12 +60,12 @@ end platform;
 
 architecture SYN of platform is
 
-	alias clk_sys				  : std_logic is clkrst_i.clk(0);
-	alias rst_sys				  : std_logic is clkrst_i.rst(0);
-	alias clk_video       : std_logic is clkrst_i.clk(1);
-	
+  alias clk_sys         : std_logic is clkrst_i.clk(0);
+  alias rst_sys         : std_logic is clkrst_i.rst(0);
+  alias clk_video       : std_logic is clkrst_i.clk(1);
+
   -- cpu signals  
-  signal clk_3M072_en		: std_logic;
+  signal clk_3M072_en   : std_logic;
   signal cpu_clk_en     : std_logic;
   signal cpu_a          : std_logic_vector(15 downto 0);
   signal cpu_d_i        : std_logic_vector(7 downto 0);
@@ -76,17 +76,17 @@ architecture SYN of platform is
   signal cpu_irq        : std_logic;
 
   -- ROM signals        
-	signal rom_cs					: std_logic;
+  signal rom_cs         : std_logic;
 --  signal rom_d_o        : std_logic_vector(7 downto 0);
   
   -- keyboard signals
-	                        
-  -- VRAM signals       
-	signal vram_cs				: std_logic;
-	signal vram_wr				: std_logic;
-   signal vram_d_o       : std_logic_vector(7 downto 0);
 
-   signal snd_cs              : std_logic;
+  -- VRAM signals       
+  signal vram_cs        : std_logic;
+  signal vram_wr        : std_logic;
+  signal vram_d_o       : std_logic_vector(7 downto 0);
+
+  signal snd_cs         : std_logic;
 
   
   -- RAM signals        
@@ -97,8 +97,8 @@ architecture SYN of platform is
   -- CRAM/SPRITE signals        
   signal cram_cs        : std_logic;
   signal cram_wr        : std_logic;
-	signal cram_d_o		    : std_logic_vector(7 downto 0);
-	signal sprite_cs      : std_logic;
+  signal cram_d_o       : std_logic_vector(7 downto 0);
+  signal sprite_cs      : std_logic;
   
   -- misc signals      
   signal in_cs          : std_logic;
@@ -165,35 +165,35 @@ begin
   wram_cs <=    '1' when STD_MATCH(cpu_a, X"E"&"------------") else '0';
 
   -- OUTPUT $XX00
-	snd_cs <=      '1' when cpu_a(7 downto 0) = X"00" else '0';
+  snd_cs <=      '1' when cpu_a(7 downto 0) = X"00" else '0';
 
   -- INPUTS (I/O) $00-$04
   in_cs <=      '1' when STD_MATCH(cpu_a(7 downto 0), X"0"&"00--") else 
                 '1' when STD_MATCH(cpu_a(7 downto 0), X"04") else
                 '0';
 
-	process (clk_sys, rst_sys) begin
-		if rst_sys = '1' then
-			sound_data_o <= X"FF";
-		elsif rising_edge(clk_sys) then
-			if cpu_clk_en = '1' and cpu_io_wr = '1' and snd_cs = '1' then
-				sound_data_o <= cpu_d_o;
-			end if;
-		end if; 
-	end process;
+  process (clk_sys, rst_sys) begin
+    if rst_sys = '1' then
+      sound_data_o <= X"FF";
+    elsif rising_edge(clk_sys) then
+      if cpu_clk_en = '1' and cpu_io_wr = '1' and snd_cs = '1' then
+        sound_data_o <= cpu_d_o;
+      end if;
+    end if; 
+  end process;
 
-	-- memory read mux
-	cpu_d_i <=  in_d_o when (cpu_io_rd = '1' and in_cs = '1') else
-					cpu_rom_do when rom_cs = '1' else
-					vram_d_o when vram_cs = '1' else
-					cram_d_o when cram_cs = '1' else
-					wram_d_o when wram_cs = '1' else
-					(others => '1');
+  -- memory read mux
+  cpu_d_i <=  in_d_o when (cpu_io_rd = '1' and in_cs = '1') else
+              cpu_rom_do when rom_cs = '1' else
+              vram_d_o when vram_cs = '1' else
+              cram_d_o when cram_cs = '1' else
+              wram_d_o when wram_cs = '1' else
+              (others => '1');
               
   -- memory block write signals 
-	vram_wr <= vram_cs and cpu_mem_wr;
-	cram_wr <= cram_cs and cpu_mem_wr;
-	wram_wr <= wram_cs and cpu_mem_wr;
+  vram_wr <= vram_cs and cpu_mem_wr;
+  cram_wr <= cram_cs and cpu_mem_wr;
+  wram_wr <= wram_cs and cpu_mem_wr;
 
   -- sprite registers
   sprite_reg_o.clk <= clk_sys;
@@ -229,24 +229,26 @@ begin
     cpu_inst : entity work.Z80                                                
       port map
       (
-        clk 		=> clk_sys,                                   
-        clk_en	=> cpu_clk_en,
-        reset  	=> cpu_rst,
+        clk     => clk_sys,                                   
+        clk_en  => cpu_clk_en,
+        reset   => cpu_rst,
 
-        addr   	=> cpu_a,
-        datai  	=> cpu_d_i,
-        datao  	=> cpu_d_o,
+        addr    => cpu_a,
+        datai   => cpu_d_i,
+        datao   => cpu_d_o,
 
-        mem_rd 	=> open,
-        mem_wr 	=> cpu_mem_wr,
-        io_rd  	=> cpu_io_rd,
-        io_wr  	=> cpu_io_wr,
+        mem_rd  => open,
+        mem_wr  => cpu_mem_wr,
+        io_rd   => cpu_io_rd,
+        io_wr   => cpu_io_wr,
 
-        intreq 	=> cpu_irq,
-        intvec 	=> cpu_d_i,
-        intack 	=> open,
-        nmi    	=> '0'
+        intreq  => cpu_irq,
+        intvec  => cpu_d_i,
+        intack  => open,
+        nmi     => '0'
       );
+
+    cpu_rom_addr <= cpu_a(14 downto 0);
 
   end block BLK_CPU;
   
@@ -256,18 +258,18 @@ begin
 
   begin
   
-		process (clk_sys, rst_sys)
-			variable vblank_r : std_logic_vector(3 downto 0);
-			alias vblank_prev : std_logic is vblank_r(vblank_r'left);
-			alias vblank_um   : std_logic is vblank_r(vblank_r'left-1);
+    process (clk_sys, rst_sys)
+      variable vblank_r : std_logic_vector(3 downto 0);
+      alias vblank_prev : std_logic is vblank_r(vblank_r'left);
+      alias vblank_um   : std_logic is vblank_r(vblank_r'left-1);
       -- 1us duty for VBLANK_INT
       variable count    : integer range 0 to CLK0_FREQ_MHz * 100;
-		begin
-			if rst_sys = '1' then
-				vblank_int <= '0';
-				vblank_r := (others => '0');
+    begin
+      if rst_sys = '1' then
+        vblank_int <= '0';
+        vblank_r := (others => '0');
         count := count'high;
-			elsif rising_edge(clk_sys) then
+      elsif rising_edge(clk_sys) then
         -- rising edge vblank only
         if vblank_prev = '0' and vblank_um = '1' then
           count := 0;
@@ -279,8 +281,8 @@ begin
           vblank_int <= '0';
         end if;
         vblank_r := vblank_r(vblank_r'left-1 downto 0) & graphics_i.vblank;
-			end if; -- rising_edge(clk_sys)
-		end process;
+      end if; -- rising_edge(clk_sys)
+    end process;
 
     -- generate INT
     cpu_irq <= vblank_int;
@@ -323,7 +325,6 @@ begin
     graphics_o.bit16(0) <= m62_hscroll;
   end block BLK_SCROLL;
   
-cpu_rom_addr <= cpu_a(14 downto 0);
   
   BLK_GFX_ROMS : block
   
@@ -339,19 +340,19 @@ cpu_rom_addr <= cpu_a(14 downto 0);
       char_rom_inst : entity work.sprom
         generic map
         (
-          init_file		=> "./roms/" &
+          init_file  => "./roms/" &
                           M62_CHAR_ROM(i) & ".hex",
-          widthad_a		=> 13
+          widthad_a  => 13
         )
         port map
         (
-          clock			=> clk_video,
-          address		=> tilemap_i(1).tile_a(12 downto 0),
-          q					=> chr_rom_d(i)
+          clock      => clk_video,
+          address    => tilemap_i(1).tile_a(12 downto 0),
+          q          => chr_rom_d(i)
         );
     end generate GEN_CHAR_ROMS;
 
- tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
+  tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
 
 -- chr_rom_addr <= tilemap_i(1).tile_a(12 downto 0);
  --tilemap_o(1).tile_d(23 downto 0) <= chr_rom_do;
@@ -361,18 +362,18 @@ cpu_rom_addr <= cpu_a(14 downto 0);
       sprite_rom_inst : entity work.dprom_2r
         generic map
         (
-          init_file		=> "./roms/" &
+          init_file  => "./roms/" &
                           M62_SPRITE_ROM(i) & ".hex",
-          widthad_a		=> 13,
-          widthad_b		=> 13
+          widthad_a  => 13,
+          widthad_b  => 13
         )
         port map
         (
-          clock			              => clk_video,
+          clock                   => clk_video,
           address_a(12 downto 5)  => sprite_i.a(12 downto 5),
           address_a(4)            => '0',
           address_a(3 downto 0)   => sprite_i.a(3 downto 0),
-          q_a 			              => spr_rom_left(i),
+          q_a                     => spr_rom_left(i),
           address_b(12 downto 5)  => sprite_i.a(12 downto 5),
           address_b(4)            => '1',
           address_b(3 downto 0)   => sprite_i.a(3 downto 0),
@@ -410,65 +411,63 @@ cpu_rom_addr <= cpu_a(14 downto 0);
     vram_inst : entity work.dpram
       generic map
       (
-        init_file		=> "",
-        widthad_a		=> 11
+        init_file  => "",
+        widthad_a  => 11
       )
       port map
       (
-        clock_b			=> clk_sys,
-        address_b		=> vram_a,
-        wren_b			=> vram_wr,
-        data_b			=> cpu_d_o,
-        q_b					=> vram_d_o,
+        clock_b    => clk_sys,
+        address_b  => vram_a,
+        wren_b     => vram_wr,
+        data_b     => cpu_d_o,
+        q_b        => vram_d_o,
 
-        clock_a			=> clk_video,
-        address_a		=> tilemap_i(1).map_a(10 downto 0),
-        wren_a			=> '0',
-        data_a			=> (others => 'X'),
-        q_a					=> tilemap_o(1).map_d(7 downto 0)
+        clock_a    => clk_video,
+        address_a  => tilemap_i(1).map_a(10 downto 0),
+        wren_a     => '0',
+        data_a     => (others => 'X'),
+        q_a        => tilemap_o(1).map_d(7 downto 0)
       );
     tilemap_o(1).map_d(15 downto 8) <= (others => '0');
 
     cram_inst : entity work.dpram
       generic map
       (
-        init_file		=> "",
-        widthad_a		=> 11
+        init_file  => "",
+        widthad_a  => 11
       )
       port map
       (
-        clock_b			=> clk_sys,
-        address_b		=> cram_a,
-        wren_b			=> cram_wr,
-        data_b			=> cpu_d_o,
-        q_b					=> cram_d_o,
+        clock_b     => clk_sys,
+        address_b   => cram_a,
+        wren_b      => cram_wr,
+        data_b      => cpu_d_o,
+        q_b         => cram_d_o,
 
-        clock_a			=> clk_video,
-        address_a		=> tilemap_i(1).attr_a(10 downto 0),
-        wren_a			=> '0',
-        data_a			=> (others => 'X'),
-        q_a					=> tilemap_o(1).attr_d(7 downto 0)
+        clock_a     => clk_video,
+        address_a   => tilemap_i(1).attr_a(10 downto 0),
+        wren_a      => '0',
+        data_a      => (others => 'X'),
+        q_a         => tilemap_o(1).attr_d(7 downto 0)
       );
     tilemap_o(1).attr_d(15 downto 8) <= (others => '0');
-    
-  end block BLK_VRAM;
- 
-  
-    wram_inst : entity work.spram
-      generic map
-      (
-      	widthad_a => 12
-      )
-      port map
-      (
-        clock				=> clk_sys,
-        address			=> cpu_a(11 downto 0),
-        data				=> cpu_d_o,
-        wren				=> wram_wr,
-        q						=> wram_d_o
-      );
 
-		
+  end block BLK_VRAM;
+
+  wram_inst : entity work.spram
+    generic map
+    (
+      widthad_a => 12
+    )
+    port map
+    (
+      clock     => clk_sys,
+      address   => cpu_a(11 downto 0),
+      data      => cpu_d_o,
+      wren      => wram_wr,
+      q         => wram_d_o
+    );
+
   -- unused outputs
 
   sprite_o.ld <= '0';
