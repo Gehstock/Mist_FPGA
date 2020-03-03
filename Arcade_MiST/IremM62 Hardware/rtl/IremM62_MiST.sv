@@ -1,4 +1,4 @@
-module LodeRunner_MiST(
+module IremM62_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -33,7 +33,7 @@ module LodeRunner_MiST(
 `define CORE_NAME "LDRUN"
 wire [6:0] core_mod;
 
-localparam CONF_STR = {      
+localparam CONF_STR = {
 	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",

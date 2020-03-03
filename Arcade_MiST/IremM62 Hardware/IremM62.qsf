@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		LodeRunner_MiST_assignment_defaults.qdf
+#		IremM62_MiST_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -44,7 +44,7 @@ set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/LodeRunner_MiST.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/IremM62_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/target_top.vhd
 set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/platform_pkg.vhd
@@ -76,9 +76,9 @@ set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/cpu68.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
 set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
-set_global_assignment -name VHDL_FILE ../../../common/CPU/T80/Z80.vhd
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -161,7 +161,7 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY LodeRunner_MiST
+set_global_assignment -name TOP_LEVEL_ENTITY IremM62_MiST
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
@@ -216,58 +216,58 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
 # -----------------------------
-# start ENTITY(LodeRunner_MiST)
+# start ENTITY(IremM62_MiST)
 
 	# Pin & Location Assignments
 	# ==========================
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
-	set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
-	set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 
 	# Fitter Assignments
 	# ==================
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(LodeRunner_MiST)
+# end ENTITY(IremM62_MiST)
 # ---------------------------
 set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_location_assignment PLL_1 -to pll|altpll_component|auto_generated|pll1
