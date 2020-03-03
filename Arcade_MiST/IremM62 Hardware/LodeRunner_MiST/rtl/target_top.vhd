@@ -42,7 +42,11 @@ entity target_top is port(
 		cpu_rom_do      : in std_logic_vector(7 downto 0);
 		snd_rom_addr    : out std_logic_vector(13 downto 0);
 		snd_rom_do      : in std_logic_vector(7 downto 0);
-		snd_vma         : out std_logic
+		snd_vma         : out std_logic;
+		gfx1_addr       : out std_logic_vector(17 downto 2);
+		gfx1_do         : in std_logic_vector(31 downto 0);
+		gfx2_addr       : out std_logic_vector(17 downto 2);
+		gfx2_do         : in std_logic_vector(31 downto 0)
   );
 end target_top;
 
@@ -111,7 +115,11 @@ pace_inst : entity work.pace
 		platform_i        => platform_i,
 		platform_o        => platform_o,
 		cpu_rom_addr      => cpu_rom_addr,
-		cpu_rom_do        => cpu_rom_do
+		cpu_rom_do        => cpu_rom_do,
+		gfx1_addr         => gfx1_addr,
+		gfx1_do           => gfx1_do,
+		gfx2_addr         => gfx2_addr,
+		gfx2_do           => gfx2_do
     );
 
 		inputs_i.jamma_n.coin(1) <= not usr_coin1;

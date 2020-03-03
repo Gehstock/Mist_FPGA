@@ -40,16 +40,15 @@ architecture SYN of spritectl is
   signal flipData : std_logic_vector(47 downto 0);   -- flipped row data
    
   alias rgb       : RGB_t is ctl_o.rgb;
-  
+  signal ld_r     : std_logic;
+  signal left_d   : std_logic;
+  signal rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
+
 begin
 
-  flipData(47 downto 32) <= flip_1 (ctl_i.d(47 downto 32), reg_i.xflip);
-  flipData(31 downto 16) <= flip_1 (ctl_i.d(31 downto 16), reg_i.xflip);
-  flipData(15 downto 0) <= flip_1 (ctl_i.d(15 downto 0), reg_i.xflip);
-  
-  process (clk, clk_ena)
+  process (clk, clk_ena, left_d, reg_i)
 
-  variable rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
+--  variable rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
   variable pel      : std_logic_vector(2 downto 0);
   variable x        : unsigned(video_ctl.x'range);
   variable y        : unsigned(video_ctl.y'range);
@@ -77,6 +76,7 @@ begin
 
     if rising_edge(clk) then
       if clk_ena = '1' then
+        ld_r <= ctl_i.ld;
         if video_ctl.hblank = '1' then
 
           x := unsigned(reg_i.x) - M62_VIDEO_H_OFFSET + PACE_VIDEO_PIPELINE_DELAY - 3;
@@ -131,16 +131,28 @@ begin
           if y = 0 then
             yMat := false;
           end if;
-          
+
           -- sprites not visible before row 16
-          if ctl_i.ld = '1' then
+          if ld_r = '0' and ctl_i.ld = '1' then
+            left_d <= not left_d; -- switch sprite half
             if yMat then
-              rowStore := flipData; -- load sprite data
+              if left_d = '0' then
+                -- store first half of the sprite line data
+                flipData(39 downto 32) <= ctl_i.d(23 downto 16);
+                flipData(23 downto 16) <= ctl_i.d(15 downto 8);
+                flipData(7 downto 0) <= ctl_i.d(7 downto 0);
+              else
+                -- load sprite data
+                rowStore(47 downto 32) <= flip_1(flipData(39 downto 32) & ctl_i.d(23 downto 16), reg_i.xflip);
+                rowStore(31 downto 16) <= flip_1(flipData(23 downto 16) & ctl_i.d(15 downto  8), reg_i.xflip);
+                rowStore(15 downto  0) <= flip_1(flipData( 7 downto  0) & ctl_i.d( 7 downto  0), reg_i.xflip);
+              end if;
             else
-              rowStore := (others => '0');
+              rowStore <= (others => '0');
             end if;
           end if;
-
+        else
+          left_d <= '0';
         end if; -- hblank='1'
 
         if video_ctl.stb = '1' then
@@ -157,9 +169,9 @@ begin
           if xMat then
             -- shift in next pixel
             pel := rowStore(rowStore'left-32) & rowStore(rowStore'left-16) & rowStore(rowStore'left);
-            rowStore(47 downto 32) := rowStore(46 downto 32) & '0';
-            rowStore(31 downto 16) := rowStore(30 downto 16) & '0';
-            rowStore(15 downto 0) := rowStore(14 downto 0) & '0';
+            rowStore(47 downto 32) <= rowStore(46 downto 32) & '0';
+            rowStore(31 downto 16) <= rowStore(30 downto 16) & '0';
+            rowStore(15 downto 0) <= rowStore(14 downto 0) & '0';
           end if;
 
         end if;
@@ -190,7 +202,7 @@ begin
     -- generate sprite data address
     ctl_o.a(15) <= '0'; -- unused
     ctl_o.a(14 downto 5) <= code;
-    ctl_o.a(4) <= '0'; -- dual-port RAM
+    ctl_o.a(4) <= left_d;
     if reg_i.yflip = '0' then
       ctl_o.a(3 downto 0) <= std_logic_vector(row(3 downto 0));
     else

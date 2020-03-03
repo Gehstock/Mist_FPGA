@@ -46,9 +46,9 @@ module sdram (
 	input      [15:0] port1_d,
 	output reg [15:0] port1_q,
 
-	input      [16:1] cpu1_addr,
+	input      [17:1] cpu1_addr,
 	output reg [15:0] cpu1_q,
-	input      [16:1] cpu2_addr,
+	input      [17:1] cpu2_addr,
 	output reg [15:0] cpu2_q,
 
 	input             port2_req,
@@ -59,7 +59,9 @@ module sdram (
 	input      [15:0] port2_d,
 	output reg [31:0] port2_q,
 	
-	input      [16:2] sp_addr,
+	input      [19:2] chr1_addr,
+	output reg [31:0] chr1_q,
+	input      [19:2] sp_addr,
 	output reg [31:0] sp_q
 );
 
@@ -83,24 +85,25 @@ localparam RFRSH_CYCLES = 10'd842;
  SDRAM state machine for 2 bank interleaved access
  1 word burst, CL2
 cmd issued  registered
- 0 RAS0     cas1 - data0 read burst terminated
- 1          ras0
+ 0 RAS0     
+ 1          ras0 - data1 returned
  2          data1 returned
- 3 CAS0     data1 returned
+ 3 CAS0     
  4 RAS1     cas0
  5          ras1
  6 CAS1     data0 returned
+ 7          cas1 - data0 read burst terminated
 */
 
 localparam STATE_RAS0      = 3'd0;   // first state in cycle
 localparam STATE_RAS1      = 3'd4;   // Second ACTIVE command after RAS0 + tRRD (15ns)
 localparam STATE_CAS0      = STATE_RAS0 + RASCAS_DELAY + 1'd1; // CAS phase - 3
 localparam STATE_CAS1      = STATE_RAS1 + RASCAS_DELAY; // CAS phase - 6
-localparam STATE_READ0     = 3'd0;// STATE_CAS0 + CAS_LATENCY + 2'd2; // 7
-localparam STATE_READ1     = 3'd3;
-localparam STATE_DS1b      = 3'd0;
-localparam STATE_READ1b    = 3'd4;
-localparam STATE_LAST      = 3'd6;
+localparam STATE_READ0     = STATE_CAS0 + CAS_LATENCY + 2'd2; // 7
+localparam STATE_READ1     = 3'd2;
+localparam STATE_DS1b      = 3'd7;
+localparam STATE_READ1b    = 3'd3;
+localparam STATE_LAST      = 3'd7;
 
 reg [2:0] t;
 
@@ -152,8 +155,8 @@ assign SDRAM_nWE  = sd_cmd[0];
 
 reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
-reg [16:1] addr_last[2];
-reg [16:2] addr_last2[2];
+reg [17:1] addr_last[2];
+reg [19:2] addr_last2[2];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
@@ -166,6 +169,7 @@ localparam PORT_NONE  = 2'd0;
 localparam PORT_CPU1  = 2'd1;
 localparam PORT_CPU2  = 2'd2;
 localparam PORT_SP    = 2'd1;
+localparam PORT_CHR1  = 2'd2;
 localparam PORT_REQ   = 2'd3;
 
 reg  [1:0] next_port[2];
@@ -185,10 +189,10 @@ always @(*) begin
 		addr_latch_next[0] = { 1'b0, port1_a };
 	end else if (cpu1_addr != addr_last[PORT_CPU1]) begin
 		next_port[0] = PORT_CPU1;
-		addr_latch_next[0] = { 8'd0, cpu1_addr };
+		addr_latch_next[0] = { 7'd0, cpu1_addr };
 	end else if (cpu2_addr != addr_last[PORT_CPU2]) begin
 		next_port[0] = PORT_CPU2;
-		addr_latch_next[0] = { 8'd0, cpu2_addr };
+		addr_latch_next[0] = { 7'd0, cpu2_addr };
 	end else begin
 		next_port[0] = PORT_NONE;
 		addr_latch_next[0] = addr_latch[0];
@@ -202,7 +206,10 @@ always @(*) begin
 		addr_latch_next[1] = { 1'b1, port2_a };
 	end else if (sp_addr != addr_last2[PORT_SP]) begin
 		next_port[1] = PORT_SP;
-		addr_latch_next[1] = { 1'b1, 7'd0, sp_addr, 1'b0 };
+		addr_latch_next[1] = { 1'b1, 4'd0, sp_addr, 1'b0 };
+	end else if (chr1_addr != addr_last2[PORT_CHR1]) begin
+		next_port[1] = PORT_CHR1;
+		addr_latch_next[1] = { 1'b1, 4'd0, chr1_addr, 1'b0 };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -249,7 +256,7 @@ always @(posedge clk) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[0][22:10];
 				SDRAM_BA <= addr_latch_next[0][24:23];
-				addr_last[next_port[0]] <= addr_latch_next[0][16:1];
+				addr_last[next_port[0]] <= addr_latch_next[0][17:1];
 				if (next_port[0] == PORT_REQ) begin
 					{ oe_latch[0], we_latch[0] } <= { ~port1_we, port1_we };
 					ds[0] <= port1_ds;
@@ -273,7 +280,7 @@ always @(posedge clk) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[1][22:10];
 				SDRAM_BA <= addr_latch_next[1][24:23];
-				addr_last2[next_port[1]] <= addr_latch_next[1][16:2];
+				addr_last2[next_port[1]] <= addr_latch_next[1][19:2];
 				if (next_port[1] == PORT_REQ) begin
 					{ oe_latch[1], we_latch[1] } <= { ~port1_we, port1_we };
 					ds[1] <= port2_ds;
@@ -327,8 +334,9 @@ always @(posedge clk) begin
 
 		if(t == STATE_READ1 && oe_latch[1]) begin
 			case(port[1])
-				PORT_REQ:	port2_q[15:0] <= sd_din;
-				PORT_SP :    sp_q[15:0] <= sd_din;
+				PORT_REQ : port2_q[15:0] <= sd_din;
+				PORT_SP  :    sp_q[15:0] <= sd_din;
+				PORT_CHR1:  chr1_q[15:0] <= sd_din;
 				default: ;
 			endcase;
 		end
@@ -337,8 +345,9 @@ always @(posedge clk) begin
 
 		if(t == STATE_READ1b && oe_latch[1]) begin
 			case(port[1])
-				PORT_REQ: begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
-				PORT_SP : begin    sp_q[31:16] <= sd_din; end
+				PORT_REQ  : begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
+				PORT_SP   : begin    sp_q[31:16] <= sd_din; end
+				PORT_CHR1 : begin  chr1_q[31:16] <= sd_din; end
 				default: ;
 			endcase;
 		end

@@ -53,7 +53,11 @@ entity platform is
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
     cpu_rom_addr    : out std_logic_vector(14 downto 0);
-    cpu_rom_do      : in std_logic_vector(7 downto 0)
+    cpu_rom_do      : in std_logic_vector(7 downto 0);
+    gfx1_addr       : out std_logic_vector(17 downto 2);
+    gfx1_do         : in std_logic_vector(31 downto 0);
+    gfx2_addr       : out std_logic_vector(17 downto 2);
+    gfx2_do         : in std_logic_vector(31 downto 0)
   );
 
 end platform;
@@ -331,72 +335,71 @@ begin
     type gfx_rom_d_a is array(M62_CHAR_ROM'range) of std_logic_vector(7 downto 0);
     signal chr_rom_d      : gfx_rom_d_a;
     type spr_rom_d_a is array(0 to 11) of std_logic_vector(7 downto 0);
-    signal spr_rom_left   : spr_rom_d_a;
-    signal spr_rom_right  : spr_rom_d_a;
+    signal spr_rom        : spr_rom_d_a;
     
   begin
-  
-    GEN_CHAR_ROMS : for i in M62_CHAR_ROM'range generate
-      char_rom_inst : entity work.sprom
-        generic map
-        (
-          init_file  => "./roms/" &
-                          M62_CHAR_ROM(i) & ".hex",
-          widthad_a  => 13
-        )
-        port map
-        (
-          clock      => clk_video,
-          address    => tilemap_i(1).tile_a(12 downto 0),
-          q          => chr_rom_d(i)
-        );
-    end generate GEN_CHAR_ROMS;
 
-  tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
+    -- external background ROMs
+    gfx1_addr <= "000"&tilemap_i(1).tile_a(12 downto 0);
+    tilemap_o(1).tile_d(23 downto 0) <= gfx1_do(7 downto 0) & gfx1_do(15 downto 8) & gfx1_do(23 downto 16);
 
--- chr_rom_addr <= tilemap_i(1).tile_a(12 downto 0);
- --tilemap_o(1).tile_d(23 downto 0) <= chr_rom_do;
- 
- 
-    GEN_SPRITE_ROMS : for i in M62_SPRITE_ROM'range generate
-      sprite_rom_inst : entity work.dprom_2r
-        generic map
-        (
-          init_file  => "./roms/" &
-                          M62_SPRITE_ROM(i) & ".hex",
-          widthad_a  => 13,
-          widthad_b  => 13
-        )
-        port map
-        (
-          clock                   => clk_video,
-          address_a(12 downto 5)  => sprite_i.a(12 downto 5),
-          address_a(4)            => '0',
-          address_a(3 downto 0)   => sprite_i.a(3 downto 0),
-          q_a                     => spr_rom_left(i),
-          address_b(12 downto 5)  => sprite_i.a(12 downto 5),
-          address_b(4)            => '1',
-          address_b(3 downto 0)   => sprite_i.a(3 downto 0),
-          q_b                     => spr_rom_right(i)
-        );
-    end generate GEN_SPRITE_ROMS;
+    -- internal background ROMs
+--    GEN_CHAR_ROMS : for i in M62_CHAR_ROM'range generate
+--      char_rom_inst : entity work.sprom
+--        generic map
+--        (
+--          init_file  => "./roms/" &
+--                          M62_CHAR_ROM(i) & ".hex",
+--          widthad_a  => 13
+--        )
+--        port map
+--        (
+--          clock      => clk_video,
+--          address    => tilemap_i(1).tile_a(12 downto 0),
+--          q          => chr_rom_d(i)
+--        );
+--    end generate GEN_CHAR_ROMS;
+--
+--    tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
 
-    sprite_o.d(sprite_o.d'left downto 48) <= (others => '0');
-    sprite_o.d(47 downto 0) <=  spr_rom_left(0) & spr_rom_right(0) & 
-                                spr_rom_left(1) & spr_rom_right(1) &
-                                spr_rom_left(2) & spr_rom_right(2)
-                                  when sprite_i.a(14 downto 13) = "00" else
-                                spr_rom_left(3) & spr_rom_right(3) &
-                                spr_rom_left(4) & spr_rom_right(4) &
-                                spr_rom_left(5) & spr_rom_right(5) 
-                                  when sprite_i.a(14 downto 13) = "01" else
-                                spr_rom_left(6) & spr_rom_right(6) &
-                                spr_rom_left(7) & spr_rom_right(7) &
-                                spr_rom_left(8) & spr_rom_right(8) 
-                                  when sprite_i.a(14 downto 13) = "10" else
-                                spr_rom_left(9) & spr_rom_right(9) &
-                                spr_rom_left(10) & spr_rom_right(10) &
-                                spr_rom_left(11) & spr_rom_right(11);
+    -- external sprite ROMs
+    gfx2_addr <= '0' & sprite_i.a(14 downto 0);
+    sprite_o.d(23 downto 0) <= gfx2_do(7 downto 0) & gfx2_do(15 downto 8) & gfx2_do(23 downto 16);
+
+    -- internal sprite ROMs
+--    GEN_SPRITE_ROMS : for i in M62_SPRITE_ROM'range generate
+--      sprite_rom_inst : entity work.sprom
+--        generic map
+--        (
+--          init_file  => "./roms/" &
+--                          M62_SPRITE_ROM(i) & ".hex",
+--          widthad_a  => 13
+--        )
+--        port map
+--        (
+--          clock                 => clk_video,
+--          address(12 downto 5)  => sprite_i.a(12 downto 5),
+--          address(4 downto 0)   => sprite_i.a(4 downto 0),
+--          q                     => spr_rom(i)
+--        );
+--    end generate GEN_SPRITE_ROMS;
+--
+--    sprite_o.d(sprite_o.d'left downto 24) <= (others => '0');
+--    sprite_o.d(23 downto 0) <=  spr_rom(0) & 
+--                                spr_rom(1) &
+--                                spr_rom(2)
+--                                  when sprite_i.a(14 downto 13) = "00" else
+--                                spr_rom(3) &
+--                                spr_rom(4) &
+--                                spr_rom(5) 
+--                                  when sprite_i.a(14 downto 13) = "01" else
+--                                spr_rom(6) &
+--                                spr_rom(7) &
+--                                spr_rom(8)
+--                                  when sprite_i.a(14 downto 13) = "10" else
+--                                spr_rom(9) &
+--                                spr_rom(10) &
+--                                spr_rom(11);
 
   end block BLK_GFX_ROMS;
 

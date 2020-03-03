@@ -30,8 +30,10 @@ module LodeRunner_MiST(
 
 `include "rtl/build_id.v" 
 
+`define CORE_NAME "LDRUN"
+
 localparam CONF_STR = {      
-	"LDRUNNER;ROM;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
@@ -98,13 +100,28 @@ user_io(
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
 
-wire [16:0] snd_addr;
+wire [17:0] snd_addr;
 wire [13:0] snd_rom_addr;
 wire [15:0] snd_do;
 wire        snd_vma;
 
+wire [14:0] chr1_addr;
+wire [31:0] chr1_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
+
+/* ROM structure
+00000-1FFFF CPU1 128k
+20000-2FFFF CPU2  64k
+30000-4FFFF GFX1 128k
+50000-8FFFF GFX2 256k
+
+90000-9FFFF GFX3  64k
+A0000-A02FF spr_color_proms 3*256b
+A0300-A05FF chr_color_proms 3*256b
+A0600-A08FF fg_color_proms  3*256b
+A0900-A091F spr_height_prom 32b
+*/
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -124,7 +141,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000; //todo
+wire [24:0] sp_ioctl_addr = ioctl_addr - 20'h30000;
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -141,22 +158,24 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : {3'b000, rom_addr[14:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : snd_addr[16:1] ),
+	.cpu2_addr     ( ioctl_downl ? 17'h1ffff : snd_addr[17:1] ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[23:16], sp_ioctl_addr[13:0], sp_ioctl_addr[15]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {sp_ioctl_addr[14], ~sp_ioctl_addr[14]} ),
+	.port2_a       ( {sp_ioctl_addr[23:15], sp_ioctl_addr[12:0], sp_ioctl_addr[14]} ), // merge sprite roms to 32-bit wide words
+	.port2_ds      ( {sp_ioctl_addr[13], ~sp_ioctl_addr[13]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'h7fff : sp_addr ),
-	.sp_q          ( sp_do )
+	.chr1_addr     ( chr1_addr ),
+	.chr1_q        ( chr1_do   ),
+	.sp_addr       ( 16'h8000 + sp_addr ),
+	.sp_q          ( sp_do     )
 );
 
 // ROM download controller
@@ -168,13 +187,13 @@ always @(posedge clk_sys) begin
 	if (ioctl_downl) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
-			port2_req <= ~port2_req;
+			if (ioctl_addr >= 20'h30000) port2_req <= ~port2_req;
 		end
 	end
 
-	// clock domain crossing here (clk_snd -> clk_sys)
+	// async clock domain crossing here (clk_snd -> clk_sys)
 	snd_vma_r <= snd_vma; snd_vma_r2 <= snd_vma_r;
-	if (snd_vma_r2) snd_addr <= snd_rom_addr + 16'h8000;
+	if (snd_vma_r2) snd_addr <= snd_rom_addr + 18'h20000;
 end
 
 // reset signal generation
@@ -230,7 +249,11 @@ target_top target_top(
 	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr(snd_rom_addr),
 	.snd_rom_do(snd_rom_addr[0] ? snd_do[15:8] : snd_do[7:0]),
-	.snd_vma(snd_vma)
+	.snd_vma(snd_vma),
+	.gfx1_addr(chr1_addr),
+	.gfx1_do(chr1_do),
+	.gfx2_addr(sp_addr),
+	.gfx2_do(sp_do)
   ); 
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(

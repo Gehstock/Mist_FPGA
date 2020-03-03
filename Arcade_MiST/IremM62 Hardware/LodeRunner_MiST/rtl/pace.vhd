@@ -34,7 +34,11 @@ entity PACE is
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
     cpu_rom_addr    : out std_logic_vector(14 downto 0);
-    cpu_rom_do      : in std_logic_vector(7 downto 0)
+    cpu_rom_do      : in std_logic_vector(7 downto 0);
+    gfx1_addr       : out std_logic_vector(17 downto 2);
+    gfx1_do         : in std_logic_vector(31 downto 0);
+    gfx2_addr       : out std_logic_vector(17 downto 2);
+    gfx2_do         : in std_logic_vector(31 downto 0)
   );
 end entity PACE;
 
@@ -53,6 +57,7 @@ architecture SYN of PACE is
 
   signal to_sprite_reg    : to_SPRITE_REG_t;
   signal to_sprite_ctl    : to_SPRITE_CTL_t;
+  signal to_sprite_ctl2   : to_SPRITE_CTL_t;
   signal from_sprite_ctl  : from_SPRITE_CTL_t;
   signal spr0_hit         : std_logic;
 
@@ -117,8 +122,12 @@ begin
       platform_i      => platform_i,
       platform_o      => platform_o,
 
-     cpu_rom_addr    => cpu_rom_addr,
-     cpu_rom_do      => cpu_rom_do
+      cpu_rom_addr    => cpu_rom_addr,
+      cpu_rom_do      => cpu_rom_do,
+      gfx1_addr       => gfx1_addr,
+      gfx1_do         => gfx1_do,
+      gfx2_addr       => gfx2_addr,
+      gfx2_do         => gfx2_do
     );
 
   graphics_inst : entity work.Graphics                                    
@@ -137,10 +146,9 @@ begin
       
       graphics_i      => to_graphics,
       graphics_o      => from_graphics,
-      
-    -- video (incl. clk)
-    video_i           => video_i,
-    video_o           => video_o
+      -- video (incl. clk)
+      video_i           => video_i,
+      video_o           => video_o
     );
 
 end SYN;
