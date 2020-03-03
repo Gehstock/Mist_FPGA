@@ -11,7 +11,7 @@ package body sprite_pkg is
 
   function NULL_TO_SPRITE_CTL return to_SPRITE_CTL_t is
   begin
-    return ('0', (others => '0'));
+    return ('0', (others => '0'), 0, (others => (others => '0')));
   end function NULL_TO_SPRITE_CTL;
 
   function flip_row

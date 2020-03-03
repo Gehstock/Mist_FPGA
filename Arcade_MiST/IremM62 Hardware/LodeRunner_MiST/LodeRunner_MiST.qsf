@@ -57,7 +57,6 @@ set_global_assignment -name VHDL_FILE rtl/video_mixer.vhd
 set_global_assignment -name VHDL_FILE rtl/video_controller_pkg_body.vhd
 set_global_assignment -name VHDL_FILE rtl/video_controller_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/video_controller.vhd
-set_global_assignment -name VHDL_FILE rtl/tilemapctl_e.vhd
 set_global_assignment -name VHDL_FILE rtl/tilemapctl.vhd
 set_global_assignment -name VHDL_FILE rtl/bitmapctl_e.vhd
 set_global_assignment -name VHDL_FILE rtl/spritereg.vhd
@@ -202,7 +201,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 # SignalTap II Assignments
 # ========================
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/sp.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/sprite.stp
 
 # Power Estimation Assignments
 # ============================
@@ -272,4 +271,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # ---------------------------
 set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_location_assignment PLL_1 -to pll|altpll_component|auto_generated|pll1
+set_global_assignment -name SIGNALTAP_FILE output_files/tilemap.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/sprite.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

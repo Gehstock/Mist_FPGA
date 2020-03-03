@@ -21,6 +21,8 @@ entity platform is
     -- clocking and reset
     clkrst_i        : in from_CLKRST_t;
 
+    hwsel           : in integer;
+
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
     switches_i      : in from_SWITCHES_t;
@@ -52,6 +54,11 @@ entity platform is
 --    project_o       : out to_PROJECT_IO_t;
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
+
+    dl_addr         : in std_logic_vector(11 downto 0);
+		dl_data         : in std_logic_vector(7 downto 0);
+		dl_wr           : in std_logic;
+
     cpu_rom_addr    : out std_logic_vector(14 downto 0);
     cpu_rom_do      : in std_logic_vector(7 downto 0);
     gfx1_addr       : out std_logic_vector(17 downto 2);
@@ -107,7 +114,13 @@ architecture SYN of platform is
   -- misc signals      
   signal in_cs          : std_logic;
   signal in_d_o         : std_logic_vector(7 downto 0);
-  
+  signal pal_r_wr       : std_logic;
+  signal pal_g_wr       : std_logic;
+  signal pal_b_wr       : std_logic;
+  signal sp_pal_r_wr    : std_logic;
+  signal sp_pal_g_wr    : std_logic;
+  signal sp_pal_b_wr    : std_logic;
+
   -- other signals
   signal rst_platform   : std_logic;
   signal pause          : std_logic;
@@ -155,14 +168,14 @@ begin
   -- SPRITE $C000-$C0FF
   sprite_cs <=  '1' when STD_MATCH(cpu_a, X"C0"&   "--------") else '0';
   -- VRAM/CRAM $D000-$DFFF
-  vram_cs <=    '1' when PLATFORM_VARIANT = "kungfum" and
+  vram_cs <=    '1' when hwsel = HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"0-----------") else 
-                '1' when PLATFORM_VARIANT /= "kungfum" and
+                '1' when hwsel /= HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"-----------0") else 
                 '0';
-  cram_cs <=    '1' when PLATFORM_VARIANT = "kungfum" and
+  cram_cs <=    '1' when hwsel = HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"1-----------") else 
-                '1' when PLATFORM_VARIANT /= "kungfum" and
+                '1' when hwsel /= HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"-----------1") else 
                 '0';
   -- RAM $E000-$EFFF
@@ -313,11 +326,11 @@ begin
         if cpu_clk_en = '1' and cpu_mem_wr = '1' then
           case cpu_a is
             when X"A000" =>
-              if PLATFORM_VARIANT = "kungfum" then
+              if hwsel = HW_KUNGFUM then
                 m62_hscroll(7 downto 0) <= cpu_d_o;
               end if;
             when X"B000" =>
-              if PLATFORM_VARIANT = "kungfum" then
+              if hwsel = HW_KUNGFUM then
                 m62_hscroll(15 downto 8) <= cpu_d_o;
               end if;
             when others =>
@@ -408,7 +421,7 @@ begin
     alias cram_a    : std_logic_vector(10 downto 0) is vram_a;
   begin
   
-    vram_a <= cpu_a(10 downto 0) when PLATFORM_VARIANT = "kungfum" else
+    vram_a <= cpu_a(10 downto 0) when hwsel = HW_KUNGFUM else
               cpu_a(11 downto 1);
               
     vram_inst : entity work.dpram
@@ -470,6 +483,140 @@ begin
       wren      => wram_wr,
       q         => wram_d_o
     );
+
+  -- tilemap 1 palettes
+  pal_r : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal_r_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap_i(1).pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => tilemap_o(1).rgb.r(9 downto 2)
+    );
+  pal_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"3" else '0';  -- 300-3FF
+
+  pal_g : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal_g_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap_i(1).pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => tilemap_o(1).rgb.g(9 downto 2)
+    );
+  pal_g_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"4" else '0';  -- 400-4FF
+
+  pal_b : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal_b_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap_i(1).pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => tilemap_o(1).rgb.b(9 downto 2)
+    );
+  pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"5" else '0';  -- 500-5FF
+
+  -- sprite palettes
+  sp_pal_r : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => sp_pal_r_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => sprite_i.pal_a,
+      wren_a      => '0',
+      data_a      => (others => '0'),
+      q_a         => sprite_o.rgb.r(9 downto 2)
+    );
+  sp_pal_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"0" else '0';  -- 000-0FF
+
+  sp_pal_g : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => sp_pal_g_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => sprite_i.pal_a,
+      wren_a      => '0',
+      data_a      => (others => '0'),
+      q_a         => sprite_o.rgb.g(9 downto 2)
+    );
+  sp_pal_g_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"1" else '0';  -- 100-1FF
+
+  sp_pal_b : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => sp_pal_b_wr,
+      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => sprite_i.pal_a,
+      wren_a      => '0',
+      data_a      => (others => '0'),
+      q_a         => sprite_o.rgb.b(9 downto 2)
+    );
+  sp_pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"2" else '0';  -- 200-2FF
 
   -- unused outputs
 

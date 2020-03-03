@@ -8,6 +8,7 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
+use work.platform_variant_pkg.all;
 use work.platform_pkg.all;
 
 entity sprite_array is
@@ -19,6 +20,9 @@ entity sprite_array is
   port
   (
     reset       : in std_logic;
+
+    hwsel       : in integer;
+    sprite_prom : in prom_a(0 to 31);
 
     -- register interface
     reg_i       : in to_SPRITE_REG_t;
@@ -34,7 +38,7 @@ entity sprite_array is
     row_d       : in SPRITE_ROW_D_t;
 
     -- video data
-    rgb         : out RGB_t;
+    pal_a       : out std_logic_vector(7 downto 0);
     set         : out std_logic;
     pri         : out std_logic;
     spr0_set    : out std_logic
@@ -96,9 +100,11 @@ begin
   -- sprite row data fan-out
   GEN_ROW_D : for i in 0 to N_SPRITES-1 generate
     ctl_i(i).ld <= ld_r(i);
+    ctl_i(i).height <= sprite_prom(to_integer(unsigned(reg_o(i).n(9 downto 5))));
     ctl_i(i).d <= row_d;
+    ctl_i(i).rgb <= (others => (others => '0'));
   end generate GEN_ROW_D;
-  
+
   -- Sprite Priority Encoder
   -- - determines which sprite pixel (if any) is to be displayed
   -- We can use a clocked process here because the tilemap
@@ -115,7 +121,7 @@ begin
         if spr_pri_v = '0' and ctl_o(i).set = '1' then
           -- if no sprite on or this priority = 1
           if spr_on_v = '0' or reg_o(i).pri = '1' then
-            rgb <= ctl_o(i).rgb;
+            pal_a <= ctl_o(i).pal_a;
             spr_on_v := '1';    -- flag as sprite on
             spr_pri_v := reg_o(i).pri;		-- store priority
           end if;
@@ -156,9 +162,11 @@ begin
       )
       port map
       (
+        hwsel       => hwsel,
+
         -- sprite registers
         reg_i       => reg_o(i),
-        
+
         -- video control signals
         video_ctl   => video_ctl,
 

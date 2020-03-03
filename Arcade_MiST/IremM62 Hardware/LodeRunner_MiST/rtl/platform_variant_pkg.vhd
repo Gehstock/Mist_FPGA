@@ -9,8 +9,10 @@ use work.platform_pkg.all;
 package platform_variant_pkg is
 
 
-  constant PLATFORM_VARIANT             : string := "ldrun";
-  
+  constant HW_LDRUN    : integer := 0;
+  constant HW_KUNGFUM  : integer := 1;
+  constant HW_BATTROAD : integer := 2;
+
   type rom_a is array (natural range <>) of string;
   
   constant M62_ROM                      : rom_a(0 to 3) := 
@@ -416,25 +418,45 @@ package platform_variant_pkg is
 
   -- table of sprite heights
   type prom_a is array (natural range <>) of integer range 0 to 3;
-  constant sprite_prom : prom_a(0 to 31) :=
-  (
-    4 => 0,
-    5 => 0,
-    6 => 0,
-    7 => 0,
-    12 => 0,
-    13 => 0,
-    14 => 0,
-    15 => 0,
-    20 => 0,
-    21 => 0,
-    22 => 0,
-    23 => 0,
-    28 => 0,
-    29 => 0,
-    30 => 0,
-    31 => 0,
-    others => 1
-  );
-  
+
+-- ldrun
+--  constant sprite_prom : prom_a(0 to 31) :=
+--  (
+--    4 => 0,
+--    5 => 0,
+--    6 => 0,
+--    7 => 0,
+--    12 => 0,
+--    13 => 0,
+--    14 => 0,
+--    15 => 0,
+--    20 => 0,
+--    21 => 0,
+--    22 => 0,
+--    23 => 0,
+--    28 => 0,
+--    29 => 0,
+--    30 => 0,
+--    31 => 0,
+--    others => 1
+--  );
+
+-- kungfum
+--  constant sprite_prom : prom_a(0 to 31) :=
+--  (
+--    0 => 0,
+--    1 => 0,
+--    8 => 0,
+--    9 => 0,
+--    12 => 2,
+--    13 => 2,
+--    14 => 2,
+--    15 => 2,
+--    16 => 0,
+--    21 => 0,
+--    23 => 0,
+--    24 => 0,
+--    27 => 0,
+--    others => 1
+--  );
 end package platform_variant_pkg;

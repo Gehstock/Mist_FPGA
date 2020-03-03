@@ -31,6 +31,7 @@ module LodeRunner_MiST(
 `include "rtl/build_id.v" 
 
 `define CORE_NAME "LDRUN"
+wire [6:0] core_mod;
 
 localparam CONF_STR = {      
 	`CORE_NAME,";;",
@@ -89,6 +90,7 @@ user_io(
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
 	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -222,6 +224,7 @@ target_top target_top(
 	.clock_vid(clk_vid),//11MHz
 	.clk_aud(clk_aud),//0.895MHz
 	.reset_in(reset),
+	.hwsel(core_mod),
 	.audio_out(audio),
 	.usr_coin1(m_coin1),
 	.usr_coin2(m_coin2),
@@ -245,6 +248,11 @@ target_top target_top(
 	.VGA_R(r),
 	.VGA_G(g),
 	.VGA_B(b),
+
+	.dl_addr(ioctl_addr - 20'hA0000),
+	.dl_data(ioctl_dout),
+	.dl_wr(ioctl_wr),
+
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr(snd_rom_addr),

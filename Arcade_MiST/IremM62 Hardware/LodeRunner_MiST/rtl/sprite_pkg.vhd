@@ -6,6 +6,7 @@ use ieee.std_logic_unsigned.all;
 
 library work;
 use work.video_controller_pkg.all;
+use work.platform_variant_pkg.all;
 
 package sprite_pkg is
 
@@ -35,16 +36,18 @@ package sprite_pkg is
   
   subtype SPRITE_ROW_D_t is std_logic_vector(63 downto 0);
   subtype SPRITE_ROW_A_t is std_logic_vector(15 downto 0);
-  
+
   type to_SPRITE_CTL_t is record
     ld        : std_logic;
     d         : SPRITE_ROW_D_t;
+    height    : integer range 0 to 3;
+    rgb       : RGB_t;
   end record;
-  
+
   type from_SPRITE_CTL_t is record
     a         : SPRITE_ROW_A_t;
-    rgb       : RGB_t;
     set       : std_logic;
+    pal_a     : std_logic_vector(7 downto 0);
   end record;
 
   function NULL_TO_SPRITE_CTL return to_SPRITE_CTL_t;
@@ -58,6 +61,8 @@ package sprite_pkg is
     port
     (
       reset       : in std_logic;
+      hwsel       : integer;
+      sprite_prom : in prom_a(0 to 31);
 
       -- register interface
       reg_i       : in to_SPRITE_REG_t;
@@ -73,7 +78,7 @@ package sprite_pkg is
       row_d       : in SPRITE_ROW_D_t;
 
       -- video data
-      rgb         : out RGB_t;
+      pal_a       : out std_logic_vector(7 downto 0);
       set         : out std_logic;
       pri         : out std_logic;
       spr0_set    : out std_logic

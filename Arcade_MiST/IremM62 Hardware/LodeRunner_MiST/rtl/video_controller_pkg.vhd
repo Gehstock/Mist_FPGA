@@ -113,6 +113,7 @@ package video_controller_pkg is
     map_d     : TILEMAP_D_t;
     tile_d    : TILE_D_t;
     attr_d    : ATTR_D_t;
+    rgb       : RGB_t;
   end record;
 
   type to_TILEMAP_CTL_a is array (natural range <>) of to_TILEMAP_CTL_t;
@@ -125,6 +126,7 @@ package video_controller_pkg is
     attr_a    : ATTR_A_t;
     rgb       : RGB_t;
     set       : std_logic;
+    pal_a     : std_logic_vector(7 downto 0);
   end record;
 
   type from_TILEMAP_CTL_a is array (natural range <>) of from_TILEMAP_CTL_t;

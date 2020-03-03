@@ -14,6 +14,25 @@ use work.video_controller_pkg.all;
 --
 --  Tile data is 2 BPP.
 --
+entity tilemapCtl is          
+  generic
+  (
+    DELAY       : integer
+  );
+  port               
+  (
+    reset       : in std_logic;
+
+    -- video control signals		
+    video_ctl   : in from_VIDEO_CTL_t;
+
+    -- tilemap controller signals
+    ctl_i       : in to_TILEMAP_CTL_t;
+    ctl_o       : out from_TILEMAP_CTL_t;
+
+    graphics_i  : in to_GRAPHICS_t
+  );
+end entity tilemapCtl;
 
 architecture TILEMAP_1 of tilemapCtl is
 
@@ -30,6 +49,8 @@ architecture TILEMAP_1 of tilemapCtl is
   alias hscroll   : std_logic_vector(15 downto 0) is graphics_i.bit16(0);
   
 begin
+
+  ctl_o.rgb <= ctl_i.rgb;
 
   -- not used
   ctl_o.map_a(ctl_o.map_a'left downto 11) <= (others => '0');
@@ -49,8 +70,6 @@ begin
     variable tile_d_r   : std_logic_vector(23 downto 0);
     variable attr_d_r   : std_logic_vector(7 downto 0);
     variable pel        : std_logic_vector(2 downto 0);
-    variable pal_i      : std_logic_vector(7 downto 0);
-    variable pal_rgb    : pal_rgb_t;
 
   begin
   
@@ -83,11 +102,7 @@ begin
 
         -- extract R,G,B from colour palette
         pel := tile_d_r(tile_d_r'left-16) & tile_d_r(tile_d_r'left-8) & tile_d_r(tile_d_r'left);
-        pal_i := attr_d_r(4 downto 0) & pel;
-        pal_rgb := tile_pal(to_integer(unsigned(pal_i)));
-        ctl_o.rgb.r <= pal_rgb(0) & "00";
-        ctl_o.rgb.g <= pal_rgb(1) & "00";
-        ctl_o.rgb.b <= pal_rgb(2) & "00";
+        ctl_o.pal_a <= attr_d_r(4 downto 0) & pel;
         ctl_o.set <= '0'; -- default
 --        if pel /= "000" then
 --            pal_rgb(0)(7 downto 5) /= "000" or

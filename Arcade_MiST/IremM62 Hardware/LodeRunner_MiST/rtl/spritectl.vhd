@@ -16,18 +16,20 @@ entity spritectl is
     INDEX   : natural;
     DELAY   : integer
   );
-  port               
+  port
   (
+    hwsel       : in integer;
+    
     -- sprite registers
     reg_i       : in from_SPRITE_REG_t;
-    
+
     -- video control signals
     video_ctl   : in from_VIDEO_CTL_t;
 
     -- sprite control signals
     ctl_i       : in to_SPRITE_CTL_t;
     ctl_o       : out from_SPRITE_CTL_t;
-    
+
     graphics_i  : in to_GRAPHICS_t
   );
 end entity spritectl;
@@ -36,10 +38,9 @@ architecture SYN of spritectl is
 
   alias clk       : std_logic is video_ctl.clk;
   alias clk_ena   : std_logic is video_ctl.clk_ena;
-  
+
   signal flipData : std_logic_vector(47 downto 0);   -- flipped row data
-   
-  alias rgb       : RGB_t is ctl_o.rgb;
+
   signal ld_r     : std_logic;
   signal left_d   : std_logic;
   signal rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
@@ -67,10 +68,8 @@ begin
     -- which part of the sprite is being drawn
     alias segment       : unsigned(1 downto 0) is rowCount(5 downto 4);
     
-    variable prom_i     : integer range sprite_prom'range;
     variable code       : std_logic_vector(9 downto 0);
     variable pal_i      : std_logic_vector(7 downto 0);
-    variable pal_rgb    : pal_rgb_t;
     
   begin
 
@@ -83,9 +82,8 @@ begin
           y := 256 + 128 - 18 - unsigned(reg_i.y);
 
           -- hande sprite height, placement
-          prom_i := to_integer(unsigned(reg_i.n(9 downto 5)));
           code := reg_i.n(9 downto 0); -- default
-          case sprite_prom(prom_i) is
+          case ctl_i.height is
             when 1 =>
               -- double height
               height := to_unsigned(2*16,height'length);
@@ -97,7 +95,7 @@ begin
             when others =>
               height := to_unsigned(16,height'length);
           end case;
-          
+
           -- do this 1st because we don't have many clocks
           if y = unsigned(video_ctl.y) then
             -- start counting sprite row
@@ -107,7 +105,7 @@ begin
             yMat := false;
           end if;
 
-          case sprite_prom(prom_i) is
+          case ctl_i.height is
             when 1 =>
               -- double height
               if reg_i.yflip = '1' then
@@ -176,17 +174,14 @@ begin
 
         end if;
 
-        if PLATFORM_VARIANT = "ldrun" or
-            PLATFORM_VARIANT = "battroad" then
+        if hwsel = HW_LDRUN or
+           hwsel = HW_BATTROAD then
           pal_i := '0' & reg_i.colour(3 downto 0) & pel;
         else
           pal_i := reg_i.colour(4 downto 0) & pel;
         end if;
         --pal_i := "000" & std_logic_vector(to_unsigned(INDEX,5));
-        pal_rgb := sprite_pal(to_integer(unsigned(pal_i)));
-        rgb.r <= pal_rgb(0) & "00";
-        rgb.g <= pal_rgb(1) & "00";
-        rgb.b <= pal_rgb(2) & "00";
+        ctl_o.pal_a <= pal_i;
 
         -- set pixel transparency based on match
         ctl_o.set <= '0';

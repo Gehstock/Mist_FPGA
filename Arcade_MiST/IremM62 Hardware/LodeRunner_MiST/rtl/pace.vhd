@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 library work;
@@ -7,6 +8,7 @@ use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
 use work.platform_pkg.all;
+use work.platform_variant_pkg.all;
 --use work.project_pkg.all;
 
 entity PACE is
@@ -14,6 +16,9 @@ entity PACE is
   (
     -- clocks and resets
     clkrst_i        : in from_CLKRST_t;
+    
+    -- hardware variant
+    hwsel           : in integer;
 
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
@@ -33,6 +38,11 @@ entity PACE is
     -- project_o       : out to_PROJECT_IO_t;
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
+
+    dl_addr         : in std_logic_vector(11 downto 0);
+    dl_data         : in std_logic_vector(7 downto 0);
+    dl_wr           : in std_logic;
+
     cpu_rom_addr    : out std_logic_vector(14 downto 0);
     cpu_rom_do      : in std_logic_vector(7 downto 0);
     gfx1_addr       : out std_logic_vector(17 downto 2);
@@ -43,6 +53,8 @@ entity PACE is
 end entity PACE;
 
 architecture SYN of PACE is
+
+  alias clk_sys         : std_logic is clkrst_i.clk(0);
 
   constant CLK_1US_COUNTS : integer := 
     integer(27 * PACE_CLK0_MULTIPLY_BY / PACE_CLK0_DIVIDE_BY);
@@ -63,6 +75,7 @@ architecture SYN of PACE is
 
   signal to_graphics      : to_GRAPHICS_t;
   signal from_graphics    : from_GRAPHICS_t;
+  signal sprite_prom      : prom_a(0 to 31);
 
 begin
 
@@ -92,6 +105,8 @@ begin
     (
       -- clocking and reset
       clkrst_i        => clkrst_i,
+
+      hwsel           => hwsel,
       
       -- misc inputs and outputs
       buttons_i       => buttons_i,
@@ -122,6 +137,10 @@ begin
       platform_i      => platform_i,
       platform_o      => platform_o,
 
+      dl_addr         => dl_addr,
+      dl_data         => dl_data,
+      dl_wr           => dl_wr,
+
       cpu_rom_addr    => cpu_rom_addr,
       cpu_rom_do      => cpu_rom_do,
       gfx1_addr       => gfx1_addr,
@@ -133,6 +152,9 @@ begin
   graphics_inst : entity work.Graphics                                    
     Port Map
     (
+      hwsel           => hwsel,
+      sprite_prom     => sprite_prom,
+
       bitmap_ctl_i    => to_bitmap_ctl,
       bitmap_ctl_o    => from_bitmap_ctl,
 
@@ -151,4 +173,12 @@ begin
       video_o           => video_o
     );
 
+  process(clk_sys) begin
+    if rising_edge(clk_sys) then
+      -- 900-91F
+      if dl_wr = '1' and dl_addr(11 downto 5) = x"9"&"000" then
+        sprite_prom(to_integer(unsigned(dl_addr(4 downto 0)))) <= to_integer(unsigned(dl_data(1 downto 0)));
+      end if;
+    end if;
+  end process;
 end SYN;

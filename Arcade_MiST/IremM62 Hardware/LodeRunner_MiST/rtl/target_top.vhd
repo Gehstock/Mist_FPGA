@@ -13,6 +13,7 @@ entity target_top is port(
 		clock_vid      	: in std_logic;
 		clk_aud      		: in std_logic;
 		reset_in        : in std_logic;
+		hwsel           : in integer;
 		audio_out       : out std_logic_vector(11 downto 0);
 		usr_coin1      	: in std_logic;
 		usr_coin2       : in std_logic;
@@ -38,6 +39,11 @@ entity target_top is port(
 		VGA_R           : out std_logic_vector(3 downto 0);
 		VGA_G           : out std_logic_vector(3 downto 0);
 		VGA_B           : out std_logic_vector(3 downto 0);
+
+		dl_addr         : in std_logic_vector(11 downto 0);
+		dl_data         : in std_logic_vector(7 downto 0);
+		dl_wr           : in std_logic;
+
 		cpu_rom_addr    : out std_logic_vector(14 downto 0);
 		cpu_rom_do      : in std_logic_vector(7 downto 0);
 		snd_rom_addr    : out std_logic_vector(13 downto 0);
@@ -106,6 +112,7 @@ Sound_Board : entity work.Sound_Board
 pace_inst : entity work.pace                                            
 	port map(
 		clkrst_i				=> clkrst_i,
+		hwsel           => hwsel,
 		buttons_i         => buttons_i,
 		switches_i        => switches_i,
 		inputs_i          => inputs_i,
@@ -114,6 +121,11 @@ pace_inst : entity work.pace
 		sound_data_o 		=> sound_data,
 		platform_i        => platform_i,
 		platform_o        => platform_o,
+
+		dl_addr           => dl_addr,
+		dl_data           => dl_data,
+		dl_wr             => dl_wr,
+
 		cpu_rom_addr      => cpu_rom_addr,
 		cpu_rom_do        => cpu_rom_do,
 		gfx1_addr         => gfx1_addr,

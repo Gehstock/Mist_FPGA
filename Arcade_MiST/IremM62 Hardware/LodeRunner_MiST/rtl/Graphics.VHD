@@ -9,10 +9,14 @@ use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
 --use work.project_pkg.all;
 use work.platform_pkg.all;
+use work.platform_variant_pkg.all;
 
 entity Graphics is
   port
   (
+    hwsel           : in integer;
+    sprite_prom     : in prom_a(0 to 31);
+
     bitmap_ctl_i    : in to_BITMAP_CTL_a(1 to PACE_VIDEO_NUM_BITMAPS);
     bitmap_ctl_o    : out from_BITMAP_CTL_a(1 to PACE_VIDEO_NUM_BITMAPS);
     tilemap_ctl_i   : in to_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
@@ -46,7 +50,7 @@ architecture SYN of Graphics is
   signal rgb_data         : RGB_t;
   -- before OSD is mixed in
   signal video_o_s        : to_VIDEO_t;
-  
+
 begin
 
   -- dodgy OSD transparency...
@@ -104,7 +108,7 @@ begin
     (
         bitmap_ctl_o  => bitmap_ctl_o_s,
         tilemap_ctl_o => tilemap_ctl_o_s,
-        sprite_rgb    => sprite_ctl_o_s.rgb,
+        sprite_rgb    => sprite_ctl_i.rgb,
         sprite_set    => sprite_ctl_o_s.set,
         sprite_pri    => sprite_pri,
         
@@ -231,7 +235,7 @@ begin
   tilemap_ctl_o <= tilemap_ctl_o_s;
 
   GEN_NO_SPRITES : if PACE_VIDEO_NUM_SPRITES = 0 generate
-    sprite_ctl_o_s <= ((others => '0'), (others => (others => '0')), '0');
+    sprite_ctl_o_s <= ((others => '0'), '0', (others => '0'));
     sprite_pri <= '0';
     spr0_hit <= '0';
   end generate GEN_NO_SPRITES;
@@ -247,7 +251,9 @@ begin
       port map
       (
         reset         => video_i.reset,
-  
+        sprite_prom   => sprite_prom,
+
+        hwsel         => hwsel,
         -- register interface
         reg_i         => sprite_reg_i,
 
@@ -259,7 +265,7 @@ begin
         row_a         => sprite_ctl_o_s.a,
         row_d         => sprite_ctl_i.d,
 
-        rgb           => sprite_ctl_o_s.rgb,
+        pal_a         => sprite_ctl_o_s.pal_a,
         set           => sprite_ctl_o_s.set,
         pri           => sprite_pri,
         spr0_set      => spr0_hit
