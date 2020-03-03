@@ -166,19 +166,19 @@ BEGIN
 		bandwidth_type => "AUTO",
 		clk0_divide_by => 27,
 		clk0_duty_cycle => 50,
-		clk0_multiply_by => 44,
+		clk0_multiply_by => 88,
 		clk0_phase_shift => "0",
 		clk1_divide_by => 27,
 		clk1_duty_cycle => 50,
-		clk1_multiply_by => 11,
+		clk1_multiply_by => 44,
 		clk1_phase_shift => "0",
 		clk2_divide_by => 27,
 		clk2_duty_cycle => 50,
-		clk2_multiply_by => 88,
+		clk2_multiply_by => 11,
 		clk2_phase_shift => "0",
-		clk3_divide_by => 9000,
+		clk3_divide_by => 5400,
 		clk3_duty_cycle => 50,
-		clk3_multiply_by => 299,
+		clk3_multiply_by => 179,
 		clk3_phase_shift => "0",
 		compensate_clock => "CLK0",
 		inclk0_input_frequency => 37037,
@@ -269,10 +269,10 @@ END SYN;
 -- Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE2 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE3 STRING "50.00000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "44.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "11.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "88.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "0.897000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "88.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "44.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "11.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "0.895000"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 -- Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
 -- Retrieval info: PRIVATE: GLOCKED_COUNTER_EDIT_CHANGED STRING "1"
@@ -306,13 +306,13 @@ END SYN;
 -- Retrieval info: PRIVATE: MULT_FACTOR2 NUMERIC "88"
 -- Retrieval info: PRIVATE: MULT_FACTOR3 NUMERIC "1"
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
--- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "44.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "11.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "88.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "0.89700000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "0"
--- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "0"
--- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE2 STRING "0"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "88.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "44.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "11.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "0.89500000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE2 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE3 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT0 STRING "MHz"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT1 STRING "MHz"
@@ -371,19 +371,19 @@ END SYN;
 -- Retrieval info: CONSTANT: BANDWIDTH_TYPE STRING "AUTO"
 -- Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "27"
 -- Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "44"
+-- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "88"
 -- Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "27"
 -- Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "11"
+-- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "44"
 -- Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "27"
 -- Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "88"
+-- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "11"
 -- Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "0"
--- Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "9000"
+-- Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "5400"
 -- Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "299"
+-- Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "179"
 -- Retrieval info: CONSTANT: CLK3_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
 -- Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "37037"

@@ -57,9 +57,9 @@ wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys),
-	.c1(clk_vid),
-	.c2(clk_sd),
+	.c0(clk_sd),
+	.c1(clk_sys),
+	.c2(clk_vid),
 	.c3(clk_aud),
 	.locked(pll_locked)
 	);
@@ -144,12 +144,15 @@ data_io data_io(
 );
 
 wire [24:0] sp_ioctl_addr = ioctl_addr - 20'h30000;
+reg clkref;
+always @(posedge clk_vid) clkref <= ~clkref;
 
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clk_sd      ),
+	.clk           ( clk_sd       ),
+	.clkref        ( clkref       ),
 
 	// port1 used for main + sound CPU
 	.port1_req     ( port1_req    ),
