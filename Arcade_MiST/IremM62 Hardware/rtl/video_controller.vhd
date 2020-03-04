@@ -4,13 +4,13 @@ use ieee.numeric_std.all;
 
 library work;
 use work.video_controller_pkg.all;
+use ieee.numeric_std.all;
 
 entity pace_video_controller is
   generic
   (
     CONFIG		  : PACEVideoController_t := PACE_VIDEO_NONE;
     DELAY       : integer := 1;
-    H_SIZE      : integer;
     V_SIZE      : integer;
     L_CROP      : integer range 0 to 255;
     R_CROP      : integer range 0 to 255;
@@ -24,6 +24,7 @@ entity pace_video_controller is
   (
     -- clocking etc
     video_i       : in from_VIDEO_t;
+    H_SIZE        : integer;
 
     -- register interface
     reg_i         : in VIDEO_REG_t;
@@ -43,7 +44,7 @@ architecture SYN of pace_video_controller is
 
   constant SIM_DELAY          : time := 2 ns;
 
-  constant VIDEO_H_SIZE       : integer := H_SIZE * H_SCALE;
+  signal VIDEO_H_SIZE       : integer := H_SIZE * H_SCALE;
   constant VIDEO_V_SIZE       : integer := V_SIZE * V_SCALE;
 
   subtype reg_t is integer range 0 to 2047;
@@ -99,8 +100,10 @@ architecture SYN of pace_video_controller is
   
 begin
 
+  video_ctl_o.video_h_offset <= to_integer(shift_right(to_unsigned(512-VIDEO_H_SIZE, 9), 1));
+
   -- registers
-  reg_proc: process (reset, clk)
+  reg_proc: process (reset, clk, VIDEO_H_SIZE)
 
   begin
     --if reset = '1' then

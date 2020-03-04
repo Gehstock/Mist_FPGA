@@ -81,6 +81,7 @@ package video_controller_pkg is
     vblank    : std_logic;
     x         : std_logic_vector(10 downto 0);
     y         : std_logic_vector(10 downto 0);
+    video_h_offset : integer range 0 to 511;
   end record;
   
   subtype BITMAP_D_t is std_logic_vector(23 downto 0);

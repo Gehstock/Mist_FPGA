@@ -42,14 +42,14 @@ package platform_pkg is
 
   constant PACE_VIDEO_BORDER_RGB            : RGB_t := RGB_BLACK;
 
-  constant M62_VIDEO_H_SIZE                 : integer := 384;
-  constant M62_VIDEO_H_OFFSET               : integer := (512-M62_VIDEO_H_SIZE)/2;
+--  constant M62_VIDEO_H_SIZE                 : integer := 384;
+--  constant M62_VIDEO_H_OFFSET               : integer := (512-M62_VIDEO_H_SIZE)/2;
   constant M62_VIDEO_V_SIZE                 : integer := 256;
 
   constant PACE_VIDEO_NUM_BITMAPS           : natural := 0;
   constant PACE_VIDEO_NUM_TILEMAPS          : natural := 1;
   constant PACE_VIDEO_NUM_SPRITES           : natural := 32;
-  constant PACE_VIDEO_H_SIZE                : integer := M62_VIDEO_H_SIZE;
+--  constant PACE_VIDEO_H_SIZE                : integer := M62_VIDEO_H_SIZE;
   constant PACE_VIDEO_V_SIZE                : integer := M62_VIDEO_V_SIZE;
   constant PACE_VIDEO_L_CROP                : integer := 0;
   constant PACE_VIDEO_R_CROP                : integer := PACE_VIDEO_L_CROP;

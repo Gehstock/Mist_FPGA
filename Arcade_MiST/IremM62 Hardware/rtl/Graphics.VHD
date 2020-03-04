@@ -50,6 +50,7 @@ architecture SYN of Graphics is
   signal rgb_data         : RGB_t;
   -- before OSD is mixed in
   signal video_o_s        : to_VIDEO_t;
+  signal irem62_hsize     : integer range 0 to 384;
 
 begin
 
@@ -69,13 +70,15 @@ begin
   graphics_o.hblank <= video_o_s.hblank;
   graphics_o.vblank <= video_o_s.vblank;
   --graphics_o.vblank <= from_video_ctl.vblank;
-    
+
+  irem62_hsize <= 384 when hwsel = HW_LDRUN else 256;
+
   pace_video_controller_inst : entity work.pace_video_controller
     generic map
     (
       CONFIG      => PACE_VIDEO_CONTROLLER_TYPE,
       DELAY       => PACE_VIDEO_PIPELINE_DELAY,
-      H_SIZE      => PACE_VIDEO_H_SIZE,
+      --H_SIZE      => PACE_VIDEO_H_SIZE,
       V_SIZE      => PACE_VIDEO_V_SIZE,
       L_CROP      => PACE_VIDEO_L_CROP,
       R_CROP      => PACE_VIDEO_R_CROP,
@@ -89,6 +92,7 @@ begin
     (
       -- clocking etc
       video_i         => video_i,
+      H_SIZE          => irem62_hsize,
       
       -- register interface
       reg_i.h_scale   => "000",

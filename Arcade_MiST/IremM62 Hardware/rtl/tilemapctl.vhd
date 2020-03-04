@@ -58,8 +58,8 @@ begin
   ctl_o.tile_a(ctl_o.tile_a'left downto 13) <= (others => '0');
 
   -- screen rotation
-  x <=  std_logic_vector(M62_VIDEO_H_OFFSET + unsigned(video_ctl.x)) when unsigned(y) < 6*8 else
-        std_logic_vector(M62_VIDEO_H_OFFSET + unsigned(video_ctl.x) + unsigned(hscroll(8 downto 0))); 
+  x <=  std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x)) when unsigned(y) < 6*8 else
+        std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x) + unsigned(hscroll(8 downto 0))); 
         -- when rot_en = '0' else not video_ctl.y;
   --y <= not video_ctl.y when rot_en = '0' else 32 + video_ctl.x;
   y <= video_ctl.y; -- when rot_en = '0' else video_ctl.x;
