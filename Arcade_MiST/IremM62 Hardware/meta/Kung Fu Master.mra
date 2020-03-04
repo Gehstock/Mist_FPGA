@@ -50,42 +50,42 @@
 
       <!-- GFX2, 256k -->
       <part name="b-4k-.bin"/>
+      <part name="b-3n-.bin"/>
+      <part name="b-4c-.bin"/>
+      <part name="b-4c-.bin"/>
+
       <part name="b-4f-.bin"/>
+      <part name="b-4n-.bin"/>
+      <part name="b-4e-.bin"/>
+      <part name="b-4e-.bin"/>
+
       <part name="b-4l-.bin"/>
-      <part name="b-4l-.bin"/>
+      <part name="b-4m-.bin"/>
+      <part name="b-4d-.bin"/>
+      <part name="b-4d-.bin"/>
 
       <part name="b-4h-.bin"/>
-      <part name="b-3n-.bin"/>
-      <part name="b-4n-.bin"/>
-      <part name="b-4n-.bin"/>
-
-      <part name="b-4m-.bin"/>
       <part name="b-3m-.bin"/>
-      <part name="b-4c-.bin"/>
-      <part name="b-4c-.bin"/>
-
-      <part name="b-4e-.bin"/>
-      <part name="b-4d-.bin"/>
       <part name="b-4a-.bin"/>
       <part name="b-4a-.bin"/>
 
       <part name="b-4k-.bin"/>
+      <part name="b-3n-.bin"/>
+      <part name="b-4c-.bin"/>
+      <part name="b-4c-.bin"/>
+
       <part name="b-4f-.bin"/>
+      <part name="b-4n-.bin"/>
+      <part name="b-4e-.bin"/>
+      <part name="b-4e-.bin"/>
+
       <part name="b-4l-.bin"/>
-      <part name="b-4l-.bin"/>
+      <part name="b-4m-.bin"/>
+      <part name="b-4d-.bin"/>
+      <part name="b-4d-.bin"/>
 
       <part name="b-4h-.bin"/>
-      <part name="b-3n-.bin"/>
-      <part name="b-4n-.bin"/>
-      <part name="b-4n-.bin"/>
-
-      <part name="b-4m-.bin"/>
       <part name="b-3m-.bin"/>
-      <part name="b-4c-.bin"/>
-      <part name="b-4c-.bin"/>
-
-      <part name="b-4e-.bin"/>
-      <part name="b-4d-.bin"/>
       <part name="b-4a-.bin"/>
       <part name="b-4a-.bin"/>
 
