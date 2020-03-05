@@ -22,6 +22,7 @@ entity tilemapCtl is
   port               
   (
     reset       : in std_logic;
+    hwsel       : in integer;
 
     -- video control signals		
     video_ctl   : in from_VIDEO_CTL_t;
@@ -47,6 +48,7 @@ architecture TILEMAP_1 of tilemapCtl is
   
   alias rot_en    : std_logic is graphics_i.bit8(0)(0);
   alias hscroll   : std_logic_vector(15 downto 0) is graphics_i.bit16(0);
+  alias vscroll   : std_logic_vector(15 downto 0) is graphics_i.bit16(1);
   
 begin
 
@@ -55,14 +57,14 @@ begin
   -- not used
   ctl_o.map_a(ctl_o.map_a'left downto 11) <= (others => '0');
   ctl_o.attr_a(ctl_o.attr_a'left downto 11) <= (others => '0');
-  ctl_o.tile_a(ctl_o.tile_a'left downto 13) <= (others => '0');
+  ctl_o.tile_a(ctl_o.tile_a'left downto 14) <= (others => '0');
 
   -- screen rotation
-  x <=  std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x)) when unsigned(y) < 6*8 else
+  x <=  std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x)) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
         std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x) + unsigned(hscroll(8 downto 0))); 
         -- when rot_en = '0' else not video_ctl.y;
   --y <= not video_ctl.y when rot_en = '0' else 32 + video_ctl.x;
-  y <= video_ctl.y; -- when rot_en = '0' else video_ctl.x;
+  y <= std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
   
   -- generate pixel
   process (clk, clk_ena)
@@ -86,6 +88,11 @@ begin
         -- 2nd stage of pipeline
         -- - set tile address
         if x(2 downto 0) = "010" then
+          if hwsel = HW_LDRUN4 then
+            ctl_o.tile_a(13) <= ctl_i.attr_d(5);
+          else
+            ctl_o.tile_a(13) <= '0';
+          end if;
           ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(7 downto 6);
           ctl_o.tile_a(10 downto 3) <= ctl_i.map_d(7 downto 0);
           ctl_o.tile_a(2 downto 0) <= y(2 downto 0);

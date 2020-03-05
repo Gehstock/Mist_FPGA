@@ -99,7 +99,7 @@ user_io(
 	.status         (status         )
 	);
 
-wire [14:0] rom_addr;
+wire [16:0] rom_addr;
 wire [15:0] rom_do;
 
 wire [17:0] snd_addr;
@@ -163,7 +163,7 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : {3'b000, rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : {1'b0, rom_addr[16:1]} ),
 	.cpu1_q        ( rom_do ),
 	.cpu2_addr     ( ioctl_downl ? 17'h1ffff : snd_addr[17:1] ),
 	.cpu2_q        ( snd_do ),
@@ -171,8 +171,8 @@ sdram sdram(
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[23:15], sp_ioctl_addr[12:0], sp_ioctl_addr[14]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {sp_ioctl_addr[13], ~sp_ioctl_addr[13]} ),
+	.port2_a       ( sp_ioctl_addr[23:1] ),
+	.port2_ds      ( {sp_ioctl_addr[0], ~sp_ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),

@@ -71,7 +71,11 @@ begin
   graphics_o.vblank <= video_o_s.vblank;
   --graphics_o.vblank <= from_video_ctl.vblank;
 
-  irem62_hsize <= 384+16 when hwsel = HW_LDRUN else 256+16;
+  irem62_hsize <= 384+16 when hwsel = HW_LDRUN or
+                              hwsel = HW_LDRUN2 or
+                              hwsel = HW_LDRUN3 or
+                              hwsel = HW_LDRUN4 else
+                  256+16;
 
   pace_video_controller_inst : entity work.pace_video_controller
     generic map
@@ -204,6 +208,7 @@ begin
       port map
       (
         reset         => video_i.reset,
+        hwsel         => hwsel,
 
         video_ctl     => from_video_ctl,
 
@@ -225,6 +230,7 @@ begin
       port map
       (
         reset         => video_i.reset,
+        hwsel         => hwsel,
 
         video_ctl     => from_video_ctl,
 

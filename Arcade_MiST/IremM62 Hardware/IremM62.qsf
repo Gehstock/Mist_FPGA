@@ -66,7 +66,6 @@ set_global_assignment -name VHDL_FILE rtl/sprite_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/sprite_array.vhd
 set_global_assignment -name VHDL_FILE rtl/Inputs.VHD
 set_global_assignment -name VHDL_FILE rtl/input_mapper.vhd
-set_global_assignment -name VHDL_FILE rtl/dprom_2r.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
@@ -201,7 +200,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 # SignalTap II Assignments
 # ========================
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/sprite.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/cpu.stp
 
 # Power Estimation Assignments
 # ============================
@@ -273,4 +272,5 @@ set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_location_assignment PLL_1 -to pll|altpll_component|auto_generated|pll1
 set_global_assignment -name SIGNALTAP_FILE output_files/tilemap.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/sprite.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/cpu.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -175,6 +175,9 @@ begin
         end if;
 
         if hwsel = HW_LDRUN or
+           hwsel = HW_LDRUN2 or
+           hwsel = HW_LDRUN3 or
+           hwsel = HW_LDRUN4 or
            hwsel = HW_BATTROAD then
           pal_i := '0' & reg_i.colour(3 downto 0) & pel;
         else

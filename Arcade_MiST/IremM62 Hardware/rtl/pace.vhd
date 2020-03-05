@@ -43,7 +43,7 @@ entity PACE is
     dl_data         : in std_logic_vector(7 downto 0);
     dl_wr           : in std_logic;
 
-    cpu_rom_addr    : out std_logic_vector(14 downto 0);
+    cpu_rom_addr    : out std_logic_vector(16 downto 0);
     cpu_rom_do      : in std_logic_vector(7 downto 0);
     gfx1_addr       : out std_logic_vector(17 downto 2);
     gfx1_do         : in std_logic_vector(31 downto 0);

@@ -1,10 +1,10 @@
 <misterromdescription>
-    <name>Lode Runner</name>
+    <name>Kung Fu Master</name>
     <mameversion>0216</mameversion>
     <setname>kungfum</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
-    <rom index="1"><part>1</part></rom>
+    <rom index="1"><part>4</part></rom>
     <rom index="0" zip="kungfum.zip" md5="9e4c8423a33f0c5bf558d475d89e041a" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="a-4e-c.bin"/>
@@ -28,66 +28,80 @@
       <part name="a-3h-.bin"/>
 
       <!-- GFX1, 128k -->
-      <part name="g-4c-a.bin"/>
-      <part name="g-4d-a.bin"/>
-      <part name="g-4e-a.bin"/>
-      <part name="g-4e-a.bin"/>
-
-      <part name="g-4c-a.bin"/>
-      <part name="g-4d-a.bin"/>
-      <part name="g-4e-a.bin"/>
-      <part name="g-4e-a.bin"/>
-
-      <part name="g-4c-a.bin"/>
-      <part name="g-4d-a.bin"/>
-      <part name="g-4e-a.bin"/>
-      <part name="g-4e-a.bin"/>
-
-      <part name="g-4c-a.bin"/>
-      <part name="g-4d-a.bin"/>
-      <part name="g-4e-a.bin"/>
-      <part name="g-4e-a.bin"/>
+      <group width="32">
+          <part name="g-4c-a.bin"/>
+          <part name="g-4d-a.bin"/>
+          <part name="g-4e-a.bin"/>
+          <part name="g-4e-a.bin"/>
+      </group>
+      <group width="32">
+          <part name="g-4c-a.bin"/>
+          <part name="g-4d-a.bin"/>
+          <part name="g-4e-a.bin"/>
+          <part name="g-4e-a.bin"/>
+      </group>
+      <group width="32">
+          <part name="g-4c-a.bin"/>
+          <part name="g-4d-a.bin"/>
+          <part name="g-4e-a.bin"/>
+          <part name="g-4e-a.bin"/>
+      </group>
+      <group width="32">
+          <part name="g-4c-a.bin"/>
+          <part name="g-4d-a.bin"/>
+          <part name="g-4e-a.bin"/>
+          <part name="g-4e-a.bin"/>
+      </group>
 
       <!-- GFX2, 256k -->
-      <part name="b-4k-.bin"/>
-      <part name="b-3n-.bin"/>
-      <part name="b-4c-.bin"/>
-      <part name="b-4c-.bin"/>
-
-      <part name="b-4f-.bin"/>
-      <part name="b-4n-.bin"/>
-      <part name="b-4e-.bin"/>
-      <part name="b-4e-.bin"/>
-
-      <part name="b-4l-.bin"/>
-      <part name="b-4m-.bin"/>
-      <part name="b-4d-.bin"/>
-      <part name="b-4d-.bin"/>
-
-      <part name="b-4h-.bin"/>
-      <part name="b-3m-.bin"/>
-      <part name="b-4a-.bin"/>
-      <part name="b-4a-.bin"/>
-
-      <part name="b-4k-.bin"/>
-      <part name="b-3n-.bin"/>
-      <part name="b-4c-.bin"/>
-      <part name="b-4c-.bin"/>
-
-      <part name="b-4f-.bin"/>
-      <part name="b-4n-.bin"/>
-      <part name="b-4e-.bin"/>
-      <part name="b-4e-.bin"/>
-
-      <part name="b-4l-.bin"/>
-      <part name="b-4m-.bin"/>
-      <part name="b-4d-.bin"/>
-      <part name="b-4d-.bin"/>
-
-      <part name="b-4h-.bin"/>
-      <part name="b-3m-.bin"/>
-      <part name="b-4a-.bin"/>
-      <part name="b-4a-.bin"/>
+      <group width="32">
+          <part name="b-4k-.bin"/>
+          <part name="b-3n-.bin"/>
+          <part name="b-4c-.bin"/>
+          <part name="b-4c-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4f-.bin"/>
+          <part name="b-4n-.bin"/>
+          <part name="b-4e-.bin"/>
+          <part name="b-4e-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4l-.bin"/>
+          <part name="b-4m-.bin"/>
+          <part name="b-4d-.bin"/>
+          <part name="b-4d-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4h-.bin"/>
+          <part name="b-3m-.bin"/>
+          <part name="b-4a-.bin"/>
+          <part name="b-4a-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4k-.bin"/>
+          <part name="b-3n-.bin"/>
+          <part name="b-4c-.bin"/>
+          <part name="b-4c-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4f-.bin"/>
+          <part name="b-4n-.bin"/>
+          <part name="b-4e-.bin"/>
+          <part name="b-4e-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4l-.bin"/>
+          <part name="b-4m-.bin"/>
+          <part name="b-4d-.bin"/>
+          <part name="b-4d-.bin"/>
+      </group>
+      <group width="32">
+          <part name="b-4h-.bin"/>
+          <part name="b-3m-.bin"/>
+          <part name="b-4a-.bin"/>
+          <part name="b-4a-.bin"/>
+      </group>
 
       <!-- GFX3, 64k -->
       <part repeat="0x10000">FF</part>

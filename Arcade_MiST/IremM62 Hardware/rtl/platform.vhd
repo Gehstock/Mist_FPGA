@@ -59,7 +59,7 @@ entity platform is
 		dl_data         : in std_logic_vector(7 downto 0);
 		dl_wr           : in std_logic;
 
-    cpu_rom_addr    : out std_logic_vector(14 downto 0);
+    cpu_rom_addr    : out std_logic_vector(16 downto 0);
     cpu_rom_do      : in std_logic_vector(7 downto 0);
     gfx1_addr       : out std_logic_vector(17 downto 2);
     gfx1_do         : in std_logic_vector(31 downto 0);
@@ -126,6 +126,15 @@ architecture SYN of platform is
   signal pause          : std_logic;
   signal rot_en         : std_logic;
 
+  -- Lode Runner 2,4
+  signal ld2_bankr1     : std_logic_vector(5 downto 0);
+  signal ld2_bankr2     : std_logic_vector(7 downto 0);
+  signal ld24_bank       : std_logic;
+
+  -- Lode Runner 3
+  signal ld3_prot5_cs   : std_logic;
+  signal ld3_prot7_cs   : std_logic;
+
 begin
 
   -- handle special keys
@@ -164,7 +173,12 @@ begin
   
   -- chip select logic
   -- ROM $0000-$7FFF
-  rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else '0';
+  --     $0000-$9FFF - LDRUN2
+  --     $0000-$BFFF - LDRUN3,4
+  rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else 
+                '1' when hwsel = HW_LDRUN2 and cpu_a(15 downto 13) = "100" else
+                '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4) and cpu_a(15 downto 14) = "10" else
+                '0';
   -- SPRITE $C000-$C0FF
   sprite_cs <=  '1' when STD_MATCH(cpu_a, X"C0"&   "--------") else '0';
   -- VRAM/CRAM $D000-$DFFF
@@ -189,6 +203,10 @@ begin
                 '1' when STD_MATCH(cpu_a(7 downto 0), X"04") else
                 '0';
 
+  -- Lode Runner 3 protection
+  ld3_prot5_cs <= '1' when hwsel = HW_LDRUN3 and cpu_a = x"c800" else '0';
+  ld3_prot7_cs <= '1' when hwsel = HW_LDRUN3 and (cpu_a = x"cc00" or cpu_a = x"cfff") else '0';
+
   process (clk_sys, rst_sys) begin
     if rst_sys = '1' then
       sound_data_o <= X"FF";
@@ -201,6 +219,8 @@ begin
 
   -- memory read mux
   cpu_d_i <=  in_d_o when (cpu_io_rd = '1' and in_cs = '1') else
+              x"05" when ld3_prot5_cs = '1' else
+              x"07" when ld3_prot7_cs = '1' else
               cpu_rom_do when rom_cs = '1' else
               vram_d_o when vram_cs = '1' else
               cram_d_o when cram_cs = '1' else
@@ -265,10 +285,50 @@ begin
         nmi     => '0'
       );
 
-    cpu_rom_addr <= cpu_a(14 downto 0);
+    cpu_rom_addr <= 
+      '0' & "10" & ld24_bank & cpu_a(12 downto 0) when hwsel = HW_LDRUN2 and cpu_a(15) = '1' else
+      '0' & '1'  & ld24_bank & cpu_a(13 downto 0) when hwsel = HW_LDRUN4 and cpu_a(15) = '1' else
+      '0' & cpu_a(15 downto 0);
 
+    -- Lode Runner 2 bank switching - some kind of protection, only the level number is used to select bank 0 or 1 at $8000
+    -- writes to $80 (level number)
+    -- writes to $81 (unknown, from a table)
+    -- reads from $80 (number of times from a table)
+    process (clk_sys, rst_sys)
+    begin
+      if rst_sys = '1' then
+        ld2_bankr1 <= (others => '0');
+        ld2_bankr2 <= (others => '0');
+        ld24_bank <= '0';
+      elsif rising_edge(clk_sys) then
+        if cpu_clk_en = '1' and cpu_io_wr = '1' then
+          case cpu_a(7 downto 0) is
+            when X"80" => ld2_bankr1 <= cpu_d_o(5 downto 0);
+            when X"81" => ld2_bankr2 <= cpu_d_o;
+            when others => null;
+          end case;
+        end if;
+
+        if cpu_clk_en = '1' and cpu_io_rd = '1' and cpu_a(7 downto 0) = x"80" then
+          if ld2_bankr1 = 6 or ld2_bankr1 = 8 or ld2_bankr1 = 12 or ld2_bankr1 = 13 or ld2_bankr1 = 14 or ld2_bankr1 = 15 or ld2_bankr1 = 16 or
+             ld2_bankr1 = 21 or ld2_bankr1 >= 23
+          then
+            ld24_bank <= '1';
+          else
+            ld24_bank <= '0';
+          end if;
+        end if;
+
+        if cpu_clk_en = '1' and cpu_mem_wr = '1' then
+          if cpu_a = x"c800" and hwsel = HW_LDRUN4 then
+            ld24_bank <= cpu_d_o(0);
+          end if;
+        end if;
+
+      end if;
+    end process;
   end block BLK_CPU;
-  
+
   BLK_INTERRUPTS : block
   
     signal vblank_int     : std_logic;
@@ -317,11 +377,15 @@ begin
   
   BLK_SCROLL : block
     signal m62_hscroll  : std_logic_vector(15 downto 0);
+    signal m62_vscroll  : std_logic_vector(15 downto 0);
+    signal m62_topbottom_mask: std_logic;
   begin
     process (clk_sys, rst_sys)
     begin
       if rst_sys = '1' then
         m62_hscroll <= (others => '0');
+        m62_vscroll <= (others => '0');
+        m62_topbottom_mask <= '0';
       elsif rising_edge(clk_sys) then
         if cpu_clk_en = '1' and cpu_mem_wr = '1' then
           case cpu_a is
@@ -337,9 +401,26 @@ begin
               null;
           end case;
         end if; -- cpu_wr
+
+        if cpu_clk_en = '1' and cpu_io_wr = '1' then
+          if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"80" then
+            m62_vscroll(7 downto 0) <= cpu_d_o;
+          end if;
+          if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"81" then
+            m62_topbottom_mask <= cpu_d_o(0);
+          end if;
+          if hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82" then
+            m62_hscroll(15 downto 8) <= cpu_d_o;
+          end if;
+          if hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83" then
+            m62_hscroll(7 downto 0) <= cpu_d_o;
+          end if;
+
+        end if;
       end if; -- rising_edge(clk_sys)
     end process;
     graphics_o.bit16(0) <= m62_hscroll;
+    graphics_o.bit16(1) <= m62_vscroll;
   end block BLK_SCROLL;
   
   
@@ -353,7 +434,7 @@ begin
   begin
 
     -- external background ROMs
-    gfx1_addr <= "000"&tilemap_i(1).tile_a(12 downto 0);
+    gfx1_addr <= "00"&tilemap_i(1).tile_a(13 downto 0);
     tilemap_o(1).tile_d(23 downto 0) <= gfx1_do(7 downto 0) & gfx1_do(15 downto 8) & gfx1_do(23 downto 16);
 
     -- internal background ROMs

@@ -44,7 +44,7 @@ entity target_top is port(
 		dl_data         : in std_logic_vector(7 downto 0);
 		dl_wr           : in std_logic;
 
-		cpu_rom_addr    : out std_logic_vector(14 downto 0);
+		cpu_rom_addr    : out std_logic_vector(16 downto 0);
 		cpu_rom_do      : in std_logic_vector(7 downto 0);
 		snd_rom_addr    : out std_logic_vector(13 downto 0);
 		snd_rom_do      : in std_logic_vector(7 downto 0);

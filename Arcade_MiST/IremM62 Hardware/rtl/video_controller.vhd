@@ -44,7 +44,7 @@ architecture SYN of pace_video_controller is
 
   constant SIM_DELAY          : time := 2 ns;
 
-  signal VIDEO_H_SIZE       : integer := H_SIZE * H_SCALE;
+  signal VIDEO_H_SIZE         : integer;
   constant VIDEO_V_SIZE       : integer := V_SIZE * V_SCALE;
 
   subtype reg_t is integer range 0 to 2047;
@@ -100,6 +100,7 @@ architecture SYN of pace_video_controller is
   
 begin
 
+  VIDEO_H_SIZE <= H_SIZE * H_SCALE;
   video_ctl_o.video_h_offset <= to_integer(shift_right(to_unsigned(512-VIDEO_H_SIZE, 9), 1));
 
   -- registers
