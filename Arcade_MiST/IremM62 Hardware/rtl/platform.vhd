@@ -109,6 +109,11 @@ architecture SYN of platform is
   signal cram_wr        : std_logic;
   signal cram_d_o       : std_logic_vector(7 downto 0);
   signal sprite_cs      : std_logic;
+
+  -- text RAM
+  signal textram_cs     : std_logic;
+  signal textram_wr     : std_logic;
+  signal textram_d_o    : std_logic_vector(7 downto 0);
   
   -- misc signals      
   signal in_cs          : std_logic;
@@ -133,6 +138,9 @@ architecture SYN of platform is
   -- Lode Runner 3
   signal ld3_prot5_cs   : std_logic;
   signal ld3_prot7_cs   : std_logic;
+
+  -- Kidniki, Battle Road
+  signal kidniki_bank   : std_logic_vector(3 downto 0);
 
 begin
 
@@ -174,15 +182,19 @@ begin
   -- ROM $0000-$7FFF
   --     $0000-$9FFF - LDRUN2
   --     $0000-$BFFF - LDRUN3,4, HORIZON
+  --     $A000-$BFFF - BATTROAD
   rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else 
                 '1' when hwsel = HW_LDRUN2 and cpu_a(15 downto 13) = "100" else
                 '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_HORIZON) and cpu_a(15 downto 14) = "10" else
+                '1' when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
                 '0';
+
   -- SPRITE $C000-$C0FF
   --        $C000-$C1FF - HORIZON
   sprite_cs <=  '1' when cpu_a(15 downto 8) = x"C0" else
                 '1' when cpu_a(15 downto 9) = x"C"&"000" and hwsel = HW_HORIZON else
                 '0';
+
   -- VRAM/CRAM $D000-$DFFF
   vram_cs <=    '1' when hwsel = HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"0-----------") else 
@@ -194,6 +206,12 @@ begin
                 '1' when hwsel /= HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"-----------1") else 
                 '0';
+
+  -- Text RAM $C800-$CFFF
+  textram_cs <= '1' when hwsel = HW_BATTROAD and
+                          cpu_a(15 downto 11) = x"C"&'1' else
+                '0';
+
   -- RAM $E000-$EFFF
   wram_cs <=    '1' when STD_MATCH(cpu_a, X"E"&"------------") else '0';
 
@@ -227,12 +245,14 @@ begin
               vram_d_o when vram_cs = '1' else
               cram_d_o when cram_cs = '1' else
               wram_d_o when wram_cs = '1' else
+              textram_d_o when textram_cs = '1' else
               (others => '1');
-              
+
   -- memory block write signals 
   vram_wr <= vram_cs and cpu_mem_wr;
   cram_wr <= cram_cs and cpu_mem_wr;
   wram_wr <= wram_cs and cpu_mem_wr;
+  textram_wr <= textram_cs and cpu_mem_wr;
 
   -- sprite registers
   sprite_reg_o.clk <= clk_sys;
@@ -290,6 +310,7 @@ begin
     cpu_rom_addr <= 
       '0' & "10" & ld24_bank & cpu_a(12 downto 0) when hwsel = HW_LDRUN2 and cpu_a(15) = '1' else
       '0' & '1'  & ld24_bank & cpu_a(13 downto 0) when hwsel = HW_LDRUN4 and cpu_a(15) = '1' else
+      '1' & kidniki_bank(2 downto 0) & cpu_a(12 downto 0) when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
       '0' & cpu_a(15 downto 0);
 
     -- Lode Runner 2 bank switching - some kind of protection, only the level number is used to select bank 0 or 1 at $8000
@@ -302,11 +323,13 @@ begin
         ld2_bankr1 <= (others => '0');
         ld2_bankr2 <= (others => '0');
         ld24_bank <= '0';
+        kidniki_bank <= (others => '0');
       elsif rising_edge(clk_sys) then
         if cpu_clk_en = '1' and cpu_io_wr = '1' then
           case cpu_a(7 downto 0) is
             when X"80" => ld2_bankr1 <= cpu_d_o(5 downto 0);
             when X"81" => ld2_bankr2 <= cpu_d_o;
+            when X"83" => if hwsel = HW_BATTROAD then kidniki_bank <= cpu_d_o(3 downto 0); end if;
             when others => null;
           end case;
         end if;
@@ -433,16 +456,18 @@ begin
         end if; -- cpu_wr
 
         if cpu_clk_en = '1' and cpu_io_wr = '1' then
-          if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"80" then
+          if (hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and cpu_a(7 downto 0) = x"80" then
             m62_vscroll(7 downto 0) <= cpu_d_o;
           end if;
           if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"81" then
             m62_topbottom_mask <= cpu_d_o(0);
           end if;
-          if hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82" then
+          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82") or
+             (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"81") then
             m62_hscroll(15 downto 8) <= cpu_d_o;
           end if;
-          if hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83" then
+          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83") or
+             (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"82") then
             m62_hscroll(7 downto 0) <= cpu_d_o;
           end if;
 
@@ -581,6 +606,27 @@ begin
       );
     tilemap_o(1).attr_d(15 downto 8) <= (others => '0');
 
+    textram_inst : entity work.dpram
+      generic map
+      (
+        init_file  => "",
+        widthad_a  => 11,
+        widthad_b  => 11
+      )
+      port map
+      (
+        clock_b    => clk_sys,
+        address_b  => cpu_a(10 downto 0),
+        wren_b     => textram_wr,
+        data_b     => cpu_d_o,
+        q_b        => textram_d_o,
+
+        clock_a    => clk_video,
+        address_a  => (others => '0'),
+        wren_a     => '0',
+        data_a     => (others => 'X'),
+        q_a        => open
+      );
   end block BLK_VRAM;
 
   wram_inst : entity work.spram
