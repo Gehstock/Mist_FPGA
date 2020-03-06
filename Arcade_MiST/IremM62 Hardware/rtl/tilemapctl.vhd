@@ -88,7 +88,7 @@ begin
         -- 2nd stage of pipeline
         -- - set tile address
         if x(2 downto 0) = "010" then
-          if hwsel = HW_LDRUN4 then
+          if hwsel = HW_LDRUN4 or hwsel = HW_HORIZON then
             ctl_o.tile_a(13) <= ctl_i.attr_d(5);
           else
             ctl_o.tile_a(13) <= '0';

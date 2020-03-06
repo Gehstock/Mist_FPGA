@@ -59,7 +59,6 @@ architecture SYN of sprite_array is
   signal ctl_o    : ctl_o_a_t(0 to N_SPRITES-1);
 
   signal ld_r     : std_logic_vector(N_SPRITES-1 downto 0);
-  signal ld_ena   : std_logic;
 begin
 
   -- Sprite Data Load Arbiter
@@ -72,27 +71,22 @@ begin
       -- enable must be 1 clock behind address to latch data after fetch
       --ld_r <= (N_SPRITES-1 => '1', others => '0');
       -- make ISE 9.2.03i happy...
-      ld_ena <= '1';
       ld_r(ld_r'left) <= '1';
       ld_r(ld_r'left-1 downto 0) <= (others => '0');
       i := 0;
     elsif rising_edge(clk) and clk_ena = '1' then
       if video_ctl.hblank = '0' then
-        ld_ena <= '1';
         i := 0;
         ld_r(ld_r'left) <= '1';
         ld_r(ld_r'left-1 downto 0) <= (others => '0');
       else
-        ld_ena <= not ld_ena;
-        if ld_ena = '1' then
-          ld_r <= ld_r(ld_r'left-1 downto 0) & ld_r(ld_r'left);
-          if i = N_SPRITES-1 then
-            i := 0;
-          else
-            i := i + 1;
-          end if;
-          row_a <= ctl_o(i).a;
+        ld_r <= ld_r(ld_r'left-1 downto 0) & ld_r(ld_r'left);
+        if (i = 31 and hwsel /= HW_HORIZON) or i = N_SPRITES-1 then
+          i := 0;
+        else
+          i := i + 1;
         end if;
+        row_a <= ctl_o(i).a;
       end if;
     end if;
   end process;

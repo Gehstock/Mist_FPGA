@@ -11,7 +11,7 @@ use work.platform_variant_pkg.all;
 package sprite_pkg is
 
   subtype SPRITE_N_t is std_logic_vector(11 downto 0);
-  subtype SPRITE_A_t is std_logic_vector(7 downto 0);
+  subtype SPRITE_A_t is std_logic_vector(8 downto 0);
   subtype SPRITE_D_t is std_logic_vector(7 downto 0);
   
   type from_SPRITE_REG_t is record
@@ -33,7 +33,7 @@ package sprite_pkg is
   end record;
 
   function NULL_TO_SPRITE_REG return to_SPRITE_REG_t;
-  
+
   subtype SPRITE_ROW_D_t is std_logic_vector(63 downto 0);
   subtype SPRITE_ROW_A_t is std_logic_vector(15 downto 0);
 

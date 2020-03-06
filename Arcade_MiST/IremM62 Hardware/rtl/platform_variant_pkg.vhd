@@ -14,7 +14,8 @@ package platform_variant_pkg is
   constant HW_LDRUN3   : integer := 2;
   constant HW_LDRUN4   : integer := 3;
   constant HW_KUNGFUM  : integer := 4;
-  constant HW_BATTROAD : integer := 5;
+  constant HW_HORIZON  : integer := 5;
+  constant HW_BATTROAD : integer := 6;
 
   type rom_a is array (natural range <>) of string;
   

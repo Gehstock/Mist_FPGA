@@ -56,8 +56,8 @@ entity platform is
     platform_o      : out to_PLATFORM_IO_t;
 
     dl_addr         : in std_logic_vector(11 downto 0);
-		dl_data         : in std_logic_vector(7 downto 0);
-		dl_wr           : in std_logic;
+    dl_data         : in std_logic_vector(7 downto 0);
+    dl_wr           : in std_logic;
 
     cpu_rom_addr    : out std_logic_vector(16 downto 0);
     cpu_rom_do      : in std_logic_vector(7 downto 0);
@@ -99,7 +99,6 @@ architecture SYN of platform is
 
   signal snd_cs         : std_logic;
 
-  
   -- RAM signals        
   signal wram_cs        : std_logic;
   signal wram_wr        : std_logic;
@@ -174,13 +173,16 @@ begin
   -- chip select logic
   -- ROM $0000-$7FFF
   --     $0000-$9FFF - LDRUN2
-  --     $0000-$BFFF - LDRUN3,4
+  --     $0000-$BFFF - LDRUN3,4, HORIZON
   rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else 
                 '1' when hwsel = HW_LDRUN2 and cpu_a(15 downto 13) = "100" else
-                '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4) and cpu_a(15 downto 14) = "10" else
+                '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_HORIZON) and cpu_a(15 downto 14) = "10" else
                 '0';
   -- SPRITE $C000-$C0FF
-  sprite_cs <=  '1' when STD_MATCH(cpu_a, X"C0"&   "--------") else '0';
+  --        $C000-$C1FF - HORIZON
+  sprite_cs <=  '1' when cpu_a(15 downto 8) = x"C0" else
+                '1' when cpu_a(15 downto 9) = x"C"&"000" and hwsel = HW_HORIZON else
+                '0';
   -- VRAM/CRAM $D000-$DFFF
   vram_cs <=    '1' when hwsel = HW_KUNGFUM and
                           STD_MATCH(cpu_a, X"D"&"0-----------") else 
@@ -235,7 +237,7 @@ begin
   -- sprite registers
   sprite_reg_o.clk <= clk_sys;
   sprite_reg_o.clk_ena <= clk_3M072_en;
-  sprite_reg_o.a <= cpu_a(7 downto 0);
+  sprite_reg_o.a <= cpu_a(8 downto 0)  when hwsel = HW_HORIZON else '0' & cpu_a(7 downto 0);
   sprite_reg_o.d <= cpu_d_o;
   sprite_reg_o.wr <= sprite_cs and cpu_mem_wr;
 
@@ -379,7 +381,35 @@ begin
     signal m62_hscroll  : std_logic_vector(15 downto 0);
     signal m62_vscroll  : std_logic_vector(15 downto 0);
     signal m62_topbottom_mask: std_logic;
+    signal scrollram_d_o  : std_logic_vector(15 downto 0);
+    signal scrollram_wr   : std_logic;
   begin
+    horizon_scrollram_inst : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 5,
+      width_a    => 16,
+      widthad_b  => 6,
+      width_b    => 8
+    )
+    port map
+    (
+      clock_b    => clk_sys,
+      address_b  => cpu_a(5 downto 0),
+      wren_b     => scrollram_wr,
+      data_b     => cpu_d_o,
+      q_b        => open,
+
+      clock_a    => clk_video,
+      address_a  => tilemap_i(1).map_a(10 downto 6),
+      wren_a     => '0',
+      data_a     => (others => 'X'),
+      q_a        => scrollram_d_o
+    );
+
+    scrollram_wr <= '1' when cpu_mem_wr = '1' and cpu_a(15 downto 6) = X"C8"&"00" else '0';
+
     process (clk_sys, rst_sys)
     begin
       if rst_sys = '1' then
@@ -419,11 +449,11 @@ begin
         end if;
       end if; -- rising_edge(clk_sys)
     end process;
-    graphics_o.bit16(0) <= m62_hscroll;
+    graphics_o.bit16(0) <= scrollram_d_o when hwsel = HW_HORIZON else m62_hscroll;
     graphics_o.bit16(1) <= m62_vscroll;
   end block BLK_SCROLL;
-  
-  
+
+
   BLK_GFX_ROMS : block
   
     type gfx_rom_d_a is array(M62_CHAR_ROM'range) of std_logic_vector(7 downto 0);
@@ -509,7 +539,8 @@ begin
       generic map
       (
         init_file  => "",
-        widthad_a  => 11
+        widthad_a  => 11,
+        widthad_b  => 11
       )
       port map
       (
@@ -531,7 +562,8 @@ begin
       generic map
       (
         init_file  => "",
-        widthad_a  => 11
+        widthad_a  => 11,
+        widthad_b  => 11
       )
       port map
       (
@@ -570,7 +602,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (
@@ -592,7 +625,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (
@@ -614,7 +648,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (
@@ -637,7 +672,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (
@@ -659,7 +695,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (
@@ -681,7 +718,8 @@ begin
     generic map
     (
       init_file  => "",
-      widthad_a  => 8
+      widthad_a  => 8,
+      widthad_b  => 8
     )
     port map
     (

@@ -76,6 +76,7 @@ architecture SYN of PACE is
   signal to_graphics      : to_GRAPHICS_t;
   signal from_graphics    : from_GRAPHICS_t;
   signal sprite_prom      : prom_a(0 to 31);
+  signal sprite_no        : integer range 0 to PACE_VIDEO_NUM_SPRITES-1;
 
 begin
 
@@ -127,7 +128,6 @@ begin
       sprite_i        => from_sprite_ctl,
       sprite_o        => to_sprite_ctl,
       spr0_hit        => spr0_hit,
-      
       graphics_i      => from_graphics,
       graphics_o      => to_graphics,
 

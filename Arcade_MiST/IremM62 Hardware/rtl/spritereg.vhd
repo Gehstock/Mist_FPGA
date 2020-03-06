@@ -30,7 +30,7 @@ begin
   begin
     if rising_edge(clk) then
       if clk_ena = '1' then
-        if reg_i.a(7 downto 3) = std_logic_vector(to_unsigned(INDEX, 5)) then
+        if reg_i.a(8 downto 3) = std_logic_vector(to_unsigned(INDEX, 6)) then
           if reg_i.wr = '1' then
             case reg_i.a(2 downto 0) is
               when "000" =>
