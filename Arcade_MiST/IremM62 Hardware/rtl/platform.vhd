@@ -141,6 +141,7 @@ architecture SYN of platform is
 
   -- Kidniki, Battle Road
   signal kidniki_bank   : std_logic_vector(3 downto 0);
+  signal kidniki_gfxbank: std_logic;
 
 begin
 
@@ -180,11 +181,11 @@ begin
   
   -- chip select logic
   -- ROM $0000-$7FFF
-  --     $0000-$9FFF - LDRUN2
+  --     $0000-$9FFF - LDRUN2, KIDNIKI
   --     $0000-$BFFF - LDRUN3,4, HORIZON
   --     $A000-$BFFF - BATTROAD
   rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else 
-                '1' when hwsel = HW_LDRUN2 and cpu_a(15 downto 13) = "100" else
+                '1' when (hwsel = HW_LDRUN2 or hwsel = HW_KIDNIKI) and cpu_a(15 downto 13) = "100" else
                 '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_HORIZON) and cpu_a(15 downto 14) = "10" else
                 '1' when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
                 '0';
@@ -195,21 +196,27 @@ begin
                 '1' when cpu_a(15 downto 9) = x"C"&"000" and hwsel = HW_HORIZON else
                 '0';
 
-  -- VRAM/CRAM $D000-$DFFF
+  -- VRAM/CRAM $D000-$DFFF, ($A000-$AFFF - KIDNIKI)
   vram_cs <=    '1' when hwsel = HW_KUNGFUM and
-                          STD_MATCH(cpu_a, X"D"&"0-----------") else 
-                '1' when hwsel /= HW_KUNGFUM and
-                          STD_MATCH(cpu_a, X"D"&"-----------0") else 
+                          STD_MATCH(cpu_a, X"D"&"0-----------") else
+                '1' when hwsel = HW_KIDNIKI and
+                          STD_MATCH(cpu_a, X"A"&"-----------0") else
+                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and
+                          STD_MATCH(cpu_a, X"D"&"-----------0") else
                 '0';
   cram_cs <=    '1' when hwsel = HW_KUNGFUM and
-                          STD_MATCH(cpu_a, X"D"&"1-----------") else 
-                '1' when hwsel /= HW_KUNGFUM and
-                          STD_MATCH(cpu_a, X"D"&"-----------1") else 
+                          STD_MATCH(cpu_a, X"D"&"1-----------") else
+                '1' when hwsel = HW_KIDNIKI and
+                          STD_MATCH(cpu_a, X"A"&"-----------1") else
+                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and
+                          STD_MATCH(cpu_a, X"D"&"-----------1") else
                 '0';
 
-  -- Text RAM $C800-$CFFF
+  -- Text RAM $C800-$CFFF, ($D000-$DFFF - KIDNIKI)
   textram_cs <= '1' when hwsel = HW_BATTROAD and
                           cpu_a(15 downto 11) = x"C"&'1' else
+                '1' when hwsel = HW_KIDNIKI and
+                          cpu_a(15 downto 12) = x"D" else
                 '0';
 
   -- RAM $E000-$EFFF
@@ -311,6 +318,7 @@ begin
       '0' & "10" & ld24_bank & cpu_a(12 downto 0) when hwsel = HW_LDRUN2 and cpu_a(15) = '1' else
       '0' & '1'  & ld24_bank & cpu_a(13 downto 0) when hwsel = HW_LDRUN4 and cpu_a(15) = '1' else
       '1' & kidniki_bank(2 downto 0) & cpu_a(12 downto 0) when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
+      (kidniki_bank(3 downto 0) + "100") & cpu_a(12 downto 0) when hwsel = HW_KIDNIKI and cpu_a(15 downto 13) = "100" and kidniki_bank(3 downto 2) /= "11" else
       '0' & cpu_a(15 downto 0);
 
     -- Lode Runner 2 bank switching - some kind of protection, only the level number is used to select bank 0 or 1 at $8000
@@ -324,12 +332,16 @@ begin
         ld2_bankr2 <= (others => '0');
         ld24_bank <= '0';
         kidniki_bank <= (others => '0');
+        kidniki_gfxbank <= '0';
       elsif rising_edge(clk_sys) then
         if cpu_clk_en = '1' and cpu_io_wr = '1' then
           case cpu_a(7 downto 0) is
             when X"80" => ld2_bankr1 <= cpu_d_o(5 downto 0);
             when X"81" => ld2_bankr2 <= cpu_d_o;
             when X"83" => if hwsel = HW_BATTROAD then kidniki_bank <= cpu_d_o(3 downto 0); end if;
+            when X"84" => if hwsel = HW_KIDNIKI then kidniki_gfxbank <= cpu_d_o(0); end if;
+            -- Kidniki banks: 0-7, C-F, 8-B not used
+            when X"85" => if hwsel = HW_KIDNIKI then kidniki_bank <= cpu_d_o(3) & (not cpu_d_o(3) and cpu_d_o(2)) & cpu_d_o(1 downto 0); end if;
             when others => null;
           end case;
         end if;
@@ -403,6 +415,7 @@ begin
   BLK_SCROLL : block
     signal m62_hscroll  : std_logic_vector(15 downto 0);
     signal m62_vscroll  : std_logic_vector(15 downto 0);
+    signal m62_vscroll2 : std_logic_vector(15 downto 0);
     signal m62_topbottom_mask: std_logic;
     signal scrollram_d_o  : std_logic_vector(15 downto 0);
     signal scrollram_wr   : std_logic;
@@ -438,6 +451,7 @@ begin
       if rst_sys = '1' then
         m62_hscroll <= (others => '0');
         m62_vscroll <= (others => '0');
+        m62_vscroll2 <= (others => '0');
         m62_topbottom_mask <= '0';
       elsif rising_edge(clk_sys) then
         if cpu_clk_en = '1' and cpu_mem_wr = '1' then
@@ -456,19 +470,29 @@ begin
         end if; -- cpu_wr
 
         if cpu_clk_en = '1' and cpu_io_wr = '1' then
+          -- background 1 vscroll
           if (hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and cpu_a(7 downto 0) = x"80" then
             m62_vscroll(7 downto 0) <= cpu_d_o;
+          end if;
+          -- background 1 hscroll
+          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82") or
+             ((hwsel = HW_BATTROAD or hwsel = HW_KIDNIKI) and cpu_a(7 downto 0) = x"81") then
+            m62_hscroll(15 downto 8) <= cpu_d_o;
+          end if;
+          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83") or
+             (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"82") or
+             (hwsel = HW_KIDNIKI and cpu_a(7 downto 0) = x"80") then
+            m62_hscroll(7 downto 0) <= cpu_d_o;
           end if;
           if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"81" then
             m62_topbottom_mask <= cpu_d_o(0);
           end if;
-          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82") or
-             (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"81") then
-            m62_hscroll(15 downto 8) <= cpu_d_o;
+          -- backrground 2 vscroll
+          if hwsel = HW_KIDNIKI and cpu_a(7 downto 0) = x"82" then
+            m62_vscroll2(7 downto 0) <= cpu_d_o;
           end if;
-          if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83") or
-             (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"82") then
-            m62_hscroll(7 downto 0) <= cpu_d_o;
+          if hwsel = HW_KIDNIKI and cpu_a(7 downto 0) = x"83" then
+            m62_vscroll2(15 downto 8) <= cpu_d_o;
           end if;
 
         end if;
@@ -489,7 +513,7 @@ begin
   begin
 
     -- external background ROMs
-    gfx1_addr <= "00"&tilemap_i(1).tile_a(13 downto 0);
+    gfx1_addr <= '0' & kidniki_gfxbank & tilemap_i(1).tile_a(13 downto 0);
     tilemap_o(1).tile_d(23 downto 0) <= gfx1_do(7 downto 0) & gfx1_do(15 downto 8) & gfx1_do(23 downto 16);
 
     -- internal background ROMs

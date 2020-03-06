@@ -74,7 +74,8 @@ begin
   irem62_hsize <= 384+16 when hwsel = HW_LDRUN or
                               hwsel = HW_LDRUN2 or
                               hwsel = HW_LDRUN3 or
-                              hwsel = HW_LDRUN4 else
+                              hwsel = HW_LDRUN4 or
+                              hwsel = HW_KIDNIKI else
                   256+16;
 
   pace_video_controller_inst : entity work.pace_video_controller

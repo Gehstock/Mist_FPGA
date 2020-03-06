@@ -90,11 +90,15 @@ begin
         if x(2 downto 0) = "010" then
           if hwsel = HW_LDRUN4 or hwsel = HW_HORIZON then
             ctl_o.tile_a(13) <= ctl_i.attr_d(5);
+          elsif hwsel = HW_KIDNIKI then
+            ctl_o.tile_a(13) <= ctl_i.attr_d(7);
           else
             ctl_o.tile_a(13) <= '0';
           end if;
           if hwsel = HW_BATTROAD then
             ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6) & ctl_i.attr_d(4);
+          elsif hwsel = HW_KIDNIKI then
+            ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6 downto 5);
           else
             ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(7 downto 6);
           end if;
