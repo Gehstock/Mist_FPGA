@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>1</part></rom>
-    <rom index="0" zip="ldrun2.zip" md5="9e4c8423a33f0c5bf558d475d89e041a" type="merged|nonmerged">
+    <rom index="0" zip="ldrun2.zip" md5="46dbb2c6765031bd796a2c62b64c4ba2" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="lr2-a-4e.a"/>
       <part name="lr2-a-4d"/>
@@ -26,14 +26,10 @@
       <part name="lr2-h-1d.a"/>
 
       <!-- SND CPU2, 64k -->
-      <part name="lr2-a-3e"/>
-      <part name="lr2-a-3f"/>
-      <part name="lr2-a-3h"/>
-      <part name="lr2-a-3h"/>
+      <part repeat="0xa000">FF</part>
 
       <part name="lr2-a-3e"/>
       <part name="lr2-a-3f"/>
-      <part name="lr2-a-3h"/>
       <part name="lr2-a-3h"/>
 
       <!-- GFX1, 128k -->

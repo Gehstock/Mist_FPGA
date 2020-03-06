@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>4</part></rom>
-    <rom index="0" zip="kungfum.zip" md5="9e4c8423a33f0c5bf558d475d89e041a" type="merged|nonmerged">
+    <rom index="0" zip="kungfum.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="a-4e-c.bin"/>
       <part name="a-4d-c.bin"/>
@@ -17,14 +17,9 @@
       <part name="a-4d-c.bin"/>
 
       <!-- SND CPU2, 64k -->
+      <part repeat="0xa000">FF</part>
       <part name="a-3e-.bin"/>
       <part name="a-3f-.bin"/>
-      <part name="a-3h-.bin"/>
-      <part name="a-3h-.bin"/>
-
-      <part name="a-3e-.bin"/>
-      <part name="a-3f-.bin"/>
-      <part name="a-3h-.bin"/>
       <part name="a-3h-.bin"/>
 
       <!-- GFX1, 128k -->

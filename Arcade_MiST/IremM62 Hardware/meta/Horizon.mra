@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>5</part></rom>
-    <rom index="0" zip="horizon.zip" md5="9e4c8423a33f0c5bf558d475d89e041a" type="merged|nonmerged">
+    <rom index="0" zip="horizon.zip" md5="573ef5ced961ede734cdde94153fcb7a" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="hrza-4e"/>
       <part name="hrza-4d"/>

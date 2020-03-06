@@ -103,7 +103,7 @@ wire [16:0] rom_addr;
 wire [15:0] rom_do;
 
 wire [17:0] snd_addr;
-wire [13:0] snd_rom_addr;
+wire [15:0] snd_rom_addr;
 wire [15:0] snd_do;
 wire        snd_vma;
 

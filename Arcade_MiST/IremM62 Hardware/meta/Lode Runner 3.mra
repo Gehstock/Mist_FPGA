@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>2</part></rom>
-    <rom index="0" zip="ldrun3.zip" md5="9e4c8423a33f0c5bf558d475d89e041a" type="merged|nonmerged">
+    <rom index="0" zip="ldrun3.zip" md5="a32c8e0a4927c70199174dea1600e761" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="lr3a4eb.bin"/>
       <part name="lr3a4db.bin"/>
