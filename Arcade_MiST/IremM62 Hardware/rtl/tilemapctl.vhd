@@ -49,7 +49,7 @@ architecture TILEMAP_1 of tilemapCtl is
   alias rot_en    : std_logic is graphics_i.bit8(0)(0);
   alias hscroll   : std_logic_vector(15 downto 0) is graphics_i.bit16(0);
   alias vscroll   : std_logic_vector(15 downto 0) is graphics_i.bit16(1);
-  
+
 begin
 
   ctl_o.rgb <= ctl_i.rgb;
@@ -71,6 +71,7 @@ begin
 
     variable tile_d_r   : std_logic_vector(23 downto 0);
     variable attr_d_r   : std_logic_vector(7 downto 0);
+    variable flipx      : std_logic;
     variable pel        : std_logic_vector(2 downto 0);
 
   begin
@@ -109,14 +110,32 @@ begin
         -- 3rd stage of pipeline
         -- - read tile, attribute data from ROM
         if x(2 downto 0) = "100" then
-          tile_d_r := ctl_i.tile_d(tile_d_r'range);
           attr_d_r := ctl_i.attr_d(7 downto 0);
+          if hwsel = HW_KUNGFUM or
+             --hwsel = LOTLOT or
+             hwsel = HW_LDRUN or
+             hwsel = HW_LDRUN2 or
+             hwsel = HW_BATTROAD
+          then
+            flipx := attr_d_r(5);
+          else
+            flipx := '0';
+          end if;
+          tile_d_r := ctl_i.tile_d(tile_d_r'range);
         elsif stb = '1' then
-          tile_d_r := tile_d_r(tile_d_r'left-1 downto 0) & '0';
+          if flipx = '0' then
+            tile_d_r := tile_d_r(tile_d_r'left-1 downto 0) & '0';
+          else
+            tile_d_r := '0' & tile_d_r(tile_d_r'left downto 1);
+          end if;
         end if;
 
         -- extract R,G,B from colour palette
-        pel := tile_d_r(tile_d_r'left-16) & tile_d_r(tile_d_r'left-8) & tile_d_r(tile_d_r'left);
+        if flipx = '0' then
+          pel := tile_d_r(tile_d_r'left-16) & tile_d_r(tile_d_r'left-8) & tile_d_r(tile_d_r'left);
+        else
+          pel := tile_d_r(tile_d_r'right) & tile_d_r(tile_d_r'right+8) & tile_d_r(tile_d_r'right+16);
+        end if;
         if hwsel = HW_BATTROAD then
           ctl_o.pal_a <= '0' & attr_d_r(3 downto 0) & pel;
         else
