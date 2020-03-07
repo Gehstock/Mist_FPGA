@@ -4,7 +4,7 @@
     <setname>kidniki</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
-    <rom index="1"><part>6</part></rom>
+    <rom index="1"><part>7</part></rom>
     <rom index="0" zip="kidniki.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="ky_a-4e-g.bin"/>

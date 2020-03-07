@@ -4,7 +4,7 @@
     <setname>battroad</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
-    <rom index="1"><part>5</part></rom>
+    <rom index="1"><part>6</part></rom>
     <rom index="0" zip="battroad.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="br-a-4e.b"/>
