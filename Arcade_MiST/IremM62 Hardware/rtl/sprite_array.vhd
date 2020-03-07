@@ -96,7 +96,6 @@ begin
     ctl_i(i).ld <= ld_r(i);
     ctl_i(i).height <= sprite_prom(to_integer(unsigned(reg_o(i).n(9 downto 5))));
     ctl_i(i).d <= row_d;
-    ctl_i(i).rgb <= (others => (others => '0'));
   end generate GEN_ROW_D;
 
   -- Sprite Priority Encoder

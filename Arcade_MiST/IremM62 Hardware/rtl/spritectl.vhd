@@ -41,35 +41,35 @@ architecture SYN of spritectl is
 
   signal ld_r     : std_logic;
   signal left_d   : std_logic;
+  signal hblank_r : std_logic;
   signal rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
+  signal rowCount : unsigned(5 downto 0);
+  -- which part of the sprite is being drawn
+  alias segment   : unsigned(1 downto 0) is rowCount(5 downto 4);
 
 begin
 
-  process (clk, clk_ena, left_d, reg_i)
+  process (clk, clk_ena, left_d, rowCount, reg_i)
 
-  variable pel      : std_logic_vector(2 downto 0);
-  variable x        : unsigned(video_ctl.x'range);
-  variable y        : unsigned(video_ctl.y'range);
-  variable yMat     : boolean;      -- raster is between first and last line of sprite
-  variable xMat     : boolean;      -- raster in between left edge and end of line
+    variable pel      : std_logic_vector(2 downto 0);
+    variable x        : unsigned(video_ctl.x'range);
+    variable y        : unsigned(video_ctl.y'range);
+    variable xMat     : boolean;      -- raster in between left edge and end of line
+    variable yMat     : boolean;      -- raster is between first and last line of sprite
 
-  variable height     : unsigned(6 downto 0);
+    variable height   : unsigned(1 downto 0);
 
-    variable rowCount   : unsigned(height'range);
-    -- which part of the sprite is being drawn
-    alias segment       : unsigned(1 downto 0) is rowCount(5 downto 4);
-    
-    variable code       : std_logic_vector(9 downto 0);
-    variable pal_i      : std_logic_vector(7 downto 0);
+    variable code     : std_logic_vector(9 downto 0);
 
   begin
 
     if rising_edge(clk) then
       if clk_ena = '1' then
         ld_r <= ctl_i.ld;
+        hblank_r <= video_ctl.hblank;
         if video_ctl.hblank = '1' then
 
-          x := unsigned(reg_i.x) - video_ctl.video_h_offset + PACE_VIDEO_PIPELINE_DELAY - 3;
+          x := unsigned(reg_i.x) - video_ctl.video_h_offset + PACE_VIDEO_PIPELINE_DELAY - 2;
           y := 256 + 128 - 18 - unsigned(reg_i.y);
 
           -- hande sprite height, placement
@@ -77,23 +77,33 @@ begin
           case ctl_i.height is
             when 1 =>
               -- double height
-              height := to_unsigned(2*16,height'length);
               y := y - 16;
             when 2 =>
               -- quadruple height
-              height := to_unsigned(4*16,height'length);
               y := y - 3*16;
             when others =>
-              height := to_unsigned(16,height'length);
+              null;
           end case;
 
-          -- do this 1st because we don't have many clocks
-          if y = unsigned(video_ctl.y) then
-            -- start counting sprite row
-            rowCount := (others => '0');
-            yMat := true;
-          elsif rowCount = height then
-            yMat := false;
+          height := to_unsigned(ctl_i.height,2);
+          height(0) := height (0) or height(1);
+
+          -- count row at start of hblank
+          if hblank_r = '0' then
+            if y = unsigned(video_ctl.y) then
+              -- start counting sprite row
+              rowCount <= (others => '0');
+              yMat := true;
+            elsif rowCount = height & "1111" then
+              yMat := false;
+            else
+              rowCount <= rowCount + 1;
+            end if;
+
+            -- stop sprites wrapping from bottom of screen
+            if y = 0 then
+              yMat := false;
+            end if;
           end if;
 
           case ctl_i.height is
@@ -115,14 +125,8 @@ begin
               null;
           end case;
 
-          xMat := false;
-          -- stop sprites wrapping from bottom of screen
-          if y = 0 then
-            yMat := false;
-          end if;
-
-          -- sprites not visible before row 16
           if ld_r = '0' and ctl_i.ld = '1' then
+            xMat := false;
             left_d <= not left_d; -- switch sprite half
             if yMat then
               if left_d = '1' then
@@ -147,12 +151,7 @@ begin
         if video_ctl.stb = '1' then
 
           if x = unsigned(video_ctl.x) then
-            -- count up at left edge of sprite
-            rowCount := rowCount + 1;
-            -- start of sprite
-            --if unsigned(x) /= 0 and unsigned(x) < 240 then
               xMat := true;
-            --end if;
           end if;
 
           if xMat then
@@ -172,17 +171,7 @@ begin
 
         end if;
 
-        if hwsel = HW_LDRUN or
-           hwsel = HW_LDRUN2 or
-           hwsel = HW_LDRUN3 or
-           hwsel = HW_LDRUN4 or
-           hwsel = HW_BATTROAD then
-          pal_i := '0' & reg_i.colour(3 downto 0) & pel;
-        else
-          pal_i := reg_i.colour(4 downto 0) & pel;
-        end if;
-        --pal_i := "000" & std_logic_vector(to_unsigned(INDEX,5));
-        ctl_o.pal_a <= pal_i;
+        ctl_o.pal_a <= reg_i.colour(4 downto 0) & pel;
 
         -- set pixel transparency based on match
         ctl_o.set <= '0';

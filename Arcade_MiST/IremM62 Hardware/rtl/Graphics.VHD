@@ -27,6 +27,7 @@ entity Graphics is
     sprite_ctl_i    : in to_SPRITE_CTL_t;
     sprite_ctl_o    : out from_SPRITE_CTL_t;
     spr0_hit        : out std_logic;
+    sprite_rgb      : in RGB_t;
 
     graphics_i      : in to_GRAPHICS_t;
     graphics_o      : out from_GRAPHICS_t;
@@ -113,7 +114,7 @@ begin
     (
         bitmap_ctl_o  => bitmap_ctl_o_s,
         tilemap_ctl_o => tilemap_ctl_o_s,
-        sprite_rgb    => sprite_ctl_i.rgb,
+        sprite_rgb    => sprite_rgb,
         sprite_set    => sprite_ctl_o_s.set,
         sprite_pri    => sprite_pri,
         

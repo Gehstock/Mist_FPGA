@@ -43,6 +43,7 @@ entity platform is
     sprite_i        : in from_SPRITE_CTL_t;
     sprite_o        : out to_SPRITE_CTL_t;
     spr0_hit        : in std_logic;
+    sprite_rgb      : out RGB_t;
 
     -- various graphics information
     graphics_i      : in from_GRAPHICS_t;
@@ -124,6 +125,7 @@ architecture SYN of platform is
   signal sp_pal_r_wr    : std_logic;
   signal sp_pal_g_wr    : std_logic;
   signal sp_pal_b_wr    : std_logic;
+  signal sprite_pal_a   : std_logic_vector(7 downto 0);
 
   -- other signals
   signal rst_platform   : std_logic;
@@ -737,6 +739,14 @@ begin
     );
   pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"5" else '0';  -- 500-5FF
 
+  sprite_pal_a <= '0' & sprite_i.pal_a(6 downto 0) when
+                    hwsel = HW_LDRUN or
+                    hwsel = HW_LDRUN2 or
+                    hwsel = HW_LDRUN3 or
+                    hwsel = HW_LDRUN4 or
+                    hwsel = HW_BATTROAD
+                  else sprite_i.pal_a;
+
   -- sprite palettes
   sp_pal_r : entity work.dpram
     generic map
@@ -754,10 +764,10 @@ begin
       q_b         => open,
 
       clock_a     => not clk_video,
-      address_a   => sprite_i.pal_a,
+      address_a   => sprite_pal_a,
       wren_a      => '0',
       data_a      => (others => '0'),
-      q_a         => sprite_o.rgb.r(9 downto 2)
+      q_a         => sprite_rgb.r(9 downto 2)
     );
   sp_pal_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"0" else '0';  -- 000-0FF
 
@@ -777,10 +787,10 @@ begin
       q_b         => open,
 
       clock_a     => not clk_video,
-      address_a   => sprite_i.pal_a,
+      address_a   => sprite_pal_a,
       wren_a      => '0',
       data_a      => (others => '0'),
-      q_a         => sprite_o.rgb.g(9 downto 2)
+      q_a         => sprite_rgb.g(9 downto 2)
     );
   sp_pal_g_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"1" else '0';  -- 100-1FF
 
@@ -800,10 +810,10 @@ begin
       q_b         => open,
 
       clock_a     => not clk_video,
-      address_a   => sprite_i.pal_a,
+      address_a   => sprite_pal_a,
       wren_a      => '0',
       data_a      => (others => '0'),
-      q_a         => sprite_o.rgb.b(9 downto 2)
+      q_a         => sprite_rgb.b(9 downto 2)
     );
   sp_pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"2" else '0';  -- 200-2FF
 
