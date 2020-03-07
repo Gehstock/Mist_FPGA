@@ -20,6 +20,7 @@ entity platform is
   (
     -- clocking and reset
     clkrst_i        : in from_CLKRST_t;
+    cpu_clk_en_i    : in std_logic;
 
     hwsel           : in integer;
 
@@ -77,7 +78,6 @@ architecture SYN of platform is
   alias clk_video       : std_logic is clkrst_i.clk(1);
 
   -- cpu signals  
-  signal clk_3M072_en   : std_logic;
   signal cpu_clk_en     : std_logic;
   signal cpu_a          : std_logic_vector(15 downto 0);
   signal cpu_d_i        : std_logic_vector(7 downto 0);
@@ -267,7 +267,7 @@ begin
 
   -- sprite registers
   sprite_reg_o.clk <= clk_sys;
-  sprite_reg_o.clk_ena <= clk_3M072_en;
+  sprite_reg_o.clk_ena <= cpu_clk_en_i;
   sprite_reg_o.a <= cpu_a(8 downto 0)  when hwsel = HW_HORIZON else '0' & cpu_a(7 downto 0);
   sprite_reg_o.d <= cpu_d_o;
   sprite_reg_o.wr <= sprite_cs and cpu_mem_wr;
@@ -279,21 +279,8 @@ begin
   BLK_CPU : block
     signal cpu_rst        : std_logic;
   begin
-    -- generate CPU enable clock (3MHz from 27/30MHz)
-    clk_en_inst : entity work.clk_div
-      generic map
-      (
-        DIVISOR		=> M62_CPU_CLK_ENA_DIVIDE_BY
-      )
-      port map
-      (
-        clk				=> clk_sys,
-        reset			=> rst_sys,
-        clk_en		=> clk_3M072_en
-      );
-    
     -- gated CPU signals
-    cpu_clk_en <= clk_3M072_en and not pause;
+    cpu_clk_en <= cpu_clk_en_i and not pause;
     cpu_rst <= rst_sys or rst_platform;
     
     cpu_inst : entity work.Z80                                                

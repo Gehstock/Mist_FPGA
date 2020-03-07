@@ -72,6 +72,8 @@ architecture SYN of target_top is
 
   signal hires          : std_logic;
   signal count          : std_logic_vector(1 downto 0);
+  signal cpu_clk        : std_logic;
+  signal cpu_clk_en     : std_logic;
 
 begin
 
@@ -85,8 +87,15 @@ begin
       else
         count <= count + 1;
       end if;
+
+      -- CPU clock = vidclk / 2
+      if count = "00" then
+        cpu_clk <= not cpu_clk;
+      end if;
     end if;
   end process;
+
+  cpu_clk_en <= '1' when count = "00" and cpu_clk = '1' else '0';
 
 	clkrst_i.clk(0) <= clock_sys;
 --	clkrst_i.clk(1) <= clock_vid;
@@ -134,6 +143,7 @@ Sound_Board : entity work.Sound_Board
 pace_inst : entity work.pace                                            
 	port map(
 		clkrst_i				=> clkrst_i,
+    cpu_clk_en_i    => cpu_clk_en,
 		hwsel           => hwsel,
     hires           => hires,
 		buttons_i         => buttons_i,

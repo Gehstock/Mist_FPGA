@@ -16,6 +16,7 @@ entity PACE is
   (
     -- clocks and resets
     clkrst_i        : in from_CLKRST_t;
+    cpu_clk_en_i    : in std_logic;
     
     -- hardware variant
     hwsel           : in integer;
@@ -108,6 +109,7 @@ begin
     (
       -- clocking and reset
       clkrst_i        => clkrst_i,
+      cpu_clk_en_i    => cpu_clk_en_i,
 
       hwsel           => hwsel,
       
