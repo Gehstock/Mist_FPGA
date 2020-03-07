@@ -214,11 +214,13 @@ begin
                           STD_MATCH(cpu_a, X"D"&"-----------1") else
                 '0';
 
-  -- Text RAM $C800-$CFFF, ($D000-$DFFF - KIDNIKI)
+  -- Text RAM $C800-$CFFF - BATTROAD, $D000-$DFFF - KIDNIKI, $A000-$AFFF - LOTLOT
   textram_cs <= '1' when hwsel = HW_BATTROAD and
                           cpu_a(15 downto 11) = x"C"&'1' else
                 '1' when hwsel = HW_KIDNIKI and
                           cpu_a(15 downto 12) = x"D" else
+                '1' when hwsel = HW_LOTLOT and
+                          cpu_a(15 downto 12) = x"A" else
                 '0';
 
   -- RAM $E000-$EFFF
@@ -456,6 +458,10 @@ begin
         m62_vscroll2 <= (others => '0');
         m62_topbottom_mask <= '0';
       elsif rising_edge(clk_sys) then
+        if hwsel = HW_LOTLOT then
+          m62_hscroll <= std_logic_vector(to_signed(-64, m62_hscroll'length));
+          m62_vscroll <= std_logic_vector(to_unsigned(32, m62_vscroll'length));
+        end if;
         if cpu_clk_en = '1' and cpu_mem_wr = '1' then
           case cpu_a is
             when X"A000" =>

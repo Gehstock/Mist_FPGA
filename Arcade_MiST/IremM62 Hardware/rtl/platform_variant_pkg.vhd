@@ -17,6 +17,7 @@ package platform_variant_pkg is
   constant HW_HORIZON  : integer := 5;
   constant HW_BATTROAD : integer := 6;
   constant HW_KIDNIKI  : integer := 7;
+  constant HW_LOTLOT   : integer := 8;
 
   type rom_a is array (natural range <>) of string;
   

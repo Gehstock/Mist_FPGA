@@ -112,7 +112,7 @@ begin
         if x(2 downto 0) = "100" then
           attr_d_r := ctl_i.attr_d(7 downto 0);
           if hwsel = HW_KUNGFUM or
-             --hwsel = LOTLOT or
+             hwsel = HW_LOTLOT or
              hwsel = HW_LDRUN or
              hwsel = HW_LDRUN2 or
              hwsel = HW_BATTROAD
