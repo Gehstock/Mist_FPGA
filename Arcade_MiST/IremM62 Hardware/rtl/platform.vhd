@@ -86,6 +86,7 @@ architecture SYN of platform is
   signal cpu_io_rd      : std_logic;
   signal cpu_io_wr      : std_logic;
   signal cpu_irq        : std_logic;
+  signal cpu_intack     : std_logic;
 
   -- ROM signals        
   signal rom_cs         : std_logic;
@@ -301,7 +302,7 @@ begin
 
         intreq  => cpu_irq,
         intvec  => cpu_d_i,
-        intack  => open,
+        intack  => cpu_intack,
         nmi     => '0'
       );
 
@@ -359,41 +360,28 @@ begin
 
   BLK_INTERRUPTS : block
   
-    signal vblank_int     : std_logic;
+    signal vblank_r     : std_logic;
 
   begin
-  
-    process (clk_sys, rst_sys)
-      variable vblank_r : std_logic_vector(3 downto 0);
-      alias vblank_prev : std_logic is vblank_r(vblank_r'left);
-      alias vblank_um   : std_logic is vblank_r(vblank_r'left-1);
-      -- 1us duty for VBLANK_INT
-      variable count    : integer range 0 to CLK0_FREQ_MHz * 100;
-    begin
-      if rst_sys = '1' then
-        vblank_int <= '0';
-        vblank_r := (others => '0');
-        count := count'high;
-      elsif rising_edge(clk_sys) then
-        -- rising edge vblank only
-        if vblank_prev = '0' and vblank_um = '1' then
-          count := 0;
-        end if;
-        if count /= count'high then
-          vblank_int <= '1';
-          count := count + 1;
-        else
-          vblank_int <= '0';
-        end if;
-        vblank_r := vblank_r(vblank_r'left-1 downto 0) & graphics_i.vblank;
-      end if; -- rising_edge(clk_sys)
-    end process;
 
     -- generate INT
-    cpu_irq <= vblank_int;
-    
+    process (clk_sys, rst_sys)
+    begin
+      if rst_sys = '1' then
+        cpu_irq <= '0';
+      elsif rising_edge(clk_sys) then
+        vblank_r <= graphics_i.vblank;
+        if vblank_r = '0' and graphics_i.vblank = '1' then
+          cpu_irq <= '1';
+        end if;
+        if cpu_intack = '1' then
+          cpu_irq <= '0';
+        end if;
+      end if;
+    end process;
+
   end block BLK_INTERRUPTS;
-  
+
   BLK_INPUTS : block
   begin
     in_d_o <= inputs_i(0).d when cpu_a(2 downto 0) = "000" else
