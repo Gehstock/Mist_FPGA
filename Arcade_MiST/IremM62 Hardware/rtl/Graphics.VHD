@@ -15,6 +15,7 @@ entity Graphics is
   port
   (
     hwsel           : in integer;
+    hires           : in std_logic;
     sprite_prom     : in prom_a(0 to 31);
 
     bitmap_ctl_i    : in to_BITMAP_CTL_a(1 to PACE_VIDEO_NUM_BITMAPS);
@@ -71,12 +72,7 @@ begin
   graphics_o.vblank <= video_o_s.vblank;
   --graphics_o.vblank <= from_video_ctl.vblank;
 
-  irem62_hsize <= 384+16 when hwsel = HW_LDRUN or
-                              hwsel = HW_LDRUN2 or
-                              hwsel = HW_LDRUN3 or
-                              hwsel = HW_LDRUN4 or
-                              hwsel = HW_KIDNIKI else
-                  256+16;
+  irem62_hsize <= 384+16 when hires = '1' else 256+16;
 
   pace_video_controller_inst : entity work.pace_video_controller
     generic map

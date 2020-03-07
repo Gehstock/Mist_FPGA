@@ -66,6 +66,8 @@ module sdram (
 	output reg [31:0] sp_q
 );
 
+parameter  MHZ = 16'd80; // 80 MHz default clock, set it to proper value to calculate refresh rate
+
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
 localparam BURST_LENGTH   = 3'b001; // 000=1, 001=2, 010=4, 011=8
 localparam ACCESS_TYPE    = 1'b0;   // 0=sequential, 1=interleaved
@@ -75,8 +77,8 @@ localparam NO_WRITE_BURST = 1'b1;   // 0= write burst enabled, 1=only single acc
 
 localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BURST_LENGTH}; 
 
-// 64ms/8192 rows = 7.8us -> 842 cycles@108MHz
-localparam RFRSH_CYCLES = 10'd842;
+// 64ms/8192 rows = 7.8us
+localparam RFRSH_CYCLES = 16'd78*MHZ/4'd10;
 
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------
@@ -86,35 +88,37 @@ localparam RFRSH_CYCLES = 10'd842;
  SDRAM state machine for 2 bank interleaved access
  1 word burst, CL2
 cmd issued  registered
- 0 RAS0     
+ 0 RAS0     data1 returned
  1          ras0 - data1 returned
- 2          data1 returned
- 3 CAS0     
+ 2
+ 3 CAS0
  4 RAS1     cas0
  5          ras1
  6 CAS1     data0 returned
  7          cas1 - data0 read burst terminated
+ 8
 */
 
-localparam STATE_RAS0      = 3'd0;   // first state in cycle
-localparam STATE_RAS1      = 3'd4;   // Second ACTIVE command after RAS0 + tRRD (15ns)
+localparam STATE_RAS0      = 4'd0;   // first state in cycle
+localparam STATE_RAS1      = 4'd4;   // Second ACTIVE command after RAS0 + tRRD (15ns)
 localparam STATE_CAS0      = STATE_RAS0 + RASCAS_DELAY + 1'd1; // CAS phase - 3
 localparam STATE_CAS1      = STATE_RAS1 + RASCAS_DELAY; // CAS phase - 6
 localparam STATE_READ0     = STATE_CAS0 + CAS_LATENCY + 2'd2; // 7
-localparam STATE_READ1     = 3'd2;
-localparam STATE_DS1b      = 3'd7;
-localparam STATE_READ1b    = 3'd3;
-localparam STATE_LAST      = 3'd7;
+localparam STATE_READ1     = 4'd1;
+localparam STATE_DS1b      = 4'd7;
+localparam STATE_READ1b    = 4'd2;
+localparam STATE_LAST      = 4'd8;
 
-reg [2:0] t;
+reg [3:0] t;
 
 always @(posedge clk) begin
 	reg clkref_d;
 	clkref_d <= clkref;
 
-	t <= t + 1'd1;
+//	t <= t + 1'd1;
+	if ((~clkref_d && clkref && t == 4'd2) || (t != 4'd2)) t <= t + 1'd1;
 	if (t == STATE_LAST) t <= STATE_RAS0;
-	if (~clkref_d & clkref) t <= STATE_RAS0;
+//	if (~clkref_d & clkref) t <= STATE_RAS0;
 end
 
 // ---------------------------------------------------------------------

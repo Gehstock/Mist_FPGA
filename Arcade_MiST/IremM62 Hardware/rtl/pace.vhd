@@ -19,6 +19,7 @@ entity PACE is
     
     -- hardware variant
     hwsel           : in integer;
+    hires           : in std_logic;
 
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
@@ -153,6 +154,7 @@ begin
     Port Map
     (
       hwsel           => hwsel,
+      hires           => hires,
       sprite_prom     => sprite_prom,
 
       bitmap_ctl_i    => to_bitmap_ctl,

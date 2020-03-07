@@ -7,10 +7,11 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.platform_pkg.all;
+use work.platform_variant_pkg.all;
 
 entity target_top is port(
 		clock_sys       : in std_logic;
-		clock_vid      	: in std_logic;
+    vid_clk_en      : out std_logic;
 		clk_aud      		: in std_logic;
 		reset_in        : in std_logic;
 		hwsel           : in integer;
@@ -69,9 +70,27 @@ architecture SYN of target_top is
   signal platform_o     : to_PLATFORM_IO_t;
   signal sound_data     : std_logic_vector(7 downto 0);
 
+  signal hires          : std_logic;
+  signal count          : std_logic_vector(1 downto 0);
+
 begin
+
+  hires <= '1' when hwsel = HW_LDRUN or hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_KIDNIKI else '0';
+
+  process(clock_sys) begin
+    if rising_edge(clock_sys) then
+      -- video clock enable: 24MHz/3 when hires, else 24MHz/4
+      if hires = '1' and count = 2 then
+        count <= "00";
+      else
+        count <= count + 1;
+      end if;
+    end if;
+  end process;
+
 	clkrst_i.clk(0) <= clock_sys;
-	clkrst_i.clk(1) <= clock_vid;		
+--	clkrst_i.clk(1) <= clock_vid;
+	clkrst_i.clk(1) <= clock_sys;
 	clkrst_i.arst <= reset_in;
 	clkrst_i.arst_n <= not clkrst_i.arst;
 
@@ -88,8 +107,11 @@ GEN_RESETS : for i in 0 to 3 generate
     end process;
 end generate GEN_RESETS;
 
+ vid_clk_en <= video_i.clk_ena;
+
  video_i.clk <= clkrst_i.clk(1);
- video_i.clk_ena <= '1';
+-- video_i.clk_ena <= '1';
+ video_i.clk_ena <= '1' when count = "00" else '0';
  video_i.reset <= clkrst_i.rst(1);
  VGA_R <= video_o.rgb.r(9 downto 6);
  VGA_G <= video_o.rgb.g(9 downto 6);
@@ -113,6 +135,7 @@ pace_inst : entity work.pace
 	port map(
 		clkrst_i				=> clkrst_i,
 		hwsel           => hwsel,
+    hires           => hires,
 		buttons_i         => buttons_i,
 		switches_i        => switches_i,
 		inputs_i          => inputs_i,

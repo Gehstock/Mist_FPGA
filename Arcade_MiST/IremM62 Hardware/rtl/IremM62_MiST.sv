@@ -52,7 +52,7 @@ assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1; 
 
-wire clk_sys, clk_aud, clk_sd, clk_vid;
+wire clk_sys, clk_vid, clk_aud, clk_sd;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
@@ -144,8 +144,7 @@ data_io data_io(
 );
 
 wire [24:0] sp_ioctl_addr = ioctl_addr - 20'h30000;
-reg clkref;
-always @(posedge clk_vid) clkref <= ~clkref;
+wire clkref;
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -223,8 +222,8 @@ wire        blankn = 1'b1;//todo
 wire  [3:0] g,b,r;
 
 target_top target_top(
-	.clock_sys(clk_sys),//4xclk_vid
-	.clock_vid(clk_vid),//11MHz
+	.clock_sys(clk_sys),//24 MHz
+	.vid_clk_en(clkref),
 	.clk_aud(clk_aud),//0.895MHz
 	.reset_in(reset),
 	.hwsel(core_mod),
@@ -265,10 +264,10 @@ target_top target_top(
 	.gfx1_do(chr1_do),
 	.gfx2_addr(sp_addr),
 	.gfx2_do(sp_do)
-  ); 
+  );
 
-mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
-	.clk_sys        ( clk_sys          ),
+mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
+	.clk_sys        ( clk_vid          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
@@ -283,7 +282,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.rotate         ( { 1'b1, rotate } ),
-	.ce_divider     ( 1'b0             ),
+	.ce_divider     ( 1'b1             ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),

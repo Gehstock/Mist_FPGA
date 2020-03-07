@@ -28,11 +28,11 @@ package platform_pkg is
 --  constant PACE_VIDEO_H_SYNC_POLARITY       : std_logic := '0';
 --  constant PACE_VIDEO_V_SYNC_POLARITY       : std_logic := '0';
 
-  constant PACE_VIDEO_CONTROLLER_TYPE       : PACEVideoController_t := PACE_VIDEO_PAL_576x288_50Hz;
-  constant PACE_CLK0_DIVIDE_BY              : natural := 27;
-  constant PACE_CLK0_MULTIPLY_BY            : natural := 44;   -- 27*44/27 = 44MHz
+  constant PACE_VIDEO_CONTROLLER_TYPE       : PACEVideoController_t := PACE_VIDEO_IREMM62;
+  constant PACE_CLK0_DIVIDE_BY              : natural := 9;
+  constant PACE_CLK0_MULTIPLY_BY            : natural := 8;   -- 27*8/9 = 24MHz
   constant PACE_CLK1_DIVIDE_BY              : natural := 27;
-  constant PACE_CLK1_MULTIPLY_BY            : natural := 11;   -- 27*11/27 = 11MHz
+  constant PACE_CLK1_MULTIPLY_BY            : natural := 8;   -- 27*8/9 = 24MHz
   constant PACE_VIDEO_H_SCALE               : integer := 1;
   constant PACE_VIDEO_V_SCALE               : integer := 1;
   constant PACE_ENABLE_ADV724               : std_logic := '1';

@@ -262,16 +262,18 @@ begin
           v_back_porch_r <= 13;
           v_border_r <= (240-VIDEO_V_SIZE)/2;
 
-        when PACE_VIDEO_PAL_576x288_50Hz =>
-          -- pixclk=11 MHz
-          h_front_porch_r <= 2*6;
-          h_sync_r <= 2*28;
-          h_back_porch_r <= 2*30;
-          h_border_r <= (576-VIDEO_H_SIZE)/2;
-          v_front_porch_r <= 8;
+        when PACE_VIDEO_IREMM62 =>
+          -- Irem M62 original timings
+          -- 512x282@8MHz or 384x282@6Mhz, (384x256 or 256x256 active display), 55 Hz
+          -- use 312 lines here, for 50 Hz PAL compatiblity.
+          h_front_porch_r <= 12;
+          h_sync_r <= 38;
+          h_back_porch_r <= 62;
+          h_border_r <= 0;--(576-VIDEO_H_SIZE)/2;
+          v_front_porch_r <= 10+15;
           v_sync_r <= 3;
-          v_back_porch_r <= 13;
-          v_border_r <= (288-VIDEO_V_SIZE)/2;
+          v_back_porch_r <= 13+15;
+          v_border_r <= 0;--(288-VIDEO_V_SIZE)/2;
 
         when others =>
           null;
@@ -280,7 +282,7 @@ begin
     h_video_r <= VIDEO_H_SIZE;
     v_video_r <= VIDEO_V_SIZE;
     border_rgb_r <= BORDER_RGB;
-      
+
     --end if;
   end process reg_proc;
 
@@ -420,9 +422,10 @@ begin
         vblank_v_r := (others => '0');
         stb_cnt_v := (others => '1');
       elsif rising_edge(clk) and clk_ena = '1' then
-  
+
+        -- hblank 
         -- register control signals and handle scaling
-        video_ctl_o.hblank <= not hactive_s after SIM_DELAY;	-- used only by the bitmap/tilemap/sprite controllers
+--        video_ctl_o.hblank <= not hactive_s after SIM_DELAY;	-- used only by the bitmap/tilemap/sprite controllers
         video_ctl_o.vblank <= not vactive_s after SIM_DELAY;	-- used only by the bitmap/tilemap/sprite controllers
         -- handle scaling
         video_ctl_o.stb <= stb_cnt_v(H_SCALE-1) after SIM_DELAY;
@@ -433,11 +436,20 @@ begin
         end if;
         video_ctl_o.x <= std_logic_vector(resize(x_s(x_s'left downto H_SCALE-1), video_ctl_o.x'length)) after SIM_DELAY;
         video_ctl_o.y <= std_logic_vector(resize(y_s(y_s'left downto V_SCALE-1), video_ctl_o.y'length)) after SIM_DELAY;
-  
+
         -- register video outputs
         if hactive_v = '1' and vactive_v = '1' then
+          -- set hblank used only by the bitmap/tilemap/sprite controllers early
+          if  x_s(x_s'left downto H_SCALE-1) < (L_CROP + PIPELINE_DELAY-7) or
+              x_s(x_s'left downto H_SCALE-1) >= (H_SIZE - R_CROP + PIPELINE_DELAY-7) then
+            video_ctl_o.hblank <= '1';
+          else
+            video_o.rgb <= rgb_i after SIM_DELAY;
+            video_ctl_o.hblank <= '0'; -- used only by the bitmap/tilemap/sprite controllers
+          end if;
+
           -- active video
-          if  x_s(x_s'left downto H_SCALE-1) < (L_CROP + PIPELINE_DELAY) or 
+          if  x_s(x_s'left downto H_SCALE-1) < (L_CROP + PIPELINE_DELAY) or
               x_s(x_s'left downto H_SCALE-1) >= (H_SIZE - R_CROP + PIPELINE_DELAY) then
             video_o.rgb <= RGB_BLACK after SIM_DELAY;
           else
