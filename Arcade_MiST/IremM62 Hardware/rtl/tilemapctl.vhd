@@ -55,17 +55,15 @@ begin
   ctl_o.rgb <= ctl_i.rgb;
 
   -- not used
-  ctl_o.map_a(ctl_o.map_a'left downto 11) <= (others => '0');
-  ctl_o.attr_a(ctl_o.attr_a'left downto 11) <= (others => '0');
-  ctl_o.tile_a(ctl_o.tile_a'left downto 14) <= (others => '0');
+  ctl_o.map_a(ctl_o.map_a'left downto 12) <= (others => '0');
+  ctl_o.attr_a(ctl_o.attr_a'left downto 12) <= (others => '0');
+  ctl_o.tile_a(ctl_o.tile_a'left downto 15) <= (others => '0');
 
-  -- screen rotation
+  -- tilemap scroll
   x <=  std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x)) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
         std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x) + unsigned(hscroll(8 downto 0))); 
-        -- when rot_en = '0' else not video_ctl.y;
-  --y <= not video_ctl.y when rot_en = '0' else 32 + video_ctl.x;
-  y <= std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
-  
+  y <= std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR else
+       std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
   -- generate pixel
   process (clk, clk_ena)
 
@@ -81,6 +79,14 @@ begin
 
         -- 1st stage of pipeline
         -- - set tilemap, attribute address
+        if hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
+          -- 64x64 tilemap
+          ctl_o.map_a(11) <= y(8);
+          ctl_o.attr_a(11) <= y(8);
+        else
+          ctl_o.map_a(11) <= '0';
+          ctl_o.attr_a(11) <= '0';
+        end if;
         ctl_o.map_a(10 downto 6) <= y(7 downto 3);
         ctl_o.map_a(5 downto 0) <= x(8 downto 3);
         ctl_o.attr_a(10 downto 6) <= y(7 downto 3);
@@ -89,14 +95,19 @@ begin
         -- 2nd stage of pipeline
         -- - set tile address
         if x(2 downto 0) = "010" then
+          if hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
+            ctl_o.tile_a(14) <= ctl_i.attr_d(5);
+          else
+            ctl_o.tile_a(14) <= '0';
+          end if;
           if hwsel = HW_LDRUN4 or hwsel = HW_HORIZON then
             ctl_o.tile_a(13) <= ctl_i.attr_d(5);
-          elsif hwsel = HW_KIDNIKI then
+          elsif hwsel = HW_KIDNIKI or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
             ctl_o.tile_a(13) <= ctl_i.attr_d(7);
           else
             ctl_o.tile_a(13) <= '0';
           end if;
-          if hwsel = HW_BATTROAD then
+          if hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
             ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6) & ctl_i.attr_d(4);
           elsif hwsel = HW_KIDNIKI then
             ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6 downto 5);
@@ -136,11 +147,8 @@ begin
         else
           pel := tile_d_r(tile_d_r'right) & tile_d_r(tile_d_r'right+8) & tile_d_r(tile_d_r'right+16);
         end if;
-        if hwsel = HW_BATTROAD then
-          ctl_o.pal_a <= '0' & attr_d_r(3 downto 0) & pel;
-        else
-          ctl_o.pal_a <= attr_d_r(4 downto 0) & pel;
-        end if;
+
+        ctl_o.pal_a <= attr_d_r(4 downto 0) & pel;
         ctl_o.set <= '0'; -- default
 --        if pel /= "000" then
 --            pal_rgb(0)(7 downto 5) /= "000" or

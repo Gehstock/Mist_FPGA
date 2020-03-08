@@ -77,7 +77,7 @@ architecture SYN of target_top is
 
 begin
 
-  hires <= '1' when hwsel = HW_LDRUN or hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_KIDNIKI or hwsel= HW_LOTLOT else '0';
+  hires <= '0' when hwsel = HW_KUNGFUM or hwsel = HW_HORIZON or hwsel = HW_BATTROAD else '1';
 
   process(clock_sys) begin
     if rising_edge(clock_sys) then

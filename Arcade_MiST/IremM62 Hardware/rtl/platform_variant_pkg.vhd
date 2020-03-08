@@ -18,6 +18,8 @@ package platform_variant_pkg is
   constant HW_BATTROAD : integer := 6;
   constant HW_KIDNIKI  : integer := 7;
   constant HW_LOTLOT   : integer := 8;
+  constant HW_SPELUNKR : integer := 9;
+  constant HW_SPELUNK2 : integer := 10;
 
   type rom_a is array (natural range <>) of string;
   
