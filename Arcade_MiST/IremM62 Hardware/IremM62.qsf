@@ -44,40 +44,6 @@ set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/IremM62_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/target_top.vhd
-set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/platform_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/platform.vhd
-set_global_assignment -name VHDL_FILE rtl/pace_pkg_body.vhd
-set_global_assignment -name VHDL_FILE rtl/pace_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/pace.vhd
-set_global_assignment -name VHDL_FILE rtl/Graphics.VHD
-set_global_assignment -name VHDL_FILE rtl/video_mixer.vhd
-set_global_assignment -name VHDL_FILE rtl/video_controller_pkg_body.vhd
-set_global_assignment -name VHDL_FILE rtl/video_controller_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/video_controller.vhd
-set_global_assignment -name VHDL_FILE rtl/tilemapctl.vhd
-set_global_assignment -name VHDL_FILE rtl/bitmapctl_e.vhd
-set_global_assignment -name VHDL_FILE rtl/spritereg.vhd
-set_global_assignment -name VHDL_FILE rtl/spritectl.vhd
-set_global_assignment -name VHDL_FILE rtl/sprite_pkg_body.vhd
-set_global_assignment -name VHDL_FILE rtl/sprite_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/sprite_array.vhd
-set_global_assignment -name VHDL_FILE rtl/Inputs.VHD
-set_global_assignment -name VHDL_FILE rtl/input_mapper.vhd
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/sprom.vhd
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/clk_div.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu68.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
-set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
-set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
-set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
-set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -200,7 +166,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 # SignalTap II Assignments
 # ========================
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/cpu.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/sprite.stp
 
 # Power Estimation Assignments
 # ============================
@@ -268,8 +234,42 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 # end ENTITY(IremM62_MiST)
 # ---------------------------
-set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_location_assignment PLL_1 -to pll|altpll_component|auto_generated|pll1
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/IremM62_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/target_top.vhd
+set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/platform_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/platform.vhd
+set_global_assignment -name VHDL_FILE rtl/pace_pkg_body.vhd
+set_global_assignment -name VHDL_FILE rtl/pace_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/pace.vhd
+set_global_assignment -name VHDL_FILE rtl/Graphics.VHD
+set_global_assignment -name VHDL_FILE rtl/video_mixer.vhd
+set_global_assignment -name VHDL_FILE rtl/iremm62_video_controller.vhd
+set_global_assignment -name VHDL_FILE rtl/video_controller_pkg_body.vhd
+set_global_assignment -name VHDL_FILE rtl/video_controller_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/tilemapctl.vhd
+set_global_assignment -name VHDL_FILE rtl/bitmapctl_e.vhd
+set_global_assignment -name VHDL_FILE rtl/spritereg.vhd
+set_global_assignment -name VHDL_FILE rtl/spritectl.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_pkg_body.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_array.vhd
+set_global_assignment -name VHDL_FILE rtl/Inputs.VHD
+set_global_assignment -name VHDL_FILE rtl/input_mapper.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/clk_div.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu68.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
+set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd
+set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/tilemap.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/sprite.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/cpu.stp

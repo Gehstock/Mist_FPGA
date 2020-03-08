@@ -61,6 +61,7 @@ package sprite_pkg is
     (
       reset       : in std_logic;
       hwsel       : integer;
+      hires       : in std_logic;
       sprite_prom : in prom_a(0 to 31);
 
       -- register interface

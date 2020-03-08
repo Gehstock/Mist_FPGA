@@ -22,6 +22,7 @@ entity sprite_array is
     reset       : in std_logic;
 
     hwsel       : in integer;
+    hires       : in std_logic;
     sprite_prom : in prom_a(0 to 31);
 
     -- register interface
@@ -86,8 +87,8 @@ begin
         else
           i := i + 1;
         end if;
-        row_a <= ctl_o(i).a;
       end if;
+      row_a <= ctl_o(i).a;
     end if;
   end process;
 
@@ -156,6 +157,7 @@ begin
       port map
       (
         hwsel       => hwsel,
+        hires       => hires,
 
         -- sprite registers
         reg_i       => reg_o(i),

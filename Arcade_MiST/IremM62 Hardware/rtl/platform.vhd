@@ -553,7 +553,7 @@ begin
 --    tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
 
     -- external sprite ROMs
-    gfx2_addr <= '0' & sprite_i.a(14 downto 0);
+    gfx2_addr <= sprite_i.a(15 downto 0);
     sprite_o.d(23 downto 0) <= gfx2_do(7 downto 0) & gfx2_do(15 downto 8) & gfx2_do(23 downto 16);
 
     -- internal sprite ROMs

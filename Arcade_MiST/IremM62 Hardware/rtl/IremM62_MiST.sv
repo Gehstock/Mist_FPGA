@@ -109,7 +109,7 @@ wire        snd_vma;
 
 wire [14:0] chr1_addr;
 wire [31:0] chr1_do;
-wire [14:0] sp_addr;
+wire [15:0] sp_addr;
 wire [31:0] sp_do;
 
 /* ROM structure

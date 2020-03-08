@@ -23,6 +23,7 @@ entity tilemapCtl is
   (
     reset       : in std_logic;
     hwsel       : in integer;
+    hires       : in std_logic;
 
     -- video control signals		
     video_ctl   : in from_VIDEO_CTL_t;
@@ -60,10 +61,11 @@ begin
   ctl_o.tile_a(ctl_o.tile_a'left downto 15) <= (others => '0');
 
   -- tilemap scroll
-  x <=  std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x)) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
-        std_logic_vector(video_ctl.video_h_offset + unsigned(video_ctl.x) + unsigned(hscroll(8 downto 0))); 
-  y <= std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR else
-       std_logic_vector(unsigned(video_ctl.y) + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
+  x <= std_logic_vector(unsigned(video_ctl.x) - 256 + 128) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
+       std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64) when hires = '1' else
+       std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 128);
+  y <= std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR else
+       std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
   -- generate pixel
   process (clk, clk_ena)
 
