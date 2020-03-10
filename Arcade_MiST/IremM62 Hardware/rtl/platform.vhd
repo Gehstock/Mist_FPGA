@@ -248,7 +248,7 @@ begin
 
   process (clk_sys, rst_sys) begin
     if rst_sys = '1' then
-      sound_data_o <= X"FF";
+      sound_data_o <= X"00";
     elsif rising_edge(clk_sys) then
       if cpu_clk_en = '1' and cpu_io_wr = '1' and snd_cs = '1' then
         sound_data_o <= cpu_d_o;

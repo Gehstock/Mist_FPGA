@@ -79,7 +79,6 @@ reg env_reset;
 always @(posedge CLK) begin
 	if(RESET) begin
 		ymreg     <= '{default:0};
-		ymreg[7]  <= '1;
 		addr      <= '0;
 		env_reset <= 0;
 	end else begin
@@ -115,8 +114,8 @@ always_comb begin
 			11: dout = ymreg[11];
 			12: dout = ymreg[12];
 			13: dout = ymreg[13][3:0];
-			14: dout = ymreg[7][6] ? ymreg[14] : IOA_in;
-			15: dout = ymreg[7][7] ? ymreg[15] : IOB_in;
+			14: dout = ymreg[7][6] ? ymreg[14] | IOA_in : IOA_in;
+			15: dout = ymreg[7][7] ? ymreg[15] | IOA_in : IOB_in;
 		endcase
 	end
 end
