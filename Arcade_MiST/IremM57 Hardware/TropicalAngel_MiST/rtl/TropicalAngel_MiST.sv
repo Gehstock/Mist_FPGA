@@ -51,6 +51,7 @@ module TropicalAngel_MiST(
 localparam CONF_STR = {      
 	"TROPANG;ROM;",
 	"O2,Rotate Controls,Off,On;",
+	"O1,Video Timing,Original,Pal 50Hz;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
 	"O6,Flip,Off,On;",
@@ -59,6 +60,7 @@ localparam CONF_STR = {
 	"V,v1.0.",`BUILD_DATE
 };
 
+wire        palmode   = status[1];
 wire        rotate    = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend     = status[5];
@@ -203,6 +205,8 @@ TropicalAngel TropicalAngel(
 	.clock_36     ( clk_sys         ),
 	.clock_0p895  ( clk_aud         ),
 	.reset        ( reset           ),
+
+	.palmode      ( palmode         ),
 
 	.video_r      ( r               ),
 	.video_g      ( g               ),
