@@ -329,7 +329,8 @@ architecture Behavioral of robotron_cpu is
     signal blt_data_out         : std_logic_vector(7 downto 0);
     signal blt_en_lower         : boolean := false;
     signal blt_en_upper         : boolean := false;
-    
+    signal blt_win_en           : std_logic := '0';
+
     -------------------------------------------------------------------
 
     function to_std_logic(L: boolean) return std_logic is
@@ -408,7 +409,7 @@ begin
     
     address <= blt_address_out when mpu_halted else
                mpu_address;
-    write <= blt_write when mpu_halted else
+    write <= blt_write  when mpu_halted and (blt_win_en = '0' or blt_address_out<x"7400" or blt_address_out>=x"C000") else
              mpu_write;
     read <= blt_read when mpu_halted else
             mpu_read;
@@ -670,6 +671,7 @@ begin
                     end if;
 
                     if control_access and write then
+                        blt_win_en     <= mpu_data_in(2) and sinistar;
                         screen_control <= mpu_data_in(1);
                         e_rom <= mpu_data_in(0);
                     end if;

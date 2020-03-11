@@ -57,6 +57,7 @@ localparam CONF_STR = {
 	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O1,Video Timing,Original,Pal 50Hz;",
 	"OA,Blending,Off,On;",
 	"O5,Units,MP,Km;",
 	"O6,Freeze,Disable,Enable;",
@@ -70,6 +71,7 @@ localparam CONF_STR = {
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[10];
+wire       pal = status[1];
 
 reg        shtrider = 0;
 wire [7:0] dip1 = 8'hff;
@@ -235,6 +237,7 @@ traverse_usa traverse_usa (
 	.clock_0p895  ( clk_aud         ),
 	.reset        ( reset 				  ),
 
+	.palmode      ( pal             ),
 	.shtrider     ( shtrider        ),
 	
 	.video_r      ( r               ),

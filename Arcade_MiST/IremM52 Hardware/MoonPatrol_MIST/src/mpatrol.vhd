@@ -61,6 +61,7 @@ architecture SYN of mpatrol is
   signal ps2_kbd_data	: std_logic;
   signal scandoubler_disable   : std_logic;
   signal ypbpr  		: std_logic;
+  signal no_csync		: std_logic;
   signal reset 			: std_logic;  
   signal audio_out 		: std_logic_vector(11 downto 0);
   signal sound_data     : std_logic_vector(7 downto 0);
@@ -175,6 +176,7 @@ user_io_inst : user_io
 		buttons             => buttons,
 		scandoubler_disable => scandoubler_disable,
 		ypbpr               => ypbpr,
+		no_csync            => no_csync,
 		joystick_1          => joystick2,
 		joystick_0          => joystick1,
 		status              => status,
@@ -276,6 +278,7 @@ mist_video: work.mist.mist_video
 		scanlines   => status(2 downto 1),
 		scandoubler_disable => scandoubler_disable,
 		ypbpr       => ypbpr,
+		no_csync    => no_csync,
 		rotate      => "00",
 		ce_divider  => '1',
 

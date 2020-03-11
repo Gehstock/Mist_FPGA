@@ -258,16 +258,6 @@ begin
           v_back_porch_r <= 13;
           v_border_r <= (240-VIDEO_V_SIZE)/2;
 
-				when PACE_VIDEO_PAL_576x288_50Hz =>
-					-- pixclk=11 MHz
-					h_front_porch_r <= 2*6;
-					h_sync_r <= 2*28;
-					h_back_porch_r <= 2*30;
-					h_border_r <= (576-VIDEO_H_SIZE)/2;
-					v_front_porch_r <= 8;
-					v_sync_r <= 3;
-					v_back_porch_r <= 13;
-					v_border_r <= (288-VIDEO_V_SIZE)/2;
 				when others =>
 					null;
 			end case;

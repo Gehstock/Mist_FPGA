@@ -29,6 +29,7 @@
 library ieee;
 	use ieee.std_logic_1164.all;
 	use ieee.numeric_std.all;
+	use ieee.std_logic_unsigned.all;
 
 entity robotron_soc is
 port (
@@ -75,13 +76,14 @@ port (
 
 	-- Audio
 	audio_out        : out   std_logic_vector(7 downto 0);
+	speech_out       : out   std_logic_vector(15 downto 0);
 
 	-- 12-pin connectors
 	JA               : in    std_logic_vector(7 downto 0);
 	JB               : in    std_logic_vector(7 downto 0);
 	
 	dl_clock         : in    std_logic;
-	dl_addr          : in    std_logic_vector(15 downto 0);
+	dl_addr          : in    std_logic_vector(16 downto 0);
 	dl_data          : in    std_logic_vector(7 downto 0);
 	dl_wr            : in    std_logic
 );
@@ -131,9 +133,11 @@ signal  cpu_q        : std_logic;
 signal  hand         : std_logic;
 signal  select_sound : std_logic_vector( 5 downto 0);
 
-signal  snd_addr     : std_logic_vector(11 downto 0);
+signal  snd_addr     : std_logic_vector(13 downto 0);
 signal  snd_do       : std_logic_vector( 7 downto 0);
+signal  spch_do      : std_logic_vector( 7 downto 0);
 signal  snd_rom_we   : std_logic;
+signal  spch_rom_we  : std_logic;
 
 begin
 
@@ -237,15 +241,29 @@ snd_rom : entity work.dpram
 generic map( dWidth => 8, aWidth => 12)
 port map(
  clk_a  => clock_snd,
- addr_a => snd_addr,
+ addr_a => snd_addr(11 downto 0),
  q_a    => snd_do,
  clk_b  => dl_clock,
  we_b   => snd_rom_we,
  addr_b => dl_addr(11 downto 0),
  d_b    => dl_data
 );
+spch_rom : entity work.dpram
 
-snd_rom_we <= '1' when dl_wr = '1' and dl_addr(15 downto 12) = x"C" else '0'; -- C000-CFFF
+generic map( dWidth => 8, aWidth => 14)
+
+port map(
+ clk_a  => clock_snd,
+ addr_a => snd_addr,
+ q_a    => spch_do,
+ clk_b  => dl_clock,
+ we_b   => spch_rom_we,
+ addr_b => (dl_addr(13 downto 12) - "10") & dl_addr(11 downto 0),
+ d_b    => dl_data
+);
+
+snd_rom_we  <= '1' when dl_wr = '1' and dl_addr(16 downto 12)  = x"C" else '0'; -- 0C000-0CFFF
+spch_rom_we <= '1' when dl_wr = '1' and dl_addr(16 downto 12) >= x"E" else '0'; -- 0E000-11FFF
 
 -- sound board
 defender_sound_board : entity work.defender_sound_board
@@ -255,8 +273,10 @@ port map(
  hand          => hand,
  select_sound  => select_sound,
  audio_out     => audio_out,
+ speech_out    => speech_out,
  rom_addr      => snd_addr,
- rom_do        => snd_do
+ rom_do        => snd_do,
+ spch_do       => spch_do
 );
 
 end Behavioral;

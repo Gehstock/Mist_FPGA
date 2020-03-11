@@ -177,6 +177,9 @@ begin
 						blt_shift <= (others => '0');
 
 						state <= state_src;
+						if reg_width = 0 or reg_height = 0 then
+							state <= state_idle;
+						end if;
 					end if;
 
 				when state_src =>
@@ -214,18 +217,18 @@ begin
 							x_count <= (others => '0');
 							y_count <= y_count_next;
 
-							if y_count_next = reg_height then
+							if y_count_next >= reg_height then
 								state <= state_idle;
 							end if;
 
 							if ctrl_span_src = '1' then
-								src_address <= reg_src_base + y_count_next;
+								src_address <= reg_src_base(15 downto 8) & (reg_src_base(7 downto 0) + y_count_next(7 downto 0));
 							else
 								src_address <= src_address + 1;
 							end if;
 
 							if ctrl_span_dst = '1' then
-								dst_address <= reg_dst_base + y_count_next;
+								dst_address <= reg_dst_base(15 downto 8) & (reg_dst_base(7 downto 0) + y_count_next(7 downto 0));
 							else
 								dst_address <= dst_address + 1;
 							end if;

@@ -47,7 +47,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
 	"O7,Auto up,Off,On;",
-	"T8,Advance,Off,On;",
+	"T8,Advance;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -64,6 +64,7 @@ reg   [7:0] JA;
 reg   [7:0] JB;
 reg   [3:0] BTN;
 reg         blitter_sc2, sinistar;
+reg         speech_en;
 
 wire  [6:0] core_mod;
 reg   [1:0] orientation; // [left/right, landscape/portrait]
@@ -88,6 +89,7 @@ always @(*) begin
 	BTN = 4'hF;
 	blitter_sc2 = 0;
 	sinistar = 0;
+	speech_en = 0;
 
 	case (core_mod)
 	7'h0: // ROBOTRON
@@ -132,10 +134,19 @@ always @(*) begin
 	7'h6: // SINISTAR
 	begin
 		sinistar = 1;
+		speech_en = 1;
 		orientation = 2'b01;
 		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
 		JA  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
 		JB  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
+	end
+	7'h7: // PLAYBALL
+	begin
+		speech_en = 1;
+		orientation = 2'b01;
+		BTN = { 2'b00, m_coin1 | m_coin2, reset };
+		JA  = ~{ 4'b0000, m_two_players, m_right, m_left, m_one_player };
+		JB  = JA;
 	end
 	default: ;
 	endcase
@@ -164,11 +175,6 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        no_csync;
 wire        ypbpr;
-wire  [7:0] audio;
-wire        hs, vs;
-wire        blankn;
-wire  [2:0] r,g;
-wire  [1:0] b;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
@@ -204,9 +210,11 @@ wire  [7:0] ioctl_dout;
 
 /*
 ROM Structure:
-0000-BFFF main cpu 48k
-C000-CFFF snd  cpu  4k
-D000-D3FF CMOS RAM  1k
+00000-0BFFF main cpu 48k
+0C000-0CFFF snd  cpu  4k
+0D000-0D3FF CMOS RAM  1k
+0D400-0DFFF ---
+0E000-11FFF speech   16k
 */
 
 data_io data_io (
@@ -290,6 +298,13 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
+wire  [7:0] audio;
+wire [15:0] speech;
+wire        hs, vs;
+wire        blankn;
+wire  [2:0] r,g;
+wire  [1:0] b;
+
 robotron_soc robotron_soc (
 	.clock       ( clk_sys     ),
 	.clock_snd   ( clk_aud     ),
@@ -299,6 +314,7 @@ robotron_soc robotron_soc (
 	.Hsync       ( hs          ),
 	.Vsync       ( vs          ),
 	.audio_out   ( audio       ),
+	.speech_out  ( speech      ),
 
 	.blitter_sc2 ( blitter_sc2 ),
 	.sinistar    ( sinistar    ),
@@ -320,7 +336,7 @@ robotron_soc robotron_soc (
 	.FlashCS     ( romcs       ),
 
 	.dl_clock    ( clk_mem  ),
-	.dl_addr     ( ioctl_addr[15:0] ),
+	.dl_addr     ( ioctl_addr[16:0] ),
 	.dl_data     ( ioctl_dout ),
 	.dl_wr       ( ioctl_wr )
 );
@@ -349,16 +365,17 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
 	.ypbpr          ( ypbpr            )
 	);
 
+wire [16:0] audio_mix = speech_en ? { 1'b0, audio, audio } + { 1'b0, speech } : { 1'b0, audio, audio };
 wire dac_o;
 assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
 dac #(
-	.C_bits(11))
+	.C_bits(17))
 dac(
 	.clk_i(clk_aud),
 	.res_n_i(1),
-	.dac_i({3'd0, audio}),  // silence by 9dB
+	.dac_i(audio_mix),
 	.dac_o(dac_o)
 	);
 

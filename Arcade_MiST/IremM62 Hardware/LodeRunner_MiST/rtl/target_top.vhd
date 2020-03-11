@@ -9,40 +9,40 @@ use work.video_controller_pkg.all;
 use work.platform_pkg.all;
 
 entity target_top is port(
-		clock_sys       : in std_logic;
+      clock_50      		: in std_logic;
 		clock_vid      	: in std_logic;
 		clk_aud      		: in std_logic;
-		reset_in        : in std_logic;
-		audio_out       : out std_logic_vector(11 downto 0);
+		reset_in      		: in std_logic;
+      audio_out         : out std_logic_vector(11 downto 0);
 		usr_coin1      	: in std_logic;
-		usr_coin2       : in std_logic;
-		usr_service     : in std_logic;
-		usr_start1      : in std_logic;
-		usr_start2      : in std_logic;
-		p1_up           : in std_logic;
-		p1_dw           : in std_logic;
-		p1_lt           : in std_logic;
-		p1_rt           : in std_logic;
-		p1_f1           : in std_logic;
-		p1_f2           : in std_logic;
+		usr_coin2     		: in std_logic;
+		usr_service     	: in std_logic;
+	   usr_start1      	: in std_logic;
+		usr_start2      	: in std_logic;
+	   p1_up      			: in std_logic;
+	   p1_dw      			: in std_logic;
+	   p1_lt      			: in std_logic;
+	   p1_rt      			: in std_logic;
+		p1_f1      			: in std_logic;
+		p1_f2      			: in std_logic;
 		
-		p2_up           : in std_logic;
-		p2_dw           : in std_logic;
-		p2_lt           : in std_logic;
-		p2_rt           : in std_logic;
-		p2_f1           : in std_logic;
-		p2_f2           : in std_logic;
-
-		VGA_VS          : out std_logic;
-		VGA_HS          : out std_logic;
-		VGA_R           : out std_logic_vector(3 downto 0);
-		VGA_G           : out std_logic_vector(3 downto 0);
-		VGA_B           : out std_logic_vector(3 downto 0);
-		cpu_rom_addr    : out std_logic_vector(14 downto 0);
-		cpu_rom_do      : in std_logic_vector(7 downto 0);
-		snd_rom_addr    : out std_logic_vector(13 downto 0);
-		snd_rom_do      : in std_logic_vector(7 downto 0)
-  );
+	   p2_up      			: in std_logic;
+	   p2_dw      			: in std_logic;
+	   p2_lt      			: in std_logic;
+	   p2_rt      			: in std_logic;
+		p2_f1      			: in std_logic;
+		p2_f2      			: in std_logic;
+		
+      VGA_VS        		: out std_logic;
+      VGA_HS        		: out std_logic;
+      VGA_R         		: out std_logic_vector(3 downto 0);
+      VGA_G         		: out std_logic_vector(3 downto 0);
+      VGA_B         		: out std_logic_vector(3 downto 0);
+	   cpu_rom_addr      : out std_logic_vector(14 downto 0);
+	   cpu_rom_do        : in std_logic_vector(7 downto 0);
+		snd_rom_addr      : out std_logic_vector(13 downto 0);
+      snd_rom_do        : in std_logic_vector(7 downto 0)
+  );    
 end target_top;
 
 architecture SYN of target_top is 
@@ -59,7 +59,7 @@ architecture SYN of target_top is
   signal sound_data     : std_logic_vector(7 downto 0);
 
 begin
-	clkrst_i.clk(0) <= clock_sys;
+	clkrst_i.clk(0) <= clock_50;
 	clkrst_i.clk(1) <= clock_vid;		
 	clkrst_i.arst <= reset_in;
 	clkrst_i.arst_n <= not clkrst_i.arst;
@@ -93,7 +93,7 @@ end generate GEN_RESETS;
 --		select_sound  	=> sound_data,
 --		audio_out     	=> audio_out,
 --		snd_rom_addr   => snd_rom_addr,
- --     snd_rom_do     => snd_rom_do,
+--      snd_rom_do     => snd_rom_do,
 --		dbg_cpu_addr  	=> open
 --	);
  
@@ -140,6 +140,8 @@ pace_inst : entity work.pace
  
 	-- not currently wired to any inputs
 	inputs_i.jamma_n.coin_cnt <= (others => '1');
+--	inputs_i.jamma_n.coin(2) <= '1';
+--	inputs_i.jamma_n.service <= '1';
 	inputs_i.jamma_n.tilt <= '1';
 	inputs_i.jamma_n.test <= '1';
 end SYN;
