@@ -197,7 +197,7 @@ process (reset, clock_E)
 begin
 	if reset='1' then
 		cpu_irq <= '0';
-		select_sound_r(7) <= '1';
+		select_sound_r(7) <= '0';
 	elsif rising_edge(clock_E) then
 		select_sound_r <= select_sound;
 		if select_sound_r(7) = '0' then
