@@ -178,7 +178,7 @@ cpu_di <=
 	port2_ddr when ports_cs = '1' and cpu_addr(3 downto 0) = X"1" else
 	port1_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"2" else
 	port2_in  when ports_cs = '1' and cpu_addr(3 downto 0) = X"3" else
-	snd_rom_do when rom_cs = '1' else X"55";
+	rom_do when rom_cs = '1' else X"55";
 
 process (clock_E)
 begin
@@ -346,9 +346,14 @@ port map(
 	test_cc  => open
 );
 
+rom_cpu : entity work.snd_prg
+port map(
+	clk   => clock_E,   -- E clock input (falling edge)
+	addr  => cpu_addr(13 downto 0),
+	data  => rom_do
+);
 
-
- snd_rom_addr <= cpu_addr(13 downto 0);
+-- snd_rom_addr <= cpu_addr(13 downto 0);
 
  
 -- cpu wram
