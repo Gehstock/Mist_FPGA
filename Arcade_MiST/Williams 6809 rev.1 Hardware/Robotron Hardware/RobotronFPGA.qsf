@@ -212,11 +212,12 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/RobotronFPGA_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/defender_sound_board.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/defender_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/hc55564.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_soc.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_cpu/sc1.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_cpu/robotron_cpu.vhd

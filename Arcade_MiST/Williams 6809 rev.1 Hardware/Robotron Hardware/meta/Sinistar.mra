@@ -4,7 +4,7 @@
     <rbf>robotron</rbf>
     <setname>sinistar</setname>
     <rom index="1"><part>6</part></rom>
-    <rom index="0" zip="sinistar.zip" md5="60b465866ccf143727ff2ce9027e0886" type="merged">
+    <rom index="0" zip="sinistar.zip" md5="d1801e21859efdeabb8d713acbe5db99" type="merged">
 	<part name="sinistar.01"/>
 	<part name="sinistar.02"/>
 	<part name="sinistar.03"/>
@@ -85,5 +85,12 @@
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	</part>
+	
+      <part repeat="0xC00">FF</part>
+
+      <part crc="e1019568" name="speech.ic7"/>
+      <part crc="cf3b5ffd" name="speech.ic5"/>
+      <part crc="ff8d2645" name="speech.ic6"/>
+      <part crc="4b56a626" name="speech.ic4"/>
     </rom>
 </misterromdescription>
