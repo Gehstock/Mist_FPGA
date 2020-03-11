@@ -113,6 +113,7 @@ port(
  clock_0p895  : in std_logic;
  reset        : in std_logic;
 
+ palmode        : in std_logic; -- 50 Hz vfreq
  shtrider       : in std_logic; -- Shot Rider mode
 -- tv15Khz_mode : in std_logic;
  video_r        : out std_logic_vector(1 downto 0);
@@ -334,7 +335,11 @@ begin
 				hcnt <= '0'&x"80";
 				vcnt <= vcnt + 1;
 				if vcnt = '1'&x"FF" then
-					vcnt <= '0'&x"E6";  -- from M52 schematics
+					if palmode = '0' then
+						vcnt <= '0'&x"E6";  -- from M52 schematics
+					else
+						vcnt <= '0'&x"C8";
+					end if;
 				end if;
 			end if;
 		end if;
