@@ -923,7 +923,7 @@ port map (
  audio_out => sg_audio
 );
 
-ssb_rom_do <= snd_rom_do(15 downto 8) when ssb_rom_addr(0) = '1' else snd_rom_do(7 downto 0);
+ssb_rom_do <= x"00" when soundboard /= "00" else snd_rom_do(15 downto 8) when ssb_rom_addr(0) = '1' else snd_rom_do(7 downto 0);
 tcs_rom_do <= snd_rom_do(15 downto 8) when tcs_rom_addr(0) = '1' else snd_rom_do(7 downto 0);
 snd_rom_addr <= "0000" & ssb_rom_addr when soundboard = "00" else
                  "000" & tcs_rom_addr when soundboard = "01" else
