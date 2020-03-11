@@ -140,6 +140,14 @@ always @(*) begin
 		JA  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
 		JB  = { sin_x, 2'b00, m_right | m_left | m_right2 | m_left2, sin_y, 2'b00, m_up | m_down | m_up2 | m_down2 };
 	end
+	7'h7: // PLAYBALL
+	begin
+		speech_en = 1;
+		orientation = 2'b01;
+		BTN = { 2'b00, m_coin1 | m_coin2, reset };
+		JA  = ~{ 4'b0000, m_two_players, m_right, m_left, m_one_player };
+		JB  = JA;
+	end
 	default: ;
 	endcase
 end
