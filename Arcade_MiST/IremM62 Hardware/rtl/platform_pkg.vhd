@@ -47,7 +47,7 @@ package platform_pkg is
   constant M62_VIDEO_V_SIZE                 : integer := 256;
 
   constant PACE_VIDEO_NUM_BITMAPS           : natural := 0;
-  constant PACE_VIDEO_NUM_TILEMAPS          : natural := 1;
+  constant PACE_VIDEO_NUM_TILEMAPS          : natural := 2;
   constant PACE_VIDEO_NUM_SPRITES           : natural := 64;
 --  constant PACE_VIDEO_H_SIZE                : integer := M62_VIDEO_H_SIZE;
   constant PACE_VIDEO_V_SIZE                : integer := M62_VIDEO_V_SIZE;

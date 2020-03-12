@@ -66,7 +66,9 @@ entity platform is
     gfx1_addr       : out std_logic_vector(17 downto 2);
     gfx1_do         : in std_logic_vector(31 downto 0);
     gfx2_addr       : out std_logic_vector(17 downto 2);
-    gfx2_do         : in std_logic_vector(31 downto 0)
+    gfx2_do         : in std_logic_vector(31 downto 0);
+    gfx3_addr       : out std_logic_vector(17 downto 2);
+    gfx3_do         : in std_logic_vector(31 downto 0)
   );
 
 end platform;
@@ -113,10 +115,12 @@ architecture SYN of platform is
   signal sprite_cs      : std_logic;
 
   -- text RAM
+  signal textram_a      : std_logic_vector(11 downto 0);
   signal textram_cs     : std_logic;
   signal textram_wr     : std_logic;
   signal textram_d_o    : std_logic_vector(7 downto 0);
-  
+  signal textram_q      : std_logic_vector(15 downto 0);
+
   -- misc signals      
   signal in_cs          : std_logic;
   signal in_d_o         : std_logic_vector(7 downto 0);
@@ -561,6 +565,10 @@ begin
 
     tilemap_o(1).tile_d(23 downto 0) <= gfx1_do(7 downto 0) & gfx1_do(15 downto 8) & gfx1_do(23 downto 16);
 
+    gfx3_addr <= '0' & tilemap_i(2).tile_a(14 downto 0);
+
+    tilemap_o(2).tile_d(23 downto 0) <= gfx3_do(7 downto 0) & gfx3_do(15 downto 8) & gfx3_do(23 downto 16);
+
     -- internal background ROMs
 --    GEN_CHAR_ROMS : for i in M62_CHAR_ROM'range generate
 --      char_rom_inst : entity work.sprom
@@ -625,11 +633,13 @@ begin
     signal vram_a   : std_logic_vector(11 downto 0);
     alias cram_a    : std_logic_vector(11 downto 0) is vram_a;
   begin
-  
+
+    textram_a <= '0' & cpu_a(10 downto 0) when hwsel = HW_BATTROAD else cpu_a(11 downto 0);
+
     vram_a <= '0' & cpu_a(10 downto 0) when hwsel = HW_KUNGFUM else
               cpu_a(12 downto 1) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 else
               '0' & cpu_a(11 downto 1);
-              
+
     vram_inst : entity work.dpram
       generic map
       (
@@ -681,22 +691,28 @@ begin
       (
         init_file  => "",
         widthad_a  => 11,
-        widthad_b  => 11
+        width_a    => 16,
+        widthad_b  => 12,
+        width_b    => 8
       )
       port map
       (
         clock_b    => clk_sys,
-        address_b  => cpu_a(10 downto 0),
+        address_b  => textram_a,
         wren_b     => textram_wr,
         data_b     => cpu_d_o,
         q_b        => textram_d_o,
 
         clock_a    => clk_video,
-        address_a  => (others => '0'),
+        address_a  => tilemap_i(2).map_a(10 downto 0),
         wren_a     => '0',
         data_a     => (others => 'X'),
-        q_a        => open
+        q_a        => textram_q
       );
+
+    tilemap_o(2).attr_d(7 downto 0) <= textram_q(15 downto 8);
+    tilemap_o(2).map_d(7 downto 0) <= textram_q(7 downto 0);
+
   end block BLK_VRAM;
 
   wram_inst : entity work.spram
@@ -804,7 +820,11 @@ begin
   -- tilemap 2 palette address
   -- Use this for Spelunk2's second blue ROM, too
   tilemap2_pal_a <= spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 else
-                    (others => '0');
+                    tilemap_i(2).pal_a(7 downto 0);
+
+  tilemap_o(2).rgb.r(9 downto 2) <= pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6);
+  tilemap_o(2).rgb.g(9 downto 2) <= pal2_r_q(5 downto 3) & pal2_r_q(5 downto 3) & pal2_r_q(5 downto 4);
+  tilemap_o(2).rgb.b(9 downto 2) <= pal2_r_q(2 downto 0) & pal2_r_q(2 downto 0) & pal2_r_q(2 downto 1);
 
   -- tilemap 2 palettes
   pal2_r : entity work.dpram

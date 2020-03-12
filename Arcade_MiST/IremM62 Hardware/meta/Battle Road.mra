@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>6</part></rom>
-    <rom index="0" zip="battroad.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
+    <rom index="0" zip="battroad.zip" md5="4d5de2720b53b64fb63beed407cbeb19" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="br-a-4e.b"/>
       <part name="br-a-4d.b"/>
@@ -106,16 +106,16 @@
 
       <!-- GFX3, 64k -->
       <group width="32">
-          <part name="br-c-1b"/>
           <part name="br-c-1c"/>
           <part name="br-c-1b"/>
           <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
       </group>
       <group width="32">
-          <part name="br-c-1b"/>
           <part name="br-c-1c"/>
           <part name="br-c-1b"/>
           <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
       </group>
 
       <!-- spr_color_proms, 3*256b -->
@@ -129,7 +129,8 @@
       <part name="br-c-3k"/>
 
       <!-- fg_color_proms, 3*256b br-c-1j -->
-      <part repeat="0x300">FF</part>
+      <part name="br-c-1j"/>
+      <part repeat="0x2e0">FF</part>
 
       <!-- spr_height_prom -->
       <part name="br-b-5p"/>

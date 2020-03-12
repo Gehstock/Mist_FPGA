@@ -62,6 +62,8 @@ module sdram (
 	
 	input      [19:2] chr1_addr,
 	output reg [31:0] chr1_q,
+	input      [19:2] chr2_addr,
+	output reg [31:0] chr2_q,
 	input      [19:2] sp_addr,
 	output reg [31:0] sp_q
 );
@@ -165,7 +167,7 @@ assign SDRAM_nWE  = sd_cmd[0];
 reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
 reg [17:1] addr_last[2];
-reg [19:2] addr_last2[2];
+reg [19:2] addr_last2[4];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
@@ -174,15 +176,16 @@ reg  [1:0] ds[2];
 reg        port1_state;
 reg        port2_state;
 
-localparam PORT_NONE  = 2'd0;
-localparam PORT_CPU1  = 2'd1;
-localparam PORT_CPU2  = 2'd2;
-localparam PORT_SP    = 2'd1;
-localparam PORT_CHR1  = 2'd2;
-localparam PORT_REQ   = 2'd3;
+localparam PORT_NONE  = 3'd0;
+localparam PORT_CPU1  = 3'd1;
+localparam PORT_CPU2  = 3'd2;
+localparam PORT_SP    = 3'd1;
+localparam PORT_CHR1  = 3'd2;
+localparam PORT_CHR2  = 3'd3;
+localparam PORT_REQ   = 3'd4;
 
-reg  [1:0] next_port[2];
-reg  [1:0] port[2];
+reg  [2:0] next_port[2];
+reg  [2:0] port[2];
 
 reg        refresh;
 reg [10:0] refresh_cnt;
@@ -219,6 +222,9 @@ always @(*) begin
 	end else if (chr1_addr != addr_last2[PORT_CHR1]) begin
 		next_port[1] = PORT_CHR1;
 		addr_latch_next[1] = { 1'b1, 4'd0, chr1_addr, 1'b0 };
+	end else if (chr2_addr != addr_last2[PORT_CHR2]) begin
+		next_port[1] = PORT_CHR2;
+		addr_latch_next[1] = { 1'b1, 4'd0, chr2_addr, 1'b0 };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -346,6 +352,7 @@ always @(posedge clk) begin
 				PORT_REQ : port2_q[15:0] <= sd_din;
 				PORT_SP  :    sp_q[15:0] <= sd_din;
 				PORT_CHR1:  chr1_q[15:0] <= sd_din;
+				PORT_CHR2:  chr2_q[15:0] <= sd_din;
 				default: ;
 			endcase;
 		end
@@ -357,6 +364,7 @@ always @(posedge clk) begin
 				PORT_REQ  : begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
 				PORT_SP   : begin    sp_q[31:16] <= sd_din; end
 				PORT_CHR1 : begin  chr1_q[31:16] <= sd_din; end
+				PORT_CHR2 : begin  chr2_q[31:16] <= sd_din; end
 				default: ;
 			endcase;
 		end

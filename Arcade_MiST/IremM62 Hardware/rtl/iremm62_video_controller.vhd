@@ -122,7 +122,8 @@ begin
 
   video_o.hsync <= hsync;
   video_o.vsync <= vsync;
-  hblank <= hblank2 when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_KIDNIKI or hwsel = HW_HORIZON or hwsel = HW_YOUJYUDN else hblank1;
+  hblank <= hblank2 when hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_KIDNIKI or hwsel = HW_HORIZON or hwsel = HW_YOUJYUDN
+       else hblank1;
   video_o.hblank <= hblank;
   video_o.vblank <= vblank;
   video_ctl_o.stb <= '1';

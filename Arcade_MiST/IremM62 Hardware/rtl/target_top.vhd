@@ -53,7 +53,9 @@ entity target_top is port(
 		gfx1_addr       : out std_logic_vector(17 downto 2);
 		gfx1_do         : in std_logic_vector(31 downto 0);
 		gfx2_addr       : out std_logic_vector(17 downto 2);
-		gfx2_do         : in std_logic_vector(31 downto 0)
+		gfx2_do         : in std_logic_vector(31 downto 0);
+		gfx3_addr       : out std_logic_vector(17 downto 2);
+		gfx3_do         : in std_logic_vector(31 downto 0)
   );
 end target_top;
 
@@ -164,7 +166,9 @@ pace_inst : entity work.pace
 		gfx1_addr         => gfx1_addr,
 		gfx1_do           => gfx1_do,
 		gfx2_addr         => gfx2_addr,
-		gfx2_do           => gfx2_do
+		gfx2_do           => gfx2_do,
+		gfx3_addr         => gfx3_addr,
+		gfx3_do           => gfx3_do
     );
 
 		inputs_i.jamma_n.coin(1) <= not usr_coin1;

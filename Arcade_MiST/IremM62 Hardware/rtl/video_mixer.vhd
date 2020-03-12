@@ -53,8 +53,8 @@ begin
                 bg_rgb;
     elsif PACE_VIDEO_NUM_TILEMAPS = 2 generate
       rgb_o <=  sprite_rgb when sprite_set = '1' and sprite_pri = '1' else
-                tilemap_ctl_o(1).rgb when tilemap_ctl_o(1).set = '1' else
                 tilemap_ctl_o(2).rgb when tilemap_ctl_o(2).set = '1' else
+                tilemap_ctl_o(1).rgb when tilemap_ctl_o(1).set = '1' else
                 sprite_rgb when sprite_set = '1' else
                 bg_rgb;
     else generate
