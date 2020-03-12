@@ -14,7 +14,7 @@ use work.platform_variant_pkg.all;
 entity Graphics is
   port
   (
-    hwsel           : in integer;
+    hwsel           : in HWSEL_t;
     hires           : in std_logic;
     sprite_prom     : in prom_a(0 to 31);
 
@@ -77,6 +77,7 @@ begin
     (
       -- clocking etc
       video_i         => video_i,
+      hwsel           => hwsel,
       hires           => hires,
 
       -- video data signals (in)

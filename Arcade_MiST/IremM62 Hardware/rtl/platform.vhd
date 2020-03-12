@@ -22,7 +22,7 @@ entity platform is
     clkrst_i        : in from_CLKRST_t;
     cpu_clk_en_i    : in std_logic;
 
-    hwsel           : in integer;
+    hwsel           : in HWSEL_t;
 
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
@@ -128,6 +128,13 @@ architecture SYN of platform is
   signal sp_pal_b_wr    : std_logic;
   signal sprite_pal_a   : std_logic_vector(7 downto 0);
   signal tilemap1_pal_a : std_logic_vector(7 downto 0);
+  signal pal_r_q        : std_logic_vector(7 downto 0);
+  signal pal_g_q        : std_logic_vector(7 downto 0);
+  signal pal_b_q        : std_logic_vector(7 downto 0);
+
+  signal pal2_r_wr      : std_logic;
+  signal pal2_r_q       : std_logic_vector(7 downto 0);
+  signal tilemap2_pal_a : std_logic_vector(7 downto 0);
 
   -- other signals
   signal rst_platform   : std_logic;
@@ -147,7 +154,9 @@ architecture SYN of platform is
   signal kidniki_bank   : std_logic_vector(3 downto 0);
   signal kidniki_gfxbank: std_logic;
 
+  signal spelunk2_palbank : std_logic_vector(1 downto 0);
   signal spelunkr_palbank : std_logic;
+  signal spelunk2_bank1   : std_logic_vector(1 downto 0);
 
 begin
 
@@ -187,12 +196,12 @@ begin
   
   -- chip select logic
   -- ROM $0000-$7FFF
-  --     $0000-$9FFF - LDRUN2, KIDNIKI, SPELUNKR
-  --     $0000-$BFFF - LDRUN3,4, HORIZON
+  --     $0000-$9FFF - LDRUN2, KIDNIKI, SPELUNKR, SPELUNK2
+  --     $0000-$BFFF - LDRUN3,4, HORIZON, YOUJYUDN
   --     $A000-$BFFF - BATTROAD
   rom_cs <=     '1' when STD_MATCH(cpu_a,  "0---------------") else 
-                '1' when (hwsel = HW_LDRUN2 or hwsel = HW_KIDNIKI or hwsel = HW_SPELUNKR) and cpu_a(15 downto 13) = "100" else
-                '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_HORIZON) and cpu_a(15 downto 14) = "10" else
+                '1' when (hwsel = HW_LDRUN2 or hwsel = HW_KIDNIKI or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2) and cpu_a(15 downto 13) = "100" else
+                '1' when (hwsel = HW_LDRUN3 or hwsel = HW_LDRUN4 or hwsel = HW_HORIZON or hwsel = HW_YOUJYUDN) and cpu_a(15 downto 14) = "10" else
                 '1' when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
                 '0';
 
@@ -222,8 +231,8 @@ begin
                           STD_MATCH(cpu_a, X"D"&"-----------1") else
                 '0';
 
-  -- Text RAM $C800-$CFFF - BATTROAD, SPELUNKR, SPELUNK2, $D000-$DFFF - KIDNIKI, $A000-$AFFF - LOTLOT
-  textram_cs <= '1' when (hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2) and
+  -- Text RAM $C800-$CFFF - BATTROAD, SPELUNKR, SPELUNK2, YOUJYUDN $D000-$DFFF - KIDNIKI, $A000-$AFFF - LOTLOT
+  textram_cs <= '1' when (hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_YOUJYUDN) and
                           cpu_a(15 downto 11) = x"C"&'1' else
                 '1' when hwsel = HW_KIDNIKI and
                           cpu_a(15 downto 12) = x"D" else
@@ -319,6 +328,9 @@ begin
       '1' & kidniki_bank(2 downto 0) & cpu_a(12 downto 0) when hwsel = HW_BATTROAD and cpu_a(15 downto 13) = "101" else
       (kidniki_bank(3 downto 0) + "100") & cpu_a(12 downto 0) when hwsel = HW_KIDNIKI and cpu_a(15 downto 13) = "100" and kidniki_bank(3 downto 2) /= "11" else
       "10" & kidniki_bank(1 downto 0) & cpu_a(12 downto 0) when hwsel = HW_SPELUNKR and cpu_a(15 downto 13) = "100" else
+      "010" & spelunk2_bank1 & cpu_a(11 downto 0) when hwsel = HW_SPELUNK2 and cpu_a(15 downto 12) = x"8" else
+      '1' & kidniki_bank & cpu_a(11 downto 0) when hwsel = HW_SPELUNK2 and cpu_a(15 downto 12) = x"9" else
+      "10" & kidniki_bank(0) & cpu_a(13 downto 0) when hwsel = HW_YOUJYUDN and cpu_a(15 downto 14) = "10" else
       '0' & cpu_a(15 downto 0);
 
     -- Lode Runner 2 bank switching - some kind of protection, only the level number is used to select bank 0 or 1 at $8000
@@ -334,12 +346,13 @@ begin
         kidniki_bank <= (others => '0');
         kidniki_gfxbank <= '0';
         spelunkr_palbank <= '0';
+        spelunk2_bank1 <= (others => '0');
       elsif rising_edge(clk_sys) then
         if cpu_clk_en = '1' and cpu_io_wr = '1' then
           case cpu_a(7 downto 0) is
             when X"80" => ld2_bankr1 <= cpu_d_o(5 downto 0);
             when X"81" => ld2_bankr2 <= cpu_d_o;
-            when X"83" => if hwsel = HW_BATTROAD then kidniki_bank <= cpu_d_o(3 downto 0); end if;
+            when X"83" => if hwsel = HW_BATTROAD or hwsel = HW_YOUJYUDN then kidniki_bank <= cpu_d_o(3 downto 0); end if;
             when X"84" => if hwsel = HW_KIDNIKI then kidniki_gfxbank <= cpu_d_o(0); end if;
             -- Kidniki banks: 0-7, C-F, 8-B not used
             when X"85" => if hwsel = HW_KIDNIKI then kidniki_bank <= cpu_d_o(3) & (not cpu_d_o(3) and cpu_d_o(2)) & cpu_d_o(1 downto 0); end if;
@@ -360,6 +373,10 @@ begin
         if cpu_clk_en = '1' and cpu_mem_wr = '1' then
           if cpu_a = x"c800" and hwsel = HW_LDRUN4 then
             ld24_bank <= cpu_d_o(0);
+          end if;
+          if cpu_a = x"d003" and hwsel = HW_SPELUNK2 then
+            kidniki_bank <= cpu_d_o(5 downto 2);
+            spelunk2_bank1 <= cpu_d_o(7 downto 6);
           end if;
           if cpu_a = x"d004" and hwsel = HW_SPELUNKR then
             kidniki_bank(1 downto 0) <= cpu_d_o(1 downto 0);
@@ -447,6 +464,7 @@ begin
         m62_vscroll <= (others => '0');
         m62_vscroll2 <= (others => '0');
         m62_topbottom_mask <= '0';
+        spelunk2_palbank <= "00";
       elsif rising_edge(clk_sys) then
         if hwsel = HW_LOTLOT then
           m62_hscroll <= std_logic_vector(to_signed(-64, m62_hscroll'length));
@@ -470,15 +488,22 @@ begin
               if hwsel = HW_SPELUNKR then
                 m62_vscroll(15 downto 8) <= cpu_d_o;
               end if;
+              if hwsel = HW_SPELUNK2 then
+                m62_hscroll(7 downto 0) <= cpu_d_o;
+              end if;
             when x"D002" =>
               if hwsel = HW_SPELUNKR then
                 m62_hscroll(7 downto 0) <= cpu_d_o;
+              end if;
+              if hwsel = HW_SPELUNK2 then
+                m62_vscroll(8) <= cpu_d_o(0);
+                m62_hscroll(8) <= cpu_d_o(1);
+                spelunk2_palbank <= cpu_d_o(3 downto 2);
               end if;
             when x"D003" =>
               if hwsel = HW_SPELUNKR then
                 m62_hscroll(15 downto 8) <= cpu_d_o;
               end if;
-
             when others =>
               null;
           end case;
@@ -491,12 +516,14 @@ begin
           end if;
           -- background 1 hscroll
           if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"82") or
-             ((hwsel = HW_BATTROAD or hwsel = HW_KIDNIKI) and cpu_a(7 downto 0) = x"81") then
+             ((hwsel = HW_BATTROAD or hwsel = HW_KIDNIKI) and cpu_a(7 downto 0) = x"81") or 
+						 (hwsel = HW_YOUJYUDN and cpu_a(7 downto 0) = x"80") then
             m62_hscroll(15 downto 8) <= cpu_d_o;
           end if;
           if (hwsel = HW_LDRUN4 and cpu_a(7 downto 0) = x"83") or
              (hwsel = HW_BATTROAD and cpu_a(7 downto 0) = x"82") or
-             (hwsel = HW_KIDNIKI and cpu_a(7 downto 0) = x"80") then
+             (hwsel = HW_KIDNIKI and cpu_a(7 downto 0) = x"80") or
+						 (hwsel = HW_YOUJYUDN and cpu_a(7 downto 0) = x"81") then
             m62_hscroll(7 downto 0) <= cpu_d_o;
           end if;
           if hwsel = HW_LDRUN3 and cpu_a(7 downto 0) = x"81" then
@@ -529,8 +556,9 @@ begin
 
     -- external background ROMs
     gfx1_addr <= 
-      '0' & tilemap_i(1).tile_a(14 downto 0) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 else 
+      '0' & tilemap_i(1).tile_a(14 downto 0) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_YOUJYUDN else 
       '0' & kidniki_gfxbank & tilemap_i(1).tile_a(13 downto 0);
+
     tilemap_o(1).tile_d(23 downto 0) <= gfx1_do(7 downto 0) & gfx1_do(15 downto 8) & gfx1_do(23 downto 16);
 
     -- internal background ROMs
@@ -687,8 +715,21 @@ begin
 
   -- tilemap 1 palette address
   tilemap1_pal_a <= spelunkr_palbank & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNKR else
+                    spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 else
                     '0' & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_BATTROAD else
                     tilemap_i(1).pal_a(7 downto 0);
+
+  -- Spelunk2 uses 512 entries/palette in an odd way: 
+  -- - red and green are stored in the first two ROMs, using the first and second half bytes
+  -- - blue is stored in the third and fourth ROMs, using the second half byte
+
+  tilemap_o(1).rgb.r(9 downto 2) <= pal_g_q(3 downto 0) & pal_g_q(3 downto 0) when hwsel = HW_SPELUNK2 and spelunk2_palbank(1) = '1' else
+                                    pal_r_q(3 downto 0) & pal_r_q(3 downto 0);
+  tilemap_o(1).rgb.g(9 downto 2) <= pal_r_q(7 downto 4) & pal_r_q(7 downto 4) when hwsel = HW_SPELUNK2 and spelunk2_palbank(1) = '0' else
+                                    pal_g_q(7 downto 4) & pal_g_q(7 downto 4) when hwsel = HW_SPELUNK2 and spelunk2_palbank(1) = '1' else
+                                    pal_g_q(3 downto 0) & pal_g_q(3 downto 0);
+  tilemap_o(1).rgb.b(9 downto 2) <= pal2_r_q(3 downto 0) & pal2_r_q(3 downto 0) when hwsel = HW_SPELUNK2 and spelunk2_palbank(1) = '1' else
+                                    pal_b_q(3 downto 0) & pal_b_q(3 downto 0);
 
   -- tilemap 1 palettes
   pal_r : entity work.dpram
@@ -703,14 +744,14 @@ begin
       clock_b     => clk_sys,
       address_b   => dl_addr(7 downto 0),
       wren_b      => pal_r_wr,
-      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      data_b      => dl_data,
       q_b         => open,
 
       clock_a     => not clk_video,
       address_a   => tilemap1_pal_a,
       wren_a      => '0',
       data_a      => (others => 'X'),
-      q_a         => tilemap_o(1).rgb.r(9 downto 2)
+      q_a         => pal_r_q
     );
   pal_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"3" else '0';  -- 300-3FF
 
@@ -726,14 +767,14 @@ begin
       clock_b     => clk_sys,
       address_b   => dl_addr(7 downto 0),
       wren_b      => pal_g_wr,
-      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      data_b      => dl_data,
       q_b         => open,
 
       clock_a     => not clk_video,
       address_a   => tilemap1_pal_a,
       wren_a      => '0',
       data_a      => (others => 'X'),
-      q_a         => tilemap_o(1).rgb.g(9 downto 2)
+      q_a         => pal_g_q
     );
   pal_g_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"4" else '0';  -- 400-4FF
 
@@ -749,17 +790,47 @@ begin
       clock_b     => clk_sys,
       address_b   => dl_addr(7 downto 0),
       wren_b      => pal_b_wr,
-      data_b      => dl_data(3 downto 0) & dl_data(3 downto 0),
+      data_b      => dl_data,
       q_b         => open,
 
       clock_a     => not clk_video,
       address_a   => tilemap1_pal_a,
       wren_a      => '0',
       data_a      => (others => 'X'),
-      q_a         => tilemap_o(1).rgb.b(9 downto 2)
+      q_a         => pal_b_q
     );
   pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"5" else '0';  -- 500-5FF
 
+  -- tilemap 2 palette address
+  -- Use this for Spelunk2's second blue ROM, too
+  tilemap2_pal_a <= spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 else
+                    (others => '0');
+
+  -- tilemap 2 palettes
+  pal2_r : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8,
+      widthad_b  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal2_r_wr,
+      data_b      => dl_data,
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap2_pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => pal2_r_q
+    );
+  pal2_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"6" else '0';  -- 600-6FF
+
+  -- sprite palette address
   sprite_pal_a <= '0' & sprite_i.pal_a(6 downto 0) when
                     hwsel = HW_LDRUN or
                     hwsel = HW_LDRUN2 or

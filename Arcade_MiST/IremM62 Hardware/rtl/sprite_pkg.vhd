@@ -60,7 +60,7 @@ package sprite_pkg is
     port
     (
       reset       : in std_logic;
-      hwsel       : integer;
+      hwsel       : HWSEL_t;
       hires       : in std_logic;
       sprite_prom : in prom_a(0 to 31);
 

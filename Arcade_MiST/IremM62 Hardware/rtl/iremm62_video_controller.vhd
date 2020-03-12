@@ -4,12 +4,14 @@ use ieee.numeric_std.all;
 
 library work;
 use work.video_controller_pkg.all;
+use work.platform_variant_pkg.all;
 
 entity iremm62_video_controller is
   port
   (
     -- clocking etc
     video_i       : in from_VIDEO_t;
+    hwsel         : in HWSEL_t;
     hires         : in std_logic;
 
     -- video input data
@@ -33,7 +35,9 @@ architecture SYN of iremm62_video_controller is
   signal vcnt                   : unsigned(8 downto 0);
   signal hsync                  : std_logic;
   signal vsync                  : std_logic;
-  signal hblank                 : std_logic;
+  signal hblank                 : std_logic; -- hblank mux
+  signal hblank1                : std_logic; -- normal hblank
+  signal hblank2                : std_logic; -- shifted hblank for some games
   signal vblank                 : std_logic;
 begin
 
@@ -67,18 +71,26 @@ begin
     if reset = '1' then
       hsync <= '0';
       vsync <= '0';
-      hblank <= '1';
+      hblank1 <= '1';
+      hblank2 <= '1';
       vblank <= '1';
     elsif rising_edge(clk) and clk_ena = '1' then
       -- display blank
       if hcnt = "00"&x"FF" then
-        hblank <= '0';
+        hblank1 <= '0';
         if vcnt = '1'&x"00" then
           vblank <= '0';
         end if;
       end if;
       if (hires = '0' and hcnt = "01"&x"FF") or hcnt = "10"&x"7F" then
-        hblank <= '1';
+        hblank1 <= '1';
+      end if;
+      -- alternate blanking to hide hscroll garbage
+      if hcnt = "01"&x"07" then
+        hblank2 <= '0';
+      end if;
+      if hcnt = "00"&x"87" then
+        hblank2 <= '1';
         if vcnt = '1'&x"FF" then
           vblank <= '1';
         end if;
@@ -110,6 +122,7 @@ begin
 
   video_o.hsync <= hsync;
   video_o.vsync <= vsync;
+  hblank <= hblank2 when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_KIDNIKI or hwsel = HW_HORIZON or hwsel = HW_YOUJYUDN else hblank1;
   video_o.hblank <= hblank;
   video_o.vblank <= vblank;
   video_ctl_o.stb <= '1';

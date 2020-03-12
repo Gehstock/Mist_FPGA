@@ -20,6 +20,9 @@ package platform_variant_pkg is
   constant HW_LOTLOT   : integer := 8;
   constant HW_SPELUNKR : integer := 9;
   constant HW_SPELUNK2 : integer := 10;
+  constant HW_YOUJYUDN : integer := 11;
+
+  subtype HWSEL_t is integer range 0 to 11;
 
   type rom_a is array (natural range <>) of string;
   

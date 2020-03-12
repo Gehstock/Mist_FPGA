@@ -21,7 +21,7 @@ entity sprite_array is
   (
     reset       : in std_logic;
 
-    hwsel       : in integer;
+    hwsel       : in HWSEL_t;
     hires       : in std_logic;
     sprite_prom : in prom_a(0 to 31);
 

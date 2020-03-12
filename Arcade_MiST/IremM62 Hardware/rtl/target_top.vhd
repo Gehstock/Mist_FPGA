@@ -11,12 +11,12 @@ use work.platform_variant_pkg.all;
 
 entity target_top is port(
 		clock_sys       : in std_logic;
-    vid_clk_en      : out std_logic;
-		clk_aud      		: in std_logic;
+		vid_clk_en      : out std_logic;
+		clk_aud         : in std_logic;
 		reset_in        : in std_logic;
-		hwsel           : in integer;
+		hwsel           : in HWSEL_t;
 		audio_out       : out std_logic_vector(11 downto 0);
-		usr_coin1      	: in std_logic;
+		usr_coin1       : in std_logic;
 		usr_coin2       : in std_logic;
 		usr_service     : in std_logic;
 		usr_start1      : in std_logic;
@@ -77,7 +77,7 @@ architecture SYN of target_top is
 
 begin
 
-  hires <= '0' when hwsel = HW_KUNGFUM or hwsel = HW_HORIZON or hwsel = HW_BATTROAD else '1';
+  hires <= '0' when hwsel = HW_KUNGFUM or hwsel = HW_HORIZON or hwsel = HW_BATTROAD or hwsel = HW_YOUJYUDN else '1';
 
   process(clock_sys) begin
     if rising_edge(clock_sys) then
@@ -140,18 +140,18 @@ Sound_Board : entity work.Sound_Board
 		dbg_cpu_addr  => open
 	);
 
-pace_inst : entity work.pace                                            
+pace_inst : entity work.pace
 	port map(
-		clkrst_i				=> clkrst_i,
-    cpu_clk_en_i    => cpu_clk_en,
+		clkrst_i        => clkrst_i,
+		cpu_clk_en_i    => cpu_clk_en,
 		hwsel           => hwsel,
-    hires           => hires,
+		hires           => hires,
 		buttons_i         => buttons_i,
 		switches_i        => switches_i,
 		inputs_i          => inputs_i,
 		video_i           => video_i,
 		video_o           => video_o,
-		sound_data_o 		=> sound_data,
+		sound_data_o      => sound_data,
 		platform_i        => platform_i,
 		platform_o        => platform_o,
 

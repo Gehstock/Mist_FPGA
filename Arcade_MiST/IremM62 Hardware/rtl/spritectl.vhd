@@ -18,9 +18,9 @@ entity spritectl is
   );
   port
   (
-    hwsel       : in integer range 0 to 15;
+    hwsel       : in HWSEL_t;
     hires       : in std_logic;
-    
+
     -- sprite registers
     reg_i       : in from_SPRITE_REG_t;
 

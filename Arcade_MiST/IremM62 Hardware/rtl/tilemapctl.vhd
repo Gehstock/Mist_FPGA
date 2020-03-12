@@ -14,18 +14,18 @@ use work.video_controller_pkg.all;
 --
 --  Tile data is 2 BPP.
 --
-entity tilemapCtl is          
+entity tilemapCtl is
   generic
   (
     DELAY       : integer
   );
-  port               
+  port
   (
     reset       : in std_logic;
-    hwsel       : in integer;
+    hwsel       : in HWSEL_t;
     hires       : in std_logic;
 
-    -- video control signals		
+    -- video control signals
     video_ctl   : in from_VIDEO_CTL_t;
 
     -- tilemap controller signals
@@ -64,8 +64,9 @@ begin
   x <= std_logic_vector(unsigned(video_ctl.x) - 256 + 128) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64) when hires = '1' else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 128);
-  y <= std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR else
-       std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0))); -- when rot_en = '0' else video_ctl.x;
+  y <= std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 else
+       std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0)));
+
   -- generate pixel
   process (clk, clk_ena)
 
@@ -81,48 +82,72 @@ begin
 
         -- 1st stage of pipeline
         -- - set tilemap, attribute address
-        if hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
-          -- 64x64 tilemap
-          ctl_o.map_a(11) <= y(8);
-          ctl_o.attr_a(11) <= y(8);
-        else
-          ctl_o.map_a(11) <= '0';
-          ctl_o.attr_a(11) <= '0';
+        if x(2 downto 0) = "000" then
+          if hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
+            -- 64x64 tilemap
+            ctl_o.map_a(11) <= y(8);
+            ctl_o.attr_a(11) <= y(8);
+          else
+            ctl_o.map_a(11) <= '0';
+            ctl_o.attr_a(11) <= '0';
+          end if;
+          if hwsel = HW_YOUJYUDN then
+            -- 8x16 tiles, 64x16 tilemap
+            ctl_o.map_a(10 downto 6) <= '0' & y(7 downto 4);
+            ctl_o.attr_a(10 downto 6) <= '0' & y(7 downto 4);
+          else
+            -- 8x8 tiles, 64x32(64) tilemap
+            ctl_o.map_a(10 downto 6) <= y(7 downto 3);
+            ctl_o.attr_a(10 downto 6) <= y(7 downto 3);
+          end if;
+          ctl_o.map_a(5 downto 0) <= x(8 downto 3);
+          ctl_o.attr_a(5 downto 0) <= x(8 downto 3);
         end if;
-        ctl_o.map_a(10 downto 6) <= y(7 downto 3);
-        ctl_o.map_a(5 downto 0) <= x(8 downto 3);
-        ctl_o.attr_a(10 downto 6) <= y(7 downto 3);
-        ctl_o.attr_a(5 downto 0) <= x(8 downto 3);
 
         -- 2nd stage of pipeline
         -- - set tile address
-        if x(2 downto 0) = "010" then
-          if hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
+        if x(2 downto 0) = "001" then
+          if hwsel = HW_SPELUNKR then
             ctl_o.tile_a(14) <= ctl_i.attr_d(5);
+          elsif hwsel = HW_SPELUNK2 then
+            ctl_o.tile_a(14) <= ctl_i.attr_d(7);
+          elsif hwsel = HW_YOUJYUDN then
+            ctl_o.tile_a(14) <= '1'; -- first half of the ROMs are empty
           else
             ctl_o.tile_a(14) <= '0';
           end if;
-          if hwsel = HW_LDRUN4 or hwsel = HW_HORIZON then
-            ctl_o.tile_a(13) <= ctl_i.attr_d(5);
-          elsif hwsel = HW_KIDNIKI or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
-            ctl_o.tile_a(13) <= ctl_i.attr_d(7);
+
+          if hwsel = HW_YOUJYUDN then
+            ctl_o.tile_a(13 downto 12) <= ctl_i.attr_d(6 downto 5);
+            ctl_o.tile_a(11 downto 4) <= ctl_i.map_d(7 downto 0);
+            ctl_o.tile_a(3 downto 0) <= y(3 downto 0);
           else
-            ctl_o.tile_a(13) <= '0';
+            if hwsel = HW_LDRUN4 or hwsel = HW_HORIZON then
+              ctl_o.tile_a(13) <= ctl_i.attr_d(5);
+            elsif hwsel = HW_KIDNIKI or hwsel = HW_SPELUNKR then
+              ctl_o.tile_a(13) <= ctl_i.attr_d(7);
+            elsif hwsel = HW_SPELUNK2 then
+              ctl_o.tile_a(13) <= ctl_i.attr_d(6);
+            else
+              ctl_o.tile_a(13) <= '0';
+            end if;
+            if hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR then
+              ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6) & ctl_i.attr_d(4);
+            elsif hwsel = HW_KIDNIKI then
+              ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6 downto 5);
+            elsif hwsel = HW_SPELUNK2 then
+              ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(5 downto 4);
+            else
+              ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(7 downto 6);
+            end if;
+            ctl_o.tile_a(10 downto 3) <= ctl_i.map_d(7 downto 0);
+            ctl_o.tile_a(2 downto 0) <= y(2 downto 0);
           end if;
-          if hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 then
-            ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6) & ctl_i.attr_d(4);
-          elsif hwsel = HW_KIDNIKI then
-            ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(6 downto 5);
-          else
-            ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(7 downto 6);
-          end if;
-          ctl_o.tile_a(10 downto 3) <= ctl_i.map_d(7 downto 0);
-          ctl_o.tile_a(2 downto 0) <= y(2 downto 0);
         end if;
 
         -- 3rd stage of pipeline
         -- - read tile, attribute data from ROM
-        if x(2 downto 0) = "100" then
+        if x(2 downto 0) = "111" then
           attr_d_r := ctl_i.attr_d(7 downto 0);
           if hwsel = HW_KUNGFUM or
              hwsel = HW_LOTLOT or
