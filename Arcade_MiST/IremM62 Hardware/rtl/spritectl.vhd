@@ -147,7 +147,8 @@ begin
         end if;
 
         if video_ctl.stb = '1' then
-          x := unsigned(reg_i.x) + 256 - 64 + PACE_VIDEO_PIPELINE_DELAY - 2;
+          x := unsigned(reg_i.x) + 256 - 64 + PACE_VIDEO_PIPELINE_DELAY;
+          if hwsel /= HW_KIDNIKI then x:=x-8; end if;
           if hires = '0' then x := x - 64; end if;
 
           if x = unsigned(video_ctl.x) then
