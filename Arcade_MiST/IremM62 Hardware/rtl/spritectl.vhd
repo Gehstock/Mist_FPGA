@@ -41,6 +41,7 @@ architecture SYN of spritectl is
   alias clk_ena   : std_logic is video_ctl.clk_ena;
 
   signal rowStore : std_logic_vector(47 downto 0);  -- saved row of spt to show during visibile period
+  signal ld_r     : std_logic;
 
 begin
 
@@ -64,6 +65,7 @@ begin
 
     if rising_edge(clk) then
       if clk_ena = '1' then
+        ld_r <= ctl_i.ld;
         if video_ctl.hblank = '1' then
           yMat := yMatNext;
         else
@@ -126,7 +128,7 @@ begin
           end if;
         end if; -- hblank='0'
 
-        if ctl_i.ld = '1' then
+        if ctl_i.ld = '1' and ld_r = '0' then
           xMat := false;
           ctl_o.a(4) <= not ctl_o.a(4);  -- switch sprite half
           if yMat then

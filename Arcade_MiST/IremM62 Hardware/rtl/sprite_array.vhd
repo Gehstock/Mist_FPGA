@@ -60,6 +60,7 @@ architecture SYN of sprite_array is
   signal ctl_o    : ctl_o_a_t(0 to N_SPRITES-1);
 
   signal ld_r     : std_logic_vector(N_SPRITES-1 downto 0);
+  signal ld_en    : std_logic;
 begin
 
   -- Sprite Data Load Arbiter
@@ -78,14 +79,31 @@ begin
     elsif rising_edge(clk) and clk_ena = '1' then
       if video_ctl.hblank = '0' then
         i := 0;
-        ld_r(ld_r'left) <= '1';
-        ld_r(ld_r'left-1 downto 0) <= (others => '0');
-      else
-        ld_r <= ld_r(ld_r'left-1 downto 0) & ld_r(ld_r'left);
-        if (i = 31 and hwsel /= HW_HORIZON) or i = N_SPRITES-1 then
-          i := 0;
+        ld_r(ld_r'left downto 0) <= (others => '0');
+        if hwsel = HW_HORIZON then
+          ld_r(ld_r'left) <= '1';
         else
-          i := i + 1;
+          ld_r(31) <= '1';
+        end if;
+        ld_en <= '1';
+      else
+        if hwsel /= HW_HORIZON then
+          -- there are 128 pixels in HBLANK
+          -- fetch one word in every pixel clock when 64 sprites/line used (HORIZON)
+          -- fetch one word in every two pixels when 32 sprites/line in use (every other games)
+          ld_en <= not ld_en;
+        end if;
+        if ld_en = '1' then
+          if hwsel = HW_HORIZON then
+            ld_r <= ld_r(ld_r'left-1 downto 0) & ld_r(ld_r'left);
+          else
+            ld_r(31 downto 0) <= ld_r(30 downto 0) & ld_r(31);
+          end if;
+          if (i = 31 and hwsel /= HW_HORIZON) or i = N_SPRITES-1 then
+            i := 0;
+          else
+            i := i + 1;
+          end if;
         end if;
       end if;
       row_a <= ctl_o(i).a;
