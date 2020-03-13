@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>7</part></rom>
-    <rom index="0" zip="kidniki.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
+    <rom index="0" zip="kidniki.zip" md5="63cf7764a51bae694ce95dfe518a96f3" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="ky_a-4e-g.bin"/>
       <part name="dr03.4cd"/>
@@ -54,10 +54,10 @@
 
       <!-- GFX3, 64k -->
       <group width="32">
-          <part name="dr08.4l"/>
+          <part name="dr10.4n"/>
           <part name="dr09.4m"/>
-          <part name="dr10.4n"/>
-          <part name="dr10.4n"/>
+          <part name="dr08.4l"/>
+          <part name="dr08.4l"/>
       </group>
 
       <!-- spr_color_proms, 3*256b -->
@@ -70,8 +70,10 @@
       <part name="dr26.3h"/>
       <part name="dr27.3j"/>
 
-      <!-- fg_color_proms, 3*256b br-c-1j -->
-      <part repeat="0x300">FF</part>
+      <!-- fg_color_proms, 3*256b -->
+      <part name="dr25.3f"/>
+      <part name="dr26.3h"/>
+      <part name="dr27.3j"/>
 
       <!-- spr_height_prom -->
       <part name="dr32.5p"/>

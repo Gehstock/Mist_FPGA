@@ -137,7 +137,11 @@ architecture SYN of platform is
   signal pal_b_q        : std_logic_vector(7 downto 0);
 
   signal pal2_r_wr      : std_logic;
+  signal pal2_g_wr      : std_logic;
+  signal pal2_b_wr      : std_logic;
   signal pal2_r_q       : std_logic_vector(7 downto 0);
+  signal pal2_g_q       : std_logic_vector(7 downto 0);
+  signal pal2_b_q       : std_logic_vector(7 downto 0);
   signal tilemap2_pal_a : std_logic_vector(7 downto 0);
 
   -- other signals
@@ -546,6 +550,7 @@ begin
     end process;
     graphics_o.bit16(0) <= scrollram_d_o when hwsel = HW_HORIZON else m62_hscroll;
     graphics_o.bit16(1) <= m62_vscroll;
+    graphics_o.bit16(2) <= m62_vscroll2;
   end block BLK_SCROLL;
 
 
@@ -634,7 +639,7 @@ begin
     alias cram_a    : std_logic_vector(11 downto 0) is vram_a;
   begin
 
-    textram_a <= '0' & cpu_a(10 downto 0) when hwsel = HW_BATTROAD else cpu_a(11 downto 0);
+    textram_a <= '0' & cpu_a(10 downto 0) when hwsel = HW_BATTROAD or hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 or hwsel = HW_YOUJYUDN else cpu_a(11 downto 0);
 
     vram_a <= '0' & cpu_a(10 downto 0) when hwsel = HW_KUNGFUM else
               cpu_a(12 downto 1) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 else
@@ -731,7 +736,8 @@ begin
 
   -- tilemap 1 palette address
   tilemap1_pal_a <= spelunkr_palbank & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNKR else
-                    spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 else
+                    spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 and tilemap_i(2).set = '0' else
+                    spelunk2_palbank(0) & tilemap_i(2).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 and tilemap_i(2).set = '1' else
                     '0' & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_BATTROAD else
                     tilemap_i(1).pal_a(7 downto 0);
 
@@ -820,11 +826,18 @@ begin
   -- tilemap 2 palette address
   -- Use this for Spelunk2's second blue ROM, too
   tilemap2_pal_a <= spelunk2_palbank(0) & tilemap_i(1).pal_a(6 downto 0) when hwsel = HW_SPELUNK2 else
+                    '1' & tilemap_i(2).pal_a(6 downto 0) when hwsel = HW_YOUJYUDN else
                     tilemap_i(2).pal_a(7 downto 0);
 
-  tilemap_o(2).rgb.r(9 downto 2) <= pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6);
-  tilemap_o(2).rgb.g(9 downto 2) <= pal2_r_q(5 downto 3) & pal2_r_q(5 downto 3) & pal2_r_q(5 downto 4);
-  tilemap_o(2).rgb.b(9 downto 2) <= pal2_r_q(2 downto 0) & pal2_r_q(2 downto 0) & pal2_r_q(2 downto 1);
+  tilemap_o(2).rgb.r(9 downto 2) <= pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) & pal2_r_q(7 downto 6) when hwsel = HW_BATTROAD else
+                                    tilemap_o(1).rgb.r(9 downto 2) when hwsel = HW_SPELUNK2 else
+                                    pal2_r_q(3 downto 0) & pal2_r_q(3 downto 0);
+  tilemap_o(2).rgb.g(9 downto 2) <= pal2_r_q(5 downto 3) & pal2_r_q(5 downto 3) & pal2_r_q(5 downto 4) when hwsel = HW_BATTROAD else
+                                    tilemap_o(1).rgb.g(9 downto 2) when hwsel = HW_SPELUNK2 else
+                                    pal2_g_q(3 downto 0) & pal2_g_q(3 downto 0);
+  tilemap_o(2).rgb.b(9 downto 2) <= pal2_r_q(2 downto 0) & pal2_r_q(2 downto 0) & pal2_r_q(2 downto 1) when hwsel = HW_BATTROAD else
+                                    tilemap_o(1).rgb.b(9 downto 2) when hwsel = HW_SPELUNK2 else
+                                    pal2_b_q(3 downto 0) & pal2_b_q(3 downto 0);
 
   -- tilemap 2 palettes
   pal2_r : entity work.dpram
@@ -849,6 +862,52 @@ begin
       q_a         => pal2_r_q
     );
   pal2_r_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"6" else '0';  -- 600-6FF
+
+  pal2_g : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8,
+      widthad_b  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal2_g_wr,
+      data_b      => dl_data,
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap2_pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => pal2_g_q
+    );
+  pal2_g_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"7" else '0';  -- 700-7FF
+
+  pal2_b : entity work.dpram
+    generic map
+    (
+      init_file  => "",
+      widthad_a  => 8,
+      widthad_b  => 8
+    )
+    port map
+    (
+      clock_b     => clk_sys,
+      address_b   => dl_addr(7 downto 0),
+      wren_b      => pal2_b_wr,
+      data_b      => dl_data,
+      q_b         => open,
+
+      clock_a     => not clk_video,
+      address_a   => tilemap2_pal_a,
+      wren_a      => '0',
+      data_a      => (others => 'X'),
+      q_a         => pal2_b_q
+    );
+  pal2_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"8" else '0';  -- 800-8FF
 
   -- sprite palette address
   sprite_pal_a <= '0' & sprite_i.pal_a(6 downto 0) when

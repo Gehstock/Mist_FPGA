@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>0B</part></rom>
-    <rom index="0" zip="youjyudn.zip" md5="065dce1c43e588ff6319a2c2ac0951a8" type="merged|nonmerged">
+    <rom index="0" zip="youjyudn.zip" md5="88142ed9adb6ffff9643cc7fa6bae82b" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="yju_a4eb.bin"/>
       <part name="yju_a4db.bin"/>
@@ -55,10 +55,10 @@
 
       <!-- GFX3, 64k -->
       <group width="32">
-          <part name="yju_p4lb.2"/>
+          <part name="yju_p4pb.0"/>
           <part name="yju_p4mb.1"/>
-          <part name="yju_p4pb.0"/>
-          <part name="yju_p4pb.0"/>
+          <part name="yju_p4lb.2"/>
+          <part name="yju_p4lb.2"/>
       </group>
 
       <!-- spr_color_proms, 3*256b -->
@@ -72,7 +72,9 @@
       <part name="yju_p2hb.bpr"/>
 
       <!-- fg_color_proms, 3*256b -->
-      <part repeat="0x300">FF</part>
+      <part name="yju_p2jb.bpr"/>
+      <part name="yju_p2kb.bpr"/>
+      <part name="yju_p2hb.bpr"/>
 
       <!-- spr_height_prom -->
       <part name="yju_b-5p.bpr"/>

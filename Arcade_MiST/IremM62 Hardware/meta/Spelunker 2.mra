@@ -5,7 +5,7 @@
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
     <rom index="1"><part>0A</part></rom>
-    <rom index="0" zip="spelunk2.zip" md5="4cf89df14a6987d1418ffe1fcb397d8e" type="merged|nonmerged">
+    <rom index="0" zip="spelunk2.zip" md5="5052a1aaf3f39b0a40babfcc00e9652d" type="merged|nonmerged">
       <!-- CPU1, 128k -->
       <part name="sp2-a.4e"/>
       <part name="sp2-a.4d"/>
@@ -57,10 +57,10 @@
 
       <!-- GFX3, 64k -->
       <group width="32">
-          <part name="sp2-r.4l"/>
+          <part name="sp2-r.4p"/>
           <part name="sp2-r.4m"/>
-          <part name="sp2-r.4p"/>
-          <part name="sp2-r.4p"/>
+          <part name="sp2-r.4l"/>
+          <part name="sp2-r.4l"/>
       </group>
 
       <!-- spr_color_proms, 3*256b -->
@@ -71,7 +71,6 @@
       <!-- chr_color_proms, 3*256b -->
       <part name="sp2-r.1k"/>
       <part name="sp2-r.2k"/>
-      <!--part name="sp2-r.2j"/-->
 
       <!-- fg_color_proms, 3*256b -->
       <part name="sp2-r.2j"/>
