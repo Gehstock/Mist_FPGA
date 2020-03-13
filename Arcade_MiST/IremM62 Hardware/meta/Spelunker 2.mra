@@ -1,0 +1,83 @@
+<misterromdescription>
+    <name>Spelunker 2</name>
+    <mameversion>0216</mameversion>
+    <setname>spelunk2</setname>
+    <manufacturer>Irem</manufacturer>
+    <rbf>iremm62</rbf>
+    <rom index="1"><part>0A</part></rom>
+    <rom index="0" zip="spelunk2.zip" md5="5052a1aaf3f39b0a40babfcc00e9652d" type="merged|nonmerged">
+      <!-- CPU1, 128k -->
+      <part name="sp2-a.4e"/>
+      <part name="sp2-a.4d"/>
+
+      <part name="sp2-r.7b"/>
+      <part repeat="0x4000">FF</part>
+
+      <part name="sp2-r.7d"/>
+      <part name="sp2-r.7c"/>
+
+      <!-- SND CPU2, 64k -->
+      <part repeat="0x8000">FF</part>
+      <part name="sp2-a.3d"/>
+      <part name="sp2-a.3f"/>
+
+      <!-- GFX1, 128k -->
+      <group width="32">
+          <part name="sp2-r.1d"/>
+          <part name="sp2-r.3b"/>
+          <part name="sp2-r.1b"/>
+          <part name="sp2-r.1b"/>
+      </group>
+
+      <!-- GFX2, 256k -->
+      <group width="32">
+          <part name="sp2-b.4k"/>
+          <part name="sp2-b.3n"/>
+          <part name="sp2-b.4c"/>
+          <part name="sp2-b.4c"/>
+      </group>
+      <group width="32">
+          <part name="sp2-b.4f"/>
+          <part name="sp2-b.4n"/>
+          <part name="sp2-b.4e"/>
+          <part name="sp2-b.4e"/>
+      </group>
+      <group width="32">
+          <part name="sp2-b.4k"/>
+          <part name="sp2-b.3n"/>
+          <part name="sp2-b.4c"/>
+          <part name="sp2-b.4c"/>
+      </group>
+      <group width="32">
+          <part name="sp2-b.4f"/>
+          <part name="sp2-b.4n"/>
+          <part name="sp2-b.4e"/>
+          <part name="sp2-b.4e"/>
+      </group>
+
+      <!-- GFX3, 64k -->
+      <group width="32">
+          <part name="sp2-r.4p"/>
+          <part name="sp2-r.4m"/>
+          <part name="sp2-r.4l"/>
+          <part name="sp2-r.4l"/>
+      </group>
+
+      <!-- spr_color_proms, 3*256b -->
+      <part name="sp2-b.1m"/>
+      <part name="sp2-b.1n"/>
+      <part name="sp2-b.1l"/>
+
+      <!-- chr_color_proms, 3*256b -->
+      <part name="sp2-r.1k"/>
+      <part name="sp2-r.2k"/>
+
+      <!-- fg_color_proms, 3*256b -->
+      <part name="sp2-r.2j"/>
+      <part repeat="0x200">FF</part>
+
+      <!-- spr_height_prom -->
+      <part name="sp2-b.5p"/>
+
+    </rom>
+</misterromdescription>

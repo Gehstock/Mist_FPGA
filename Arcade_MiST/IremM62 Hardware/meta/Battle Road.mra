@@ -1,0 +1,139 @@
+<misterromdescription>
+    <name>Battle Road</name>
+    <mameversion>0216</mameversion>
+    <setname>battroad</setname>
+    <manufacturer>Irem</manufacturer>
+    <rbf>iremm62</rbf>
+    <rom index="1"><part>6</part></rom>
+    <rom index="0" zip="battroad.zip" md5="4d5de2720b53b64fb63beed407cbeb19" type="merged|nonmerged">
+      <!-- CPU1, 128k -->
+      <part name="br-a-4e.b"/>
+      <part name="br-a-4d.b"/>
+      <part name="br-a-4b.b"/>
+      <part name="br-a-4a"/>
+      <part repeat="0x8000">FF</part>
+
+      <part name="br-c-7c"/>
+      <part name="br-c-7l"/>
+      <part name="br-c-7d"/>
+      <part name="br-c-7b"/>
+      <part name="br-c-7a"/>
+      <part name="br-c-7k"/>
+      <part name="br-c-7k"/>
+      <part repeat="0x2000">FF</part>
+
+      <!-- SND CPU2, 64k -->
+      <part repeat="0xa000">FF</part>
+      <part name="br-a-3e"/>
+      <part name="br-a-3f"/>
+      <part name="br-a-3h"/>
+
+      <!-- GFX1, 128k -->
+      <group width="32">
+          <part name="br-c-6h"/>
+          <part name="br-c-6n"/>
+          <part name="br-c-6k"/>
+          <part name="br-c-6k"/>
+      </group>
+      <group width="32">
+          <part name="br-c-6h"/>
+          <part name="br-c-6n"/>
+          <part name="br-c-6k"/>
+          <part name="br-c-6k"/>
+      </group>
+      <group width="32">
+          <part name="br-c-6h"/>
+          <part name="br-c-6n"/>
+          <part name="br-c-6k"/>
+          <part name="br-c-6k"/>
+      </group>
+      <group width="32">
+          <part name="br-c-6h"/>
+          <part name="br-c-6n"/>
+          <part name="br-c-6k"/>
+          <part name="br-c-6k"/>
+      </group>
+
+      <!-- GFX2, 256k -->
+      <group width="32">
+          <part name="br-b-4k.a"/>
+          <part name="br-b-3n.a"/>
+          <part name="br-b-4c.a"/>
+          <part name="br-b-4c.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4f.a"/>
+          <part name="br-b-4n.a"/>
+          <part name="br-b-4e.a"/>
+          <part name="br-b-4e.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4k.a"/>
+          <part name="br-b-3n.a"/>
+          <part name="br-b-4c.a"/>
+          <part name="br-b-4c.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4f.a"/>
+          <part name="br-b-4n.a"/>
+          <part name="br-b-4e.a"/>
+          <part name="br-b-4e.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4k.a"/>
+          <part name="br-b-3n.a"/>
+          <part name="br-b-4c.a"/>
+          <part name="br-b-4c.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4f.a"/>
+          <part name="br-b-4n.a"/>
+          <part name="br-b-4e.a"/>
+          <part name="br-b-4e.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4k.a"/>
+          <part name="br-b-3n.a"/>
+          <part name="br-b-4c.a"/>
+          <part name="br-b-4c.a"/>
+      </group>
+      <group width="32">
+          <part name="br-b-4f.a"/>
+          <part name="br-b-4n.a"/>
+          <part name="br-b-4e.a"/>
+          <part name="br-b-4e.a"/>
+      </group>
+
+      <!-- GFX3, 64k -->
+      <group width="32">
+          <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
+          <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
+      </group>
+      <group width="32">
+          <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
+          <part name="br-c-1c"/>
+          <part name="br-c-1b"/>
+      </group>
+
+      <!-- spr_color_proms, 3*256b -->
+      <part name="br-b-1m"/>
+      <part name="br-b-1n"/>
+      <part name="br-b-1l"/>
+
+      <!-- chr_color_proms, 3*256b -->
+      <part name="br-c-3j"/>
+      <part name="br-c-3l"/>
+      <part name="br-c-3k"/>
+
+      <!-- fg_color_proms, 3*256b br-c-1j -->
+      <part name="br-c-1j"/>
+      <part repeat="0x2e0">FF</part>
+
+      <!-- spr_height_prom -->
+      <part name="br-b-5p"/>
+
+    </rom>
+</misterromdescription>

@@ -1,0 +1,89 @@
+<misterromdescription>
+    <name>Spelunker</name>
+    <mameversion>0216</mameversion>
+    <setname>spelunkr</setname>
+    <manufacturer>Irem</manufacturer>
+    <rbf>iremm62</rbf>
+    <rom index="1"><part>9</part></rom>
+    <rom index="0" zip="spelunkr.zip" md5="ec64e30638077a75ff9f6698494057fc" type="merged|nonmerged">
+      <!-- CPU1, 128k -->
+      <part name="spra.4e"/>
+      <part name="spra.4d"/>
+      <part repeat="0x8000">FF</part>
+      <part name="sprm.7c"/>
+      <part name="sprm.7b"/>
+      <part repeat="0x8000">FF</part>
+
+      <!-- SND CPU2, 64k -->
+      <part repeat="0x8000">FF</part>
+      <part name="spra.3d"/>
+      <part name="spra.3f"/>
+
+      <!-- GFX1, 128k -->
+      <group width="32">
+          <part name="sprm.1d"/>
+          <part name="sprm.3c"/>
+          <part name="sprm.1c"/>
+          <part name="sprm.1c"/>
+      </group>
+      <group width="32">
+          <part name="sprm.1e"/>
+          <part name="sprm.3b"/>
+          <part name="sprm.1b"/>
+          <part name="sprm.1b"/>
+      </group>
+
+      <!-- GFX2, 256k -->
+      <group width="32">
+          <part name="sprb.4k"/>
+          <part name="sprb.3p"/>
+          <part name="sprb.4c"/>
+          <part name="sprb.4c"/>
+      </group>
+      <group width="32">
+          <part name="sprb.4f"/>
+          <part name="sprb.4p"/>
+          <part name="sprb.4e"/>
+          <part name="sprb.4e"/>
+      </group>
+      <group width="32">
+          <part name="sprb.4k"/>
+          <part name="sprb.3p"/>
+          <part name="sprb.4c"/>
+          <part name="sprb.4c"/>
+      </group>
+      <group width="32">
+          <part name="sprb.4f"/>
+          <part name="sprb.4p"/>
+          <part name="sprb.4e"/>
+          <part name="sprb.4e"/>
+      </group>
+
+      <!-- GFX3, 64k -->
+      <group width="32">
+          <part name="sprm.4m"/>
+          <part name="sprm.4l"/>
+          <part name="sprm.4p"/>
+          <part name="sprm.4p"/>
+      </group>
+
+      <!-- spr_color_proms, 3*256b -->
+      <part name="sprb.1m"/>
+      <part name="sprb.1n"/>
+      <part name="sprb.1l"/>
+
+      <!-- chr_color_proms, 3*256b -->
+      <part name="sprm.2k"/>
+      <part name="sprm.2j"/>
+      <part name="sprm.2h"/>
+
+      <!-- fg_color_proms, 3*256b -->
+      <part name="sprm.2k"/>
+      <part name="sprm.2j"/>
+      <part name="sprm.2h"/>
+
+      <!-- spr_height_prom -->
+      <part name="sprb.5p"/>
+
+    </rom>
+</misterromdescription>

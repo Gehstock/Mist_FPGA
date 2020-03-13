@@ -1,0 +1,133 @@
+<misterromdescription>
+    <name>Lode Runner</name>
+    <mameversion>0216</mameversion>
+    <setname>ldrun</setname>
+    <manufacturer>Irem</manufacturer>
+    <rbf>iremm62</rbf>
+    <rom index="1"><part>0</part></rom>
+    <rom index="0" zip="ldrun.zip" md5="dbd20cd8f5d2555911090e62e4621920" type="merged|nonmerged">
+      <!-- CPU1, 128k -->
+      <part name="lr-a-4e"/>
+      <part name="lr-a-4d"/>
+      <part name="lr-a-4b"/>
+      <part name="lr-a-4a"/>
+      <part name="lr-a-4e"/>
+      <part name="lr-a-4d"/>
+      <part name="lr-a-4b"/>
+      <part name="lr-a-4a"/>
+      <part name="lr-a-4e"/>
+      <part name="lr-a-4d"/>
+      <part name="lr-a-4b"/>
+      <part name="lr-a-4a"/>
+      <part name="lr-a-4e"/>
+      <part name="lr-a-4d"/>
+      <part name="lr-a-4b"/>
+      <part name="lr-a-4a"/>
+
+      <!-- SND CPU2, 64k -->
+      <part name="lr-a-3f"/>
+      <part name="lr-a-3h"/>
+      <part name="lr-a-3f"/>
+      <part name="lr-a-3h"/>
+      <part name="lr-a-3f"/>
+      <part name="lr-a-3h"/>
+      <part name="lr-a-3f"/>
+      <part name="lr-a-3h"/>
+
+      <!-- GFX1, 128k -->
+      <group width="32">
+          <part name="lr-e-2d"/>
+          <part name="lr-e-2j"/>
+          <part name="lr-e-2f"/>
+          <part name="lr-e-2f"/>
+      </group>
+      <group width="32">
+          <part name="lr-e-2d"/>
+          <part name="lr-e-2j"/>
+          <part name="lr-e-2f"/>
+          <part name="lr-e-2f"/>
+      </group>
+      <group width="32">
+          <part name="lr-e-2d"/>
+          <part name="lr-e-2j"/>
+          <part name="lr-e-2f"/>
+          <part name="lr-e-2f"/>
+      </group>
+      <group width="32">
+          <part name="lr-e-2d"/>
+          <part name="lr-e-2j"/>
+          <part name="lr-e-2f"/>
+          <part name="lr-e-2f"/>
+      </group>
+
+      <!-- GFX2, 256k -->
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr-b-4k"/>
+          <part name="lr-b-3n"/>
+          <part name="lr-b-4c"/>
+          <part name="lr-b-4c"/>
+      </group>
+
+      <!-- GFX3, 64k -->
+      <part repeat="0x10000">FF</part>
+
+      <!-- spr_color_proms, 3*256b -->
+      <part name="lr-b-1m"/>
+      <part name="lr-b-1n"/>
+      <part name="lr-b-1l"/>
+
+      <!-- chr_color_proms, 3*256b -->
+      <part name="lr-e-3m"/>
+      <part name="lr-e-3l"/>
+      <part name="lr-e-3n"/>
+
+      <!-- fg_color_proms, 3*256b -->
+      <part repeat="0x300">FF</part>
+
+      <!-- spr_height_prom -->
+      <part name="lr-b-5p"/>
+
+    </rom>
+</misterromdescription>

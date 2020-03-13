@@ -1,0 +1,85 @@
+<misterromdescription>
+    <name>Lode Runner 4</name>
+    <mameversion>0216</mameversion>
+    <setname>ldrun4</setname>
+    <manufacturer>Irem</manufacturer>
+    <rbf>iremm62</rbf>
+    <rom index="1"><part>3</part></rom>
+    <rom index="0" zip="ldrun4.zip" md5="cd633975a81980cefe104543024cc7ee" type="merged|nonmerged">
+      <!-- CPU1, 128k -->
+      <part name="lr4-a-4e"/>
+      <part name="lr4-a-4d.c"/>
+      <part name="lr4-v-4k"/>
+
+      <part name="lr4-a-4e"/>
+      <part name="lr4-a-4d.c"/>
+      <part name="lr4-v-4k"/>
+
+      <!-- SND CPU2, 64k -->
+      <part name="lr4-a-3d"/>
+      <part name="lr4-a-3f"/>
+
+      <part name="lr4-a-3d"/>
+      <part name="lr4-a-3f"/>
+
+      <!-- GFX1, 128k -->
+      <group width="32">
+          <part name="lr4-v-2b"/>
+          <part name="lr4-v-2d"/>
+          <part name="lr4-v-2c"/>
+          <part name="lr4-v-2c"/>
+      </group>
+      <group width="32">
+          <part name="lr4-v-2b"/>
+          <part name="lr4-v-2d"/>
+          <part name="lr4-v-2c"/>
+          <part name="lr4-v-2c"/>
+      </group>
+
+      <!-- GFX2, 256k -->
+      <group width="32">
+          <part name="lr4-b-4k"/>
+          <part name="lr4-b-3n"/>
+          <part name="lr4-b-4c"/>
+          <part name="lr4-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr4-b-4f"/>
+          <part name="lr4-b-4n"/>
+          <part name="lr4-b-4e"/>
+          <part name="lr4-b-4e"/>
+      </group>
+      <group width="32">
+          <part name="lr4-b-4k"/>
+          <part name="lr4-b-3n"/>
+          <part name="lr4-b-4c"/>
+          <part name="lr4-b-4c"/>
+      </group>
+      <group width="32">
+          <part name="lr4-b-4f"/>
+          <part name="lr4-b-4n"/>
+          <part name="lr4-b-4e"/>
+          <part name="lr4-b-4e"/>
+      </group>
+
+      <!-- GFX3, 64k -->
+      <part repeat="0x10000">FF</part>
+
+      <!-- spr_color_proms, 3*256b -->
+      <part name="lr4-b-1m"/>
+      <part name="lr4-b-1n"/>
+      <part name="lr4-b-1l"/>
+
+      <!-- chr_color_proms, 3*256b -->
+      <part name="lr4-v-1m"/>
+      <part name="lr4-v-1n"/>
+      <part name="lr4-v-1p"/>
+
+      <!-- fg_color_proms, 3*256b -->
+      <part repeat="0x300">FF</part>
+
+      <!-- spr_height_prom -->
+      <part name="lr4-b-5p"/>
+
+    </rom>
+</misterromdescription>
