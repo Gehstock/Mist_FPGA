@@ -48,6 +48,33 @@ wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       service   = status[6];
 
+reg  [1:0] orientation = 2'b10;
+
+always @(*) begin
+  orientation = 2'b10;
+  case (core_mod)
+  7'h0: ;// LDRUN
+  7'h1: ;// LDRUN2
+  7'h2: ;// LDRUN3
+  7'h3: ;// LDRUN4
+  7'h4: ;// KUNGFUM
+  7'h5: ;// HORIZON
+  7'h6: // BATTROAD
+  begin
+    orientation = 2'b11;
+  end
+  7'h7: ;// KIDNIKI
+  7'h8: ;// LOTLOT
+  7'h9: ;// SPELUNKR
+  7'hA: ;// SPELUNK2
+  7'hB: // YOUJYUDN
+  begin
+    orientation = 2'b01;
+  end
+  default: ;
+  endcase
+end
+
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1; 
@@ -111,6 +138,8 @@ wire [14:0] chr1_addr;
 wire [31:0] chr1_do;
 wire [15:0] sp_addr;
 wire [31:0] sp_do;
+wire [14:0] chr2_addr;
+wire [31:0] chr2_do;
 
 /* ROM structure
 00000-1FFFF CPU1 128k
@@ -178,6 +207,8 @@ sdram sdram(
 
 	.chr1_addr     ( chr1_addr ),
 	.chr1_q        ( chr1_do   ),
+	.chr2_addr     ( 17'h18000 + chr2_addr ),
+	.chr2_q        ( chr2_do   ),
 	.sp_addr       ( 16'h8000 + sp_addr ),
 	.sp_q          ( sp_do     )
 );
@@ -262,6 +293,8 @@ target_top target_top(
 	.snd_vma(snd_vma),
 	.gfx1_addr(chr1_addr),
 	.gfx1_do(chr1_do),
+	.gfx3_addr(chr2_addr),
+	.gfx3_do(chr2_do),
 	.gfx2_addr(sp_addr),
 	.gfx2_do(sp_do)
   );
@@ -315,7 +348,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b10       ),
+	.orientation ( orientation ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
