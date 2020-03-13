@@ -36,6 +36,7 @@ wire [6:0] core_mod;
 localparam CONF_STR = {
 	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
+	"O1,Video Timings,Original,PAL 50Hz;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
 	"O6,Service,Off,On;",
@@ -43,6 +44,7 @@ localparam CONF_STR = {
 	"V,v1.0.",`BUILD_DATE
 };
 
+wire       palmode   = status[1];
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
@@ -258,6 +260,7 @@ target_top target_top(
 	.clk_aud(clk_aud),//0.895MHz
 	.reset_in(reset),
 	.hwsel(core_mod),
+	.palmode(palmode),
 	.audio_out(audio),
 	.usr_coin1(m_coin1),
 	.usr_coin2(m_coin2),

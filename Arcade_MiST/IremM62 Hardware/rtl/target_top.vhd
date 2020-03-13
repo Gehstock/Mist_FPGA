@@ -15,6 +15,7 @@ entity target_top is port(
 		clk_aud         : in std_logic;
 		reset_in        : in std_logic;
 		hwsel           : in HWSEL_t;
+		palmode         : in std_logic;
 		audio_out       : out std_logic_vector(11 downto 0);
 		usr_coin1       : in std_logic;
 		usr_coin2       : in std_logic;
@@ -147,6 +148,7 @@ pace_inst : entity work.pace
 		clkrst_i        => clkrst_i,
 		cpu_clk_en_i    => cpu_clk_en,
 		hwsel           => hwsel,
+		palmode         => palmode,
 		hires           => hires,
 		buttons_i         => buttons_i,
 		switches_i        => switches_i,

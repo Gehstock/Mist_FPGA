@@ -16,6 +16,7 @@ entity Graphics is
   (
     hwsel           : in HWSEL_t;
     hires           : in std_logic;
+    palmode         : in std_logic;
     sprite_prom     : in prom_a(0 to 31);
 
     bitmap_ctl_i    : in to_BITMAP_CTL_a(1 to PACE_VIDEO_NUM_BITMAPS);
@@ -78,6 +79,7 @@ begin
       -- clocking etc
       video_i         => video_i,
       hwsel           => hwsel,
+      palmode         => palmode,
       hires           => hires,
 
       -- video data signals (in)

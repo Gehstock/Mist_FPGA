@@ -20,6 +20,7 @@ entity PACE is
 
     -- hardware variant
     hwsel           : in HWSEL_t;
+    palmode         : in std_logic;
     hires           : in std_logic;
 
     -- misc I/O
@@ -163,6 +164,7 @@ begin
     (
       hwsel           => hwsel,
       hires           => hires,
+      palmode         => palmode,
       sprite_prom     => sprite_prom,
 
       bitmap_ctl_i    => to_bitmap_ctl,

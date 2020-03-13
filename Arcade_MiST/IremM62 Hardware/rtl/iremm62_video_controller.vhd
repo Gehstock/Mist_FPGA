@@ -12,6 +12,7 @@ entity iremm62_video_controller is
     -- clocking etc
     video_i       : in from_VIDEO_t;
     hwsel         : in HWSEL_t;
+    palmode       : in std_logic;
     hires         : in std_logic;
 
     -- video input data
@@ -59,8 +60,11 @@ begin
         hcnt <= "00"&x"80";
         vcnt <= vcnt + 1;
         if vcnt = '1'&x"FF" then
---          vcnt <= '0'&x"E6";  -- from M52 schematics
-          vcnt <= '0'&x"C8";  -- 312 lines/PAL 50 Hz
+          if palmode = '1' then
+            vcnt <= '0'&x"C8";  -- 312 lines/PAL 50 Hz
+          else
+            vcnt <= '0'&x"E6";  -- from M52 schematics
+          end if;
         end if;
       end if;
     end if;
