@@ -40,7 +40,7 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
 	"DIP;",
-	"O6,Service,Off,On;",
+	"O7,Service,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -49,14 +49,19 @@ wire       palmode   = status[1];
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
-wire       service   = status[6];
+wire       service   = status[7];
+wire       joyswap   = status[6];
 
 reg  [1:0] orientation = 2'b10;
+reg        oneplayer;
 wire [7:0] DSW1 = {/*coinage*/4'hf, ~status[11:8]};
 
 always @(*) begin
   orientation = 2'b10;
+  oneplayer = 1;
+
   case (core_mod)
+  7'h3: oneplayer = 0; // LDRUN4
   7'h6: orientation = 2'b11; // BATTROAD
   7'hB: orientation = 2'b01; // YOUJYUDN
   default: ;
@@ -339,8 +344,8 @@ arcade_inputs inputs (
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
 	.orientation ( orientation ),
-	.joyswap     ( 1'b0        ),
-	.oneplayer   ( 1'b1        ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( oneplayer   ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
