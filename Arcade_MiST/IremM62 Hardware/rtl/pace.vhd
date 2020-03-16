@@ -61,9 +61,6 @@ architecture SYN of PACE is
 
   alias clk_sys         : std_logic is clkrst_i.clk(0);
 
-  constant CLK_1US_COUNTS : integer := 
-    integer(27 * PACE_CLK0_MULTIPLY_BY / PACE_CLK0_DIVIDE_BY);
-
   signal mapped_inputs    : from_MAPPED_INPUTS_t(0 to PACE_INPUTS_NUM_BYTES-1);
 
   signal to_tilemap_ctl   : to_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
@@ -90,8 +87,7 @@ begin
     generic map
     (
       NUM_DIPS        => PACE_NUM_SWITCHES,
-      NUM_INPUTS      => PACE_INPUTS_NUM_BYTES,
-      CLK_1US_DIV     => CLK_1US_COUNTS
+      NUM_INPUTS      => PACE_INPUTS_NUM_BYTES
     )
     port map
     (

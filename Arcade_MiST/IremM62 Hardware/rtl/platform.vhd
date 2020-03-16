@@ -555,12 +555,6 @@ begin
 
 
   BLK_GFX_ROMS : block
-  
-    type gfx_rom_d_a is array(M62_CHAR_ROM'range) of std_logic_vector(7 downto 0);
-    signal chr_rom_d      : gfx_rom_d_a;
-    type spr_rom_d_a is array(0 to 11) of std_logic_vector(7 downto 0);
-    signal spr_rom        : spr_rom_d_a;
-    
   begin
 
     -- external background ROMs
@@ -574,63 +568,9 @@ begin
 
     tilemap_o(2).tile_d(23 downto 0) <= gfx3_do(7 downto 0) & gfx3_do(15 downto 8) & gfx3_do(23 downto 16);
 
-    -- internal background ROMs
---    GEN_CHAR_ROMS : for i in M62_CHAR_ROM'range generate
---      char_rom_inst : entity work.sprom
---        generic map
---        (
---          init_file  => "./roms/" &
---                          M62_CHAR_ROM(i) & ".hex",
---          widthad_a  => 13
---        )
---        port map
---        (
---          clock      => clk_video,
---          address    => tilemap_i(1).tile_a(12 downto 0),
---          q          => chr_rom_d(i)
---        );
---    end generate GEN_CHAR_ROMS;
---
---    tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
-
     -- external sprite ROMs
     gfx2_addr <= sprite_i.a(15 downto 0);
     sprite_o.d(23 downto 0) <= gfx2_do(7 downto 0) & gfx2_do(15 downto 8) & gfx2_do(23 downto 16);
-
-    -- internal sprite ROMs
---    GEN_SPRITE_ROMS : for i in M62_SPRITE_ROM'range generate
---      sprite_rom_inst : entity work.sprom
---        generic map
---        (
---          init_file  => "./roms/" &
---                          M62_SPRITE_ROM(i) & ".hex",
---          widthad_a  => 13
---        )
---        port map
---        (
---          clock                 => clk_video,
---          address(12 downto 5)  => sprite_i.a(12 downto 5),
---          address(4 downto 0)   => sprite_i.a(4 downto 0),
---          q                     => spr_rom(i)
---        );
---    end generate GEN_SPRITE_ROMS;
---
---    sprite_o.d(sprite_o.d'left downto 24) <= (others => '0');
---    sprite_o.d(23 downto 0) <=  spr_rom(0) & 
---                                spr_rom(1) &
---                                spr_rom(2)
---                                  when sprite_i.a(14 downto 13) = "00" else
---                                spr_rom(3) &
---                                spr_rom(4) &
---                                spr_rom(5) 
---                                  when sprite_i.a(14 downto 13) = "01" else
---                                spr_rom(6) &
---                                spr_rom(7) &
---                                spr_rom(8)
---                                  when sprite_i.a(14 downto 13) = "10" else
---                                spr_rom(9) &
---                                spr_rom(10) &
---                                spr_rom(11);
 
   end block BLK_GFX_ROMS;
 

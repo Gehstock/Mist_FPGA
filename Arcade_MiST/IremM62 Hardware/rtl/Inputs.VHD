@@ -8,8 +8,7 @@ entity inputs is
   generic
   (
     NUM_DIPS        : integer := 8;
-    NUM_INPUTS      : integer := 2;
-    CLK_1US_DIV     : natural := 30
+    NUM_INPUTS      : integer := 2
   );
   port
   (
