@@ -4,6 +4,12 @@
     <setname>kungfum</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="8"     name="Difficulty"  ids="Easy,Hard"/>
+        <dip bits="9"     name="Energy Loss" ids="Slow,Fast"/>
+        <dip bits="10,11" name="Lives"       ids="3,2,4,5"/>
+    </switches>
     <rom index="1"><part>4</part></rom>
     <rom index="0" zip="kungfum.zip" md5="e4dd9d396dd574a11189c2183cf4cead" type="merged|nonmerged">
       <!-- CPU1, 128k -->

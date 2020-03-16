@@ -39,6 +39,7 @@ localparam CONF_STR = {
 	"O1,Video Timings,Original,PAL 50Hz;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
+	"DIP;",
 	"O6,Service,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
@@ -51,28 +52,13 @@ wire       blend     = status[5];
 wire       service   = status[6];
 
 reg  [1:0] orientation = 2'b10;
+wire [7:0] DSW1 = {/*coinage*/4'hf, ~status[11:8]};
 
 always @(*) begin
   orientation = 2'b10;
   case (core_mod)
-  7'h0: ;// LDRUN
-  7'h1: ;// LDRUN2
-  7'h2: ;// LDRUN3
-  7'h3: ;// LDRUN4
-  7'h4: ;// KUNGFUM
-  7'h5: ;// HORIZON
-  7'h6: // BATTROAD
-  begin
-    orientation = 2'b11;
-  end
-  7'h7: ;// KIDNIKI
-  7'h8: ;// LOTLOT
-  7'h9: ;// SPELUNKR
-  7'hA: ;// SPELUNK2
-  7'hB: // YOUJYUDN
-  begin
-    orientation = 2'b01;
-  end
+  7'h6: orientation = 2'b11; // BATTROAD
+  7'hB: orientation = 2'b01; // YOUJYUDN
   default: ;
   endcase
 end
@@ -262,6 +248,7 @@ target_top target_top(
 	.hwsel(core_mod),
 	.palmode(palmode),
 	.audio_out(audio),
+	.switches_i(DSW1),
 	.usr_coin1(m_coin1),
 	.usr_coin2(m_coin2),
 	.usr_service(service),
@@ -317,7 +304,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( { 1'b1, rotate } ),
+	.rotate         ( { orientation[1], rotate } ),
 	.ce_divider     ( 1'b1             ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),

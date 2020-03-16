@@ -17,6 +17,8 @@ entity target_top is port(
 		hwsel           : in HWSEL_t;
 		palmode         : in std_logic;
 		audio_out       : out std_logic_vector(11 downto 0);
+		switches_i      : from_SWITCHES_t;
+
 		usr_coin1       : in std_logic;
 		usr_coin2       : in std_logic;
 		usr_service     : in std_logic;
@@ -64,7 +66,6 @@ architecture SYN of target_top is
   
   signal clkrst_i       : from_CLKRST_t;
   signal buttons_i      : from_BUTTONS_t;
-  signal switches_i     : from_SWITCHES_t;
   signal leds_o         : to_LEDS_t;
   signal inputs_i       : from_INPUTS_t;
   signal video_i        : from_VIDEO_t;

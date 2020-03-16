@@ -4,6 +4,11 @@
     <setname>battroad</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="8,9"   name="Fuel Decrease" ids="Slow,Medium,Fast,Fastest"/>
+        <dip bits="10"    name="Difficulty"    ids="Easy,Hard"/>
+    </switches>
     <rom index="1"><part>6</part></rom>
     <rom index="0" zip="battroad.zip" md5="4d5de2720b53b64fb63beed407cbeb19" type="merged|nonmerged">
       <!-- CPU1, 128k -->

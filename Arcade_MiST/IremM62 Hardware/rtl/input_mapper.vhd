@@ -73,7 +73,7 @@ begin
       inputs(0).d <= jamma_v(0).d;
       inputs(1).d <= jamma_v(1).d;
       inputs(2).d <= jamma_v(2).d;
-      inputs(3).d <= "11111110";  -- 1C/1C, 10/30/50K, 3 lives
+      inputs(3).d <= dips(7 downto 0); -- DSW1
       inputs(4).d <= jamma.service & "1111100";
 --	PORT_START("DSW2")
 --	PORT_DIPNAME( 0x01, 0x01, DEF_STR( Flip_Screen ) ) PORT_DIPLOCATION("SW2:1")
