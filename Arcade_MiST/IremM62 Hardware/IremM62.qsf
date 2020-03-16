@@ -235,6 +235,7 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 # end ENTITY(IremM62_MiST)
 # ---------------------------
 set_location_assignment PLL_1 -to pll|altpll_component|auto_generated|pll1
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/IremM62_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/target_top.vhd
 set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
@@ -263,8 +264,8 @@ set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
-set_global_assignment -name QIP_FILE rtl/jt5205/jt5205.qip
 set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
+set_global_assignment -name QIP_FILE ../../common/Sound/jt5205/jt5205.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd
@@ -274,4 +275,3 @@ set_global_assignment -name SIGNALTAP_FILE output_files/tilemap.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/sprite.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/cpu.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/snd.stp
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
