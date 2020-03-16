@@ -124,8 +124,8 @@ entity robotron_cpu is
         SIN_FIRE         : in    std_logic;
         SIN_BOMB         : in    std_logic;
 
-		-- To sound board
-		HAND             : in    std_logic := '1';
+        -- To sound board
+        HAND             : in    std_logic := '1';
         PB               : out   std_logic_vector(5 downto 0)
     );
 end robotron_cpu;
@@ -159,7 +159,8 @@ architecture Behavioral of robotron_cpu is
     signal horizontal_sync          : std_logic;
     signal vertical_sync            : std_logic;
     
-    signal video_blank              : boolean := true;
+    signal video_hblank             : boolean := true;
+    signal video_vblank             : boolean := true;
     
     -------------------------------------------------------------------
     
@@ -519,10 +520,16 @@ begin
 
             if clock_12_phase(5) = '1' then
                 if std_match(video_address(5 downto 0), "11-1--") then
-                    video_blank <= true;
+                    video_hblank <= true;
                 elsif std_match(video_address(5 downto 0), "0---1-") then
-                    video_blank <= false;
+                    video_hblank <= false;
                 end if;
+                if std_match(video_address(13 downto 6), "11111---") then
+                    video_vblank <= true;
+                elsif std_match(video_address(13 downto 6), "00000000") then
+                    video_vblank <= false;
+                end if;
+
             end if;
 
             if clock_12_phase( 0) = '1' or
@@ -533,7 +540,7 @@ begin
                 ram_lower_enable <= true;
                 ram_upper_enable <= true;
 
-                if video_blank then
+                if video_hblank or video_vblank then
                     vgaRed <= (others => '0');
                     vgaGreen <= (others => '0');
                     vgaBlue <= (others => '0');
@@ -548,7 +555,7 @@ begin
                clock_12_phase( 5) = '1' or
                clock_12_phase( 9) = '1' then
                 pixel_nibbles <= memory_data_in;
-			end if;
+            end if;
             if clock_12_phase( 2) = '1' or
                clock_12_phase( 6) = '1' or
                clock_12_phase(10) = '1' then
@@ -556,7 +563,7 @@ begin
                 pixel_byte_l <= color_table(to_integer(unsigned(pixel_nibbles(3 downto 0))));
                 pixel_byte_h <= color_table(to_integer(unsigned(pixel_nibbles(7 downto 4))));
 
-                if video_blank then
+                if video_hblank or video_vblank then
                     vgaRed <= (others => '0');
                     vgaGreen <= (others => '0');
                     vgaBlue <= (others => '0');
@@ -743,7 +750,7 @@ begin
     blt: entity work.sc1
         port map(
             clk => clock,
-			sc2 => blitter_sc2,
+            sc2 => blitter_sc2,
 
             reg_cs => blt_reg_cs,
             reg_data_in => blt_reg_data_in,
