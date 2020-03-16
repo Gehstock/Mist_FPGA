@@ -61,7 +61,8 @@ begin
   ctl_o.tile_a(ctl_o.tile_a'left downto 15) <= (others => '0');
 
   -- tilemap scroll
-  x <= std_logic_vector(unsigned(video_ctl.x) - 256 + 128 + 8) when unsigned(y) < 6*8 and HWSEL = HW_KUNGFUM else
+  x <= std_logic_vector(unsigned(video_ctl.x) - 256 + 128 + 8) when unsigned(y) < 6*8 and hwsel = HW_KUNGFUM else
+       std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64 + 10) when hwsel = HW_LDRUN4 else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64 + 8) when hires = '1' else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 128 + 8);
   y <= std_logic_vector(unsigned(video_ctl.y) - 256 + unsigned(vscroll(8 downto 0)) + 128) when hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2 else
