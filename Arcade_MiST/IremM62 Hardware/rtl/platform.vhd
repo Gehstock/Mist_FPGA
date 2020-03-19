@@ -44,6 +44,7 @@ entity platform is
     sprite_i        : in from_SPRITE_CTL_t;
     sprite_o        : out to_SPRITE_CTL_t;
     spr0_hit        : in std_logic;
+    sprite_pri      : out std_logic;
     sprite_rgb      : out RGB_t;
 
     -- various graphics information
@@ -854,7 +855,6 @@ begin
                     hwsel = HW_LDRUN or
                     hwsel = HW_LDRUN2 or
                     hwsel = HW_LDRUN3 or
-                    hwsel = HW_LDRUN4 or
                     hwsel = HW_BATTROAD
                   else sprite_i.pal_a;
 
@@ -927,6 +927,36 @@ begin
       q_a         => sprite_rgb.b(9 downto 2)
     );
   sp_pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"2" else '0';  -- 200-2FF
+
+  -- sprite priority
+  -- B Board:
+  -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+  -- J2: selects whether bit 4 of obj color code goes to A7 of obj color PROMS 
+  -- G Board
+  -- JP1-4 - Tiles with color code >= the value set here have priority over sprites
+  -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+
+  process(hwsel, tilemap_i(1).pal_a, sprite_i.pal_a)
+    variable bg_trans: std_logic;
+  begin
+    sprite_pri <= '1';
+    bg_trans := '0';
+    if tilemap_i(1).pal_a(2 downto 0) = "000" then
+      bg_trans := '1';
+    end if;
+    if (hwsel = HW_YOUJYUDN or hwsel = HW_HORIZON) and tilemap_i(1).pal_a(7 downto 4) >= x"8" then
+      sprite_pri <= bg_trans;
+    end if;
+    if hwsel = HW_LDRUN and tilemap_i(1).pal_a(7 downto 4) >= x"c" then
+      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
+    end if;
+    if (hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and tilemap_i(1).pal_a(7 downto 4) >= x"4" then
+      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
+    end if;
+    if hwsel = HW_KIDNIKI and tilemap_i(1).tile_a(13 downto 11) = "111" then
+      sprite_pri <= bg_trans;
+    end if;
+  end process;
 
   -- unused outputs
 

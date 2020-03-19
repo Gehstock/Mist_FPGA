@@ -154,6 +154,7 @@ begin
              hwsel = HW_LOTLOT or
              hwsel = HW_LDRUN or
              hwsel = HW_LDRUN2 or
+             hwsel = HW_LDRUN3 or
              hwsel = HW_BATTROAD
           then
             flipx := attr_d_r(5);

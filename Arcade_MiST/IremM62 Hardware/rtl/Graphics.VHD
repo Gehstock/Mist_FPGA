@@ -28,6 +28,7 @@ entity Graphics is
     sprite_ctl_i    : in to_SPRITE_CTL_t;
     sprite_ctl_o    : out from_SPRITE_CTL_t;
     spr0_hit        : out std_logic;
+    sprite_pri      : in std_logic;
     sprite_rgb      : in RGB_t;
 
     graphics_i      : in to_GRAPHICS_t;
@@ -47,8 +48,6 @@ architecture SYN of Graphics is
   signal bitmap_ctl_o_s   : from_BITMAP_CTL_a(1 to PACE_VIDEO_NUM_BITMAPS);
   signal tilemap_ctl_o_s  : from_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
   signal sprite_ctl_o_s   : from_SPRITE_CTL_t;
-  signal sprite_pri       : std_logic;
-
 
   signal rgb_data         : RGB_t;
   -- before OSD is mixed in
@@ -229,7 +228,6 @@ begin
 
   GEN_NO_SPRITES : if PACE_VIDEO_NUM_SPRITES = 0 generate
     sprite_ctl_o_s <= ((others => '0'), '0', (others => '0'));
-    sprite_pri <= '0';
     spr0_hit <= '0';
   end generate GEN_NO_SPRITES;
 
@@ -261,7 +259,6 @@ begin
 
         pal_a         => sprite_ctl_o_s.pal_a,
         set           => sprite_ctl_o_s.set,
-        pri           => sprite_pri,
         spr0_set      => spr0_hit
       );
 

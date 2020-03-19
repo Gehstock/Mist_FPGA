@@ -74,6 +74,7 @@ architecture SYN of PACE is
   signal to_sprite_ctl2   : to_SPRITE_CTL_t;
   signal from_sprite_ctl  : from_SPRITE_CTL_t;
   signal spr0_hit         : std_logic;
+  signal sprite_pri       : std_logic;
 
   signal to_graphics      : to_GRAPHICS_t;
   signal from_graphics    : from_GRAPHICS_t;
@@ -132,6 +133,7 @@ begin
       sprite_o        => to_sprite_ctl,
       spr0_hit        => spr0_hit,
       sprite_rgb      => sprite_rgb,
+      sprite_pri      => sprite_pri,
       graphics_i      => from_graphics,
       graphics_o      => to_graphics,
 
@@ -173,6 +175,7 @@ begin
       sprite_ctl_i    => to_sprite_ctl,
       sprite_ctl_o    => from_sprite_ctl,
       spr0_hit        => spr0_hit,
+      sprite_pri      => sprite_pri,
       sprite_rgb      => sprite_rgb,
       
       graphics_i      => to_graphics,
