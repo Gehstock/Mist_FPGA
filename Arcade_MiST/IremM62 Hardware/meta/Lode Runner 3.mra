@@ -4,6 +4,11 @@
     <setname>ldrun3</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="8,9"   name="Timer" ids="Slow,Medium,Fast,Fastest"/>
+        <dip bits="10,11" name="Lives" ids="3,2,4,5"/>
+    </switches>
     <rom index="1"><part>2</part></rom>
     <rom index="0" zip="ldrun3.zip" md5="a32c8e0a4927c70199174dea1600e761" type="merged|nonmerged">
       <!-- CPU1, 128k -->

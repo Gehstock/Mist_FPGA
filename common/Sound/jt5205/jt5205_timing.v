@@ -41,12 +41,12 @@ end
 
 always @(posedge clk) begin
 
-    if (lim == 1) begin
-      cnt <= 1'b0;
+    if (sel == 2'd3) begin
+      cnt <= 7'd0;
       vclk_o <= 1'b0;
     end
     if(cen) begin
-        if (lim != 1) cnt <= cnt + 7'd1;
+        if (sel != 2'd3) cnt <= cnt + 7'd1;
 
         pre    <= 1'b0;
         preb   <= 1'b0;

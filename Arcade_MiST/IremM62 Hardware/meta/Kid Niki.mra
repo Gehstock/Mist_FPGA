@@ -4,6 +4,12 @@
     <setname>kidniki</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="8,9" name="Lives"      ids="3,2,4,5"/>
+        <dip bits="10"  name="Difficulty" ids="Normal,Hard"/>
+        <dip bits="11"  name="Bonus Life" ids="50000,80000"/>
+    </switches>
     <rom index="1"><part>7</part></rom>
     <rom index="0" zip="kidniki.zip" md5="63cf7764a51bae694ce95dfe518a96f3" type="merged|nonmerged">
       <!-- CPU1, 128k -->

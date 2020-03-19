@@ -61,9 +61,6 @@ architecture SYN of PACE is
 
   alias clk_sys         : std_logic is clkrst_i.clk(0);
 
-  constant CLK_1US_COUNTS : integer := 
-    integer(27 * PACE_CLK0_MULTIPLY_BY / PACE_CLK0_DIVIDE_BY);
-
   signal mapped_inputs    : from_MAPPED_INPUTS_t(0 to PACE_INPUTS_NUM_BYTES-1);
 
   signal to_tilemap_ctl   : to_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
@@ -77,6 +74,7 @@ architecture SYN of PACE is
   signal to_sprite_ctl2   : to_SPRITE_CTL_t;
   signal from_sprite_ctl  : from_SPRITE_CTL_t;
   signal spr0_hit         : std_logic;
+  signal sprite_pri       : std_logic;
 
   signal to_graphics      : to_GRAPHICS_t;
   signal from_graphics    : from_GRAPHICS_t;
@@ -90,8 +88,7 @@ begin
     generic map
     (
       NUM_DIPS        => PACE_NUM_SWITCHES,
-      NUM_INPUTS      => PACE_INPUTS_NUM_BYTES,
-      CLK_1US_DIV     => CLK_1US_COUNTS
+      NUM_INPUTS      => PACE_INPUTS_NUM_BYTES
     )
     port map
     (
@@ -136,6 +133,7 @@ begin
       sprite_o        => to_sprite_ctl,
       spr0_hit        => spr0_hit,
       sprite_rgb      => sprite_rgb,
+      sprite_pri      => sprite_pri,
       graphics_i      => from_graphics,
       graphics_o      => to_graphics,
 
@@ -177,6 +175,7 @@ begin
       sprite_ctl_i    => to_sprite_ctl,
       sprite_ctl_o    => from_sprite_ctl,
       spr0_hit        => spr0_hit,
+      sprite_pri      => sprite_pri,
       sprite_rgb      => sprite_rgb,
       
       graphics_i      => to_graphics,

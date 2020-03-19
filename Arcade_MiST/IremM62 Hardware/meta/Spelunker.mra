@@ -4,6 +4,11 @@
     <setname>spelunkr</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="8,9"   name="Energy Decrease" ids="Slow,Medium,Fast,Fastest"/>
+        <dip bits="10,11" name="Lives" ids="3,2,4,5"/>
+    </switches>
     <rom index="1"><part>9</part></rom>
     <rom index="0" zip="spelunkr.zip" md5="ec64e30638077a75ff9f6698494057fc" type="merged|nonmerged">
       <!-- CPU1, 128k -->

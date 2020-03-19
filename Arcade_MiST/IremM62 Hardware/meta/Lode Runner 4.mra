@@ -4,6 +4,13 @@
     <setname>ldrun4</setname>
     <manufacturer>Irem</manufacturer>
     <rbf>iremm62</rbf>
+    <switches>
+        <!-- DSW1 -->
+        <dip bits="6"     name="Joystick Swap"  ids="Off,On"/>
+        <dip bits="8"     name="Timer"          ids="Slow,Fast"/>
+        <dip bits="9"     name="2 Players"      ids="2 Credits, 1 Credit"/>
+        <dip bits="10,11" name="1 Player Lives" ids="3,2,4,5"/>
+    </switches>
     <rom index="1"><part>3</part></rom>
     <rom index="0" zip="ldrun4.zip" md5="cd633975a81980cefe104543024cc7ee" type="merged|nonmerged">
       <!-- CPU1, 128k -->

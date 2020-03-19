@@ -76,6 +76,7 @@ set_location_assignment PIN_88 -to SPI_DI
 set_location_assignment PIN_126 -to SPI_SCK
 set_location_assignment PIN_127 -to SPI_SS2
 set_location_assignment PIN_91 -to SPI_SS3
+set_location_assignment PIN_90 -to SPI_SS4
 set_location_assignment PIN_13 -to CONF_DATA0
 set_location_assignment PIN_49 -to SDRAM_A[0]
 set_location_assignment PIN_44 -to SDRAM_A[1]
@@ -260,12 +261,11 @@ set_global_assignment -name VHDL_FILE rtl/input_mapper.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/clk_div.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
-set_global_assignment -name QIP_FILE rtl/jt5205/jt5205.qip
 set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
+set_global_assignment -name QIP_FILE ../../common/Sound/jt5205/jt5205.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd

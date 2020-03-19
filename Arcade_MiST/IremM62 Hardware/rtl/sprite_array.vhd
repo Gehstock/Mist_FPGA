@@ -41,7 +41,7 @@ entity sprite_array is
     -- video data
     pal_a       : out std_logic_vector(7 downto 0);
     set         : out std_logic;
-    pri         : out std_logic;
+    --pri         : out std_logic;
     spr0_set    : out std_logic
 );
 end entity sprite_array;
@@ -141,7 +141,7 @@ begin
       end loop;
     end if;
     set <= spr_on_v;
-    pri <= spr_pri_v;
+    --pri <= spr_pri_v;
   end process;
 
   -- for NES, and perhaps others

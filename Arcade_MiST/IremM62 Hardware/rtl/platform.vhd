@@ -44,6 +44,7 @@ entity platform is
     sprite_i        : in from_SPRITE_CTL_t;
     sprite_o        : out to_SPRITE_CTL_t;
     spr0_hit        : in std_logic;
+    sprite_pri      : out std_logic;
     sprite_rgb      : out RGB_t;
 
     -- various graphics information
@@ -555,12 +556,6 @@ begin
 
 
   BLK_GFX_ROMS : block
-  
-    type gfx_rom_d_a is array(M62_CHAR_ROM'range) of std_logic_vector(7 downto 0);
-    signal chr_rom_d      : gfx_rom_d_a;
-    type spr_rom_d_a is array(0 to 11) of std_logic_vector(7 downto 0);
-    signal spr_rom        : spr_rom_d_a;
-    
   begin
 
     -- external background ROMs
@@ -574,63 +569,9 @@ begin
 
     tilemap_o(2).tile_d(23 downto 0) <= gfx3_do(7 downto 0) & gfx3_do(15 downto 8) & gfx3_do(23 downto 16);
 
-    -- internal background ROMs
---    GEN_CHAR_ROMS : for i in M62_CHAR_ROM'range generate
---      char_rom_inst : entity work.sprom
---        generic map
---        (
---          init_file  => "./roms/" &
---                          M62_CHAR_ROM(i) & ".hex",
---          widthad_a  => 13
---        )
---        port map
---        (
---          clock      => clk_video,
---          address    => tilemap_i(1).tile_a(12 downto 0),
---          q          => chr_rom_d(i)
---        );
---    end generate GEN_CHAR_ROMS;
---
---    tilemap_o(1).tile_d(23 downto 0) <= chr_rom_d(0) & chr_rom_d(1) & chr_rom_d(2);
-
     -- external sprite ROMs
     gfx2_addr <= sprite_i.a(15 downto 0);
     sprite_o.d(23 downto 0) <= gfx2_do(7 downto 0) & gfx2_do(15 downto 8) & gfx2_do(23 downto 16);
-
-    -- internal sprite ROMs
---    GEN_SPRITE_ROMS : for i in M62_SPRITE_ROM'range generate
---      sprite_rom_inst : entity work.sprom
---        generic map
---        (
---          init_file  => "./roms/" &
---                          M62_SPRITE_ROM(i) & ".hex",
---          widthad_a  => 13
---        )
---        port map
---        (
---          clock                 => clk_video,
---          address(12 downto 5)  => sprite_i.a(12 downto 5),
---          address(4 downto 0)   => sprite_i.a(4 downto 0),
---          q                     => spr_rom(i)
---        );
---    end generate GEN_SPRITE_ROMS;
---
---    sprite_o.d(sprite_o.d'left downto 24) <= (others => '0');
---    sprite_o.d(23 downto 0) <=  spr_rom(0) & 
---                                spr_rom(1) &
---                                spr_rom(2)
---                                  when sprite_i.a(14 downto 13) = "00" else
---                                spr_rom(3) &
---                                spr_rom(4) &
---                                spr_rom(5) 
---                                  when sprite_i.a(14 downto 13) = "01" else
---                                spr_rom(6) &
---                                spr_rom(7) &
---                                spr_rom(8)
---                                  when sprite_i.a(14 downto 13) = "10" else
---                                spr_rom(9) &
---                                spr_rom(10) &
---                                spr_rom(11);
 
   end block BLK_GFX_ROMS;
 
@@ -914,7 +855,6 @@ begin
                     hwsel = HW_LDRUN or
                     hwsel = HW_LDRUN2 or
                     hwsel = HW_LDRUN3 or
-                    hwsel = HW_LDRUN4 or
                     hwsel = HW_BATTROAD
                   else sprite_i.pal_a;
 
@@ -987,6 +927,36 @@ begin
       q_a         => sprite_rgb.b(9 downto 2)
     );
   sp_pal_b_wr <= '1' when dl_wr = '1' and dl_addr(11 downto 8) = x"2" else '0';  -- 200-2FF
+
+  -- sprite priority
+  -- B Board:
+  -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+  -- J2: selects whether bit 4 of obj color code goes to A7 of obj color PROMS 
+  -- G Board
+  -- JP1-4 - Tiles with color code >= the value set here have priority over sprites
+  -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+
+  process(hwsel, tilemap_i(1).pal_a, sprite_i.pal_a)
+    variable bg_trans: std_logic;
+  begin
+    sprite_pri <= '1';
+    bg_trans := '0';
+    if tilemap_i(1).pal_a(2 downto 0) = "000" then
+      bg_trans := '1';
+    end if;
+    if (hwsel = HW_YOUJYUDN or hwsel = HW_HORIZON) and tilemap_i(1).pal_a(7 downto 4) >= x"8" then
+      sprite_pri <= bg_trans;
+    end if;
+    if hwsel = HW_LDRUN and tilemap_i(1).pal_a(7 downto 4) >= x"c" then
+      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
+    end if;
+    if (hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and tilemap_i(1).pal_a(7 downto 4) >= x"4" then
+      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
+    end if;
+    if hwsel = HW_KIDNIKI and tilemap_i(1).tile_a(13 downto 11) = "111" then
+      sprite_pri <= bg_trans;
+    end if;
+  end process;
 
   -- unused outputs
 

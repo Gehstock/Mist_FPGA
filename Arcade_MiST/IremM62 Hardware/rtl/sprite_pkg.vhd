@@ -80,7 +80,6 @@ package sprite_pkg is
       -- video data
       pal_a       : out std_logic_vector(7 downto 0);
       set         : out std_logic;
-      pri         : out std_logic;
       spr0_set    : out std_logic
     );
   end component sprite_array;

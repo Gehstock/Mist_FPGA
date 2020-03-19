@@ -8,10 +8,11 @@ module IremM62_MiST(
 	output        AUDIO_L,
 	output        AUDIO_R,
 	input         SPI_SCK,
-	output        SPI_DO,
+	inout         SPI_DO,
 	input         SPI_DI,
 	input         SPI_SS2,
 	input         SPI_SS3,
+	input         SPI_SS4,
 	input         CONF_DATA0,
 	input         CLOCK_27,
 
@@ -39,7 +40,8 @@ localparam CONF_STR = {
 	"O1,Video Timings,Original,PAL 50Hz;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
-	"O6,Service,Off,On;",
+	"DIP;",
+	"O7,Service,Off,On;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -48,31 +50,21 @@ wire       palmode   = status[1];
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
-wire       service   = status[6];
+wire       service   = status[7];
+wire       joyswap   = status[6];
 
 reg  [1:0] orientation = 2'b10;
+reg        oneplayer;
+wire [7:0] DSW1 = {/*coinage*/4'hf, ~status[11:8]};
 
 always @(*) begin
   orientation = 2'b10;
+  oneplayer = 1;
+
   case (core_mod)
-  7'h0: ;// LDRUN
-  7'h1: ;// LDRUN2
-  7'h2: ;// LDRUN3
-  7'h3: ;// LDRUN4
-  7'h4: ;// KUNGFUM
-  7'h5: ;// HORIZON
-  7'h6: // BATTROAD
-  begin
-    orientation = 2'b11;
-  end
-  7'h7: ;// KIDNIKI
-  7'h8: ;// LOTLOT
-  7'h9: ;// SPELUNKR
-  7'hA: ;// SPELUNK2
-  7'hB: // YOUJYUDN
-  begin
-    orientation = 2'b01;
-  end
+  7'h3: oneplayer = 0; // LDRUN4
+  7'h6: orientation = 2'b11; // BATTROAD
+  7'hB: orientation = 2'b01; // YOUJYUDN
   default: ;
   endcase
 end
@@ -106,7 +98,8 @@ wire  [7:0] key_code;
 wire        key_strobe;
 
 user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
+	.STRLEN(($size(CONF_STR)>>3)),
+	.ROM_DIRECT_UPLOAD(1'b1))
 user_io(
 	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
@@ -162,11 +155,13 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
-data_io data_io(
+data_io #(.ROM_DIRECT_UPLOAD(1'b1)) data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_SS4       ( SPI_SS4      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
@@ -262,6 +257,7 @@ target_top target_top(
 	.hwsel(core_mod),
 	.palmode(palmode),
 	.audio_out(audio),
+	.switches_i(DSW1),
 	.usr_coin1(m_coin1),
 	.usr_coin2(m_coin2),
 	.usr_service(service),
@@ -317,7 +313,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( { 1'b1, rotate } ),
+	.rotate         ( { orientation[1], rotate } ),
 	.ce_divider     ( 1'b1             ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
@@ -352,8 +348,8 @@ arcade_inputs inputs (
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
 	.orientation ( orientation ),
-	.joyswap     ( 1'b0        ),
-	.oneplayer   ( 1'b1        ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( oneplayer   ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
