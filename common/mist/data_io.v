@@ -34,10 +34,12 @@ module data_io
 
 	// ARM -> FPGA download
 	output reg        ioctl_download = 0, // signal indicating an active download
-	output reg  [7:0] ioctl_index,        // menu index used to upload the file
+	output reg  [7:0] ioctl_index,        // menu index used to upload the file ([7:6] - extension index, [5:0] - menu index)
 	output reg        ioctl_wr,           // strobe indicating ioctl_dout valid
 	output reg [24:0] ioctl_addr,
-	output reg  [7:0] ioctl_dout
+	output reg  [7:0] ioctl_dout,
+	output reg [23:0] ioctl_fileext,      // file extension
+	output reg [31:0] ioctl_filesize      // file size
 );
 
 parameter START_ADDR = 25'd0;
@@ -50,23 +52,26 @@ reg  [7:0] data_w2  = 0;
 reg        rclk   = 0;
 reg        rclk2  = 0;
 reg        addr_reset = 0;
-
 reg        downloading_reg = 0;
 reg  [7:0] index_reg = 0;
 
 localparam DIO_FILE_TX      = 8'h53;
 localparam DIO_FILE_TX_DAT  = 8'h54;
 localparam DIO_FILE_INDEX   = 8'h55;
+localparam DIO_FILE_INFO    = 8'h56;
 
 // data_io has its own SPI interface to the io controller
-always@(posedge SPI_SCK, posedge SPI_SS2) begin
+always@(posedge SPI_SCK, posedge SPI_SS2) begin : SPI_RECEIVER
 	reg  [6:0] sbuf;
 	reg  [7:0] cmd;
 	reg  [3:0] cnt;
+	reg  [5:0] bytecnt;
 	reg [24:0] addr;
 
-	if(SPI_SS2) cnt <= 0;
-	else begin
+	if(SPI_SS2) begin
+		bytecnt <= 0;
+		cnt <= 0;
+	end	else begin
 		// don't shift in last bit. It is evaluated directly
 		// when writing to ram
 		if(cnt != 15) sbuf <= { sbuf[5:0], SPI_DI};
@@ -97,14 +102,27 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
 
 		// expose file (menu) index
 		if((cmd == DIO_FILE_INDEX) && (cnt == 15)) index_reg <= {sbuf, SPI_DI};
+
+		// receiving FAT directory entry (mist-firmware/fat.h - DIRENTRY)
+		if((cmd == DIO_FILE_INFO) && (cnt == 15)) begin
+			bytecnt <= bytecnt + 1'd1;
+			case (bytecnt)
+				8'h08: ioctl_fileext[23:16]  <= {sbuf, SPI_DI};
+				8'h09: ioctl_fileext[15: 8]  <= {sbuf, SPI_DI};
+				8'h0A: ioctl_fileext[ 7: 0]  <= {sbuf, SPI_DI};
+				8'h1C: ioctl_filesize[ 7: 0] <= {sbuf, SPI_DI};
+				8'h1D: ioctl_filesize[15: 8] <= {sbuf, SPI_DI};
+				8'h1E: ioctl_filesize[23:16] <= {sbuf, SPI_DI};
+				8'h1F: ioctl_filesize[31:24] <= {sbuf, SPI_DI};
+			endcase
+		end
 	end
 end
-
 
 // direct SD Card->FPGA transfer
 generate if (ROM_DIRECT_UPLOAD == 1) begin
 
-always@(posedge SPI_SCK, posedge SPI_SS4) begin
+always@(posedge SPI_SCK, posedge SPI_SS4) begin : SPI_DIRECT_RECEIVER
 	reg  [6:0] sbuf2;
 	reg  [2:0] cnt2;
 	reg  [9:0] bytecnt;
@@ -137,13 +155,14 @@ end
 end
 endgenerate
 
-always@(posedge clk_sys) begin
+always@(posedge clk_sys) begin : DATA_OUT
 	// bring flags from spi clock domain into core clock domain
 	reg rclkD, rclkD2;
 	reg rclk2D, rclk2D2;
 	reg addr_resetD, addr_resetD2;
 	reg wr_int, wr_int_direct;
 	reg [24:0] addr;
+	reg [31:0] filepos;
 
 	{ rclkD, rclkD2 } <= { rclk, rclkD };
 	{ rclk2D ,rclk2D2 } <= { rclk2, rclk2D };
@@ -151,7 +170,7 @@ always@(posedge clk_sys) begin
 
 	ioctl_wr <= 0;
 
-	ioctl_download <= downloading_reg;
+	if (!downloading_reg) ioctl_download <= 0;
 
 	if (~clkref_n) begin
 		wr_int <= 0;
@@ -167,12 +186,17 @@ always@(posedge clk_sys) begin
 	// detect transfer start from the SPI receiver
 	if(addr_resetD ^ addr_resetD2) begin
 		addr <= START_ADDR;
+		filepos <= 0;
 		ioctl_index <= index_reg;
+		ioctl_download <= 1;
 	end
 
 	// detect new byte from the SPI receiver
 	if (rclkD ^ rclkD2)   wr_int <= 1;
-	if (rclk2D ^ rclk2D2) wr_int_direct <= 1;
+	if (rclk2D ^ rclk2D2 && filepos != ioctl_filesize) begin
+		filepos <= filepos + 1'd1;
+		wr_int_direct <= 1;
+	end
 end
 
 endmodule
