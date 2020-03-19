@@ -8,10 +8,11 @@ module IremM62_MiST(
 	output        AUDIO_L,
 	output        AUDIO_R,
 	input         SPI_SCK,
-	output        SPI_DO,
+	inout         SPI_DO,
 	input         SPI_DI,
 	input         SPI_SS2,
 	input         SPI_SS3,
+	input         SPI_SS4,
 	input         CONF_DATA0,
 	input         CLOCK_27,
 
@@ -97,7 +98,8 @@ wire  [7:0] key_code;
 wire        key_strobe;
 
 user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
+	.STRLEN(($size(CONF_STR)>>3)),
+	.ROM_DIRECT_UPLOAD(1'b1))
 user_io(
 	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
@@ -153,11 +155,13 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
-data_io data_io(
+data_io #(.ROM_DIRECT_UPLOAD(1'b1)) data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_SS4       ( SPI_SS4      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
