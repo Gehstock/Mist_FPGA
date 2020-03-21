@@ -1,3 +1,38 @@
+/***************************************************************************
+Son Son memory map (preliminary)
+driver by Mirko Buffoni
+MAIN CPU:
+0000-0fff RAM
+1000-13ff Video RAM
+1400-17ff Color RAM
+2020-207f Sprites
+4000-ffff ROM
+read:
+3002      IN0
+3003      IN1
+3004      IN2
+3005      DSW0
+3006      DSW1
+write:
+3000      horizontal scroll
+3008      watchdog reset
+3018      flipscreen (inverted)
+3010      command for the audio CPU
+3019      trigger FIRQ on audio CPU
+SOUND CPU:
+0000-07ff RAM
+e000-ffff ROM
+read:
+a000      command from the main CPU
+write:
+2000      8910 #1 control
+2001      8910 #1 write
+4000      8910 #2 control
+4001      8910 #2 write
+TODO:
+- Fix Service Mode Output Test: press p1/p2 shot to insert coin
+- Flip Screen DIP is noted in service manual and added to DIP LOCATIONS, but not working.
+***************************************************************************/
 module SonSon_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
@@ -51,15 +86,15 @@ wire       test   = status[8];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CKE = 1; 
-
-wire clk_sys, clk_vid;
+assign SDRAM_CLK = clk_sd;
+wire clk_sys, clk_vid, clk_sd;
 wire pll_locked;
-pll_mist pll(
+pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),//20
 	.c1(clk_vid),//40
-	.c2(SDRAM_CLK),
+	.c2(clk_sd),
 	.locked(pll_locked)
 	);
 
@@ -105,9 +140,6 @@ wire [12:0] tile_rom_addr;
 //wire [12:0] tile_addr;
 wire [15:0] tile_do;
 
-wire [14:0] sp_addr; //todo
-wire [31:0] sp_do; //todo
-
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
@@ -115,7 +147,7 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 data_io data_io(
-	.clk_sys       ( clk_sys      ),
+	.clk_sys       ( clk_sd      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -126,13 +158,11 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h10000; //todo
-
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( SDRAM_CLK      ),
+	.clk           ( clk_sd      ),
 
 	// port1 used for main + sound CPU
 	.port1_req     ( port1_req    ),
@@ -145,20 +175,17 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu_rom_addr[15:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h6000 + tile_rom_addr[12:1]) ),
-	.cpu2_q        ( tile_do ),
+	.snd_addr     ( ioctl_downl ? 16'hffff : (16'h6000 + tile_rom_addr[12:1]) ),
+	.snd_q        ( tile_do ),
 
 	// port2 for sprite graphics
-	.port2_req     ( port2_req ),
+	.port2_req     ( ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[23:1]} ),
-	.port2_ds      ( {sp_ioctl_addr[0], ~sp_ioctl_addr[0]} ),
-	.port2_we      ( ioctl_downl ),
-	.port2_d       ( {ioctl_dout, ioctl_dout} ),
-	.port2_q       ( ),
-
-	.sp_addr       ( ioctl_downl ? 15'h7fff : sp_addr ),
-	.sp_q          ( sp_do )
+	.port2_a       ( ),
+	.port2_ds      ( ),
+	.port2_we      ( ),
+	.port2_d       ( ),
+	.port2_q       ( )
 );
 
 // ROM download controller
@@ -209,12 +236,11 @@ target_top target_top(
 	.vid_r(r),
 	.vid_g(g),
 	.vid_b(b),
-		
 	.inputs_p1(~{2'b00,m_down,m_up,m_right,m_left,1'b0,m_fireC}),
-   .inputs_p2(~{2'b00,m_down2,m_up2,m_right2,m_left2,1'b0,m_fire2C}),
-   .inputs_sys(~{2'b00,m_coin2,m_coin1,2'b00,m_two_players,m_one_player}),
-   .inputs_dip1(~{flip,test,"011111"}),
-   .inputs_dip2(~{freeze,"1111111"}),
+	.inputs_p2(~{2'b00,m_down2,m_up2,m_right2,m_left2,1'b0,m_fire2C}),
+	.inputs_sys(~{2'b00,m_coin2,m_coin1,2'b00,m_two_players,m_one_player}),
+	.inputs_dip1(~{flip,test,"011111"}),
+	.inputs_dip2(~{freeze,"1111111"}),
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_addr[0] ? rom_do[15:8] : rom_do[7:0]),
 	.tile_rom_addr(tile_rom_addr),

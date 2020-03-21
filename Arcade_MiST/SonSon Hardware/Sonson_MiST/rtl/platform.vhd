@@ -388,7 +388,7 @@ begin
       widthad_a		=> 13
     )
     port map
-    (
+   (
       clock			=> clk_video,
       address		=> tilemap_i(1).tile_a(12 downto 0),
       q					=> tilemap_o(1).tile_d(7 downto 0)
@@ -398,18 +398,18 @@ begin
  -- ss_8_b5_inst : entity work.sprom
   --  generic map
   --  (
-  --   init_file		=> "./roms/ss_8_b5.hex",
+  ---   init_file		=> "./roms/ss_8_b5.hex",
   --    widthad_a		=> 13
-  --  )
-  --  port map
-  --  (
-  --    clock			=> clk_video,
-  --    address		=> tilemap_i(1).tile_a(12 downto 0),
-   --  q					=> tilemap_o(1).tile_d(15 downto 8)
-   -- );
+ --   )
+ --   port map
+ --   (
+ --     clock			=> clk_video,
+ --     address		=> tilemap_i(1).tile_a(12 downto 0),
+ --    q					=> tilemap_o(1).tile_d(15 downto 8)
+ --   );
 
 --tile_rom_addr <= tilemap_i(1).tile_a(12 downto 0);
---tilemap_o(1).tile_d(15 downto 0) <= tile_rom_do(15 downto 0);
+--tilemap_o(1).tile_d(15 downto 0) <= tile_rom_do;
 
   BLK_SPRITES : block---will not fit in FPGA Block Ram
     signal bit0_1       : std_logic_vector(7 downto 0);   -- offset 0
