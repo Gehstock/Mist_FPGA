@@ -1,6 +1,6 @@
-
 build_id.v
 db
+history.db
 greybox_tmp
 incremental_db
 output_files
