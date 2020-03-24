@@ -8,35 +8,24 @@ use work.video_controller_pkg.all;
 
 package platform_pkg is
 
-	constant PACE_HAS_PLL								      : boolean := true; 
-
   constant PACE_VIDEO_CONTROLLER_TYPE       	: PACEVideoController_t := PACE_VIDEO_VGA_800x600_60Hz; --40
   constant PACE_CLK0_DIVIDE_BY              	: natural := 27;
-  constant PACE_CLK0_MULTIPLY_BY            	: natural := 20;  -- 20MHz
+  constant PACE_CLK0_MULTIPLY_BY            	: natural := 24;  -- 20MHz
   constant PACE_CLK1_DIVIDE_BY        		  	: natural := 27;
-  constant PACE_CLK1_MULTIPLY_BY      		  	: natural := 40;  -- 40MHz
-	constant PACE_VIDEO_H_SCALE         	  	: integer := 2;
-	constant PACE_VIDEO_V_SCALE         		: integer := 2;
-  constant PACE_VIDEO_H_SYNC_POLARITY       	: std_logic := '1';
-  constant PACE_VIDEO_V_SYNC_POLARITY       	: std_logic := '1';
+  constant PACE_CLK1_MULTIPLY_BY      		  	: natural := 6;  -- 40MHz
 
-  
   constant PACE_VIDEO_BORDER_RGB            	: RGB_t := RGB_BLACK;
 
-	constant PACE_VIDEO_NUM_BITMAPS 	    		: natural := 0;
-	constant PACE_VIDEO_NUM_TILEMAPS 	    	: natural := 1;
-	constant PACE_VIDEO_NUM_SPRITES 	    		: natural := 24;
-	constant PACE_VIDEO_H_SIZE				    	: integer := 256;   -- 240
-	constant PACE_VIDEO_V_SIZE				    	: integer := 256;   -- 240
-  constant PACE_VIDEO_L_CROP            		: integer := (256-240)/2;
-  constant PACE_VIDEO_R_CROP            		: integer := PACE_VIDEO_L_CROP;
-	constant PACE_VIDEO_PIPELINE_DELAY    		: integer := 3;
-	
-	constant PACE_INPUTS_NUM_BYTES        		: integer := 4;
-		
-	--
-	-- Platform-specific constants (optional)
-	--
+  constant PACE_VIDEO_NUM_BITMAPS 	    		: natural := 0;
+  constant PACE_VIDEO_NUM_TILEMAPS 	    	: natural := 1;
+  constant PACE_VIDEO_NUM_SPRITES 	    		: natural := 24;
+  constant PACE_VIDEO_PIPELINE_DELAY    		: integer := 3;
+
+  constant PACE_INPUTS_NUM_BYTES        		: integer := 4;
+
+  --
+  -- Platform-specific constants (optional)
+  --
 
 	constant CLK0_FREQ_MHz			          : natural := 
     27 * PACE_CLK0_MULTIPLY_BY / PACE_CLK0_DIVIDE_BY;

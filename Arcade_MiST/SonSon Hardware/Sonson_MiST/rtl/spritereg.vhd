@@ -26,7 +26,7 @@ architecture SYN of sptReg is
 
 begin
 
-	process (clk)
+	process (clk, reg_i)
     variable i : integer range 0 to 31;
 	begin
     -- sprite registers $2020-$207F, 4 bytes per sprite

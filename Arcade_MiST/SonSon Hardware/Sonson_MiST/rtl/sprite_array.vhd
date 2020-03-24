@@ -73,12 +73,12 @@ begin
 			i := 0;
 		elsif rising_edge(clk) and clk_ena = '1' then
 			ld_r <= ld_r(ld_r'left-1 downto 0) & ld_r(ld_r'left);
+      row_a <= ctl_o(i).a;
 			if i = N_SPRITES-1 then
 			  i := 0;
 			else
 			  i := i + 1;
 			end if;
-      row_a <= ctl_o(i).a;
 		end if;
 	end process;
 

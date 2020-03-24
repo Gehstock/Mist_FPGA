@@ -55,34 +55,35 @@ begin
   	if rising_edge(clk) then
       if clk_ena = '1' then
 
-        -- video is clipped left and right (only 224 wide)
+        -- don't scroll the fist 5 lines
         if unsigned(y) < 40 then
           x_adj := unsigned(x);
           else
           x_adj := unsigned(x) + unsigned(scroll);
         end if;
-        
+
         -- 1st stage of pipeline
         -- - read tile from tilemap
         -- - read attribute data
         if stb = '1' then
-          ctl_o.map_a(4 downto 0) <= std_logic_vector(x_adj(7 downto 3));
-          ctl_o.attr_a(4 downto 0) <= std_logic_vector(x_adj(7 downto 3));
+          if x_adj(2 downto 0) = "000" then
+            ctl_o.map_a(4 downto 0) <= std_logic_vector(x_adj(7 downto 3));
+            ctl_o.attr_a(4 downto 0) <= std_logic_vector(x_adj(7 downto 3));
+          end if;
         end if;
-        
+
         -- 2nd stage of pipeline
         -- - read tile data from tile ROM
         if stb = '1' then
-          if x_adj(2 downto 0) = "001" then
-            attr_d_r := ctl_i.attr_d(attr_d_r'range);
-            --map_d_r := ctl_i.map_d(map_d_r'range);
+          if x_adj(2 downto 0) = "010" then
+						ctl_o.tile_a(12 downto 11) <= ctl_i.attr_d(1 downto 0);
+						ctl_o.tile_a(10 downto 3) <= ctl_i.map_d(7 downto 0);
           end if;
         end if;
-        ctl_o.tile_a(12 downto 11) <= attr_d_r(1 downto 0);
-        ctl_o.tile_a(10 downto 3) <= ctl_i.map_d(7 downto 0);
 
         if stb = '1' then
-          if x_adj(2 downto 0) = "010" then
+          if x_adj(2 downto 0) = "111" then
+            attr_d_r := ctl_i.attr_d(attr_d_r'range);
             tile_d_r := ctl_i.tile_d(tile_d_r'range);
           else
             tile_d_r(15 downto 8) := tile_d_r(14 downto 8) & '0';

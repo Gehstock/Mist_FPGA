@@ -13,7 +13,7 @@ entity PACE is
   (
   	-- clocks and resets
     clkrst_i        : in from_CLKRST_t;
-	 vma					: out std_logic;
+
     -- controller inputs
     inputs_p1			: in std_logic_vector(7 downto 0);
     inputs_p2			: in std_logic_vector(7 downto 0);
@@ -29,10 +29,12 @@ entity PACE is
     audio_o         : out to_AUDIO_t;
     platform_i      : in from_PLATFORM_IO_t;
     platform_o      : out to_PLATFORM_IO_t;
-	 cpu_rom_addr		: out std_logic_vector(15 downto 0);
-	 cpu_rom_do			: in std_logic_vector(7 downto 0);
-	 tile_rom_addr		: out std_logic_vector(12 downto 0);
-	 tile_rom_do		: in std_logic_vector(15 downto 0)
+    cpu_rom_addr		: out std_logic_vector(15 downto 0);
+    cpu_rom_do			: in std_logic_vector(7 downto 0);
+    tile_rom_addr		: out std_logic_vector(12 downto 0);
+    tile_rom_do		: in std_logic_vector(15 downto 0);
+    snd_rom_addr : out std_logic_vector(12 downto 0);
+    snd_rom_do   : in std_logic_vector(7 downto 0)
   );
 end entity PACE;
 
@@ -54,50 +56,53 @@ architecture SYN of PACE is
 
   signal to_graphics      : to_GRAPHICS_t;
 	signal from_graphics    : from_GRAPHICS_t;
-	
-	signal to_sound         : to_SOUND_t;
-	signal from_sound       : from_sound_t;
+
+  signal snd_irq          : std_logic;
+  signal snd_data         : std_logic_vector(7 downto 0);
+
+  signal video_out        : to_VIDEO_t;
 
 begin
 
+  video_o <= video_out;
 
   platform_inst : entity work.platform
     port map
     (
       -- clocking and reset
       clkrst_i        => clkrst_i,
-		vma				 => vma,
       -- controller inputs
-    inputs_p1       => inputs_p1, 
-    inputs_p2       => inputs_p2, 
-    inputs_sys       => inputs_sys,
-    inputs_dip1       => inputs_dip1, 
-    inputs_dip2       => inputs_dip2, 
+      inputs_p1       => inputs_p1, 
+      inputs_p2       => inputs_p2, 
+      inputs_sys      => inputs_sys,
+      inputs_dip1     => inputs_dip1, 
+      inputs_dip2     => inputs_dip2, 
 
       -- graphics
       bitmap_i        => from_bitmap_ctl,
       bitmap_o        => to_bitmap_ctl,
-      
+
       tilemap_i       => from_tilemap_ctl,
       tilemap_o       => to_tilemap_ctl,
-      
+
       sprite_reg_o    => to_sprite_reg,
       sprite_i        => from_sprite_ctl,
       sprite_o        => to_sprite_ctl,
 			spr0_hit				=> spr0_hit,
-      
+
       graphics_i      => from_graphics,
       graphics_o      => to_graphics,
-      
+
       -- sound
-      snd_i           => from_sound,
-      snd_o           => to_sound,
+      snd_irq         => snd_irq,
+      snd_data        => snd_data,
+
       platform_i      => platform_i,
       platform_o      => platform_o,
-		cpu_rom_addr      => cpu_rom_addr,
-	   cpu_rom_do	      => cpu_rom_do,
-	   tile_rom_addr     => tile_rom_addr,
-	   tile_rom_do	      => tile_rom_do
+      cpu_rom_addr    => cpu_rom_addr,
+      cpu_rom_do	    => cpu_rom_do,
+      tile_rom_addr   => tile_rom_addr,
+      tile_rom_do	    => tile_rom_do
     );
 
   graphics_inst : entity work.Graphics                                    
@@ -113,48 +118,30 @@ begin
       sprite_ctl_i    => to_sprite_ctl,
       sprite_ctl_o    => from_sprite_ctl,
       spr0_hit				=> spr0_hit,
-      
+
       graphics_i      => to_graphics,
       graphics_o      => from_graphics,
-      
+
 			-- video (incl. clk)
-			video_i					=> video_i,
-			video_o					=> video_o
+      video_i         => video_i,
+      video_o         => video_out
     );
 
-	SOUND_BLOCK : block
-		signal snd_data_l	: std_logic_vector(7 downto 0);
-		signal snd_data_r : std_logic_vector(7 downto 0);
-    signal snd_a      : std_logic_vector(15 downto 0);
-	begin
-
-    snd_a <= std_logic_vector(resize(unsigned(to_sound.a), snd_a'length));
-    
-	  sound_inst : entity work.Sound
-      generic map
+    sound_inst : entity work.sonson_soundboard
+      port map
       (
-        CLK_MHz     => CLK0_FREQ_MHz
-      )
-	    port map
-	    (
-	      sysclk      => clkrst_i.clk(0),    -- fudge for now
-	      reset       => clkrst_i.rst(0),
+      -- clocking and reset
+      clkrst_i        => clkrst_i,
 
-	      sndif_rd    => to_sound.rd,              
-	      sndif_wr    => to_sound.wr,              
-	      sndif_addr  => snd_a,
-	      sndif_datai => to_sound.d,
+      sound_irq       => snd_irq,
+      sound_data      => snd_data,
+      vblank          => video_out.vblank,
 
-	      snd_clk     => audio_o.clk,
-	      snd_data_l  => snd_data_l,
-	      snd_data_r  => snd_data_r,
-	      sndif_datao => from_sound.d
-	    );
+      audio_out_l     => audio_o.ldata(9 downto 0),
+      audio_out_r     => audio_o.rdata(9 downto 0),
 
-		-- route audio to both channels
-		audio_o.ldata <= snd_data_l & "00000000";
-		audio_o.rdata <= snd_data_r & "00000000";
-	
-	end block SOUND_BLOCK;
-		
+      snd_rom_addr    => snd_rom_addr,
+      snd_rom_do      => snd_rom_do
+    );
+
 end SYN;

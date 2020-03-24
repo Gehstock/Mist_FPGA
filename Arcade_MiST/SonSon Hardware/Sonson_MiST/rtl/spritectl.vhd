@@ -47,10 +47,9 @@ architecture SYN of spritectl is
    
 begin
 
-  -- handle xflip
-  flipData(47 downto 32) <= flip_row (ctl_i.d(47 downto 32), reg_i.xflip);
-  flipData(31 downto 16) <= flip_row (ctl_i.d(31 downto 16), reg_i.xflip);
-  flipData(15 downto 0) <= flip_row (ctl_i.d(15 downto 0), reg_i.xflip);
+  flipData(47 downto 32) <= ctl_i.d(47 downto 32);
+  flipData(31 downto 16) <= ctl_i.d(31 downto 16);
+  flipData(15 downto 0) <= ctl_i.d(15 downto 0);
   
 	process (clk)
 
@@ -61,10 +60,7 @@ begin
     variable yMat     : boolean;    -- raster is between first and last line of sprite
     variable xMat     : boolean;    -- raster in between left edge and end of line
 
-		-- the width of rowCount determines the scanline multipler
-		-- - eg.	(4 downto 0) is 1:1
-		-- 				(5 downto 0) is 2:1 (scan-doubling)
-  	variable rowCount : std_logic_vector(3+PACE_VIDEO_V_SCALE downto 0);
+  	variable rowCount : std_logic_vector(4 downto 0);
 
     variable clut_i     : integer range 0 to 31;
 		variable clut_entry : sprite_clut_entry_t;
@@ -77,7 +73,7 @@ begin
 		if rising_edge(clk) then
       if clk_ena = '1' then
 
-        x := unsigned(reg_i.x);
+        x := unsigned(reg_i.x) + 8;
         y := unsigned(reg_i.y);
         
         if video_ctl.hblank = '1' then
@@ -92,7 +88,7 @@ begin
             -- start counting sprite row
             rowCount := (others => '0');
             yMat := true;
-          elsif rowCount(rowCount'left downto rowCount'left-4) = "10000" then
+          elsif rowCount(4 downto 0) = "10000" then
             yMat := false;				
           end if;
 
@@ -103,21 +99,28 @@ begin
               rowStore := (others => '0');
             end if;
           end if;
-              
+
         elsif video_ctl.stb = '1' then
-        
+
           if unsigned(video_ctl.x) = x then
             -- count up at left edge of sprite
             rowCount := std_logic_vector(unsigned(rowCount) + 1);
             xMat := true;
           end if;
-          
+
           if xMat then
             -- shift in next pixel
-            pel := rowStore(32) & rowStore(16) & rowStore(0);
-            rowStore(47 downto 32) := '0' & rowStore(47 downto 33);
-            rowStore(31 downto 16) := '0' & rowStore(31 downto 17);
-            rowStore(15 downto 0) := '0' & rowStore(15 downto 1);
+            if reg_i.xflip = '1' then
+              pel := rowStore(47) & rowStore(31) & rowStore(15);
+              rowStore(47 downto 32) := rowStore(46 downto 32) & '0';
+              rowStore(31 downto 16) := rowStore(30 downto 16) & '0';
+              rowStore(15 downto  0) := rowStore(14 downto  0) & '0';
+            else
+              pel := rowStore(32) & rowStore(16) & rowStore(0);
+              rowStore(47 downto 32) := '0' & rowStore(47 downto 33);
+              rowStore(31 downto 16) := '0' & rowStore(31 downto 17);
+              rowStore(15 downto  0) := '0' & rowStore(15 downto  1);
+            end if;
           end if;
 
         end if;
@@ -149,11 +152,11 @@ begin
       --   use dual-port memory to access both halves of each row
       ctl_o.a(4) <= '0'; -- used for 1st/2nd port of dual-port memory
       if reg_i.yflip = '1' then
-        ctl_o.a(3 downto 0) <= not rowCount(rowCount'left-1 downto rowCount'left-4);
+        ctl_o.a(3 downto 0) <= not rowCount(3 downto 0);
       else
-        ctl_o.a(3 downto 0) <= rowCount(rowCount'left-1 downto rowCount'left-4);
+        ctl_o.a(3 downto 0) <= rowCount(3 downto 0);
       end if;
-      
+
     end if; -- rising_edge(clk)
   end process;
 
