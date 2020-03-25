@@ -5,7 +5,7 @@
     <manufacturer>Capcom</manufacturer>
     <rbf>sonson</rbf>
 
-    <rom index="0" zip="sonson.zip" md5="4d5de2720b53b64fb63beed407cbeb19" type="merged|nonmerged">
+    <rom index="0" zip="sonson.zip" md5="d17bc11db95dd6e2d44ac342b3462259" type="merged|nonmerged">
       <!-- CPU2, 8k -->
       <part name="ss_6.c11"/>
       <part repeat="0x2000">FF</part>
