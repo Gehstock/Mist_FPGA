@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 
 # Pin & Location Assignments
@@ -217,6 +217,7 @@ set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/zaxx.stp
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Zaxxon_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/zaxxon.vhd
+set_global_assignment -name VHDL_FILE rtl/zaxxon_sound.vhd
 set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd

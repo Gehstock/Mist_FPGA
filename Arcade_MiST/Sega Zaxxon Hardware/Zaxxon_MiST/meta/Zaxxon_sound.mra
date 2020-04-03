@@ -1,0 +1,16 @@
+<misterromdescription>
+    <rom index="0" zip="zaxxon_samples.zip" md5="3b9bfc168a09b904e7a18a6b5a6f45e1">
+	<part crc="E6528D9E" name="00.wav"/>
+	<part crc="AC9441DB" name="01.wav"/>
+	<part crc="580B4E60" name="02.wav"/>
+	<part crc="87A820AA" name="03.wav"/>
+	<part crc="F1B68A58" name="04.wav"/>
+	<part crc="CCF9619D" name="05.wav"/>
+	<part crc="67B30407" name="08.wav"/>
+	<part crc="01725AAA" name="10.wav"/>
+	<part crc="9F0E6086" name="11.wav"/>
+	<part crc="1CEBA559" name="20.wav"/>
+	<part crc="2ADCDFBB" name="21.wav"/>
+	<part crc="6AFDE55B" name="23.wav"/>
+    </rom>
+</misterromdescription>

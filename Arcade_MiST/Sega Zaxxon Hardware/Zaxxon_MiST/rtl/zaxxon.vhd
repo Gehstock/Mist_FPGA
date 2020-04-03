@@ -146,7 +146,9 @@ port(
  down_c         : in std_logic;
  fire_c         : in std_logic;
 
- cocktail       : in std_logic;
+ sw1_input      : in  std_logic_vector( 7 downto 0);
+ sw2_input      : in  std_logic_vector( 7 downto 0);
+
  service        : in std_logic;
  flip_screen    : in std_logic;
 
@@ -158,6 +160,10 @@ port(
  dl_addr        : in std_logic_vector(16 downto 0);
  dl_data        : in std_logic_vector(7 downto 0);
  dl_wr          : in std_logic;
+
+ wave_addr      : buffer std_logic_vector(19 downto 0);
+ wave_rd        : out std_logic;
+ wave_data      : in std_logic_vector(15 downto 0);
 
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
@@ -289,8 +295,6 @@ architecture struct of zaxxon is
  
  signal p1_input  : std_logic_vector(7 downto 0);
  signal p2_input  : std_logic_vector(7 downto 0); 
- signal sw1_input : std_logic_vector(7 downto 0);
- signal sw2_input : std_logic_vector(7 downto 0);
  signal gen_input : std_logic_vector(7 downto 0);
  
  signal coin1_r, coin1_mem, coin1_ena : std_logic := '0';
@@ -306,6 +310,10 @@ architecture struct of zaxxon is
  signal sp_graphics_bits_3_we : std_logic;
  signal char_color_we         : std_logic;
  signal palette_we            : std_logic;
+
+ signal port_a, port_a_r : std_logic_vector(7 downto 0); -- i8255 ports
+ signal port_b, port_b_r : std_logic_vector(7 downto 0);
+ signal port_c, port_c_r : std_logic_vector(7 downto 0);
 
 begin
 
@@ -462,8 +470,6 @@ end process;
 ---------------------------------
 p1_input <= "000" & fire   & down   & up   & left   & right  ;
 p2_input <= "000" & fire_c & down_c & up_c & left_c & right_c;
-sw1_input <= cocktail&"111"&x"f"; -- cocktail->FF  upright->7F
-sw2_input <= x"33"; -- coin a/b 1c_1c
 gen_input <= service & coin2_mem & coin1_mem & '0' & start2 & start1 & "00";
 
 ------------------------------------------
@@ -526,7 +532,12 @@ begin
 			if (cpu_addr and x"E0FF") = x"E0F9" then bg_position(10 downto 8) <= not cpu_do(2 downto 0); end if; -- E0F9 + mirroring 1F00
 			if (cpu_addr and x"E0FF") = x"E0FA" then bg_color_ref             <= cpu_do(0);          end if; -- E0FA + mirroring 1F00
 			if (cpu_addr and x"E0FF") = x"E0FB" then bg_enable                <= cpu_do(0);          end if; -- E0FB + mirroring 1F00
-	
+
+			-- (i8255 trivial mode 0)
+			if (cpu_addr and x"E0FF") = x"E03C" then port_a <= cpu_do; port_a_r <= port_a; end if; -- E03C + mirroring 1F00
+			if (cpu_addr and x"E0FF") = x"E03D" then port_b <= cpu_do; port_b_r <= port_b; end if; -- E03D + mirroring 1F00
+			if (cpu_addr and x"E0FF") = x"E03E" then port_c <= cpu_do; port_c_r <= port_c; end if; -- E03E + mirroring 1F00
+
 		end if;
 		
 		if int_on = '0' then 
@@ -1084,28 +1095,25 @@ port map(
 );
 palette_we <= '1' when dl_wr = '1' and dl_addr(16 downto 8) = "111000000" else '0'; --1C000-1C0FF
 
---zaxxon_sound_board 
---sound_board : entity work.tron_sound_board
---port map(
--- clock_40    => clock_40,
--- reset       => reset,
--- 
--- main_cpu_addr => cpu_addr(7 downto 0),
--- 
--- ssio_iowe => ssio_iowe,
--- ssio_di   => cpu_do,
--- ssio_do   => ssio_do,
--- 
--- input_0 => input_0,
--- input_1 => input_1,
--- input_2 => input_2,
--- input_3 => input_3,
--- input_4 => input_4,
--- 
--- separate_audio => separate_audio,
--- audio_out_l    => audio_out_l,
--- audio_out_r    => audio_out_r,
--- 
--- dbg_cpu_addr => open --dbg_cpu_addr
---);
+--zaxxon_sound_board
+sound_board : entity work.zaxxon_sound
+port map(
+ clock_24    => clock_24,
+ reset       => reset,
+
+ port_a      => port_a,
+ port_a_r    => port_a_r,
+ port_b      => port_b,
+ port_b_r    => port_b_r,
+ port_c      => port_c,
+ port_c_r    => port_c_r,
+
+ audio_out_l => audio_out_l,
+ audio_out_r => audio_out_r,
+
+ wave_addr   => wave_addr,
+ wave_rd     => wave_rd,
+ wave_data   => wave_data
+);
+
 end struct;
