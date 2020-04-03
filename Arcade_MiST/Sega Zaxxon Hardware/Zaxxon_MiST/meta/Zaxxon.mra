@@ -1,0 +1,34 @@
+<misterromdescription>
+    <name>Zaxxon</name>
+    <mameversion>0193</mameversion>
+    <mratimestamp>202003290000</mratimestamp>
+    <year>1982</year>
+    <manufacturer>Sega/Gremlin</manufacturer>
+    <category>Isometric Shoot'em up</category>
+    <category>Space</category>
+    <setname>zaxxon</setname>
+    <rbf>zaxxon</rbf>
+    <rom index="0" zip="zaxxon.zip" md5="ff0c5218a2c94a58c5e84b9bb56ccf54">
+	<part crc="6e2b4a30" name="zaxxon_rom3d.u27"/>
+	<part crc="1c9ea398" name="zaxxon_rom2d.u28"/>
+	<part crc="1c123ef9" name="zaxxon_rom1d.u29"/>
+	<part crc="1c123ef9" name="zaxxon_rom1d.u29"/>
+	<part crc="1c123ef9" name="zaxxon_rom1d.u29"/>
+
+	<part crc="28d65063" name="zaxxon_rom8.u91"/>
+	<part crc="6284c200" name="zaxxon_rom7.u90"/>
+	<part crc="a95e61fd" name="zaxxon_rom10.u93"/>
+	<part crc="7e42691f" name="zaxxon_rom9.u92"/>
+
+	<part crc="07bf8c52" name="zaxxon_rom14.u68"/>
+	<part crc="c215edcb" name="zaxxon_rom15.u69"/>
+	<part crc="6e07bb68" name="zaxxon_rom6.u113"/>
+	<part crc="0a5bce6a" name="zaxxon_rom5.u112"/>
+	<part crc="a5bf1465" name="zaxxon_rom4.u111"/>
+	<part crc="eaf0dd4b" name="zaxxon_rom11.u77"/>
+	<part crc="1c5369c7" name="zaxxon_rom12.u78"/>
+	<part crc="ab4e8a9a" name="zaxxon_rom13.u79"/>
+	<part crc="6cc6695b" name="mro16.u76"/>
+	<part crc="deaa21f7" name="zaxxon.u72"/>
+    </rom>
+</misterromdescription>
