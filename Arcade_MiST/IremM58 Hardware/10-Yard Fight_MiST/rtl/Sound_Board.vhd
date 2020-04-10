@@ -104,7 +104,6 @@ architecture struct of Sound_Board is
  
  signal rom_cs    : std_logic;
  signal rom_do    : std_logic_vector( 7 downto 0);
- signal rom_addr  : std_logic_vector(15 downto 0);
 
  signal ay1_chan_a    : std_logic_vector(7 downto 0);
  signal ay1_chan_b    : std_logic_vector(7 downto 0);
@@ -156,7 +155,7 @@ wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
 ports_cs  <= '1' when cpu_addr(15 downto  4) = X"000"    else '0'; -- 0000-000F
 adpcm_cs  <= '1' when cpu_addr(15 downto 14) = "00" and cpu_addr(11) = '1' and cpu_addr(1 downto 0) /= "00" else '0'; -- 0801-0802
 irqraz_cs <= '1' when cpu_addr(15 downto 14) = "00" and cpu_addr(11) = '1' and cpu_addr(1 downto 0)  = "00" else '0'; -- 0800
-rom_cs    <= '1' when cpu_addr(15 downto 14) >= "01"     else '0'; -- 8000-FFFF
+rom_cs    <= '1' when cpu_addr(15) = '1' else '0'; -- 8000-FFFF
 
 -- write enables
 wram_we    <= '1' when cpu_rw = '0' and wram_cs =   '1' else '0';
@@ -316,9 +315,8 @@ port map(
  test_cc  => open
 );
 
-rom_addr <= cpu_addr(15 downto 0) - x"8000";
 snd_vma <= rom_cs and cpu_vma;
-snd_rom_addr <= rom_addr(14 downto 0);
+snd_rom_addr <= cpu_addr(14 downto 0);
 
 -- cpu wram
 cpu_ram : entity work.spram

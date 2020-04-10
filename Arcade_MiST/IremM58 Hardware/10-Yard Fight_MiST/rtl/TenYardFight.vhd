@@ -79,41 +79,39 @@ use ieee.numeric_std.all;
 
 entity TenYardFight is
 port(
- clock_36     : in std_logic;
- clock_0p895  : in std_logic;
- reset        : in std_logic;
+ clock_36     		: in std_logic;
+ clock_0p895  		: in std_logic;
+ reset        		: in std_logic;
+ palmode      		: in std_logic;
+-- tv15Khz_mode 	: in std_logic;
+ video_r        	: out std_logic_vector(1 downto 0);
+ video_g        	: out std_logic_vector(2 downto 0);
+ video_b        	: out std_logic_vector(2 downto 0);
+ video_clk      	: out std_logic;
+ video_csync    	: out std_logic;
+ video_blankn   	: out std_logic;
+ video_hs       	: out std_logic;
+ video_vs       	: out std_logic;
+ audio_out      	: out std_logic_vector(10 downto 0);
 
- palmode      : in std_logic;
+ cpu_rom_addr   	: out std_logic_vector(14 downto 0);
+ cpu_rom_do     	: in  std_logic_vector( 7 downto 0);
+ snd_rom_addr		: out std_logic_vector(14 downto 0);
+ snd_rom_do  		: in  std_logic_vector(7 downto 0);
+ snd_vma         	: out std_logic;
+ sp_addr        	: out std_logic_vector(14 downto 0);
+ sp_graphx32_do 	: in std_logic_vector(31 downto 0);
 
--- tv15Khz_mode : in std_logic;
- video_r        : out std_logic_vector(1 downto 0);
- video_g        : out std_logic_vector(2 downto 0);
- video_b        : out std_logic_vector(2 downto 0);
- video_clk      : out std_logic;
- video_csync    : out std_logic;
- video_blankn   : out std_logic;
- video_hs       : out std_logic;
- video_vs       : out std_logic;
- audio_out      : out std_logic_vector(10 downto 0);
+ dip_switch_1   	: in std_logic_vector(7 downto 0);
+ dip_switch_2   	: in std_logic_vector(7 downto 0);
+ input_0        	: in std_logic_vector(7 downto 0);
+ input_1        	: in std_logic_vector(7 downto 0);
+ input_2        	: in std_logic_vector(7 downto 0);
 
- cpu_rom_addr   : out std_logic_vector(14 downto 0);
- cpu_rom_do     : in  std_logic_vector( 7 downto 0);
- snd_rom_addr: out std_logic_vector(14 downto 0);
- snd_rom_do  : in  std_logic_vector(7 downto 0);
- snd_vma         : out std_logic;
- sp_addr        : out std_logic_vector(14 downto 0);
- sp_graphx32_do : in std_logic_vector(31 downto 0);
-
- dip_switch_1   : in std_logic_vector(7 downto 0);
- dip_switch_2   : in std_logic_vector(7 downto 0);
- input_0        : in std_logic_vector(7 downto 0);
- input_1        : in std_logic_vector(7 downto 0);
- input_2        : in std_logic_vector(7 downto 0);
-
- dl_clk         : in std_logic;
- dl_addr        : in std_logic_vector(17 downto 0);
- dl_data        : in std_logic_vector( 7 downto 0);
- dl_wr          : in std_logic;
+ dl_clk         	: in std_logic;
+ dl_addr        	: in std_logic_vector(17 downto 0);
+ dl_data        	: in std_logic_vector( 7 downto 0);
+ dl_wr          	: in std_logic;
 
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
@@ -163,10 +161,13 @@ architecture struct of TenYardFight is
  signal flip     : std_logic;
  signal flip_int : std_logic;
  
- signal chrram_addr: std_logic_vector(11 downto 0);
+ signal chrram_addr: std_logic_vector(10 downto 0);
  signal chrram_we  : std_logic; 
  signal chrram_do  : std_logic_vector(7 downto 0);
+ signal chrram1_do : std_logic_vector(7 downto 0);
+ signal chrram2_do : std_logic_vector(7 downto 0);
  signal chrram_do_to_cpu : std_logic_vector( 7 downto 0);
+ signal chrram_ce  : std_logic :='0';
 
  signal scroll_x     : std_logic_vector(7 downto 0) := (others=>'0');
  signal apply_xscroll : std_logic;
@@ -518,7 +519,7 @@ spr_input_line_di <= spr_pixels(3 downto 0);
 -- keep write data if input buffer is clear
 spr_input_line_we <= '1' when spr_on_line_r = '1' and spr_pix_ena = '1' and spr_input_line_do = "0000" else '0';
 
--- feed output buufer (clear)
+-- feed output buffer (clear)
 spr_output_line_di <= "0000";
 -- always clear just after read
 spr_output_line_we <= pix_ena;
@@ -554,15 +555,10 @@ hcnt_scrolled_flip <= hcnt_scrolled(2 downto 0) when flip = '1' else not (hcnt_s
 -- address char attr at pixel # 0
 -- address char code at pixel # 4
 -- give access to CPU for all other pixels
-
-
-
-
--- todo not sure about this   Gehstock
 with hcnt_scrolled_flip(2 downto 0) select chrram_addr <=
-	vcnt_flip(7 downto 2) & hcnt_scrolled(7 downto 3) & '1' when "000",
-	vcnt_flip(7 downto 2) & hcnt_scrolled(7 downto 3) & '0' when "100",
-	cpu_addr(11 downto 0) when others;
+	vcnt_flip(7 downto 3) & hcnt_scrolled(7 downto 3) & '1' when "000",
+	vcnt_flip(7 downto 3) & hcnt_scrolled(7 downto 3) & '0' when "100",
+	cpu_addr(10 downto 0) when others;
 
 -- write enable to char tile ram from CPU
 chrram_we <= '1' when cpu_wr_n = '0' and cpu_addr(15 downto 12) = X"8" and hcnt_scrolled_flip(1 downto 0) /= "00" else '0';
@@ -612,7 +608,6 @@ begin
 		end if;
 	end if;
 end process;
-
 ---------------------------
 -- mux char/sprite video --
 ---------------------------
@@ -635,6 +630,7 @@ begin
 
 	end if;
 end process;
+
 
 ---------------------------------------------------------
 -- Sound board is same as Moon patrol (except CPU rom) --
@@ -799,25 +795,37 @@ port map(
  q_b    => scrollram_h_do
 );
 
--- char RAM   0x8000-0x8FFF
-chrram : entity work.gen_ram
-generic map( dWidth => 8, aWidth => 12)
+-- char RAM   0x8000-0x83FF  4A
+chrram1: entity work.gen_ram
+generic map( dWidth => 8, aWidth => 11)
 port map(
  clk  => clock_36n,
  we   => chrram_we,
  addr => chrram_addr,
  d    => cpu_do,
- q    => chrram_do
+ q    => chrram1_do
 );
+
+-- char RAM   0x8400-0x8FFF  4C
+chrram2: entity work.gen_ram
+generic map( dWidth => 8, aWidth => 11)
+port map(
+ clk  => clock_36n,
+ we   => chrram_we,
+ addr => chrram_addr,
+ d    => cpu_do,
+ q    => chrram2_do
+);
+
+chrram_do <= chrram1_do when chrram_ce = '0' else chrram2_do;
+chrram_ce <= '0';--todo
 
 -- sprite RAM   0xC820-0xC87F
 sprite_ram : entity work.dpram
---generic map( dWidth => 8, aWidth => 8)
 generic map( dWidth => 8, aWidth => 7)
 port map(
  clk_a  => clock_36n,
  we_a   => sprram_we,
--- addr_a => cpu_addr(7 downto 0),
  addr_a => cpu_addr(6 downto 0),
  d_a    => cpu_do,
  clk_b  => clock_36n,
@@ -943,7 +951,7 @@ char_palette_l_we <= '1' when dl_wr = '1' and dl_addr(17 downto 8) = "1000100010
 char_palette_h_we <= '1' when dl_wr = '1' and dl_addr(17 downto 8) = "1000100011" else '0'; --22300 - 223FF chr pal hi 256b  yard.1d
 chr_palette_do <= chr_paletteh_do(3 downto 0) & chr_palettel_do(3 downto 0);
 
--- sprite palette ROM 3D
+-- Sprite Lut 2H
 spr_palette : entity work.dpram
 generic map( dWidth => 8, aWidth => 8)
 port map(
@@ -957,7 +965,7 @@ port map(
 );
 spr_palette_we <= '1' when dl_wr = '1' and dl_addr(17 downto 8) = "1000100100" else '0'; --22400 - 224FF spr lut    256b  yard.2h
 
--- sprite rgb lut ROM 1B
+-- Sprite Palette 3L
 spr_rgb_lut : entity work.dpram
 generic map( dWidth => 8, aWidth => 5)
 port map(
@@ -972,3 +980,27 @@ port map(
 spr_rgb_lut_we <= '1' when dl_wr = '1' and dl_addr(17 downto 8) = "1000100101" else '0'; --22500 - 2251F spr pal     32b  yard.1f
 
 end struct;
+
+--M58-A-A Center PCB
+	--4x Rom 8k 3R,3N,3M,3K					Main Rom								yf-a-3p-b, yf-a-3n-b, yf-a-3m-b
+	--2xRam 2k 3J,3H							Main Ram
+		
+	--3xKNA6032701 5-6M,5-6K,5-6A-B		Custom
+	--3x Rom 8k 3C,3D,3E-F					Char Rom								yf-a.3e, yf-a.3d, yf-a.3c
+	--2x Ram 2k 3J,3H							Char Ram
+	--2x Rom 256b	5C,5D						Char Palette						yard.1c, yard.1d
+	
+--M58-B-A Buttom PVB
+	--1x Ram 2k 5L-M							Sprite Ram
+	--6x Rom 8k 5A,5C,5F,5E,5J,5K			Sprite Rom							yf-b.5b, yf-b.5c, yf-b.5f, yf-b.5e, yf-b.5j, yf-b.5k
+	
+	--1x Rom 24S10 256b	3L					Sprite Lut							yard.2h
+	
+	
+	--2x Ram 1k 1K,1F							Sprite Ram
+   --1x Rom 18s030 32b	3L					Sprite Palette						yard.1f
+		
+		
+	--2x Ram 2k 5R,5N						   Ram		
+	--1xKNA6032701 6-7P-R					Custom	
+	--2x Rom 24S10 256b	2R, 2P			Radar Palette						yard.2n, yard.2m

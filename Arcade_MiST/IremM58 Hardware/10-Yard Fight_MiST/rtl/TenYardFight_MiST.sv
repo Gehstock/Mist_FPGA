@@ -102,7 +102,9 @@ wire        key_strobe;
 
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
-wire [14:0] snd_addr;
+wire [15:0] snd_addr;
+wire [14:0] snd_rom_addr;
+
 wire [15:0] snd_do;
 wire        snd_vma;
 wire [14:0] sp_addr;
@@ -158,7 +160,7 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + snd_addr[14:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : (snd_addr) ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -185,6 +187,10 @@ always @(posedge clk_sd) begin
 			port2_req <= ~port2_req;
 		end
 	end
+		// async clock domain crossing here (clk_snd -> clk_sys)
+	snd_vma_r <= snd_vma; 
+	snd_vma_r2 <= snd_vma_r;
+	if (snd_vma_r2) snd_addr <= snd_rom_addr + 15'h8000;
 end
 
 // reset signal generation
@@ -202,6 +208,32 @@ always @(posedge clk_sys) begin
 	reset <= reset_count != 16'h0000;
 
 end
+/*
+static INPUT_PORTS_START( yard )
+	PORT_INCLUDE(m58)
+
+	PORT_MODIFY("DSW2")
+	PORT_DIPNAME( 0x08, 0x08, "Slow Motion (Cheat)" ) PORT_DIPLOCATION("SW2:4")  Listed as "Unused" 
+	PORT_DIPSETTING(    0x08, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
+	// In stop mode, press 2 to stop and 1 to restart 
+	PORT_DIPNAME( 0x10, 0x10, "Stop Mode (Cheat)") PORT_DIPLOCATION("SW2:5")  Listed as "Unused" 
+	PORT_DIPSETTING(    0x10, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
+	PORT_DIPNAME( 0x20, 0x20, "Level Select (Cheat)" ) PORT_DIPLOCATION("SW2:6")  Listed as "Unused" 
+	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
+
+	PORT_START("DSW1")
+	PORT_DIPUNUSED_DIPLOC( 0x01, IP_ACTIVE_LOW, "SW1:1" )
+	PORT_DIPUNUSED_DIPLOC( 0x02, IP_ACTIVE_LOW, "SW1:2" )
+	PORT_DIPNAME( 0x0c, 0x0c, "Time Reduced by Ball Dead" ) PORT_DIPLOCATION("SW1:3,4")
+	PORT_DIPSETTING(    0x0c, DEF_STR( Normal ) )
+	PORT_DIPSETTING(    0x08, "x1.3" )
+	PORT_DIPSETTING(    0x04, "x1.5" )
+	PORT_DIPSETTING(    0x00, "x1.8" )
+	IREM_Z80_COINAGE_TYPE_1_LOC(SW1)
+INPUT_PORTS_END*/
 
 wire [7:0] dip1 = ~8'b00000010;
 wire [7:0] dip2 = ~{ 1'b0, invuln, 1'b0, 1'b0/*stop*/, 3'b010, flip };
@@ -224,8 +256,8 @@ TenYardFight TenYardFight(
 
 	.cpu_rom_addr ( rom_addr       	),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.snd_rom_addr ( snd_addr	),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_addr ( snd_rom_addr),
+	.snd_rom_do   ( snd_rom_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_vma(snd_vma),
 	.sp_addr      ( sp_addr         ),
 	.sp_graphx32_do( sp_do          ),
