@@ -47,7 +47,7 @@ input		[7:0]	key_code,
 input		[9:0]	SWITCH,
 input				UART_RXD,
 output			UART_TXD
-               
+               );
 
 reg		[3:0]		CLK;
 
