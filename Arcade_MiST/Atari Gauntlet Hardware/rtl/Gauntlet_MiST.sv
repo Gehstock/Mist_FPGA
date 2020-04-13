@@ -110,7 +110,6 @@ wire [15:0] snd_do;
 wire [15:0] sp_addr;
 wire [31:0] sp_do;
 wire [24:0] sp_ioctl_addr = ioctl_addr - 20'h34000;
-wire [24:0] snd_ioctl_addr = ioctl_addr - 18'h28000;
 
 /* ROM structure
 00000-27FFF CPU1 160k Program
@@ -140,7 +139,7 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-
+    
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
@@ -156,9 +155,9 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 18'h3ffff : {rom_addr[18:0]} ),
+	.cpu1_addr     ( ioctl_downl ? 18'h3ffff : {1'b0,rom_addr[18:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 18'h3ffff : snd_ioctl_addr ),
+	.cpu2_addr     ( ioctl_downl ? 18'h3ffff : 18'h28000 + snd_addr[15:1] ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -197,7 +196,7 @@ always @(posedge clk_sys) begin
 	reg [15:0] reset_count;
 	ioctl_downlD <= ioctl_downl;
 
-	if (status[0] | buttons[1]/* ~rom_loaded*/)reset_count <= 16'hffff;
+	if (status[0] | buttons[1] | ~rom_loaded)reset_count <= 16'hffff;
 	else if (reset_count != 0) reset_count <= reset_count - 1'd1;
 
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
@@ -222,7 +221,7 @@ GAUNTLET GAUNTLET(
 	.O_LEDS(),
 	.O_AUDIO_L(audiol),
 	.O_AUDIO_R(audior),
-	.O_VIDEO_I(),
+	.O_VIDEO_I(),   
 	.O_VIDEO_R(r),
 	.O_VIDEO_G(g),
 	.O_VIDEO_B(b),
