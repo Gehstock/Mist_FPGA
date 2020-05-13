@@ -1,0 +1,34 @@
+<misterromdescription>
+    <name>SZaxxon</name>
+    <mameversion>0193</mameversion>
+    <mratimestamp>202003290000</mratimestamp>
+    <year>1982</year>
+    <manufacturer>Sega/Gremlin</manufacturer>
+    <category>Isometric Shoot'em up</category>
+    <category>Space</category>
+    <setname>szaxxon</setname>
+    <rbf>szaxxon</rbf>
+    <rom index="0" zip="szaxxon.zip" md5="707764cc5622e5e1031259de94902916">
+	<part crc="af7221da" name="1804e.u27"/>
+	<part crc="1b90fb2a" name="1803e.u28"/>
+	<part crc="07258b4a" name="1802e.u29"/>
+	<part crc="07258b4a" name="1802e.u29"/>
+	<part crc="07258b4a" name="1802e.u29"/>
+
+	<part crc="dd1b52df" name="1809b.u91"/>
+	<part crc="b5bc07f0" name="1808b.u90"/>
+	<part crc="68e84174" name="1811b.u93"/>
+	<part crc="a509994b" name="1810b.u92"/>
+
+	<part crc="bccf560c" name="1815b.u68"/>
+	<part crc="d28c628b" name="1816b.u69"/>
+	<part crc="f51af375" name="1807b.u113"/>
+	<part crc="a7de021d" name="1806b.u112"/>
+	<part crc="5bfb3b04" name="1805b.u111"/>
+	<part crc="1503ae41" name="1812e.u77"/>
+	<part crc="3b53d83f" name="1813e.u78"/>
+	<part crc="581e8793" name="1814e.u79"/>
+	<part crc="15727a9f" name="pr-5168.u98"/>
+	<part crc="deaa21f7" name="pr-5167.u72"/>
+    </rom>
+</misterromdescription>
