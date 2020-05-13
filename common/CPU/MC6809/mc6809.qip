@@ -1,4 +1,4 @@
-set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) cpu09l_128a.vhd     ]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) cpu09.vhd     ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809.v      ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809i.v     ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809is.v    ]
