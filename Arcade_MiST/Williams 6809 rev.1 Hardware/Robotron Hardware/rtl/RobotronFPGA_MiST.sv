@@ -4,7 +4,7 @@
 //  Robotron-FPGA is Copyright 2012 ShareBrained Technology, Inc.
 //
 //  Supports:
-//  Robotron 2048/Joust/Stargate/Bubbles/Splat/Sinistar
+//  Robotron 2048/Joust/Stargate/Bubbles/Splat/Sinistar/Lotto Fun
 
 module RobotronFPGA_MiST(
 	output        LED,
@@ -56,7 +56,7 @@ wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
-wire       autoup    = status[7];
+wire       autoup    = status[7];// Memory Protect for Lotto Fun
 wire       adv       = status[8];
 
 reg   [7:0] SW;
@@ -146,6 +146,12 @@ always @(*) begin
 		orientation = 2'b01;
 		BTN = { 2'b00, m_coin1 | m_coin2, reset };
 		JA  = ~{ 4'b0000, m_two_players, m_right, m_left, m_one_player };
+		JB  = JA;
+	end
+	7'h8: // LOTTO FUN
+	begin
+		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
+		JA  = ~{ 1'b0, 1'b0, m_fireB, m_fireA, m_right, m_left, m_down, m_up };
 		JB  = JA;
 	end
 	default: ;
