@@ -4,7 +4,7 @@
 -- 15 November 2019
 -- 
    missing Sounds
-   maybe Graphic Problem
+   maybe Graphic Problems
 ---------------------------------------------------------------------------------
 -- A simulation model of Pacman hardware
 -- // Copyright(c) 2003 - 2005 Katsumi Degawa , All rights reserved

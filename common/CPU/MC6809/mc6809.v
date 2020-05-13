@@ -35,10 +35,8 @@ module mc6809(
     input   nHALT,	 
     input   nRESET,
     input   MRDY,
-    input   nDMABREQ
-    
-    , output  [111:0] RegData
-
+    input   nDMABREQ, 
+	 output  [111:0] RegData
     );
 
 reg [1:0] clk_phase=2'b00;

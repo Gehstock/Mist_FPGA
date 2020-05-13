@@ -23,4 +23,4 @@ set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) cond_branc
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) clock_ctrl.vhd	]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) bus_mux.vhd	]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) alu_pack-p.vhd	]
-
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) alu.vhd	]

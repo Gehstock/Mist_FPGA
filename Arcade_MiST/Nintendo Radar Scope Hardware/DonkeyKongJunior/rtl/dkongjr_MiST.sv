@@ -24,9 +24,9 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
-	"T6,Reset;",
 	"O89,Lives,3,4,5,6;",
 	"OAB,Bonus,7000,10000,15000,20000;",
+	"T6,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
 
@@ -159,9 +159,9 @@ always @(posedge clock_24) begin
 		case(key_code)
 			'h75: btn_up         	<= key_pressed; // up
 			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      	<= key_pressed; // left
+			'h6B: btn_left      		<= key_pressed; // left
 			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin			<= key_pressed; // ESC
+			'h76: btn_coin				<= key_pressed; // ESC
 			'h05: btn_one_player   	<= key_pressed; // F1
 			'h06: btn_two_players  	<= key_pressed; // F2
 			'h29: btn_fire1   		<= key_pressed; // Space
