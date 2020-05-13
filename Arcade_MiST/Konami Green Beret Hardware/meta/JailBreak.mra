@@ -1,0 +1,25 @@
+<misterromdescription>
+    <name>Jail Break</name>
+    <mameversion>0216</mameversion>
+    <setname>jailbrekb</setname>
+    <mratimestamp>202004180000</mratimestamp>
+    <year>1985</year>
+    <manufacturer>Konami</manufacturer>
+    <category>Army / Fighter</category>
+    <rbf>jailbrekb</rbf>
+
+    <rom index="1"><part>0</part></rom>
+
+    <rom index="0" zip="jailbrekb.zip" md5="68D138F265C40DEF938883CA1BC33B29" type="merged|nonmerged">
+	<part name="1.k6"/>
+	<part name="1.k6"/>
+	<part name="5.f6"/>
+	<part name="4.g6"/>
+	<part name="3.h6"/>
+
+	<part name="prom.e6"/>
+	<part name="prom.d6"/>
+	<part name="prom.j2"/>
+	<part name="prom.i2"/>
+    </rom>
+</misterromdescription>
