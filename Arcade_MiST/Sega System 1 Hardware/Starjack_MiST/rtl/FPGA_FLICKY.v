@@ -23,7 +23,7 @@ module FPGA_FLICKY
 	output			video_vb,
 
 	output  [15:0] SOUT,			// Sound Out (PCM)
-	output  [14:0] cpu_rom_addr,
+	output  [15:0] cpu_rom_addr,
 	input	  [7:0]	cpu_rom_do,
 	output  [14:0] spr_rom_addr,
 	input	  [7:0]	spr_rom_do,
@@ -46,11 +46,20 @@ wire			SNDRQ;
 
 FlickyMAIN Main (
 	.RESET(reset),
-	.INP0(INP0),.INP1(INP1),.INP2(INP2),
-	.DSW0(DSW0),.DSW1(DSW1),
-	.CLK48M(clk48M),.CLK3M(clk3M),
-	.CPUCLn(CPUCLn),.CPUAD(CPUAD),.CPUDO(CPUDO),.CPUWR(CPUWR),
-	.VBLK(VBLK),.VIDCS(VIDCS),.VIDDO(VIDDO),
+	.INP0(INP0),
+	.INP1(INP1),
+	.INP2(INP2),
+	.DSW0(DSW0),
+	.DSW1(DSW1),
+	.CLK48M(clk48M),
+	.CLK3M(clk3M),
+	.CPUCLn(CPUCLn),
+	.CPUAD(CPUAD),
+	.CPUDO(CPUDO),
+	.CPUWR(CPUWR),
+	.VBLK(VBLK),
+	.VIDCS(VIDCS),
+	.VIDDO(VIDDO),
 	.SNDRQ(SNDRQ),
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_do)
@@ -67,7 +76,6 @@ FlickyVIDEO Video (
 	.VBLK(VBLK),
 	.RGB8(POUT),
 	.PALDSW(1'b0),
-
 	.cpu_cl(CPUCLn),
 	.cpu_ad(CPUAD),
 	.cpu_wr(CPUWR),
@@ -83,8 +91,13 @@ assign PCLK = clk6M;
 
 // Sound
 FlickySND Sound(
-	clk8M, reset, CPUDO, SNDRQ, SOUT,
-	snd_rom_addr, snd_rom_do
+   .clk8M(clk8M),
+	.reset(reset),
+	.sndno(CPUDO),
+   .sndstart(SNDRQ),
+	.sndout(SOUT),
+	.snd_rom_addr(snd_rom_addr),
+	.snd_rom_do(snd_rom_do)	
 );
 
 wire [8:0]  HPOS;
