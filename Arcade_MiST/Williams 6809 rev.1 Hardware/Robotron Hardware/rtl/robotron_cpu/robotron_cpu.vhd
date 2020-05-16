@@ -39,7 +39,7 @@ entity robotron_cpu is
         clock            : in    std_logic;
         blitter_sc2      : in    std_logic;
         sinistar         : in    std_logic;
-
+		  speedball        : in    std_logic;
         -- MC6809 signals
         A                : in    std_logic_vector(15 downto 0);
         Dout             : in    std_logic_vector(7 downto 0);
@@ -123,7 +123,11 @@ entity robotron_cpu is
         JB               : in    std_logic_vector(7 downto 0);
         SIN_FIRE         : in    std_logic;
         SIN_BOMB         : in    std_logic;
-
+		  -- Analog Input
+		  AN0              : in    std_logic_vector(7 downto 0);
+		  AN1              : in    std_logic_vector(7 downto 0);
+		  AN2              : in    std_logic_vector(7 downto 0);
+		  AN3              : in    std_logic_vector(7 downto 0);		  
         -- To sound board
         HAND             : in    std_logic := '1';
         PB               : out   std_logic_vector(5 downto 0)
@@ -224,6 +228,7 @@ architecture Behavioral of robotron_cpu is
     signal hiram_access             : boolean; -- Sinistar hiram
     signal color_table_access       : boolean;
     signal widget_pia_access        : boolean;
+	 signal extra_pia_access        : boolean;
     signal rom_pia_access           : boolean;
     signal blt_register_access      : boolean;
     signal video_counter_access     : boolean;
@@ -313,6 +318,35 @@ architecture Behavioral of robotron_cpu is
     signal widget_ic4_a         : std_logic_vector(4 downto 1);
     signal widget_ic4_b         : std_logic_vector(4 downto 1);
     signal widget_ic4_y         : std_logic_vector(4 downto 1);
+    
+    -------------------------------------------------------------------
+    
+--    signal SLAM                 : std_logic := '1';
+--    signal R_COIN               : std_logic := '1';
+--    signal C_COIN               : std_logic := '1';
+--    signal L_COIN               : std_logic := '1';
+--    signal H_S_RESET            : std_logic := '1';
+--    signal ADVANCE              : std_logic := '1';
+--    signal AUTO_UP              : std_logic := '0';
+    
+    signal extra_pia_rs           : std_logic_vector(1 downto 0) := (others => '0');
+    signal extra_pia_cs           : std_logic := '0';
+    signal extra_pia_write        : std_logic := '0';
+    signal extra_pia_data_in      : std_logic_vector(7 downto 0);
+    signal extra_pia_data_out     : std_logic_vector(7 downto 0);
+    signal extra_pia_ca2_out      : std_logic;
+    signal extra_pia_ca2_dir      : std_logic;
+    signal extra_pia_irq_a        : std_logic;
+    signal extra_pia_pa_in        : std_logic_vector(7 downto 0);
+    signal extra_pia_pa_out       : std_logic_vector(7 downto 0);
+    signal extra_pia_pa_dir       : std_logic_vector(7 downto 0);
+
+    signal extra_pia_cb2_out      : std_logic;
+    signal extra_pia_cb2_dir      : std_logic;
+    signal extra_pia_irq_b        : std_logic;
+    signal extra_pia_pb_in        : std_logic_vector(7 downto 0);
+    signal extra_pia_pb_out       : std_logic_vector(7 downto 0);
+    signal extra_pia_pb_dir       : std_logic_vector(7 downto 0);
     
     -------------------------------------------------------------------
 
@@ -431,6 +465,9 @@ begin
     -- Widget PIA: read/write: C8X4 - C8X7
     widget_pia_access <= std_match(address, "11001000----01--");
 
+    -- Speedball PIA: read/write: C8X8 - C8XB
+    extra_pia_access <= std_match(address, "11001000----1---");	 
+	 
     -- ROM PIA: read/write: C8XC - C8XF
     rom_pia_access <= std_match(address, "11001000----11--");
 
@@ -502,6 +539,9 @@ begin
 
             widget_pia_cs <= '0';
             widget_pia_write <= '0';
+				
+            extra_pia_cs <= '0';
+            extra_pia_write <= '0';				
 
             if clock_12_phase( 0) = '1' then
                 memory_address <= "00" & video_prom_address &
@@ -676,6 +716,15 @@ begin
                         widget_pia_write <= to_std_logic(write);
                         widget_pia_cs <= '1';
                     end if;
+						  
+						  if speedball = '1' then
+								if extra_pia_access then
+									extra_pia_rs <= address(1 downto 0);
+									extra_pia_data_in <= mpu_data_in;
+									extra_pia_write <= to_std_logic(write);
+									extra_pia_cs <= '1';
+								end if;
+						  end if;
 
                     if control_access and write then
                         blt_win_en     <= mpu_data_in(2) and sinistar;
@@ -699,6 +748,10 @@ begin
                         if widget_pia_access then
                             mpu_data_out <= widget_pia_data_out;
                         end if;
+								
+								if extra_pia_access then
+                            mpu_data_out <= extra_pia_data_out;
+                        end if;
                     
                         if rom_pia_access then
                             mpu_data_out <= rom_pia_data_out;
@@ -720,6 +773,7 @@ begin
            to_std_logic(rom_access) &
            to_std_logic(rom_pia_access) &
            to_std_logic(widget_pia_access) &
+--			  to_std_logic(extra_pia_access) &
            to_std_logic(blt_register_access);
 
     led_bcd_in <= debug_blt_source_address;
@@ -773,7 +827,7 @@ begin
         );
 
     -------------------------------------------------------------------
-
+--IN2
     rom_pia_pa_in <= not HAND &
                      not SLAM &
                      not C_COIN &
@@ -833,28 +887,30 @@ begin
     widget_ic4_b <= not (FIRE_RIGHT_1 & FIRE_LEFT_1 & FIRE_DOWN_1 & FIRE_UP_1);
 
     widget_ic4_y <= widget_ic4_b when widget_pia_input_select = '1' else widget_ic4_a;
-    
-    widget_pia_pa_in <= widget_ic4_y(2) &
-                        widget_ic4_y(1) &
+ --IN0   
+    widget_pia_pa_in <= widget_ic4_y(2) &--fire down
+                        widget_ic4_y(1) &--fire up
                         not PLAYER_2_START &
                         not PLAYER_1_START &
-                        widget_ic3_y(4) &
-                        widget_ic3_y(3) &
-                        widget_ic3_y(2) &
-                        widget_ic3_y(1) when sinistar = '0' else
-                        widget_ic4_y(4) &
-                        widget_ic4_y(3) &
-                        widget_ic4_y(2) &
-                        widget_ic4_y(1) &
-                        widget_ic3_y(4) &
-                        widget_ic3_y(3) &
-                        widget_ic3_y(2) &
-                        widget_ic3_y(1);
+                        widget_ic3_y(4) &--right
+                        widget_ic3_y(3) &--left
+                        widget_ic3_y(2) &--down
+                        widget_ic3_y(1) when sinistar = '0' else--up 
+								
+								widget_ic4_y(4) &--fire right
+                        widget_ic4_y(3) &--fire left
+                        widget_ic4_y(2) &--fire down
+                        widget_ic4_y(1) &--fire up
+                        widget_ic3_y(4) &--right
+                        widget_ic3_y(3) &--left
+                        widget_ic3_y(2) &--down
+                        widget_ic3_y(1);--up
+--IN1								
     widget_pia_pb_in <= not board_interface_w1 &
                         "00000" &
-                        widget_ic4_y(4) &
-                        widget_ic4_y(3) when sinistar = '0' else
-                        not board_interface_w1 &
+                        widget_ic4_y(4) &--fire right
+                        widget_ic4_y(3) when sinistar = '0' else --fire left
+								not board_interface_w1 &
                         "0" &
                         not PLAYER_2_START &
                         not PLAYER_1_START &
@@ -894,6 +950,79 @@ begin
         );
 
     -------------------------------------------------------------------
+	 
+--	PORT_START("IN3")
+--	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP ) PORT_PLAYER(1)
+--	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN ) PORT_PLAYER(1)
+--	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP ) PORT_PLAYER(2)
+--	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN ) PORT_PLAYER(2)
+--	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_BUTTON1 ) PORT_PLAYER(1)
+--	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_UNKNOWN )
+--	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_BUTTON1 ) PORT_PLAYER(2)
+--	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNKNOWN )
+	
+	
+--IN3   
+    extra_pia_pa_in <= 	'0' & --unknown
+                        FIRE_UP_2 & --fire 2
+                        '0' & --unknown
+                        FIRE_UP_1 & --fire 1
+                        MOVE_DOWN_2 &--down2
+                        MOVE_UP_2 &--up2
+                        MOVE_DOWN_1 &--down1
+                        MOVE_UP_1;--up1
+								
+--	PORT_START("IN4")
+--	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT ) PORT_PLAYER(1)
+--	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT ) PORT_PLAYER(1)
+--	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT ) PORT_PLAYER(2)
+--	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT ) PORT_PLAYER(2)
+--	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_UNKNOWN )
+--	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_UNKNOWN )
+--	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_START1 )
+--	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_START2 )
+
+	
+--IN4								
+    extra_pia_pb_in <=  not PLAYER_2_START &
+                        not PLAYER_1_START &
+								"00" &
+								MOVE_RIGHT_2 & 
+								MOVE_LEFT_2 &
+								MOVE_RIGHT_1 &
+								MOVE_LEFT_1;	 
+	 
+    extra_pia: work.pia6821
+        port map(
+		    rst => reset,
+            clk => clock,        
+            addr => address(1 downto 0),
+            cs => extra_pia_cs,
+            rw => not extra_pia_write,
+			
+            data_in => mpu_data_in,
+            data_out => extra_pia_data_out,
+        
+            ca1 => '0',
+            ca2_i => '0',
+            ca2_o => extra_pia_ca2_out,
+            ca2_oe => extra_pia_ca2_dir,
+            irqa => extra_pia_irq_a,
+            pa_i => extra_pia_pa_in,
+            pa_o => extra_pia_pa_out,
+            pa_oe => extra_pia_pa_dir,
+        
+            cb1 => '0',
+            cb2_i => '1',
+            cb2_o => extra_pia_cb2_out,
+            cb2_oe => extra_pia_cb2_dir,
+            irqb => extra_pia_irq_b,
+            pb_i => extra_pia_pb_in,
+            pb_o => extra_pia_pb_out,
+            pb_oe => extra_pia_pb_dir
+        );
+
+    -------------------------------------------------------------------	 
 
     E <= clock_e;
     Q <= clock_q;

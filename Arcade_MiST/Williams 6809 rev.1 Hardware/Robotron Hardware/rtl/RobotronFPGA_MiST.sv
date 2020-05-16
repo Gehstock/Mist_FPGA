@@ -56,14 +56,18 @@ wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
-wire       autoup    = status[7];// Memory Protect for Lotto Fun
-wire       adv       = status[8];
+wire       autoup    = status[7] | (core_mod != 7'h8);// Memory Protect for Lotto Fun
+wire       adv       = status[8] ;
 
 reg   [7:0] SW;
 reg   [7:0] JA;
 reg   [7:0] JB;
+reg   [7:0] AN0;
+reg   [7:0] AN1;
+reg   [7:0] AN2;
+reg   [7:0] AN3;
 reg   [3:0] BTN;
-reg         blitter_sc2, sinistar;
+reg         blitter_sc2, sinistar, speedball;
 reg         speech_en;
 
 wire  [6:0] core_mod;
@@ -87,8 +91,13 @@ always @(*) begin
 	JA = 8'hFF;
 	JB = 8'hFF;
 	BTN = 4'hF;
+	AN0 = 8'hFF;
+	AN1 = 8'hFF;
+	AN2 = 8'hFF;
+	AN3 = 8'hFF;
 	blitter_sc2 = 0;
 	sinistar = 0;
+	speedball = 0;
 	speech_en = 0;
 
 	case (core_mod)
@@ -150,9 +159,21 @@ always @(*) begin
 	end
 	7'h8: // LOTTO FUN
 	begin
-		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
-		JA  = ~{ 1'b0, 1'b0, m_fireB, m_fireA, m_right, m_left, m_down, m_up };
-		JB  = JA;
+		BTN = { m_one_player | m_fireA, 1'b0, m_coin1 | m_coin2, reset };
+		JA  = ~{ 4'b0000, m_right, m_left, m_down, m_up };
+		JB  = 8'b11111111;//IN1
+	end
+	7'h9: // Speed Ball
+	begin
+		speedball = 1;
+		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };//IN2
+		JA  = 8'b11111111;//IN0
+		JB  = 8'b11111111;//IN1
+		//todo
+//		AN0 =;
+//		AN1 =;
+//		AN2 =;
+	//	AN3 =;
 	end
 	default: ;
 	endcase
@@ -324,6 +345,7 @@ robotron_soc robotron_soc (
 
 	.blitter_sc2 ( blitter_sc2 ),
 	.sinistar    ( sinistar    ),
+	.speedball	 ( speedball	),
 	.BTN         ( BTN         ),
 	.SIN_FIRE    ( ~m_fireA & ~m_fire2A ),
 	.SIN_BOMB    ( ~m_fireB & ~m_fire2B ),

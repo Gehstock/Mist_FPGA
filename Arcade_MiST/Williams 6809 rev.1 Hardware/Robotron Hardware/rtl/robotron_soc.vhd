@@ -58,7 +58,7 @@ port (
 
 	blitter_sc2      : in    std_logic;
 	sinistar         : in    std_logic;
-
+	speedball        : in    std_logic;
 	-- Switches
 	SW               : in    std_logic_vector(7 downto 0);
 
@@ -81,7 +81,10 @@ port (
 	-- 12-pin connectors
 	JA               : in    std_logic_vector(7 downto 0);
 	JB               : in    std_logic_vector(7 downto 0);
-	
+	AN0              : in    std_logic_vector(7 downto 0);
+	AN1              : in    std_logic_vector(7 downto 0);
+	AN2              : in    std_logic_vector(7 downto 0);
+	AN3              : in    std_logic_vector(7 downto 0);		
 	dl_clock         : in    std_logic;
 	dl_addr          : in    std_logic_vector(16 downto 0);
 	dl_data          : in    std_logic_vector(7 downto 0);
@@ -166,7 +169,7 @@ port map (
 	clock            => clock,
 	blitter_sc2      => blitter_sc2,
 	sinistar         => sinistar,
-
+	speedball        => speedball,
 	A                => cpu_a,
 	Dout             => cpu_dout,
 	Din              => cpu_din,
@@ -231,7 +234,11 @@ port map (
 	-- 12-pin connectors
 	JA               => JA,
 	JB               => JB,
-	
+	-- Analog Input	
+	AN0               => AN0,
+	AN1               => AN1,
+	AN2               => AN2,
+	AN3               => AN3,		
 	-- Sound board
 	PB               => select_sound,
 	HAND             => hand
