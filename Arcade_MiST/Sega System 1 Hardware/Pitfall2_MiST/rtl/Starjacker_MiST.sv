@@ -1,5 +1,4 @@
-
-module Flicky_MiST(
+module Starjacker_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -32,7 +31,8 @@ module Flicky_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"STARJACK;ROM;",
+	"PITFALL;ROM;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 
@@ -50,7 +50,7 @@ wire           blend = status[5];
 wire [1:0] dsLives  = ~status[9:8];
 wire [1:0] dsExtend = ~status[11:10]; 
 wire       dsDifclt = ~status[12]; 
-
+wire          rotate = status[2];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = sdram_clk;
@@ -243,7 +243,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_HS         ( VGA_HS           ),
 	.ce_divider     ( 1'b0             ),
 	.blend          ( blend            ),
-	.rotate         ( 2'b0   			  ),
+	.rotate         ( {1'b0, rotate}   ),
 	.scandoubler_disable(scandoublerD  ),
 	.scanlines      ( scanlines        ),
 	.ypbpr          ( ypbpr            ),
@@ -270,8 +270,8 @@ arcade_inputs inputs (
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
-	.rotate      ( 1'b0        ),
-	.orientation ( 2'b00       ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b01       ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
