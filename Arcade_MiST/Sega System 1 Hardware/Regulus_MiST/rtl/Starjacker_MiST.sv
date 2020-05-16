@@ -35,7 +35,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-
+	"O6,Service,Off,On;",
 	"O89,Lives,3,4,5,Infinite;",
 	"OAB,Extend,30k/80k/160k,30k/100k/200k,40k/120k/240k,40k/140k/280k;",
 	"OC,Difficulty,Easy,Hard;",
@@ -51,7 +51,7 @@ wire [1:0] dsLives  = ~status[9:8];
 wire [1:0] dsExtend = ~status[11:10]; 
 wire       dsDifclt = ~status[12]; 
 wire          rotate = status[2];
-
+wire        dsService = status[6];
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = sdram_clk;
 assign SDRAM_CKE = 1;
@@ -150,10 +150,10 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]}),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (17'h10000 + spr_rom_addr[14:1]) ),
-	.cpu2_q        ( spr_rom_do ),
-	.cpu3_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + snd_rom_addr[12:1]) ),
-	.cpu3_q        ( snd_rom_do ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + snd_rom_addr[12:1]) ),
+	.cpu2_q        ( snd_rom_do ),
+	.cpu3_addr     ( ioctl_downl ? 16'hffff : (17'h10000 + spr_rom_addr[14:1]) ),
+	.cpu3_q        ( spr_rom_do ),
 
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
@@ -190,12 +190,12 @@ always @(posedge sdram_clk) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-wire [7:0] INP0 = ~{m_left, m_right,3'd0,m_fireA,2'd0}; 
-wire [7:0] INP1 = ~{m_left2,m_right2,3'd0,m_fire2A,2'd0}; 
-wire [7:0] INP2 = ~{2'd0,m_two_players, m_one_player,3'd0, m_coin1}; 
+wire [7:0] INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,m_fireB,1'b0}; 
+wire [7:0] INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,m_fire2B,1'b0}; 
+wire [7:0] INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
 
 wire [7:0] DSW0 = 8'hFF;
-wire [7:0] DSW1 = {dsDifclt,dsExtend,dsLives,2'b00};
+wire [7:0] DSW1 = {dsDifclt,dsExtend,dsLives,2'b00};//Continue, Difficulty
 
 FPGA_FLICKY FPGA_FLICKY(
 	.clk48M(clk_sys),
