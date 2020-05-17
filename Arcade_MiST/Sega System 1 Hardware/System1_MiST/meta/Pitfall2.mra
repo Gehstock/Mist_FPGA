@@ -1,0 +1,32 @@
+<misterromdescription>
+    <name>Pitfall2</name>
+    <mameversion>0216</mameversion>
+    <mratimestamp>202001010000</mratimestamp>
+    <year>1985</year>
+    <manufacturer>Sega</manufacturer>
+´   <rbf>System1_MiST</rbf>
+    <category>Action</category>
+    <setname>pitfall2</setname>
+    <rom index="0" zip="pitfall2u.zip" md5="28519359654348978293b199d0545da6" type="merged|nonmerged">
+    <rom index="1"> <part>1</part> </rom>
+	<part name="epr-6623.116"/>
+	<part name="epr6624a.109"/>
+	<part name="epr-6625.96"/>
+	<part name="epr-6625.96"/>
+
+	<part name="epr-6462.120"/>
+
+	<part name="epr6454a.117"/>
+	<part name="epr-6455.05"/>
+
+	<part name="epr6474a.62"/>
+	<part name="epr6473a.61"/>
+	<part name="epr6472a.64"/>
+	<part name="epr6471a.63"/>
+	<part name="epr6470a.66"/>
+	<part name="epr6469a.65"/>
+	
+	<part name="pr-5317.76"/>
+	<part repeat="0x80">FF</part>
+    </rom>
+</misterromdescription>
