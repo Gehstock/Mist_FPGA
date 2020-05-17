@@ -133,7 +133,7 @@ wire  [7:0] dectbl;
 wire  [7:0] mdec    = ( mdat & andv ) | ( dectbl ^ xorv );
 
 //DLROM #( 7,8) decrom( clk, decidx,   dectbl, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16: 7]==10'b1_1110_0001_0) );	// $1E100-$1E17F
-dec_rom dec_rom(
+dec_rom dec_rom(//only 32k are encrypted  todo
 	.clk(clk),
 	.addr(decidx),
 	.data(dectbl)

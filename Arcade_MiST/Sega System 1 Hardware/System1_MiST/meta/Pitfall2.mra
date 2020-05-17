@@ -18,6 +18,7 @@
 
 	<part name="epr6454a.117"/>
 	<part name="epr-6455.05"/>
+	<part repeat="0x8000">FF</part>
 
 	<part name="epr6474a.62"/>
 	<part name="epr6473a.61"/>

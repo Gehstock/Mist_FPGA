@@ -11,13 +11,13 @@
     <rom index="1"> <part>0</part> </rom>
 	<part name="epr5978a.116"/>
 	<part name="epr5979a.109"/>
-	<part name="epr5978a.116"/>
-	<part name="epr5979a.109"/>
+	<part repeat="0x8000">FF</part>
 
 	<part name="epr-5869.120"/>
 
 	<part name="epr-5855.117"/>
 	<part name="epr-5856.110"/>
+	<part repeat="0x8000">FF</part>
 
 	<part name="epr-5868.62"/>
 	<part name="epr-5867.61"/>

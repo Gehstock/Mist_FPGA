@@ -37,7 +37,7 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
-	"O7,Crypt,Off,On;",
+	"O7,Crypt,On,OFF;",
 	"O89,Lives,3,4,5,Infinite;",
 	"OAB,Extend,30k/80k/160k,30k/100k/200k,40k/120k/240k,40k/140k/280k;",
 	"OC,Difficulty,Easy,Hard;",
@@ -90,7 +90,7 @@ always @(*) begin
 		
 //		crypt = 1'b0;
 	end
-	7'h2: // STARJACKER - PPI no Sound todo
+	7'h2: // STARJACKER no Sound todo
 	begin
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,m_fireB,1'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,m_fire2B,1'b0}; 
@@ -120,6 +120,27 @@ always @(*) begin
 	
 //		crypt = 1'b0;
 	end
+	7'h5: // My Hero - PIO
+	begin
+		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
+		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
+		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
+		DSW0 = 8'hFF;
+		DSW1 = {dsDifclt,dsExtend,dsLives,2'b00};//Continue, Difficulty
+	
+//		crypt = 1'b0;
+	end	
+	7'h6: // Sega Ninja - PIO
+	begin
+		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
+		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
+		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
+		DSW0 = 8'hFF;
+		DSW1 = {dsDifclt,dsExtend,dsLives,2'b00};//Continue, Difficulty
+	
+//		crypt = 1'b0;
+//Check graphic
+	end		
 	default: ;
 	endcase
 end
@@ -180,7 +201,7 @@ wire  [2:0] g, r;
 wire  [1:0] b;
 wire [15:0] rom_addr;
 wire [15:0] rom_do;
-wire [14:0] spr_rom_addr;
+wire [15:0] spr_rom_addr;
 wire [15:0] spr_rom_do;
 wire [12:0] snd_rom_addr;
 wire [15:0] snd_rom_do;
@@ -206,7 +227,7 @@ data_io data_io(
 
 
 reg port1_req, port2_req;
-wire [24:0] tl_ioctl_addr = ioctl_addr - 17'h1A000;
+wire [24:0] tl_ioctl_addr = ioctl_addr - 18'h22000;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
@@ -225,7 +246,7 @@ sdram sdram(
 	.cpu1_q        ( rom_do ),
 	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + snd_rom_addr[12:1]) ),
 	.cpu2_q        ( snd_rom_do ),
-	.cpu3_addr     ( ioctl_downl ? 16'hffff : (17'h10000 + spr_rom_addr[14:1]) ),
+	.cpu3_addr     ( ioctl_downl ? 16'hffff : (17'h10000 + spr_rom_addr[15:1]) ),
 	.cpu3_q        ( spr_rom_do ),
 
 	// port2 for sprite graphics
@@ -284,7 +305,7 @@ System1_Top System1_Top(
 	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr(snd_rom_addr),
 	.snd_rom_do(snd_rom_addr[0] ? snd_rom_do[15:8] : snd_rom_do[7:0] ),
-	.spr_rom_addr(spr_rom_addr),//Internal for now
+	.spr_rom_addr(spr_rom_addr),
 	.spr_rom_do(spr_rom_addr[0] ? spr_rom_do[15:8] : spr_rom_do[7:0] ),
 	.tile_rom_addr(tile_rom_addr),
 	.tile_rom_do(tile_rom_do),

@@ -1,0 +1,34 @@
+<misterromdescription>
+    <name>MyHero</name>
+    <mameversion>0216</mameversion>
+    <mratimestamp>202001010000</mratimestamp>
+    <year>1985</year>
+    <manufacturer>Sega</manufacturer>
+´   <rbf>System1_MiST</rbf>
+    <category>Action</category>
+    <setname>myhero</setname>
+    <rom index="0" zip="myhero.zip" md5="15ab241d9f6780f41721916f46e7d4fa" type="merged|nonmerged">
+    <rom index="1"> <part>5</part> </rom>
+	<part name="epr6963b.116"/>
+	<part name="epr6964a.109"/>
+	<part name="epr-6927.96"/>
+	<part repeat="0x4000">FF</part>
+
+	<part name="epr-69xx.120"/>
+
+	<part name="epr-6921.117"/>
+	<part name="epr-6923.04"/>
+	<part name="epr-6922.110"/>
+	<part name="epr-6924.05"/>
+
+	<part name="epr-6966.62"/>
+	<part name="epr-6961.61"/>
+	<part name="epr-6960.64"/>
+	<part name="epr-6959.63"/>
+	<part name="epr-6958.66"/>
+	<part name="epr-6957.65"/>
+	
+	<part name="pr-5317.76"/>
+	<part repeat="0x80">FF</part>
+    </rom>
+</misterromdescription>

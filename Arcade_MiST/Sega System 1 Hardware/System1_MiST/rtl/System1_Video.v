@@ -21,7 +21,7 @@ module System1_Video
 	input		[7:0]	cpu_dw,
 	output			cpu_rd,
 	output	[7:0]	cpu_dr,
-	output  [14:0] spr_rom_addr,
+	output  [15:0] spr_rom_addr,
 	input	  [7:0]	spr_rom_do,	
 	output  [13:0] tile_rom_addr,
 	input	  [23:0]	tile_rom_do
@@ -79,7 +79,7 @@ VIDHVGEN hv(
 
 // Sprite Engine
 wire [10:0] SPRPX;
-wire [14:0] sprchad;
+wire [15:0] sprchad;
 wire  [7:0] sprchdt;
 //DLROM #(15,8) sprchr(VCLKx8,sprchad,sprchdt, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16:15]==2'b0_1));	// $08000-$0FFFF
 //spr_rom spr_rom(

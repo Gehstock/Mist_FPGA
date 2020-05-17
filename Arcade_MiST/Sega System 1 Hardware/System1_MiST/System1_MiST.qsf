@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 06:24:46  May 16, 2020
+# Date created = 21:33:05  May 17, 2020
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		Flicky_MiST_assignment_defaults.qdf
+#		System1_MiST_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -43,6 +43,23 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/System1_MiST.sv
+set_global_assignment -name VERILOG_FILE rtl/System1_Top.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Main.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Video.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Sound.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Sprite.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Parts.v
+set_global_assignment -name VERILOG_FILE rtl/System1_hvgen.v
+set_global_assignment -name VERILOG_FILE rtl/SN76496.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
+set_global_assignment -name VERILOG_FILE rtl/z80ip.v
+set_global_assignment -name VERILOG_FILE rtl/DPRAM1024_11B.v
+set_global_assignment -name VHDL_FILE rtl/rom/dec_rom.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/clut.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -168,77 +185,58 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(Flicky_MiST)
+# --------------------------
+# start ENTITY(System1_MiST)
 
 	# Pin & Location Assignments
 	# ==========================
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+	set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 
 	# Fitter Assignments
 	# ==================
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(Flicky_MiST)
-# -----------------------
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
-set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/System1_MiST.sv
-set_global_assignment -name VERILOG_FILE rtl/System1_Top.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Main.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Video.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Sound.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Sprite.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Parts.v
-set_global_assignment -name VERILOG_FILE rtl/System1_hvgen.v
-set_global_assignment -name VERILOG_FILE rtl/SN76496.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
-set_global_assignment -name VERILOG_FILE rtl/z80ip.v
-set_global_assignment -name VERILOG_FILE rtl/DPRAM1024_1B.v
-set_global_assignment -name VERILOG_FILE rtl/DPRAM1024_11B.v
-set_global_assignment -name VHDL_FILE rtl/rom/dec_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/clut.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/spr_rom.vhd
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+# end ENTITY(System1_MiST)
+# ------------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

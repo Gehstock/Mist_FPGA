@@ -25,7 +25,7 @@ module System1_Top
 	output  [15:0] SOUT,			// Sound Out (PCM)
 	output  [15:0] cpu_rom_addr,
 	input	  [7:0]	cpu_rom_do,
-	output  [14:0] spr_rom_addr,
+	output  [15:0] spr_rom_addr,
 	input	  [7:0]	spr_rom_do,
 	output  [12:0] snd_rom_addr,
 	input	  [7:0]	snd_rom_do,
