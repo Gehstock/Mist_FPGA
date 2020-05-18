@@ -91,6 +91,8 @@ always @(posedge CPUCLn) begin
 	end
 end
 
+wire [7:0] mrom_data = (crypt == 1'b1 & CPUAD[15] == 1'b0) ? cpu_rd_mrom : cpu_rom_do;
+
 dataselector8 mcpudisel(
 	CPUDI,
 	VIDCS, VIDDO,
@@ -100,7 +102,7 @@ dataselector8 mcpudisel(
 	cpu_cs_portA, cpu_rd_portA,
 	cpu_cs_portB, cpu_rd_portB,
 	cpu_cs_mram,  cpu_rd_mram,
-	cpu_cs_mrom,  (crypt == 1'b1) ? cpu_rd_mrom : cpu_rom_do,
+	cpu_cs_mrom,  mrom_data,
 	8'hFF
 );
 
@@ -133,7 +135,7 @@ wire  [7:0] dectbl;
 wire  [7:0] mdec    = ( mdat & andv ) | ( dectbl ^ xorv );
 
 //DLROM #( 7,8) decrom( clk, decidx,   dectbl, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16: 7]==10'b1_1110_0001_0) );	// $1E100-$1E17F
-dec_rom dec_rom(//only 32k are encrypted  todo
+dec_315_5051 dec_315_5051(//todo move to sdram
 	.clk(clk),
 	.addr(decidx),
 	.data(dectbl)

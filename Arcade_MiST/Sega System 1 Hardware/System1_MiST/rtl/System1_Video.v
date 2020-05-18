@@ -122,7 +122,7 @@ BGGEN bg1(VCLK,BG1HP,BG1VP,vram1ad,vram1dt,tile1ad,tile1dt,BG1PX);
 // Color Mixer & RGB Output
 wire [7:0] cltidx,cltval;
 //DLROM #(8,8) clut(VCLKx2, cltidx, cltval, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16:8]==9'b1_1110_0000) ); // $1E000-$1E0FF
-clut clut(
+clut clut(//todo move to sdram
 	.clk(VCLKx2),
 	.addr(cltidx),
 	.data(cltval)

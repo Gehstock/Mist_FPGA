@@ -30,6 +30,7 @@ module System1_MiST(
 );
 
 `include "rtl/build_id.v" 
+
 `define CORE_NAME "FLICKY"
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
@@ -140,6 +141,16 @@ always @(*) begin
 	
 //		crypt = 1'b0;
 //Check graphic
+	end		
+	7'h7: // Mr Viking
+	begin
+		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
+		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
+		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
+		DSW0 = 8'hFF;
+		DSW1 = {dsDifclt,dsExtend,dsLives,2'b00};//Continue, Difficulty
+	
+//		crypt = 1'b1;
 	end		
 	default: ;
 	endcase
