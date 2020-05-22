@@ -27,13 +27,15 @@ module osd (
 	output [5:0] B_out
 );
 
-parameter OSD_X_OFFSET = 10'd0;
-parameter OSD_Y_OFFSET = 10'd0;
+parameter OSD_X_OFFSET = 11'd0;
+parameter OSD_Y_OFFSET = 11'd0;
 parameter OSD_COLOR    = 3'd0;
 parameter OSD_AUTO_CE  = 1'b1;
 
-localparam OSD_WIDTH   = 10'd256;
-localparam OSD_HEIGHT  = 10'd128;
+localparam OSD_WIDTH   = 11'd256;
+localparam OSD_HEIGHT  = 11'd128;
+
+localparam OSD_WIDTH_PADDED = OSD_WIDTH + (OSD_WIDTH >> 1);  // 25% padding left and right
 
 // *********************************************************************************
 // spi client
@@ -84,36 +86,40 @@ end
 // *********************************************************************************
 
 // horizontal counter
-reg  [9:0] h_cnt;
-reg  [9:0] hs_low, hs_high;
-wire       hs_pol = hs_high < hs_low;
-wire [9:0] dsp_width = hs_pol ? hs_low : hs_high;
+reg  [10:0] h_cnt;
+reg  [10:0] hs_low, hs_high;
+wire        hs_pol = hs_high < hs_low;
+wire [10:0] dsp_width = hs_pol ? hs_low : hs_high;
 
 // vertical counter
-reg  [9:0] v_cnt;
-reg  [9:0] vs_low, vs_high;
-wire       vs_pol = vs_high < vs_low;
-wire [9:0] dsp_height = vs_pol ? vs_low : vs_high;
+reg  [10:0] v_cnt;
+reg  [10:0] vs_low, vs_high;
+wire        vs_pol = vs_high < vs_low;
+wire [10:0] dsp_height = vs_pol ? vs_low : vs_high;
 
 wire doublescan = (dsp_height>350);
 
 reg auto_ce_pix;
 always @(posedge clk_sys) begin
-	integer cnt = 0;
-	integer pixsz, pixcnt;
-	reg hs;
+	reg [15:0] cnt = 0;
+	reg  [1:0] pixsz;
+	reg  [1:0] pixcnt;
+	reg        hs;
 
-	cnt <= cnt + 1;
+	cnt <= cnt + 1'd1;
 	hs <= HSync;
 
-	pixcnt <= pixcnt + 1;
+	pixcnt <= pixcnt + 1'd1;
 	if(pixcnt == pixsz) pixcnt <= 0;
 	auto_ce_pix <= !pixcnt;
 
 	if(hs && ~HSync) begin
-		cnt    <= 0;
-		if (cnt <= 512) pixsz = 0;
-		else pixsz  <= (cnt >> 9) - 1;
+		cnt <= 0;
+		if(cnt <= OSD_WIDTH_PADDED * 2) pixsz <= 0;
+		else if(cnt <= OSD_WIDTH_PADDED * 3) pixsz <= 1;
+		else if(cnt <= OSD_WIDTH_PADDED * 4) pixsz <= 2;
+		else pixsz <= 3;
+
 		pixcnt <= 0;
 		auto_ce_pix <= 1;
 	end
@@ -161,14 +167,22 @@ always @(posedge clk_sys) begin
 end
 
 // area in which OSD is being displayed
-wire [9:0] h_osd_start = ((dsp_width - OSD_WIDTH)>> 1) + OSD_X_OFFSET;
-wire [9:0] h_osd_end   = h_osd_start + OSD_WIDTH;
-wire [9:0] v_osd_start = ((dsp_height- (OSD_HEIGHT<<doublescan))>> 1) + OSD_Y_OFFSET;
-wire [9:0] v_osd_end   = v_osd_start + (OSD_HEIGHT<<doublescan);
-wire [9:0] osd_hcnt    = h_cnt - h_osd_start;
-wire [9:0] osd_vcnt    = v_cnt - v_osd_start;
-wire [9:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd pixel
-wire [9:0] osd_hcnt_next2 = osd_hcnt + 2'd2;  // two pixel offset for osd byte address register
+reg [10:0] h_osd_start;
+reg [10:0] h_osd_end;
+reg [10:0] v_osd_start;
+reg [10:0] v_osd_end;
+
+always @(posedge clk_sys) begin
+	h_osd_start <= ((dsp_width - OSD_WIDTH)>> 1) + OSD_X_OFFSET;
+	h_osd_end   <= h_osd_start + OSD_WIDTH;
+	v_osd_start <= ((dsp_height- (OSD_HEIGHT<<doublescan))>> 1) + OSD_Y_OFFSET;
+	v_osd_end   <= v_osd_start + (OSD_HEIGHT<<doublescan);
+end
+
+wire [10:0] osd_hcnt    = h_cnt - h_osd_start;
+wire [10:0] osd_vcnt    = v_cnt - v_osd_start;
+wire [10:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd pixel
+wire [10:0] osd_hcnt_next2 = osd_hcnt + 2'd2;  // two pixel offset for osd byte address register
 reg        osd_de;
 
 reg [10:0] osd_buffer_addr;
