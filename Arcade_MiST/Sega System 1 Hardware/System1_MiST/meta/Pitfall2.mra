@@ -8,7 +8,6 @@
     <category>Action</category>
     <setname>pitfall2</setname>
     <rom index="0" zip="pitfall2u.zip" md5="28519359654348978293b199d0545da6" type="merged|nonmerged">
-    <rom index="1"> <part>1</part> </rom>
 	<part name="epr-6623.116"/>
 	<part name="epr6624a.109"/>
 	<part name="epr-6625.96"/>
@@ -30,4 +29,5 @@
 	<part name="pr-5317.76"/>
 	<part repeat="0x80">FF</part>
     </rom>
+    <rom index="1"> <part>1</part> </rom>
 </misterromdescription>

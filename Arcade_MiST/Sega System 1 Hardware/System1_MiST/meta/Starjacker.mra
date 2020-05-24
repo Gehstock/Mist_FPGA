@@ -8,7 +8,6 @@
     <category>Action</category>
     <setname>starjack</setname>
     <rom index="0" zip="starjack.zip" md5="ed626899e524649927c7e138d5999128" type="merged|nonmerged">
-    <rom index="1"> <part>2</part> </rom>
 	<part name="epr5320b.129"/>
 	<part name="epr5321a.130"/>
 	<part name="epr5322a.131"/>
@@ -34,4 +33,5 @@
 	<part name="pr-5317.106"/>
 	<part repeat="0x80">FF</part>
     </rom>
+    <rom index="1"> <part>2</part> </rom>
 </misterromdescription>

@@ -8,7 +8,6 @@
     <category>Action</category>
     <setname>regulus</setname>
     <rom index="0" zip="regulusu.zip" md5="df09d8fb7f19299699c19a3986c53538" type="merged|nonmerged">
-    <rom index="1"> <part>3</part> </rom>
 	<part name="epr-5950.129"/>
 	<part name="epr-5951.130"/>
 	<part name="epr-5952.131"/>
@@ -34,4 +33,5 @@
 	<part name="5317.106"/>
 	<part repeat="0x80">FF</part>
     </rom>
+    <rom index="1"> <part>3</part> </rom>
 </misterromdescription>

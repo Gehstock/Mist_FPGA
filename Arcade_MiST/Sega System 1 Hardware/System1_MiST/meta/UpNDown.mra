@@ -8,7 +8,6 @@
     <category>Action</category>
     <setname>upndown</setname>
     <rom index="0" zip="upndownu.zip" md5="77fe1ba964f9603a30e5ef5c6b97534f" type="merged|nonmerged">
-    <rom index="1"> <part>4</part> </rom>
 	<part name="epr-5679.129"/>
 	<part name="epr-5680.130"/>
 	<part name="epr-5681.131"/>
@@ -34,4 +33,5 @@
 	<part name="pr-5317.106"/>
 	<part repeat="0x80">FF</part>
     </rom>
+    <rom index="1"> <part>4</part> </rom>
 </misterromdescription>
