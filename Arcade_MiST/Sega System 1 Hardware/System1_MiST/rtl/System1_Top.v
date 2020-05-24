@@ -30,7 +30,11 @@ module System1_Top
 	output  [12:0] snd_rom_addr,
 	input	  [7:0]	snd_rom_do,
 	output  [13:0] tile_rom_addr,
-	input	  [23:0]	tile_rom_do
+	input	  [23:0]	tile_rom_do,
+	input   [17:0] dl_addr,
+	input	  [7:0]	dl_data,
+	input				dl_wr,
+	input				dl_clk
 );
 
 // Clocks
@@ -63,7 +67,11 @@ System1_Main System1_Main(
 	.VIDDO(VIDDO),
 	.SNDRQ(SNDRQ),
 	.cpu_rom_addr(cpu_rom_addr),
-	.cpu_rom_do(cpu_rom_do)
+	.cpu_rom_do(cpu_rom_do),
+	.dl_addr(dl_addr),
+	.dl_data(dl_data),
+	.dl_wr(dl_wr),
+	.dl_clk(dl_clk)
 );
 
 System1_Video System1_Video(
@@ -85,7 +93,11 @@ System1_Video System1_Video(
 	.spr_rom_addr(spr_rom_addr),
 	.spr_rom_do(spr_rom_do),
 	.tile_rom_addr(tile_rom_addr),
-	.tile_rom_do(tile_rom_do)
+	.tile_rom_do(tile_rom_do),
+	.dl_addr(dl_addr),
+	.dl_data(dl_data),
+	.dl_wr(dl_wr),
+	.dl_clk(dl_clk)	
 );
 assign PCLK = clk6M;
 

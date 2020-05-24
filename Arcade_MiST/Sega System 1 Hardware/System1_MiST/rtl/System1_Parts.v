@@ -95,7 +95,6 @@ end
 
 endmodule
 
-
 module DPRAM1024
 (
 	input					clk0,

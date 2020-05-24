@@ -25,7 +25,11 @@ module System1_Main
 	
 	output			SNDRQ,
 	output [15:0]	cpu_rom_addr,
-	input   [7:0]	cpu_rom_do
+	input   [7:0]	cpu_rom_do,
+	input   [17:0] dl_addr,
+	input	  [7:0]	dl_data,
+	input				dl_wr,
+	input				dl_clk
 );
 
 wire			AXSCL   = CLK48M;
@@ -78,7 +82,7 @@ wire [7:0]	cpu_rd_portB = DSW1;
 
 wire [7:0]	cpu_rd_mrom;
 wire			cpu_cs_mrom = (CPUAD[15:12] < 4'b1100);
-PRGROM prom(AXSCL, cpu_m1, CPUAD[14:0], cpu_rd_mrom, cpu_rom_addr,cpu_rom_do );
+PRGROM prom(AXSCL, cpu_m1, CPUAD[14:0], cpu_rd_mrom, cpu_rom_addr[14:0],cpu_rom_do,dl_addr,dl_data,dl_wr,dl_clk );
 
 wire [7:0]	cpu_rd_mram;
 wire			cpu_cs_mram = (CPUAD[15:12] == 4'b1100);
@@ -120,7 +124,11 @@ module PRGROM
 	input     [14:0]	mrom_ad,
 	output reg [7:0]	mrom_dt,
 	output 	[14:0]	cpu_rom_addr,
-	input   	 [7:0]	cpu_rom_do
+	input   	 [7:0]	cpu_rom_do,
+	input   [17:0] dl_addr,
+	input	  [7:0]	dl_data,
+	input				dl_wr,
+	input				dl_clk
 );
 
 reg  [15:0] madr;
@@ -135,19 +143,18 @@ wire  [7:0] dectbl;
 wire  [7:0] mdec    = ( mdat & andv ) | ( dectbl ^ xorv );
 
 //DLROM #( 7,8) decrom( clk, decidx,   dectbl, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16: 7]==10'b1_1110_0001_0) );	// $1E100-$1E17F
-dec_315_5051 dec_315_5051(//todo move to sdram
-	.clk(clk),
-	.addr(decidx),
-	.data(dectbl)
-);
+wire dec_we = dl_addr[17:7] == 11'b10111000010;//2E100
+dpram#(8,7)decrom(
+	.clk_a(clk),
+	.addr_a(decidx),
+	.q_a(dectbl),
+	.clk_b(dl_clk),
+	.addr_b(dl_addr[6:0]),
+	.we_b(dec_we & dl_wr),
+	.d_b(dl_data)
+	);
 
-//DLROM #(15,8) mainir( clk, madr[14:0], mdat, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16:15]==2'b0_0) );				// $00000-$07FFF
-//prg_rom pgr_rom(
-//	.clk(clk),
-//	.addr(madr[14:0]),
-//	.data(mdat)
-//);
-assign cpu_rom_addr = madr[15:0];
+assign cpu_rom_addr = madr[14:0];
 assign mdat = cpu_rom_do;
 
 reg phase = 1'b0;

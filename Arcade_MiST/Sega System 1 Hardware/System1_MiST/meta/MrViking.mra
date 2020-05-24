@@ -4,11 +4,11 @@
     <mratimestamp>202001010000</mratimestamp>
     <year>1985</year>
     <manufacturer>Sega</manufacturer>
-´   <rbf>System1_MiST</rbf>
+´   <rbf>System1</rbf>
     <category>Action</category>
     <setname>mrviking</setname>
-    <rom index="0" zip="mrviking.zip" md5="15ab241d9f6780f41721916f46e7d4fa" type="merged|nonmerged">
     <rom index="1"> <part>7</part> </rom>
+    <rom index="0" zip="mrviking.zip" md5="0c780578b7ded1c053192b4ec15fd546" type="merged|nonmerged">
 	<part name="epr-5873.129"/>
 	<part name="epr-5874.130"/>
 	<part name="epr-5875.131"/>

@@ -4,11 +4,11 @@
     <mratimestamp>202001010000</mratimestamp>
     <year>1984</year>
     <manufacturer>Sega</manufacturer>
-´   <rbf>System1_MiST</rbf>
+´   <rbf>System1</rbf>
     <category>Action</category>
     <setname>flicky</setname>
-    <rom index="0" zip="flicky.zip" md5="97c9fdc1c04b6d341e2555663a7b14be" type="merged|nonmerged">
     <rom index="1"> <part>0</part> </rom>
+    <rom index="0" zip="flicky.zip" md5="bb794955615ad5c3fbd30c99ddb35cec" type="merged|nonmerged">
 	<part name="epr5978a.116"/>
 	<part name="epr5979a.109"/>
 	<part repeat="0x8000">FF</part>

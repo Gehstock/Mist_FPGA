@@ -223,6 +223,7 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire dl_wr = ioctl_wr && ioctl_addr < 18'h2E180;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -275,7 +276,6 @@ sdram sdram(
 
 always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
-
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
@@ -320,6 +320,10 @@ System1_Top System1_Top(
 	.spr_rom_do(spr_rom_addr[0] ? spr_rom_do[15:8] : spr_rom_do[7:0] ),
 	.tile_rom_addr(tile_rom_addr),
 	.tile_rom_do(tile_rom_do),
+	.dl_addr      ( ioctl_addr[17:0] ),
+	.dl_data      ( ioctl_dout ),
+	.dl_wr        ( dl_wr ),
+	.dl_clk(clk_sys),
 	.SOUT(audio)
 );
 

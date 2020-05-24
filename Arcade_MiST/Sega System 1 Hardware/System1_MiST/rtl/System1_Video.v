@@ -24,7 +24,11 @@ module System1_Video
 	output  [15:0] spr_rom_addr,
 	input	  [7:0]	spr_rom_do,	
 	output  [13:0] tile_rom_addr,
-	input	  [23:0]	tile_rom_do
+	input	  [23:0]	tile_rom_do,
+	input   [17:0] dl_addr,
+	input	  [7:0]	dl_data,
+	input				dl_wr,
+	input				dl_clk
 );
 
 // CPU Interface
@@ -82,11 +86,6 @@ wire [10:0] SPRPX;
 wire [15:0] sprchad;
 wire  [7:0] sprchdt;
 //DLROM #(15,8) sprchr(VCLKx8,sprchad,sprchdt, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16:15]==2'b0_1));	// $08000-$0FFFF
-//spr_rom spr_rom(
-//	.clk(VCLKx8),
-//	.addr(sprchad),
-//	.data(sprchdt)
-//);
 assign  spr_rom_addr = sprchad;
 assign sprchdt = spr_rom_do;
 
@@ -122,11 +121,16 @@ BGGEN bg1(VCLK,BG1HP,BG1VP,vram1ad,vram1dt,tile1ad,tile1dt,BG1PX);
 // Color Mixer & RGB Output
 wire [7:0] cltidx,cltval;
 //DLROM #(8,8) clut(VCLKx2, cltidx, cltval, ROMCL,ROMAD,ROMDT,ROMEN & (ROMAD[16:8]==9'b1_1110_0000) ); // $1E000-$1E0FF
-clut clut(//todo move to sdram
-	.clk(VCLKx2),
-	.addr(cltidx),
-	.data(cltval)
-);
+wire clut_we = dl_addr[17:8] == 10'b1011100000;//2E000
+dpram#(8,8)decrom(
+	.clk_a(VCLKx2),
+	.addr_a(cltidx),
+	.q_a(cltval),
+	.clk_b(dl_clk),
+	.addr_b(dl_addr[7:0]),
+	.we_b(clut_we & dl_wr),
+	.d_b(dl_data)
+	);
 
 COLMIX cmix(
 	VCLK,
