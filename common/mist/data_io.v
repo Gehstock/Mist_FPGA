@@ -156,21 +156,27 @@ end
 endgenerate
 
 always@(posedge clk_sys) begin : DATA_OUT
-	// bring flags from spi clock domain into core clock domain
+	// synchronisers
 	reg rclkD, rclkD2;
 	reg rclk2D, rclk2D2;
 	reg addr_resetD, addr_resetD2;
+
 	reg wr_int, wr_int_direct;
 	reg [24:0] addr;
 	reg [31:0] filepos;
 
+	// bring flags from spi clock domain into core clock domain
 	{ rclkD, rclkD2 } <= { rclk, rclkD };
 	{ rclk2D ,rclk2D2 } <= { rclk2, rclk2D };
 	{ addr_resetD, addr_resetD2 } <= { addr_reset, addr_resetD };
 
 	ioctl_wr <= 0;
 
-	if (!downloading_reg) ioctl_download <= 0;
+	if (!downloading_reg) begin
+		ioctl_download <= 0;
+		wr_int <= 0;
+		wr_int_direct <= 0;
+	end
 
 	if (~clkref_n) begin
 		wr_int <= 0;
