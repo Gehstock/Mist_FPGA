@@ -2,13 +2,13 @@
 
 module System1_Video
 (
+	input				RESET,
 	input				VCLKx8,
-	input				VCLKx4,
-	input				VCLKx2,
-	input				VCLK,
+
 
 	input		[8:0]	PH,
 	input		[8:0]	PV,
+	input				VFLP,
 
 	output			VBLK,
 	output   [7:0]	RGB8,
@@ -31,6 +31,12 @@ module System1_Video
 	input				dl_clk
 );
 
+reg [2:0] clkdiv;
+always @(posedge VCLKx8) clkdiv <= clkdiv+1;
+wire VCLKx4 = clkdiv[0];
+wire VCLKx2 = clkdiv[1];
+wire VCLK   = clkdiv[2];
+
 // CPU Interface
 wire [10:0] palno;
 wire  [7:0] palout;
@@ -52,6 +58,7 @@ wire [15:0]	scrx;
 wire  [7:0] scry;
 
 VIDCPUINTF intf(
+	RESET,
 	cpu_cl,
 	cpu_ad, cpu_wr, cpu_dw,
 	cpu_rd, cpu_dr,
@@ -150,6 +157,7 @@ endmodule
 //----------------------------------
 module VIDCPUINTF
 (
+	input				RESET,
 	input				cpu_cl,
 	input	  [15:0]	cpu_ad,
 	input				cpu_wr,
@@ -225,14 +233,20 @@ VIDADEC adecs(
 );
 
 // Scroll Register
-always @ ( posedge cpu_cl ) begin
-	if (cpu_wr_scrreg) begin
-		case({cpu_ad[6],cpu_ad[0]})
-		2'b11: scrx[15:8] <= cpu_dw;
-		2'b10: scrx[ 7:0] <= cpu_dw;
-		2'b01: scry <= cpu_dw;
-		2'b00: ;
-		endcase
+always @ ( posedge cpu_cl or posedge RESET) begin
+	if (RESET) begin
+		scrx <= 0;
+		scry <= 0;
+	end
+	else begin
+		if (cpu_wr_scrreg) begin
+			case(cpu_ad[7:0])
+			8'hBD: scry <= cpu_dw;
+			8'hFC: scrx[ 7:0] <= cpu_dw;
+			8'hFD: scrx[15:8] <= cpu_dw;
+			default:;
+			endcase
+		end
 	end
 end
 
@@ -254,16 +268,15 @@ DPRAM2048_8_16 sprram(
 
 
 // Collision RAM (Mixer & Sprite)
-wire			noclip = 1'b1;
 wire [7:0]	cpu_rd_mixcoll;
 wire [7:0]	cpu_rd_sprcoll;
 COLLRAM_M mixc(
 	cpu_cl,cpu_ad[5:0],cpu_wr_mixcoll,cpu_wr_mixcollclr,cpu_rd_mixcoll,
-	VCLKx4,mixcoll_ad,mixcoll & noclip
+	VCLKx4,mixcoll_ad,mixcoll
 );
 COLLRAM_S sprc(
 	cpu_cl,cpu_ad[9:0],cpu_wr_sprcoll,cpu_wr_sprcollclr,cpu_rd_sprcoll,
-	VCLKx4,sprcoll_ad,sprcoll & noclip
+	VCLKx4,sprcoll_ad,sprcoll
 );
 
 
@@ -377,16 +390,16 @@ module VIDHVGEN
 	output			VBLK
 );
 	
-assign VBLK = (PV == 8'd224) & (PH <= 8'd64);
+assign VBLK = (PV == 9'd224) & (PH <= 9'd64);
 
 assign HPOS = PH+1;
 assign VPOS = PV;
 
-wire [8:0] BGHSCR = (511-scrx[9:1])-10;
-wire [8:0] BGVSCR = { 1'b0, scry };
+wire [7:0] BGHSCR = scrx[9:1]+14;
+wire [7:0] BGVSCR = scry;
 
-assign BG0HP = BGHSCR+HPOS;
-assign BG0VP = BGVSCR+VPOS;
+assign BG0HP = (HPOS-BGHSCR)+3;
+assign BG0VP = (VPOS+BGVSCR);
 
 assign BG1HP = HPOS+3;
 assign BG1VP = VPOS;
@@ -422,15 +435,15 @@ module VIDADEC
 	output		 cpu_rd
 );
 
-assign cpu_cs_palram		 = ( cpu_ad[15:11] ==  5'b1101_1  );
-assign cpu_cs_spram		 = ( cpu_ad[15:11] ==  5'b11010   );
-assign cpu_cs_mixcoll    = ( cpu_ad[15:10] ==  6'b1111_00 );
-wire	 cpu_cs_mixcollclr = ( cpu_ad[15:10] ==  6'b1111_01 );
-assign cpu_cs_sprcoll    = ( cpu_ad[15:10] ==  6'b1111_10 );
-wire   cpu_cs_sprcollclr = ( cpu_ad[15:10] ==  6'b1111_11 );
-assign cpu_cs_vram0		 = ( cpu_ad[15:11] ==  5'b11100   );
-assign cpu_cs_vram1		 = ( cpu_ad[15:11] ==  5'b11101   );
-wire   cpu_cs_scrreg     = ((cpu_ad[15: 0] & 16'b1111_1111_1011_1110) == 16'b1110_1111_1011_1100);
+assign cpu_cs_palram		 = (cpu_ad[15:11] == 5'b1101_1   );
+assign cpu_cs_spram		 = (cpu_ad[15:11] == 5'b1101_0   );
+assign cpu_cs_mixcoll    = (cpu_ad[15:10] == 6'b1111_00  );
+wire	 cpu_cs_mixcollclr = (cpu_ad[15:10] == 6'b1111_01  );
+assign cpu_cs_sprcoll    = (cpu_ad[15:10] == 6'b1111_10  );
+wire   cpu_cs_sprcollclr = (cpu_ad[15:10] == 6'b1111_11  );
+assign cpu_cs_vram0		 = (cpu_ad[15:11] == 5'b1110_0   );
+assign cpu_cs_vram1		 = (cpu_ad[15:11] == 5'b1110_1   );
+wire   cpu_cs_scrreg     = (cpu_ad[15: 8] == 8'b1110_1111);
 
 
 assign cpu_wr_palram 	 = cpu_cs_palram 		& cpu_wr;
@@ -566,17 +579,12 @@ module COLLRAM_M
 reg [63:0] core;
 reg coll_rd, coll_sm;
 
-always @(posedge cpu_cl) coll_rd <= core[cpu_ad];
-
 always @(posedge VCLKx4) begin
-	if (cpu_cl) begin
-		if (cpu_wr_coll) core[cpu_ad] <= 1'b0;
-		if (cpu_wr_collclr) coll_sm <= 1'b0;
-	end
-	else coll_sm <= coll;
-	if (coll) core[coll_ad] <= 1'b1;
+	if (cpu_cl & cpu_wr_coll) 	  core[cpu_ad] <= 1'b0; else if (coll) core[coll_ad] <= 1'b1;
+	if (cpu_cl & cpu_wr_collclr)      coll_sm <= 1'b0; else if (coll)       coll_sm <= 1'b1;
 end
 
+always @(posedge cpu_cl) coll_rd <= core[cpu_ad];
 assign cpu_rd_coll = { coll_sm, 6'b111111, coll_rd };
 
 endmodule
@@ -597,18 +605,12 @@ module COLLRAM_S
 reg [1023:0] core;
 reg coll_rd, coll_sm;
 
-always @(posedge cpu_cl) coll_rd <= core[cpu_ad];
-
 always @(posedge VCLKx4) begin
-	if (cpu_cl) begin
-		if (cpu_wr_coll) core[cpu_ad] <= 1'b0;
-		if (cpu_wr_collclr) coll_sm <= 1'b0;
-	end
-	else coll_sm <= coll;
-	if (coll) core[coll_ad] <= 1'b1;
+	if (cpu_cl & cpu_wr_coll   ) core[cpu_ad] <= 1'b0; else if (coll) core[coll_ad] <= 1'b1;
+	if (cpu_cl & cpu_wr_collclr)      coll_sm <= 1'b0; else if (coll)       coll_sm <= 1'b1;
 end
 
+always @(posedge cpu_cl) coll_rd <= core[cpu_ad];
 assign cpu_rd_coll = { coll_sm, 6'b111111, coll_rd };
 
-endmodule
-
+endmodule 

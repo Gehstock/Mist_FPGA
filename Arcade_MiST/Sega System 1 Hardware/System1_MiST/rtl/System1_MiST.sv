@@ -71,8 +71,10 @@ always @(*) begin
 	DSW1 = 8'hFF;
 //	crypt = 1'b0;
 	case (core_mod)
-	7'h0: // FLICKY - PIO
+	7'h0: // FLICKY
 	begin
+		//Sound OK(on latest Version)
+		//not working anymore try with new MRA(Decoder Rom2)
 		INP0 = ~{m_left, m_right,3'b000,m_fireA,2'b00}; 
 		INP1 = ~{m_left2,m_right2,3'b000,m_fire2A,2'b00}; 
 		INP2 = ~{2'b00,m_two_players, m_one_player,3'b000, m_coin1}; 
@@ -81,8 +83,9 @@ always @(*) begin
 	
 //		crypt = 1'b1;
 	end
-	7'h1: // PITFALL2 - PIO
+	7'h1: // PITFALL2
 	begin
+	//Sound OK	
 		INP0 = ~{m_left, m_right,3'd0,m_fireA,m_fireB,1'b0}; 
 		INP1 = ~{m_left2,m_right2,3'd0,m_fire2A,m_fire2B,1'b0}; 
 		INP2 = ~{2'b00,m_two_players, m_one_player,3'd0, m_coin1}; 
@@ -91,8 +94,9 @@ always @(*) begin
 		
 //		crypt = 1'b0;
 	end
-	7'h2: // STARJACKER no Sound todo
+	7'h2: // STARJACKER
 	begin
+		//Sound OK
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,m_fireB,1'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,m_fire2B,1'b0}; 
 		INP2 = ~{2'b00,m_two_players, m_one_player,dsService,2'b00, m_coin1}; 
@@ -101,8 +105,9 @@ always @(*) begin
 	
 //		crypt = 1'b0;
 	end
-	7'h3: // REGULUS - PPI no Sound todo
+	7'h3: // REGULUS
 	begin
+	//Sound OK	
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,m_fireB,1'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,m_fire2B,1'b0}; 
 		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
@@ -111,8 +116,9 @@ always @(*) begin
 	
 //		crypt = 1'b0;
 	end
-	7'h4: // UPN´DOWN - PPI no Sound todo
+	7'h4: // UPN´DOWN
 	begin
+	//Sound OK
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
 		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
@@ -121,8 +127,9 @@ always @(*) begin
 	
 //		crypt = 1'b0;
 	end
-	7'h5: // My Hero - PIO
+	7'h5: // My Hero
 	begin
+	//Sound OK	
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
 		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
@@ -133,6 +140,7 @@ always @(*) begin
 	end	
 	7'h6: // Sega Ninja - PIO
 	begin
+		//Sound OK
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
 		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
@@ -144,6 +152,8 @@ always @(*) begin
 	end		
 	7'h7: // Mr Viking
 	begin
+		//Sound OK(on latest Version)
+		//not working anymore try with new MRA(Decoder Rom2)
 		INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireA,2'b0}; 
 		INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2A,2'b0}; 
 		INP2 = ~{2'd0,m_two_players, m_one_player,dsService,2'b0, m_coin1}; 
@@ -223,7 +233,7 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-wire dl_wr = ioctl_wr && ioctl_addr < 18'h2E180;
+wire dl_wr = ioctl_wr && ioctl_addr < 18'h2E200;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -236,7 +246,6 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-
 
 reg port1_req, port2_req;
 wire [24:0] tl_ioctl_addr = ioctl_addr - 18'h22000;

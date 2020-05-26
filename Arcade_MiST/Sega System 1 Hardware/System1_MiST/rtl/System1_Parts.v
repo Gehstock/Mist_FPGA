@@ -300,6 +300,30 @@ assign oDATA = iSEL0 ? iDATA0 :
 
 endmodule
 
+//----------------------------------
+//  Data Selector 5 to 1
+//----------------------------------
+module dataselector5(
+
+	output [7:0] oDATA,
+
+	input iSEL0, input [7:0] iDATA0,
+	input iSEL1, input [7:0] iDATA1,
+	input iSEL2, input [7:0] iDATA2,
+	input iSEL3, input [7:0] iDATA3,
+	input iSEL4, input [7:0] iDATA4,
+
+	input [7:0] dData
+);
+
+assign oDATA = iSEL0 ? iDATA0 :
+					iSEL1 ? iDATA1 :
+					iSEL2 ? iDATA2 :
+					iSEL3 ? iDATA3 :
+					iSEL4 ? iDATA4 :
+					dData;
+
+endmodule
 
 //----------------------------------
 //  Data Selector 8 to 1

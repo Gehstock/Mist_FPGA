@@ -44,7 +44,7 @@ CLKGEN clks( clk48M, clk24M, clk12M, clk6M, clk3M, clk8M );
 // CPU
 wire 			CPUCLn;
 wire [15:0] CPUAD;
-wire  [7:0] CPUDO,VIDDO;
+wire  [7:0] CPUDO,VIDDO,SNDNO,VIDMD;
 wire			CPUWR,VIDCS,VBLK;
 wire			SNDRQ;
 
@@ -57,7 +57,6 @@ System1_Main System1_Main(
 	.DSW0(DSW0),
 	.DSW1(DSW1),
 	.CLK48M(clk48M),
-	.CLK3M(clk3M),
 	.CPUCLn(CPUCLn),
 	.CPUAD(CPUAD),
 	.CPUDO(CPUDO),
@@ -65,7 +64,9 @@ System1_Main System1_Main(
 	.VBLK(VBLK),
 	.VIDCS(VIDCS),
 	.VIDDO(VIDDO),
+	.VIDMD(VIDMD),
 	.SNDRQ(SNDRQ),
+	.SNDNO(SNDNO),
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_do),
 	.dl_addr(dl_addr),
@@ -75,12 +76,11 @@ System1_Main System1_Main(
 );
 
 System1_Video System1_Video(
-	.VCLKx8(clk48M),
-	.VCLKx4(clk24M),
-	.VCLKx2(clk12M),
-	.VCLK(clk6M),
+	.RESET(reset),
+	.VCLKx8(clk8M),
 	.PH(HPOS),
 	.PV(VPOS),
+	.VFLP(VIDMD[7]),
 	.VBLK(VBLK),
 	.RGB8(POUT),
 	.PALDSW(1'b0),
@@ -102,9 +102,9 @@ System1_Video System1_Video(
 assign PCLK = clk6M;
 
 System1_Sound System1_Sound(
-   .clk8M(clk8M),
+   .clk48M(clk48M),
 	.reset(reset),
-	.sndno(CPUDO),
+	.sndno(SNDNO),
    .sndstart(SNDRQ),
 	.sndout(SOUT),
 	.snd_rom_addr(snd_rom_addr),

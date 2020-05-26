@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 23:55:41  May 24, 2020
+# Date created = 02:55:28  May 26, 2020
 #
 # -------------------------------------------------------------------------- #
 #
@@ -43,6 +43,23 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/System1_MiST.sv
+set_global_assignment -name VERILOG_FILE rtl/System1_Top.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Main.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Decoder.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Video.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Sound.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Sprite.v
+set_global_assignment -name VERILOG_FILE rtl/System1_Parts.v
+set_global_assignment -name VERILOG_FILE rtl/System1_hvgen.v
+set_global_assignment -name VERILOG_FILE rtl/SN76496.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
+set_global_assignment -name VERILOG_FILE rtl/z80ip.v
+set_global_assignment -name VERILOG_FILE rtl/DPRAM1024_11B.v
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -222,20 +239,4 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(System1_MiST)
 # ------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/System1_MiST.sv
-set_global_assignment -name VERILOG_FILE rtl/System1_Top.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Main.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Video.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Sound.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Sprite.v
-set_global_assignment -name VERILOG_FILE rtl/System1_Parts.v
-set_global_assignment -name VERILOG_FILE rtl/System1_hvgen.v
-set_global_assignment -name VERILOG_FILE rtl/SN76496.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VERILOG_FILE rtl/pll_mist.v
-set_global_assignment -name VERILOG_FILE rtl/z80ip.v
-set_global_assignment -name VERILOG_FILE rtl/DPRAM1024_11B.v
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

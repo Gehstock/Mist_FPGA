@@ -2,7 +2,7 @@
 
 module System1_Sound
 (
-   input				clk8M,
+   input				clk48M,
 	input				reset,
 
    input   [7:0]	sndno,
@@ -16,8 +16,8 @@ module System1_Sound
 //----------------------------------
 //  ClockGen
 //----------------------------------
-wire clk4M,clk2M;
-SndClkGen clkgen(clk8M,clk4M,clk2M);
+wire clk8M,clk4M,clk2M;
+SndClkGen clkgen(clk48M,clk8M,clk4M,clk2M);
 
 wire cpuclkx2 = clk8M;
 wire cpu_clk  = clk4M;
@@ -78,7 +78,7 @@ dataselector3 scpudisel(
 );
 
 SndPlayReq sndreq (
-	clk4M, reset,
+	clk8M, reset,
 	sndno, sndstart,
 	cpu_irq, cpu_irqa,
 	cpu_nmi, cpu_nmia,
@@ -121,10 +121,21 @@ endmodule
 
 module SndClkGen
 (
-	input		clk8M,
-	output	clk4M,
-	output	clk2M
+	input			clk48M,
+	output reg 	clk8M,
+	output		clk4M,
+	output		clk2M
 );
+
+reg [1:0] count;
+always @( posedge clk48M ) begin
+	if (count > 2'd2) begin
+		count <= count - 2'd2;
+      clk8M <= ~clk8M;
+   end
+   else count <= count + 2'd1;
+end
+
 reg [1:0] clkdiv;
 always @ ( posedge clk8M ) clkdiv <= clkdiv+1;
 
@@ -168,7 +179,7 @@ endmodule
 //----------------------------------
 module SndPlayReq
 (
-	input			clk4M,
+	input			clk8M,
 	input			reset,
 
 	input	[7:0]	sndno,
@@ -183,10 +194,10 @@ module SndPlayReq
 	output reg [7:0] comlatch
 );
 
-reg [15:0]	timercnt;
+reg [16:0]	timercnt;
 reg			psndstart;
 
-always @( posedge clk4M or posedge reset ) begin
+always @( posedge clk8M or posedge reset ) begin
 	if ( reset ) begin
 		cpu_nmi   <= 0;
 		cpu_irq   <= 0;
@@ -204,11 +215,11 @@ always @( posedge clk4M or posedge reset ) begin
 		end
 		psndstart <= sndstart;
 
-		if ( timercnt == 16666 ) cpu_irq <= 1'b1;
 		if ( timercnt == 33333 ) cpu_irq <= 1'b1;
+		if ( timercnt == 66666 ) cpu_irq <= 1'b1;
 
-		timercnt <= ( timercnt == 33333 ) ? 0 : (timercnt+1);	// 1/60sec
+		timercnt <= ( timercnt == 66666 ) ? 0 : (timercnt+1);	// 1/60sec
 	end
 end
 
-endmodule
+endmodule 
