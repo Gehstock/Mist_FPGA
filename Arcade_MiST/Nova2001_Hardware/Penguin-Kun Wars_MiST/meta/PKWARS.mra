@@ -1,24 +1,25 @@
 <misterromdescription>
-    <name>PKWARS</name>
-    <mameversion>0216</mameversion>
-    <mratimestamp>202001010000</mratimestamp>
-    <year>1985</year>
-    <manufacturer>Sega</manufacturer>
-´   <rbf>PKWARS</rbf>
-    <category>Action</category>
-    <setname>pkunwar</setname>
-    <rom index="0" zip="pkunwar.zip" md5="7f9e2699d4413869b6f5326203a9a8e7" type="merged|nonmerged">
-	<part name="pkwar.01r"/>
-	<part name="pkwar.02r"/>
-	<part repeat="0x6000">FF</part>
-	<part name="pkwar.03r"/>
+    	<name>PKWARS</name>
+    	<mameversion>0216</mameversion>
+    	<mratimestamp>202001010000</mratimestamp>
+    	<year>1985</year>
+    	<manufacturer>UPL</manufacturer>
+´   	<rbf>PKWARS</rbf>
+	<category>Maze / Penguin</category>
+	<category>Sports / Speed Ball</category>
+    	<setname>pkunwar</setname>
+    	<rom index="0" zip="pkunwar.zip" md5="7f9e2699d4413869b6f5326203a9a8e7" type="merged|nonmerged">
+		<part name="pkwar.01r"/>
+		<part name="pkwar.02r"/>
+		<part repeat="0x6000">FF</part>
+		<part name="pkwar.03r"/>
 
-	<part name="pkwar.01y"/>
-	<part name="pkwar.02y"/>
-	<part name="pkwar.03y"/>
-	<part name="pkwar.04y"/>
+		<part name="pkwar.01y"/>
+		<part name="pkwar.02y"/>
+		<part name="pkwar.03y"/>
+		<part name="pkwar.04y"/>
 
-	<part name="pkwar.col"/>
+		<part name="pkwar.col"/>
 
-    </rom>
+    	</rom>
 </misterromdescription>
