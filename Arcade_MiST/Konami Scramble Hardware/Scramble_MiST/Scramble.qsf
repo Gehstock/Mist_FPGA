@@ -196,6 +196,8 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/scr.stp
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ScrambleMist.sv
@@ -205,7 +207,6 @@ set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_pack.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
 set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
 set_global_assignment -name QIP_FILE rtl/pll.qip

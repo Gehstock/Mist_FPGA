@@ -51,31 +51,42 @@
 -- to produced all the required values.
 -- (The first part of the curve is a bit steeper and the last bit is more linear than expected)
 --
--- NOTE, this component uses LINEAR mixing of the three analogue channels, and is only
--- accurate for designs where the outputs are buffered and not simply wired together.
--- The ouput level is more complex in that case and requires a larger table.
+-- NOTE, when MIXER_VOLTABLE = '0', this component uses LINEAR mixing of the three analogue channels, 
+-- and is only accurate for designs where the outputs are buffered and not simply wired together.
+-- The ouput level is more complex in that case and requires a larger table (MIXER_VOLTABLE = '1').
 
 library ieee;
   use ieee.std_logic_1164.all;
-  use ieee.std_logic_arith.all;
   use ieee.std_logic_unsigned.all;
+  use ieee.numeric_std.all;
 
 entity YM2149 is
+  generic (
+	MIXER_VOLTABLE      : std_logic := '0'
+  );
   port (
   -- data bus
   I_DA                : in  std_logic_vector(7 downto 0);
   O_DA                : out std_logic_vector(7 downto 0);
   O_DA_OE_L           : out std_logic;
   -- control
-  I_A9_L              : in  std_logic;
-  I_A8                : in  std_logic;
+  I_A9_L              : in  std_logic := '0';
+  I_A8                : in  std_logic := '1';
   I_BDIR              : in  std_logic;
-  I_BC2               : in  std_logic;
+  I_BC2               : in  std_logic := '1';
   I_BC1               : in  std_logic;
-  I_SEL_L             : in  std_logic;
+  I_SEL_L             : in  std_logic := '1';
 
+  I_STEREO            : in  std_logic := '0';
+
+  -- separate channel output
   O_AUDIO             : out std_logic_vector(7 downto 0);
   O_CHAN              : out std_logic_vector(1 downto 0);
+
+  -- mixed output
+  O_AUDIO_L           : out std_logic_vector(9 downto 0);
+  O_AUDIO_R           : out std_logic_vector(9 downto 0);
+
   -- port a
   I_IOA               : in  std_logic_vector(7 downto 0);
   O_IOA               : out std_logic_vector(7 downto 0);
@@ -87,7 +98,7 @@ entity YM2149 is
 
   ENA                 : in  std_logic; -- clock enable for higher speed operation
   RESET_L             : in  std_logic;
-  CLK                 : in  std_logic  -- note 6 Mhz
+  CLK                 : in  std_logic
   );
 end;
 
@@ -130,6 +141,17 @@ architecture RTL of YM2149 is
   signal chan_vol             : std_logic_vector(4 downto 0);
 
   signal dac_amp              : std_logic_vector(7 downto 0);
+
+  signal vol_l                : std_logic_vector(9 downto 0);
+  signal vol_r                : std_logic_vector(9 downto 0);
+  signal vol_mixer_l          : std_logic_vector(9 downto 0);
+  signal vol_mixer_r          : std_logic_vector(9 downto 0);
+
+  signal vol_table_in_l       : std_logic_vector(11 downto 0);
+  signal vol_table_in_r       : std_logic_vector(11 downto 0);
+  signal vol_table_out_l      : std_logic_vector(9 downto 0);
+  signal vol_table_out_r      : std_logic_vector(9 downto 0);
+
 begin
   -- cpu i/f
   p_busdecode            : process(I_BDIR, I_BC2, I_BC1, addr, I_A9_L, I_A8)
@@ -183,10 +205,8 @@ begin
     if (RESET_L = '0') then
       addr <= (others => '0');
     elsif rising_edge(CLK) then
-      if (ENA = '1') then
-        if (busctrl_addr = '1') then
-          addr <= I_DA;
-        end if;
+      if (busctrl_addr = '1') then
+        addr <= I_DA;
       end if;
     end if;
   end process;
@@ -197,28 +217,11 @@ begin
       reg <= (others => (others => '0'));
       env_reset <= '1';
     elsif rising_edge(CLK) then
-      if (ENA = '1') then
-        env_reset <= '0';
-        if (busctrl_we = '1') then
-          case addr(3 downto 0) is
-            when x"0" => reg(0)  <= I_DA;
-            when x"1" => reg(1)  <= I_DA;
-            when x"2" => reg(2)  <= I_DA;
-            when x"3" => reg(3)  <= I_DA;
-            when x"4" => reg(4)  <= I_DA;
-            when x"5" => reg(5)  <= I_DA;
-            when x"6" => reg(6)  <= I_DA;
-            when x"7" => reg(7)  <= I_DA;
-            when x"8" => reg(8)  <= I_DA;
-            when x"9" => reg(9)  <= I_DA;
-            when x"A" => reg(10) <= I_DA;
-            when x"B" => reg(11) <= I_DA;
-            when x"C" => reg(12) <= I_DA;
-            when x"D" => reg(13) <= I_DA; env_reset <= '1';
-            when x"E" => reg(14) <= I_DA;
-            when x"F" => reg(15) <= I_DA;
-            when others => null;
-          end case;
+      env_reset <= '0';
+      if (busctrl_we = '1') then
+        reg(to_integer(unsigned(addr(3 downto 0)))) <= I_DA;
+        if addr(3 downto 0) = x"D" then
+          env_reset <= '1';
         end if;
       end if;
     end if;
@@ -246,12 +249,12 @@ begin
         when x"E" => if (reg(7)(6) = '0') then -- input
                        O_DA <= ioa_inreg;
                      else
-                       O_DA <= reg(14); -- read output reg
+                       O_DA <= reg(14) and ioa_inreg; -- read output reg
                      end if;
         when x"F" => if (Reg(7)(7) = '0') then
                        O_DA <= iob_inreg;
                      else
-                       O_DA <= reg(15);
+                       O_DA <= reg(15) and iob_inreg;
                      end if;
         when others => null;
       end case;
@@ -372,25 +375,46 @@ begin
     variable is_top_m1 : boolean;
     variable is_top    : boolean;
   begin
-    if (env_reset = '1') then
-      -- load initial state
-      if (reg(13)(2) = '0') then -- attack
-        env_vol <= "11111";
-        env_inc <= '0'; -- -1
+        -- envelope shapes
+        -- C AtAlH
+        -- 0 0 x x  \___
+        --
+        -- 0 1 x x  /___
+        --
+        -- 1 0 0 0  \\\\
+        --
+        -- 1 0 0 1  \___
+        --
+        -- 1 0 1 0  \/\/
+        --           ___
+        -- 1 0 1 1  \
+        --
+        -- 1 1 0 0  ////
+        --           ___
+        -- 1 1 0 1  /
+        --
+        -- 1 1 1 0  /\/\
+        --
+        -- 1 1 1 1  /___
+    if rising_edge(CLK) then
+      if (env_reset = '1') then
+        -- load initial state
+        if (reg(13)(2) = '0') then -- attack
+          env_vol <= "11111";
+          env_inc <= '0'; -- -1
+        else
+          env_vol <= "00000";
+          env_inc <= '1'; -- +1
+        end if;
+        env_hold <= '0';
+
       else
-        env_vol <= "00000";
-        env_inc <= '1'; -- +1
-      end if;
-      env_hold <= '0';
+        is_bot    := (env_vol = "00000");
+        is_bot_p1 := (env_vol = "00001");
+        is_top_m1 := (env_vol = "11110");
+        is_top    := (env_vol = "11111");
 
-    elsif rising_edge(CLK) then
-      is_bot    := (env_vol = "00000");
-      is_bot_p1 := (env_vol = "00001");
-      is_top_m1 := (env_vol = "11110");
-      is_top    := (env_vol = "11111");
-
-      if (ENA = '1') then
-        if (env_ena = '1') then
+        if (ENA = '1' and env_ena = '1') then
           if (env_hold = '0') then
             if (env_inc = '1') then
               env_vol <= (env_vol + "00001");
@@ -437,6 +461,8 @@ begin
       end if;
     end if;
   end process;
+
+-- output mixer
 
   p_chan_mixer           : process(cnt_div, reg, tone_gen_op)
   begin
@@ -531,8 +557,146 @@ begin
         O_AUDIO <= dac_amp(7 downto 0);
         O_CHAN  <= cnt_div_t1(1 downto 0);
       end if;
+
     end if;
   end process;
+
+  -- output mixer(s)
+
+  p_chan_mixer_linear     : process(RESET_L, CLK)
+  begin
+    if (RESET_L = '0') then
+      vol_l <= (others => '0');
+      vol_r <= (others => '0');
+      vol_mixer_l  <= (others => '0');
+      vol_mixer_r  <= (others => '0');
+    elsif rising_edge(CLK) then
+
+      if (ENA = '1') then
+        case cnt_div_t1(1 downto 0) is
+        when "10" => -- Channel C
+          vol_r <= "00" & dac_amp;
+          if I_STEREO = '0' then
+            vol_l <= "00" & dac_amp;
+          else
+            vol_l <= (others => '0');
+          end if;
+        when "01" => -- Channel B
+          vol_l <= vol_l + dac_amp;
+          vol_r <= vol_r + dac_amp;
+        when "00" => -- Channel A
+          if I_STEREO = '0' then
+            vol_mixer_l <= vol_l + dac_amp;
+          else
+            vol_mixer_l <= vol_l;
+          end if;
+          vol_mixer_r <= vol_r + dac_amp;
+        when others => null;
+        end case;
+      end if;
+    end if;
+  end process;
+
+  VOLTABLE: if MIXER_VOLTABLE = '1' generate
+
+  p_chan_mixer_table     : process
+    variable chan_mixed : std_logic_vector(2 downto 0);
+  begin
+    wait until rising_edge(CLK);
+    if (ENA = '1') then
+      chan_mixed(0) := (reg(7)(0) or tone_gen_op(1)) and (reg(7)(3) or noise_gen_op);
+      chan_mixed(1) := (reg(7)(1) or tone_gen_op(2)) and (reg(7)(4) or noise_gen_op);
+      chan_mixed(2) := (reg(7)(2) or tone_gen_op(3)) and (reg(7)(5) or noise_gen_op);
+
+      vol_table_in_l <= x"000";
+      vol_table_in_r <= x"000";
+
+      if (chan_mixed(0) = '1') then
+        if(I_STEREO = '1') then
+          if (reg(8)(4) = '0') then
+            vol_table_in_l(3 downto 0) <= reg(8)(3 downto 0);
+          else
+            vol_table_in_l(3 downto 0) <= env_vol(4 downto 1);
+          end if;
+        else
+          if (reg(8)(4) = '0') then
+            vol_table_in_l(3 downto 0) <= reg(8)(3 downto 0);
+            vol_table_in_r(3 downto 0) <= reg(8)(3 downto 0);
+          else
+            vol_table_in_l(3 downto 0) <= env_vol(4 downto 1);
+            vol_table_in_r(3 downto 0) <= env_vol(4 downto 1);
+          end if;
+        end if;
+      end if;
+
+      if (chan_mixed(1) = '1') then
+        if (reg(9)(4) = '0') then
+          vol_table_in_l(7 downto 4) <= reg(9)(3 downto 0);
+          vol_table_in_r(7 downto 4) <= reg(9)(3 downto 0);
+        else
+          vol_table_in_l(7 downto 4) <= env_vol(4 downto 1);
+          vol_table_in_r(7 downto 4) <= env_vol(4 downto 1);
+        end if;
+      end if;
+
+      if (chan_mixed(2) = '1') then
+        if(I_STEREO = '1') then
+          if (reg(10)(4) = '0') then
+            vol_table_in_r(11 downto 8) <= reg(10)(3 downto 0);
+          else
+            vol_table_in_r(11 downto 8) <= env_vol(4 downto 1);
+          end if;
+        else
+          if (reg(10)(4) = '0') then
+            vol_table_in_l(11 downto 8) <= reg(10)(3 downto 0);
+            vol_table_in_r(11 downto 8) <= reg(10)(3 downto 0);
+          else
+            vol_table_in_l(11 downto 8) <= env_vol(4 downto 1);
+            vol_table_in_r(11 downto 8) <= env_vol(4 downto 1);
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  u_vol_table : work.vol_table
+    port map (
+      CLK         => clk,
+      ADDR_A      => vol_table_in_l,
+      DATA_A      => vol_table_out_l,
+      ADDR_B      => vol_table_in_r,
+      DATA_B      => vol_table_out_r
+      );
+	end generate; -- VOLTABLE
+
+  NO_VOLTABLE: if MIXER_VOLTABLE = '0' generate
+    vol_table_out_l <= (others => '0');
+    vol_table_out_r <= (others => '0');
+	end generate;
+
+  -- mixed audio output
+
+  p_vol_out                : process
+    variable chan_mixed : std_logic;
+    variable chan_amp : std_logic_vector(4 downto 0);
+  begin
+    wait until rising_edge(CLK);
+
+    if (RESET_L = '0') then
+      O_AUDIO_L <= (others => '0');
+      O_AUDIO_R <= (others => '0');
+    else
+      if (MIXER_VOLTABLE = '1') then
+        O_AUDIO_L <= vol_table_out_l;
+        O_AUDIO_R <= vol_table_out_r;
+      else
+        O_AUDIO_L <= vol_mixer_l;
+        O_AUDIO_R <= vol_mixer_r;
+      end if;
+    end if;
+  end process;
+
+  -- IO ports
 
   p_io_ports             : process(reg)
   begin
@@ -545,9 +709,7 @@ begin
   p_io_ports_inreg       : process
   begin
     wait until rising_edge(CLK);
-    if (ENA = '1') then -- resync
-      ioa_inreg <= I_IOA;
-      iob_inreg <= I_IOB;
-    end if;
+    ioa_inreg <= I_IOA;
+    iob_inreg <= I_IOB;
   end process;
 end architecture RTL;
