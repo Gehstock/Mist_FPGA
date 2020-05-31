@@ -506,7 +506,7 @@ port map(
   I_BDIR     => ay1_bdir,  -- in  std_logic; -- pin 27
   I_BC2      => '1',       -- in  std_logic; -- pin 28
   I_BC1      => ay1_bc1,   -- in  std_logic; -- pin 29
-  I_SEL_L    => '0',       -- in  std_logic;
+  I_SEL_L    => '1',       -- in  std_logic;
 
   O_AUDIO    => ay1_audio_muxed, -- out std_logic_vector(7 downto 0);
   O_CHAN     => ay1_audio_chan,  -- out std_logic_vector(1 downto 0);
@@ -539,7 +539,7 @@ port map(
   I_BDIR     => ay2_bdir,  -- in  std_logic; -- pin 27
   I_BC2      => '1',       -- in  std_logic; -- pin 28
   I_BC1      => ay2_bc1,   -- in  std_logic; -- pin 29
-  I_SEL_L    => '0',       -- in  std_logic;
+  I_SEL_L    => '1',       -- in  std_logic;
 
   O_AUDIO    => ay2_audio_muxed, -- out std_logic_vector(7 downto 0);
   O_CHAN     => ay2_audio_chan,  -- out std_logic_vector(1 downto 0);

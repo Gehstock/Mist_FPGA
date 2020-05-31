@@ -220,7 +220,6 @@ set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/sounds_good.vhd
 set_global_assignment -name VHDL_FILE rtl/turbo_cheap_squeak.vhd
 set_global_assignment -name VHDL_FILE rtl/super_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/midssio_82s123.vhd
 set_global_assignment -name VHDL_FILE rtl/spinner.vhd
 set_global_assignment -name VHDL_FILE rtl/spy_hunter_control.vhd
@@ -229,5 +228,7 @@ set_global_assignment -name QIP_FILE ../../common/CPU/68000/FX68k/fx68k.qip
 set_global_assignment -name VHDL_FILE ../../common/IO/pia6821.vhd
 set_global_assignment -name VHDL_FILE ../../common/CPU/MC6809/cpu09l_128a.vhd
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name VHDL_FILE ../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name VHDL_FILE ../../common/Sound/ym2149/YM2149.vhd
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
