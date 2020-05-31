@@ -230,7 +230,6 @@ set_global_assignment -name VHDL_FILE rtl/time_pilot.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_video.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/time_pilot_sound_board.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/time_pilot_sprite_grphx.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/time_pilot_sprite_color_lut.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/time_pilot_sound_prog.vhd
@@ -240,6 +239,8 @@ set_global_assignment -name VHDL_FILE rtl/rom/time_pilot_char_grphx.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/time_pilot_char_color_lut.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
