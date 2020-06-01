@@ -70,7 +70,7 @@ wire [4:0]		PALAD;
 wire [7:0]		PALDT;
 
 col col(
-	.clk(VCLKx4),
+	.clk(VCLK),
 	.addr(PALAD),
 	.data(PALDT)
 );

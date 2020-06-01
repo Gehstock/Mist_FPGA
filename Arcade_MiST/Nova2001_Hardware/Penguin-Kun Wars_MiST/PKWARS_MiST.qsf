@@ -44,24 +44,6 @@ set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:48:06 MAY 24,2017"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/PKWARS_MiST.sv
-set_global_assignment -name VERILOG_FILE rtl/FPGA_PKWARS.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_VIDEO.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_SPRITE.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_SND.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_ROMARB.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_CLKGEN.v
-set_global_assignment -name VERILOG_FILE rtl/PKWARS_HVGEN.v
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep_mod.vhd
-set_global_assignment -name VHDL_FILE rtl/col.vhd
-set_global_assignment -name VERILOG_FILE rtl/mems.v
-set_global_assignment -name VERILOG_FILE rtl/z80ip.v
-set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VERILOG_FILE rtl/DPRAM1024.v
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -242,4 +224,28 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(PKWARS_MiST)
 # -----------------------
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/PKWARS_MiST.sv
+set_global_assignment -name VERILOG_FILE rtl/FPGA_PKWARS.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_VIDEO.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_SPRITE.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_SND.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_ROMARB.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_CLKGEN.v
+set_global_assignment -name VERILOG_FILE rtl/PKWARS_HVGEN.v
+set_global_assignment -name VHDL_FILE rtl/col.vhd
+set_global_assignment -name VERILOG_FILE rtl/mems.v
+set_global_assignment -name VERILOG_FILE rtl/z80ip.v
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/DPRAM1024.v
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep_mod.vhd
+set_global_assignment -name VHDL_FILE meta/gfx1.vhd
+set_global_assignment -name VHDL_FILE meta/gfx2.vhd
+set_global_assignment -name VHDL_FILE meta/gfx3.vhd
+set_global_assignment -name VHDL_FILE meta/gfx4.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

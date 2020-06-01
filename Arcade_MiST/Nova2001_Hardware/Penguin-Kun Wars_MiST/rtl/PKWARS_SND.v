@@ -124,6 +124,24 @@ YM2149m sg
 	.I_IOA(IA),.I_IOB(IB),
 	.ENA(1'b1),.RESET_L(~RST),.CLK(CLK),.ACLK(ACLK)
 );
+/*
+YM2149 sg(
+	.I_DA(ID),
+	.O_DA(OD),
+	.I_A9_L(~CS),
+	.I_BDIR(bd),
+	.I_BC1(bc),
+	.I_A8(1'b1),
+	.I_BC2(1'b1),
+	.I_SEL_L(1'b1),
+	.O_AUDIO(Sx),
+	.O_CHAN(Sc),
+	.I_IOA(IA),
+	.I_IOB(IB),
+	.ENA(1'b1),
+	.RESET_L(~RST),
+	.CLK(ACLK)
+);*/
 
 assign SO = SA+SB+SC;
 
