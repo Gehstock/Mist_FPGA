@@ -110,8 +110,11 @@ begin
 			I_BDIR					=> s_5C1,
 			I_BC2						=> s_5C10,
 			I_BC1						=> s_5C13,
+			
+			I_IOA						=> X"FF",
+			I_IOB						=> X"FF",
 
-			I_CHEN					=> I_CHEN(8 downto 6),
+--			I_CHEN					=> I_CHEN(8 downto 6),
 			O_AUDIO					=> s_psg1_out
 		);
 
@@ -131,8 +134,11 @@ begin
 			I_BDIR					=> s_5B1,
 			I_BC2						=> s_5B10,
 			I_BC1						=> s_5B13,
+			
+			I_IOA						=> X"FF",
+			I_IOB						=> X"FF",
 
-			I_CHEN					=> I_CHEN(5 downto 3),
+--			I_CHEN					=> I_CHEN(5 downto 3),
 			O_AUDIO					=> s_psg2_out
 		);
 
@@ -152,8 +158,11 @@ begin
 			I_BDIR					=> s_5A1,
 			I_BC2						=> s_5A10,
 			I_BC1						=> s_5A13,
+			
+			I_IOA						=> X"FF",
+			I_IOB						=> X"FF",
 
-			I_CHEN					=> I_CHEN(2 downto 0),
+--			I_CHEN					=> I_CHEN(2 downto 0),
 			O_AUDIO					=> s_psg3_out
 		);
 

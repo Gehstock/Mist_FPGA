@@ -40,7 +40,7 @@
 # Project-Wide Assignments
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
-set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
@@ -229,8 +229,6 @@ set_global_assignment -name VHDL_FILE rtl/p8_palette.vhd
 set_global_assignment -name VHDL_FILE rtl/p9_audio_cpu.vhd
 set_global_assignment -name VHDL_FILE rtl/p10_psgs.vhd
 set_global_assignment -name VHDL_FILE rtl/sprite_buff.vhd
-set_global_assignment -name VHDL_FILE rtl/YM2149_linmix.vhd
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE rtl/rom/ROM_8R.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/ROM_8N.vhd
 set_global_assignment -name VHDL_FILE rtl/rom/ROM_8L.vhd
@@ -250,4 +248,7 @@ set_global_assignment -name VHDL_FILE rtl/rom/ROM_1J.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
