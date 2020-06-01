@@ -103,7 +103,7 @@ wire [13:0] gfx_rom_addr;
 wire [31:0] gfx_rom_do;
 
 
-wire [24:0] bg_ioctl_addr = ioctl_addr - 17'h8000;
+	wire [24:0] bg_ioctl_addr = ioctl_addr - 17'h10000;
 	
 reg port1_req, port2_req;
 sdram sdram(
