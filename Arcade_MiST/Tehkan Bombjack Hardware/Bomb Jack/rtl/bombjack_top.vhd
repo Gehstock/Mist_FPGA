@@ -67,7 +67,8 @@ entity bombjack_top is
 		bg_rom_data			: in		std_logic_vector(23 downto 0) := (others => '0');
 
 		-- Sound out
-		s_audio				: out		std_logic_vector(7 downto 0);
+		O_AUDIO_L		: out std_logic_vector (11 downto 0);
+		O_AUDIO_R		: out std_logic_vector (11 downto 0);
 
 		-- Active high external buttons
 		RESETn				: in		std_logic;
@@ -711,10 +712,10 @@ O_VSYNC <= s_vsync_n;
 		I_PSG1_n				=> s_psg1_n,
 		I_PSG2_n				=> s_psg2_n,
 		I_PSG3_n				=> s_psg3_n,
-		I_CHEN				=> "111111111",
 		I_SD					=> psg_data_in,
 		O_SD					=> psg_data_out,
-		O_AUDIO				=> s_audio
+		O_AUDIO_L			=> O_AUDIO_L,
+		O_AUDIO_R			=> O_AUDIO_R
 	);
 
 --	---------------------------------

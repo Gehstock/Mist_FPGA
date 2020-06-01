@@ -39,7 +39,6 @@ localparam CONF_STR = {
 };
 
 assign 		LED = ~ioctl_downl;
-assign 		AUDIO_R = AUDIO_L;
 assign 		SDRAM_CLK = clock_48;
 assign 		SDRAM_CKE = 1;
 
@@ -61,10 +60,10 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [7:0] audio;
+wire  [11:0] audio_l, audio_r;
 wire 			hs, vs;
-wire 			hb, vb;
-wire 			blankn = ~(hb | vb);
+//wire 			hb, vb;
+//wire 			blankn = ~(hb | vb);
 wire [3:0] 	r, g, b;
 wire 			key_strobe;
 wire 			key_pressed;
@@ -154,8 +153,8 @@ bombjack_top bombjack_top(
 	.O_VIDEO_B(b),
 	.O_HSYNC(hs),
 	.O_VSYNC(vs),
-	.O_HBLANK(hb),
-	.O_VBLANK(vb),	
+//	.O_HBLANK(hb),
+//	.O_VBLANK(vb),	
 	.p1_sw({"000",m_fire,m_down,m_up,m_left,m_right}),
 	.p2_sw({"000",m_fire,m_down,m_up,m_left,m_right}),
 	.s_sys({"1111",btn_two_players,btn_one_player,1'b1,btn_coin}),
@@ -163,7 +162,8 @@ bombjack_top bombjack_top(
 	.cpu_rom_data(rom_addr[0] ? rom_do[15:8] : rom_do[7:0]),
 	.bg_rom_addr(bg_addr),
 	.bg_rom_data(bg_do),
-	.s_audio(audio),
+	.O_AUDIO_L(audio_l),
+	.O_AUDIO_R(audio_r),
 	.RESETn(~reset),
 	.clk_4M_en(clock_4),
 	.clk_6M_en(clock_6),
@@ -212,12 +212,19 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.status         (status         )
 	);
 
-dac #(.C_bits(16))dac(
+dac #(.C_bits(12))dac_l(
 	.clk_i(clock_48),
 	.res_n_i(1),
-	.dac_i({audio,audio}),
+	.dac_i(audio_l),
 	.dac_o(AUDIO_L)
 	);
+	
+dac #(.C_bits(12))dac_r(
+	.clk_i(clock_48),
+	.res_n_i(1),
+	.dac_i(audio_r),
+	.dac_o(AUDIO_R)
+	);	
 	
 //											Rotated														Normal
 wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];

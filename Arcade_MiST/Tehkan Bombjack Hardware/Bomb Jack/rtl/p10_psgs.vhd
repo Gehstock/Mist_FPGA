@@ -47,10 +47,10 @@ entity psgs is
 		I_PSG1_n		: in  std_logic;
 		I_PSG2_n		: in  std_logic;
 		I_PSG3_n		: in  std_logic;
-		I_CHEN		: in  std_logic_vector( 8 downto 0);
 		I_SD			: in  std_logic_vector (7 downto 0);
 		O_SD			: out std_logic_vector (7 downto 0);
-		O_AUDIO		: out std_logic_vector (7 downto 0)
+		O_AUDIO_L		: out std_logic_vector (11 downto 0);
+		O_AUDIO_R		: out std_logic_vector (11 downto 0)
 	);
 end psgs;
 
@@ -70,9 +70,12 @@ architecture RTL of psgs is
 	signal s_34A_data		: std_logic_vector( 7 downto 0) := (others => '0');
 	signal s_34C_data		: std_logic_vector( 7 downto 0) := (others => '0');
 	signal s_34D_data		: std_logic_vector( 7 downto 0) := (others => '0');
-	signal s_psg1_out		: std_logic_vector( 7 downto 0) := (others => '0');
-	signal s_psg2_out		: std_logic_vector( 7 downto 0) := (others => '0');
-	signal s_psg3_out		: std_logic_vector( 7 downto 0) := (others => '0');
+	signal s_psg1l_out		: std_logic_vector( 9 downto 0) := (others => '0');
+	signal s_psg1r_out		: std_logic_vector( 9 downto 0) := (others => '0');	
+	signal s_psg2l_out		: std_logic_vector( 9 downto 0) := (others => '0');
+	signal s_psg2r_out		: std_logic_vector( 9 downto 0) := (others => '0');
+	signal s_psg3l_out		: std_logic_vector( 9 downto 0) := (others => '0');	
+	signal s_psg3r_out		: std_logic_vector( 9 downto 0) := (others => '0');
 
 begin
 	-- CPU data bus mux
@@ -114,8 +117,8 @@ begin
 			I_IOA						=> X"FF",
 			I_IOB						=> X"FF",
 
---			I_CHEN					=> I_CHEN(8 downto 6),
-			O_AUDIO					=> s_psg1_out
+			O_AUDIO_L				=> s_psg1l_out,
+			O_AUDIO_R				=> s_psg1r_out
 		);
 
 	U34C : entity work.ym2149
@@ -138,8 +141,8 @@ begin
 			I_IOA						=> X"FF",
 			I_IOB						=> X"FF",
 
---			I_CHEN					=> I_CHEN(5 downto 3),
-			O_AUDIO					=> s_psg2_out
+			O_AUDIO_L				=> s_psg2l_out,
+			O_AUDIO_R				=> s_psg2r_out
 		);
 
 	U34A : entity work.ym2149
@@ -162,14 +165,14 @@ begin
 			I_IOA						=> X"FF",
 			I_IOB						=> X"FF",
 
---			I_CHEN					=> I_CHEN(2 downto 0),
-			O_AUDIO					=> s_psg3_out
+			O_AUDIO_L				=> s_psg3l_out,
+			O_AUDIO_R				=> s_psg3r_out
 		);
 
-	s_audio_sum <=
-		(("00" & s_psg1_out) + ("00" & s_psg2_out)) + ("00" & s_psg3_out);
-
-	O_AUDIO	<= s_audio_sum(9 downto 2);
+	O_AUDIO_L <=
+		(("00" & s_psg1l_out) + ("00" & s_psg2l_out)) + ("00" & s_psg3l_out);
+	O_AUDIO_R <=
+		(("00" & s_psg1r_out) + ("00" & s_psg2r_out)) + ("00" & s_psg3r_out);
 
 
 end RTL;
