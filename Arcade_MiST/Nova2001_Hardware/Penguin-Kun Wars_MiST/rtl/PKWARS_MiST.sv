@@ -44,14 +44,13 @@ localparam CONF_STR = {
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = clk_sd;
+assign 		SDRAM_CLK = CLOCK_48;
 assign 		SDRAM_CKE = 1;
 
-wire CLOCK_48, pll_locked, clk_sd;
+wire CLOCK_48, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(CLOCK_48),
-	.c1(clk_sd),
 	.locked(pll_locked)
 	);
 
@@ -109,7 +108,7 @@ reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clk_sd      ),
+	.clk           ( CLOCK_48      ),
 
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
@@ -124,11 +123,11 @@ sdram sdram(
 	.cpu2_addr     ( 16'hffff ),
 	.cpu2_q        ( ),
 
-	// port2 for sprite graphics
+		// port2 for sprite graphics
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {bg_ioctl_addr[13:0], bg_ioctl_addr[15]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {bg_ioctl_addr[14], ~bg_ioctl_addr[14]} ),
+	.port2_a       ( bg_ioctl_addr),
+	.port2_ds      ( {bg_ioctl_addr[0], ~bg_ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
