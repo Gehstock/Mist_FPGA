@@ -49,7 +49,7 @@ wire [1:0] scanlines = status[4:3];
 wire           blend = status[5];
 wire           flip  = status[6];
 wire        service  = status[7];
-wire           sound = status[8];// deactivated for Now, 
+wire           sound = status[8];
 wire [1:0]     ships = ~status[10:9];
 wire [1:0] extraship = status[12:11];
 
@@ -270,7 +270,7 @@ dac #(
 	.C_bits(16))
 dac(
 	.clk_i(clk_sys),
-	.res_n_i(status[8]),
+	.res_n_i(1),
 	.dac_i(audio_l),
 	.dac_o(AUDIO_L)
 	);
