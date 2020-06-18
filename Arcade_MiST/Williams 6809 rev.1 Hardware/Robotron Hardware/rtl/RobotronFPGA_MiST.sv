@@ -4,7 +4,8 @@
 //  Robotron-FPGA is Copyright 2012 ShareBrained Technology, Inc.
 //
 //  Supports:
-//  Robotron 2048/Joust/Stargate/Bubbles/Splat/Sinistar/Lotto Fun
+//  Robotron 2048/Joust/Splat/Bubbles/Stargate/Alien Arena/Sinistar/
+//  Playball!/Lotto Fun/Speed Ball
 
 module RobotronFPGA_MiST(
 	output        LED,
@@ -56,8 +57,8 @@ wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
-wire       autoup    = status[7] | (core_mod != 7'h8);// Memory Protect for Lotto Fun
-wire       adv       = status[8] ;
+wire       autoup    = status[7];
+wire       adv       = status[8];
 
 reg   [7:0] SW;
 reg   [7:0] JA;
@@ -91,10 +92,10 @@ always @(*) begin
 	JA = 8'hFF;
 	JB = 8'hFF;
 	BTN = 4'hF;
-	AN0 = 8'hFF;
-	AN1 = 8'hFF;
-	AN2 = 8'hFF;
-	AN3 = 8'hFF;
+	AN0 = 8'h80;
+	AN1 = 8'h80;
+	AN2 = 8'h80;
+	AN3 = 8'h80;
 	blitter_sc2 = 0;
 	sinistar = 0;
 	speedball = 0;
@@ -163,20 +164,41 @@ always @(*) begin
 		JA  = ~{ 4'b0000, m_right, m_left, m_down, m_up };
 		JB  = 8'b11111111;//IN1
 	end
-	7'h9: // Speed Ball
+	7'h9: // SPEED BALL
 	begin
 		speedball = 1;
-		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };//IN2
-		JA  = 8'b11111111;//IN0
-		JB  = 8'b11111111;//IN1
-		//todo
-//		AN0 =;
-//		AN1 =;
-//		AN2 =;
-	//	AN3 =;
+		BTN = { m_two_players, m_one_player, m_coin1 | m_coin2, reset };
+		JA  = { m_fireD, m_fireC, m_fireB, m_fireA | mouse_btns0[0], m_right, m_left, m_down, m_up };
+		JB  = { m_fire2D, m_fire2C, m_fire2B, m_fire2A | mouse_btns1[0], m_right2, m_left2, m_down2, m_up2 };
+		AN0 = {~y_pos0[8], y_pos0[7:1]};
+		AN1 = {~x_pos0[8], x_pos0[7:1]};
+		AN2 = {~y_pos1[8], y_pos1[7:1]};
+		AN3 = {~x_pos1[8], x_pos1[7:1]};
 	end
 	default: ;
 	endcase
+end
+
+reg  signed [9:0] x_pos0;
+reg  signed [9:0] y_pos0;
+reg  [1:0] mouse_btns0;
+
+reg  signed [9:0] x_pos1;
+reg  signed [9:0] y_pos1;
+reg  [1:0] mouse_btns1;
+
+always @(posedge clk_sys) begin
+  if (mouse_strobe) begin
+		if (~mouse_idx) begin
+			mouse_btns0 <= mouse_flags[1:0];
+			x_pos0 <= x_pos0 + mouse_x;
+			y_pos0 <= y_pos0 + mouse_y;
+		end else begin
+			mouse_btns1 <= mouse_flags[1:0];
+			x_pos1 <= x_pos1 + mouse_x;
+			y_pos1 <= y_pos1 + mouse_y;
+		end
+  end
 end
 
 assign LED = ~ioctl_downl;
@@ -206,6 +228,12 @@ wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
 
+wire        mouse_strobe;
+wire signed [8:0] mouse_x;
+wire signed [8:0] mouse_y;
+wire  [7:0] mouse_flags;
+wire        mouse_idx;
+
 user_io #(
 	.STRLEN($size(CONF_STR)>>3))
 user_io(
@@ -224,6 +252,11 @@ user_io(
 	.key_strobe     ( key_strobe       ),
 	.key_pressed    ( key_pressed      ),
 	.key_code       ( key_code         ),
+	.mouse_idx      ( mouse_idx        ),
+	.mouse_strobe   ( mouse_strobe     ),
+	.mouse_x        ( mouse_x          ),
+	.mouse_y        ( mouse_y          ),
+	.mouse_flags    ( mouse_flags      ),
 	.joystick_0     ( joystick_0       ),
 	.joystick_1     ( joystick_1       ),
 	.status         ( status           )
@@ -352,6 +385,10 @@ robotron_soc robotron_soc (
 	.SW          ( SW          ),
 	.JA          ( JA          ),
 	.JB          ( JB          ),
+	.AN0         ( AN0         ),
+	.AN1         ( AN1         ),
+	.AN2         ( AN2         ),
+	.AN3         ( AN3         ),
 
 	.MemAdr      ( mem_addr    ),
 	.MemDin      ( mem_di      ),
