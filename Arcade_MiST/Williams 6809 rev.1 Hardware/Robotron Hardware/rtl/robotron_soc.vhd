@@ -84,7 +84,9 @@ port (
 	AN0              : in    std_logic_vector(7 downto 0);
 	AN1              : in    std_logic_vector(7 downto 0);
 	AN2              : in    std_logic_vector(7 downto 0);
-	AN3              : in    std_logic_vector(7 downto 0);		
+	AN3              : in    std_logic_vector(7 downto 0);
+
+  -- ROM download signals
 	dl_clock         : in    std_logic;
 	dl_addr          : in    std_logic_vector(16 downto 0);
 	dl_data          : in    std_logic_vector(7 downto 0);

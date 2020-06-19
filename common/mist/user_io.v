@@ -52,8 +52,8 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_
 
 	// connection to sd card emulation
 	input        [31:0] sd_lba,
-	input               sd_rd,
-	input               sd_wr,
+	input         [1:0] sd_rd,
+	input         [1:0] sd_wr,
 	output reg          sd_ack,
 	output reg          sd_ack_conf,
 	input               sd_conf,
@@ -64,7 +64,7 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_
 	output reg          sd_din_strobe,
 	output reg    [8:0] sd_buff_addr,
 
-	output reg          img_mounted, //rising edge if a new image is mounted
+	output reg    [1:0] img_mounted, // rising edge if a new image is mounted
 	output reg   [31:0] img_size,    // size of image in bytes
 
 	// ps2 keyboard/mouse emulation
@@ -82,8 +82,10 @@ module user_io #(parameter STRLEN=0, parameter PS2DIV=100, parameter ROM_DIRECT_
 	// mouse data
 	output reg    [8:0] mouse_x,
 	output reg    [8:0] mouse_y,
+	output reg    [3:0] mouse_z,
 	output reg    [7:0] mouse_flags,  // YOvfl, XOvfl, dy8, dx8, 1, mbtn, rbtn, lbtn
 	output reg          mouse_strobe, // mouse data is valid on mouse_strobe
+	output reg          mouse_idx,    // which mouse?
 
 	// serial com port
 	input [7:0]         serial_data,
@@ -109,8 +111,9 @@ assign conf_addr = byte_cnt;
 // bit 4 indicates ROM direct upload capability
 wire [7:0] core_type = ROM_DIRECT_UPLOAD ? 8'hb4 : 8'ha4;
 
+wire drive_sel = sd_rd[1] | sd_wr[1];
 // command byte read by the io controller
-wire [7:0] sd_cmd = { 4'h5, sd_conf, sd_sdhc, sd_wr, sd_rd };
+wire [7:0] sd_cmd = { 4'h6, sd_conf, sd_sdhc, sd_wr[drive_sel], sd_rd[drive_sel] };
 
 wire spi_sck = SPI_CLK;
 
@@ -328,6 +331,7 @@ end
 
 always@(posedge spi_sck or posedge SPI_SS_IO) begin
 	reg [31:0] sd_lba_r;
+	reg  [7:0] drive_sel_r;
 
 	if(SPI_SS_IO == 1) begin
 		spi_byte_out <= core_type;
@@ -346,8 +350,10 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 			8'h16: if(byte_cnt == 0) begin
 					spi_byte_out <= sd_cmd;
 					sd_lba_r <= sd_lba;
-				end
-				else if(byte_cnt < 5) spi_byte_out <= sd_lba_r[(4-byte_cnt)<<3 +:8];
+					drive_sel_r <= {7'b0, drive_sel};
+				end 
+				else if(byte_cnt == 1) spi_byte_out <= drive_sel_r;
+				else if(byte_cnt < 6) spi_byte_out <= sd_lba_r[(5-byte_cnt)<<3 +:8];
 
 			// reading sd card write data
 			8'h18: spi_byte_out <= sd_din;
@@ -397,6 +403,7 @@ always @(posedge clk_sys) begin
 
 	reg [7:0] mouse_flags_r;
 	reg [7:0] mouse_x_r;
+	reg [7:0] mouse_y_r;
 
 	reg       key_pressed_r;
 	reg       key_extended_r;
@@ -428,18 +435,24 @@ always @(posedge clk_sys) begin
 				8'h62: if (abyte_cnt < 5) joystick_2[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 				8'h63: if (abyte_cnt < 5) joystick_3[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 				8'h64: if (abyte_cnt < 5) joystick_4[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
-				8'h04: begin
+				8'h70,8'h71: begin
 					// store incoming ps2 mouse bytes 
-					ps2_mouse_fifo[ps2_mouse_wptr] <= spi_byte_in;
-					ps2_mouse_wptr <= ps2_mouse_wptr + 1'd1;
+					if (~acmd[0]) begin
+						// PS2 serial protocol for the first mouse only
+						ps2_mouse_fifo[ps2_mouse_wptr] <= spi_byte_in;
+						ps2_mouse_wptr <= ps2_mouse_wptr + 1'd1;
+					end
 					if (abyte_cnt == 1) mouse_flags_r <= spi_byte_in;
 					else if (abyte_cnt == 2) mouse_x_r <= spi_byte_in;
-					else if (abyte_cnt == 3) begin
+					else if (abyte_cnt == 3) mouse_y_r <= spi_byte_in;
+					else if (abyte_cnt == 4) begin
 						// flags: YOvfl, XOvfl, dy8, dx8, 1, mbtn, rbtn, lbtn
 						mouse_flags <= mouse_flags_r;
 						mouse_x <= { mouse_flags_r[4], mouse_x_r };
-						mouse_y <= { mouse_flags_r[5], spi_byte_in };
+						mouse_y <= { mouse_flags_r[5], mouse_y_r };
+						mouse_z <= spi_byte_in[3:0];
 						mouse_strobe <= 1;
+						mouse_idx <= acmd[0];
 					end
 				end
 				8'h05: begin
@@ -500,7 +513,7 @@ always @(posedge clk_sd) begin
 	reg       spi_transfer_end;
 	reg       spi_receiver_strobeD;
 	reg       spi_transfer_endD;
-	reg       sd_wrD;
+	reg [1:0] sd_wrD;
 	reg [7:0] acmd;
 	reg [7:0] abyte_cnt;   // counts bytes
 
@@ -518,7 +531,7 @@ always @(posedge clk_sd) begin
 	sd_din_strobe<= 0;
 	sd_wrD <= sd_wr;
 	// fetch the first byte immediately after the write command seen
-	if (~sd_wrD & sd_wr) begin
+	if ((~sd_wrD[0] & sd_wr[0]) || (~sd_wrD[1] & sd_wrD[1])) begin
 		sd_buff_addr <= 0;
 		sd_din_strobe <= 1;
 	end
@@ -560,8 +573,10 @@ always @(posedge clk_sd) begin
 
 				// send sector FPGA -> IO
 				8'h18: begin
-					sd_din_strobe <= 1'b1;
-					if(~&sd_buff_addr) sd_buff_addr <= sd_buff_addr + 1'b1;
+					if(~&sd_buff_addr) begin
+						sd_din_strobe <= 1'b1;
+						sd_buff_addr <= sd_buff_addr + 1'b1;
+					end
 				end
 
 				// send SD config IO -> FPGA
@@ -572,7 +587,7 @@ always @(posedge clk_sd) begin
 					sd_dout <= spi_byte_in;
 				end
 
-				8'h1c: img_mounted <= 1;
+				8'h1c: img_mounted[spi_byte_in[0]] <= 1;
 
 				// send image info
 				8'h1d: if(abyte_cnt<5) img_size[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
