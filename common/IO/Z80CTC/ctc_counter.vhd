@@ -41,6 +41,7 @@ architecture struct of ctc_counter is
  signal clk_trg_in   : std_logic;
  signal clk_trg_r    : std_logic;
  signal trigger      : std_logic;
+ signal trigger_clk  : std_logic;
  signal count_ena    : std_logic;
  signal load_data_r  : std_logic; -- make sure load_data toggles to get one new data
 
@@ -52,7 +53,6 @@ prescale_max <=
 	X"FF";                                           -- timer mode prescale 256
 
 clk_trg_in <= clk_trg xor control_word(4);
-trigger <= '1' when clk_trg_in = '0' and clk_trg_r = '1' else '0';
 
 d_out <= count_in(7 downto 0);
 
@@ -74,8 +74,11 @@ begin
 	else
 		if rising_edge(clock) then
 			if clock_ena = '1' then
-			
-				clk_trg_r <= clk_trg_in;
+				trigger <= '0';
+				trigger_clk <= '0';
+				if trigger_clk = '0' and trigger = '1' then
+					trigger_clk <= '1';
+				end if;
 				load_data_r <= load_data;
 
 				if (restart_on_next_trigger = '1' and trigger = '1') or (restart_on_next_clock = '1') then
@@ -128,7 +131,7 @@ begin
 
 				-- counter 
 				zc_to_in <= '0';
-				if ((control_word(6) = '1' and trigger = '1'  ) or 
+				if ((control_word(6) = '1' and trigger_clk = '0' and trigger = '1') or -- rising edge of trigger_clk
 					 (control_word(6) = '0' and count_ena = '1') ) and time_constant_loaded = '1' then
 					if prescale_in = 0 then
 						prescale_in <= prescale_max;
@@ -144,6 +147,14 @@ begin
 				end if; 
 
 			end if;
+
+			-- detecting of trg input is asynchronous,
+			-- but eventually it's synchronized to the timer clock (clock_ena) via trigger_clk
+			clk_trg_r <= clk_trg_in;
+			if clk_trg_in = '0' and clk_trg_r = '1' then
+				trigger <= '1';
+			end if;
+
 		end if;
 	end if;
 end process;

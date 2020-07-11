@@ -37,6 +37,7 @@ end z80ctc_top;
 architecture struct of z80ctc_top is
 
  signal cpu_int_ack_n     : std_logic;
+ signal ctc_int_n         : std_logic;
 
  signal ctc_controler_we  : std_logic;
  signal ctc_controler_do  : std_logic_vector(7 downto 0);
@@ -87,12 +88,14 @@ ctc_counter_1_we <= '1' when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n
 ctc_counter_2_we <= '1' when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '1' and cs = "10" else '0';
 ctc_counter_3_we <= '1' when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '1' and cs = "11" else '0';
 
-dout <= ctc_controler_do when cpu_int_ack_n = '0' else
-        ctc_counter_0_do when iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "00" else
-        ctc_counter_1_do when iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "01" else
-        ctc_counter_2_do when iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "10" else
-        ctc_counter_3_do when iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "11" else
+dout <= ctc_controler_do when cpu_int_ack_n = '0' and ctc_int_n = '0' else
+        ctc_counter_0_do when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "00" else
+        ctc_counter_1_do when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "01" else
+        ctc_counter_2_do when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "10" else
+        ctc_counter_3_do when ce_n = '0' and iorq_n = '0' and m1_n = '1' and rd_n = '0' and cs = "11" else
         x"FF";
+
+int_n <= ctc_int_n;
 
 -- CTC interrupt controler Z80-CTC (MK3882)
 ctc_controler : entity work.ctc_controler
@@ -112,7 +115,7 @@ port map(
  int_pulse_3 => ctc_counter_3_int,
 
  d_out     => ctc_controler_do,
- int_n     => int_n
+ int_n     => ctc_int_n
 );
 
 ctc_counter_0 : entity work.ctc_counter
