@@ -35,6 +35,8 @@ module data_io
 	// ARM -> FPGA download
 	output reg        ioctl_download = 0, // signal indicating an active download
 	output reg  [7:0] ioctl_index,        // menu index used to upload the file ([7:6] - extension index, [5:0] - menu index)
+	                                      // Note: this is also set for user_io mounts.
+	                                      // Valid when ioctl_download = 1 or when img_mounted strobe is active in user_io.
 	output reg        ioctl_wr,           // strobe indicating ioctl_dout valid
 	output reg [24:0] ioctl_addr,
 	output reg  [7:0] ioctl_dout,
@@ -53,7 +55,6 @@ reg        rclk   = 0;
 reg        rclk2  = 0;
 reg        addr_reset = 0;
 reg        downloading_reg = 0;
-reg  [7:0] index_reg = 0;
 
 localparam DIO_FILE_TX      = 8'h53;
 localparam DIO_FILE_TX_DAT  = 8'h54;
@@ -101,7 +102,7 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin : SPI_RECEIVER
 		end
 
 		// expose file (menu) index
-		if((cmd == DIO_FILE_INDEX) && (cnt == 15)) index_reg <= {sbuf, SPI_DI};
+		if((cmd == DIO_FILE_INDEX) && (cnt == 15)) ioctl_index <= {sbuf, SPI_DI};
 
 		// receiving FAT directory entry (mist-firmware/fat.h - DIRENTRY)
 		if((cmd == DIO_FILE_INFO) && (cnt == 15)) begin
@@ -193,7 +194,6 @@ always@(posedge clk_sys) begin : DATA_OUT
 	if(addr_resetD ^ addr_resetD2) begin
 		addr <= START_ADDR;
 		filepos <= 0;
-		ioctl_index <= index_reg;
 		ioctl_download <= 1;
 	end
 
