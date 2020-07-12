@@ -84,7 +84,7 @@ package T80_Pack is
 	port(
 		RESET_n         : in std_logic;
 		CLK_n           : in std_logic;
-		CEN                     : in std_logic;
+		CEN             : in std_logic;
 		WAIT_n          : in std_logic;
 		INT_n           : in std_logic;
 		NMI_n           : in std_logic;
@@ -96,35 +96,42 @@ package T80_Pack is
 		RFSH_n          : out std_logic;
 		HALT_n          : out std_logic;
 		BUSAK_n         : out std_logic;
-		A                       : out std_logic_vector(15 downto 0);
+		A               : out std_logic_vector(15 downto 0);
 		DInst           : in std_logic_vector(7 downto 0);
-		DI                      : in std_logic_vector(7 downto 0);
-		DO                      : out std_logic_vector(7 downto 0);
-		MC                      : out std_logic_vector(2 downto 0);
-		TS                      : out std_logic_vector(2 downto 0);
+		DI              : in std_logic_vector(7 downto 0);
+		DO              : out std_logic_vector(7 downto 0);
+		MC              : out std_logic_vector(2 downto 0);
+		TS              : out std_logic_vector(2 downto 0);
 		IntCycle_n      : out std_logic;
 		IntE            : out std_logic;
-		Stop            : out std_logic
+		Stop            : out std_logic;
+		out0            : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
+		REG             : out std_logic_vector(211 downto 0); -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
+		DIRSet          : in  std_logic := '0';
+		DIR             : in  std_logic_vector(211 downto 0) := (others => '0') -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
 	);
 	end component;
 
 	component T80_Reg
 	port(
-		Clk                     : in std_logic;
-		CEN                     : in std_logic;
-		WEH                     : in std_logic;
-		WEL                     : in std_logic;
+		Clk             : in std_logic;
+		CEN             : in std_logic;
+		WEH             : in std_logic;
+		WEL             : in std_logic;
 		AddrA           : in std_logic_vector(2 downto 0);
 		AddrB           : in std_logic_vector(2 downto 0);
 		AddrC           : in std_logic_vector(2 downto 0);
-		DIH                     : in std_logic_vector(7 downto 0);
-		DIL                     : in std_logic_vector(7 downto 0);
+		DIH             : in std_logic_vector(7 downto 0);
+		DIL             : in std_logic_vector(7 downto 0);
 		DOAH            : out std_logic_vector(7 downto 0);
 		DOAL            : out std_logic_vector(7 downto 0);
 		DOBH            : out std_logic_vector(7 downto 0);
 		DOBL            : out std_logic_vector(7 downto 0);
 		DOCH            : out std_logic_vector(7 downto 0);
-		DOCL            : out std_logic_vector(7 downto 0)
+		DOCL            : out std_logic_vector(7 downto 0);
+		DOR             : out std_logic_vector(127 downto 0);
+		DIRSet          : in  std_logic;
+		DIR             : in  std_logic_vector(127 downto 0)
 	);
 	end component;
 
@@ -173,8 +180,6 @@ package T80_Pack is
 		LDZ                     : out std_logic;
 		LDW                     : out std_logic;
 		LDSPHL                  : out std_logic;
-		LDHLSP                  : out std_logic;
-		ADDSPdd						: out std_logic;
 		Special_LD              : out std_logic_vector(2 downto 0); -- A,I;A,R;I,A;R,A;None
 		ExchangeDH              : out std_logic;
 		ExchangeRp              : out std_logic;
@@ -191,6 +196,7 @@ package T80_Pack is
 		I_RLD                   : out std_logic;
 		I_RRD                   : out std_logic;
 		I_INRC                  : out std_logic;
+		SetWZ                   : out std_logic_vector(1 downto 0);
 		SetDI                   : out std_logic;
 		SetEI                   : out std_logic;
 		IMode                   : out std_logic_vector(1 downto 0);
@@ -216,6 +222,8 @@ package T80_Pack is
 	port(
 		Arith16         : in  std_logic;
 		Z16             : in  std_logic;
+		WZ              : in  std_logic_vector(15 downto 0);
+		XY_State        : in  std_logic_vector(1 downto 0);
 		ALU_Op          : in  std_logic_vector(3 downto 0);
 		IR              : in  std_logic_vector(5 downto 0);
 		ISet            : in  std_logic_vector(1 downto 0);
