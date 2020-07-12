@@ -102,8 +102,8 @@ wire doublescan = (dsp_height>350);
 reg auto_ce_pix;
 always @(posedge clk_sys) begin
 	reg [15:0] cnt = 0;
-	reg  [1:0] pixsz;
-	reg  [1:0] pixcnt;
+	reg  [2:0] pixsz;
+	reg  [2:0] pixcnt;
 	reg        hs;
 
 	cnt <= cnt + 1'd1;
@@ -118,7 +118,9 @@ always @(posedge clk_sys) begin
 		if(cnt <= OSD_WIDTH_PADDED * 2) pixsz <= 0;
 		else if(cnt <= OSD_WIDTH_PADDED * 3) pixsz <= 1;
 		else if(cnt <= OSD_WIDTH_PADDED * 4) pixsz <= 2;
-		else pixsz <= 3;
+		else if(cnt <= OSD_WIDTH_PADDED * 5) pixsz <= 3;
+		else if(cnt <= OSD_WIDTH_PADDED * 6) pixsz <= 4;
+		else pixsz <= 5;
 
 		pixcnt <= 0;
 		auto_ce_pix <= 1;
@@ -155,13 +157,15 @@ always @(posedge clk_sys) begin
 		// falling edge of VSync
 		if(!VSync && vsD) begin
 			v_cnt <= 0;
-			vs_high <= v_cnt;
+			// if the difference is only one line, that might be interlaced picture
+			if (vs_high != v_cnt + 1'd1) vs_high <= v_cnt;
 		end
 
 		// rising edge of VSync
 		else if(VSync && !vsD) begin
 			v_cnt <= 0;
-			vs_low <= v_cnt;
+			// if the difference is only one line, that might be interlaced picture
+			if (vs_low != v_cnt + 1'd1) vs_low <= v_cnt;
 		end
 	end
 end

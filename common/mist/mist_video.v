@@ -51,6 +51,7 @@ parameter OSD_Y_OFFSET = 10'd0;
 parameter SD_HCNT_WIDTH = 9;
 parameter COLOR_DEPTH = 6; // 1-6
 parameter OSD_AUTO_CE = 1'b1;
+parameter SYNC_AND = 1'b0; // 0 - XOR, 1 - AND
 
 wire [5:0] SD_R_O;
 wire [5:0] SD_G_O;
@@ -181,7 +182,7 @@ assign VGA_R = ypbpr?pr:cofi_r;
 assign VGA_G = ypbpr? y:cofi_g;
 assign VGA_B = ypbpr?pb:cofi_b;
 
-wire   cs = ~(cofi_hs ^ cofi_vs);
+wire   cs = SYNC_AND ? (cofi_hs & cofi_vs) : ~(cofi_hs ^ cofi_vs);
 wire   hs = cofi_hs;
 wire   vs = cofi_vs;
 
