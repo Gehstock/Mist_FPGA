@@ -160,7 +160,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(CosmicAvenger)
 # -------------------------
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/CosmicAvenger.sv
 set_global_assignment -name VHDL_FILE rtl/ladybug.vhd
 set_global_assignment -name VHDL_FILE rtl/ladybug_video_unit.vhd
@@ -180,13 +179,7 @@ set_global_assignment -name VHDL_FILE rtl/ladybug_chutes.vhd
 set_global_assignment -name VHDL_FILE rtl/ladybug_chute.vhd
 set_global_assignment -name VHDL_FILE rtl/ladybug_char.vhd
 set_global_assignment -name VHDL_FILE rtl/ladybug_addr_dec.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_top.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_tone.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_noise.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_latch_ctrl.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_clock_div.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/sn76489/sn76489_attenuator.vhd
-set_global_assignment -name VHDL_FILE rtl/sound/ladybug_sound_unit.vhd
+set_global_assignment -name VHDL_FILE rtl/ladybug_sound_unit.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_u.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/rom_sprite_l.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/rom_cpu3.vhd
@@ -198,15 +191,12 @@ set_global_assignment -name VHDL_FILE rtl/ROM/prom_decrypt.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_3.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_2.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/prom_10_1.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80a.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/ttl_393.vhd
 set_global_assignment -name VHDL_FILE rtl/ttl_175.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name QIP_FILE rtl/pll.qip
+set_global_assignment -name QIP_FILE ../../../common/Sound/sn76489/sn76489.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

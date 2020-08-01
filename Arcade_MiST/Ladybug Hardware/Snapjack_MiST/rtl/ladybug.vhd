@@ -65,7 +65,7 @@ port (
 	O_PIXCE      : out std_logic;
 
 	-- Audio Interface --------------------------------------------------------
-	O_AUDIO      : out signed(7 downto 0);
+	O_AUDIO      : out std_logic_vector( 8 downto 0);
 	
 	but_coin_s   : in  std_logic_vector( 1 downto 0);
 	but_fire_s   : in  std_logic_vector( 1 downto 0);
@@ -160,8 +160,8 @@ begin
 		rgb_b_o           => O_VIDEO_B,
 		hsync_n_o         => O_HSYNC,
 		vsync_n_o         => O_VSYNC,
-	   vblank_o          => O_VBLANK,
-	   hblank_o          => O_HBLANK,
+		vblank_o          => O_VBLANK,
+		hblank_o          => O_HBLANK,
 		audio_o           => O_AUDIO,
 		rom_cpu_a_o       => rom_cpu_a_s,
 		rom_cpu_d_i       => rom_cpu_d_s,
