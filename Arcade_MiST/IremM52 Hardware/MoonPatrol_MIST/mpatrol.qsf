@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "12.1 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "09:07:52  FEBRUARY 01, 2013"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:src/build_id.tcl"
@@ -204,7 +204,6 @@ set_global_assignment -name VHDL_FILE src/video_controller_pkg.vhd
 set_global_assignment -name VHDL_FILE src/video_controller.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_board.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_prog.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE src/YM2149.sv
 set_global_assignment -name VHDL_FILE src/Z80.vhd
 set_global_assignment -name VHDL_FILE src/tilemapctl.vhd
 set_global_assignment -name VHDL_FILE src/sprom.vhd
@@ -229,4 +228,6 @@ set_global_assignment -name VHDL_FILE src/build_id.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE ../../../common/CPU/6800/cpu68.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
