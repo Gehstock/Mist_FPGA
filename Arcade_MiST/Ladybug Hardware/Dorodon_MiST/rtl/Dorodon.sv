@@ -41,7 +41,7 @@ module Dorodon
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Ladybug;;",
+	"Dorodon;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
