@@ -75,6 +75,7 @@ architecture rtl of sn76489_latch_ctrl is
   signal reg_q   : std_logic_vector(0 to 2);
   signal we_q    : boolean;
   signal ready_q : std_logic;
+  signal we_n_d  : std_logic;
 
 begin
 
@@ -92,6 +93,12 @@ begin
       ready_q   <= '0';
 
     elsif clock_i'event and clock_i = '1' then
+      if clk_en_i then
+        we_n_d <= we_n_i;
+      elsif we_n_i = '1' then
+        we_n_d <= '1';
+      end if;
+
       -- READY Flag Output ----------------------------------------------------
       if ready_q = '0' and we_q then
         if clk_en_i then
@@ -104,15 +111,15 @@ begin
       end if;
 
       -- Register Selection ---------------------------------------------------
-      if ce_n_i = '0' and we_n_i = '0' then
-        if clk_en_i then
+      if clk_en_i then
+        if ce_n_i = '0' and we_n_d = '1' and we_n_i = '0' then
           if d_i(0) = '1' then
             reg_q <= d_i(1 to 3);
           end if;
           we_q  <= true;
+        else
+          we_q  <= false;
         end if;
-      else
-        we_q  <= false;
       end if;
 
     end if;

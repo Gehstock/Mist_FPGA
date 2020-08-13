@@ -40,35 +40,9 @@ port(
 end moon_patrol_sound_board;
 
 architecture struct of moon_patrol_sound_board is
-  component YM2149
-  port (
-    CLK         : in  std_logic;
-    CE          : in  std_logic;
-    RESET       : in  std_logic;
-    A8          : in  std_logic := '1';
-    A9_L        : in  std_logic := '0';
-    BDIR        : in  std_logic; -- Bus Direction (0 - read , 1 - write)
-    BC          : in  std_logic; -- Bus control
-    DI          : in  std_logic_vector(7 downto 0);
-    DO          : out std_logic_vector(7 downto 0);
-    CHANNEL_A   : out std_logic_vector(7 downto 0);
-    CHANNEL_B   : out std_logic_vector(7 downto 0);
-    CHANNEL_C   : out std_logic_vector(7 downto 0);
-
-    SEL         : in  std_logic;
-    MODE        : in  std_logic;
-
-    ACTIVE      : out std_logic_vector(5 downto 0);
-
-    IOA_in      : in  std_logic_vector(7 downto 0);
-    IOA_out     : out std_logic_vector(7 downto 0);
-
-    IOB_in      : in  std_logic_vector(7 downto 0);
-    IOB_out     : out std_logic_vector(7 downto 0)
-    );
-  end component;
 
  signal reset      : std_logic := '1';
+ signal reset_n    : std_logic;
  signal reset_cnt  : integer range 0 to 1000000 := 1000000;
 
  signal cpu_addr   : std_logic_vector(15 downto 0);
@@ -158,6 +132,7 @@ architecture struct of moon_patrol_sound_board is
 begin
 
 dbg_cpu_addr <= cpu_addr;
+reset_n <= not reset;
 
 -- cs
 wram_cs   <= '1' when cpu_addr(15 downto  7) = X"00"&'1' else '0'; -- 0080-00FF
@@ -367,62 +342,66 @@ port map(
  q    => wram_do
 );
 
-  ay83910_inst1: YM2149
-  port map (
-    CLK         => clock_E,
-    CE          => '1',
-    RESET       => reset,
-    A8          => '1',
-    A9_L        => port2_data(4),
-    BDIR        => port2_data(0),
-    BC          => port2_data(2),
-    DI          => port1_data,
-    DO          => ay1_do,
-    CHANNEL_A   => ay1_chan_a,
-    CHANNEL_B   => ay1_chan_b,
-    CHANNEL_C   => ay1_chan_c,
+-- AY-3-8910 #1
+ay_3_8910_1 : entity work.YM2149
+port map(
+  -- data bus
+  I_DA       => port1_data,-- in  std_logic_vector(7 downto 0);
+  O_DA       => ay1_do,    -- out std_logic_vector(7 downto 0);
+  O_DA_OE_L  => open,      -- out std_logic;
+  -- control
+  I_A9_L     => port2_data(4),  -- in  std_logic;
+  I_A8       => '1',            -- in  std_logic;
+  I_BDIR     => port2_data(0),  -- in  std_logic;
+  I_BC2      => '1',            -- in  std_logic;
+  I_BC1      => port2_data(2),  -- in  std_logic;
+  I_SEL_L    => '1',            -- in  std_logic;
 
-    SEL         => '0',
-    MODE        => '1',
+  O_AUDIO_L  => ay1_audio,         -- out std_logic_vector(9 downto 0);
 
-    ACTIVE      => open,
+  -- port a
+  I_IOA      => select_sound, -- in  std_logic_vector(7 downto 0);
+  O_IOA      => open,         -- out std_logic_vector(7 downto 0);
+  O_IOA_OE_L => open,         -- out std_logic;
+  -- port b
+  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
+  O_IOB      => ay1_port_b_do,   -- out std_logic_vector(7 downto 0);
+  O_IOB_OE_L => open,            -- out std_logic;
 
-    IOA_in      => select_sound_r,
-    IOA_out     => open,
+  ENA        => '1', --cpu_ena,  -- in  std_logic; -- clock enable for higher speed operation
+  RESET_L    => reset_n,         -- in  std_logic;
+  CLK        => clock_E          -- in  std_logic
+);
 
-    IOB_in      => (others => '0'),
-    IOB_out     => ay1_port_b_do
-    );
+-- AY-3-8910 #2
+ay_3_8910_2 : entity work.YM2149
+port map(
+  -- data bus
+  I_DA       => port1_data,-- in  std_logic_vector(7 downto 0);
+  O_DA       => ay2_do,    -- out std_logic_vector(7 downto 0);
+  O_DA_OE_L  => open,      -- out std_logic;
+  -- control
+  I_A9_L     => port2_data(3),  -- in  std_logic;
+  I_A8       => '1',            -- in  std_logic;
+  I_BDIR     => port2_data(0),  -- in  std_logic;
+  I_BC2      => '1',            -- in  std_logic;
+  I_BC1      => port2_data(2),  -- in  std_logic;
+  I_SEL_L    => '1',            -- in  std_logic;
 
-  ay1_audio <= "0000000000" + ay1_chan_a + ay1_chan_b + ay1_chan_c;
+  O_AUDIO_L  => ay2_audio,         -- out std_logic_vector(9 downto 0);
 
-  ay83910_inst2: YM2149
-  port map (
-    CLK         => clock_E,
-    CE          => '1',
-    RESET       => reset,
-    A8          => '1',
-    A9_L        => port2_data(3),
-    BDIR        => port2_data(0),
-    BC          => port2_data(2),
-    DI          => port1_data,
-    DO          => ay2_do,
-    CHANNEL_A   => ay2_chan_a,
-    CHANNEL_B   => ay2_chan_b,
-    CHANNEL_C   => ay2_chan_c,
+  -- port a
+  I_IOA      => (others => '0'), -- in  std_logic_vector(7 downto 0);
+  O_IOA      => open,            -- out std_logic_vector(7 downto 0);
+  O_IOA_OE_L => open,            -- out std_logic;
+  -- port b
+  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
+  O_IOB      => open,            -- out std_logic_vector(7 downto 0);
+  O_IOB_OE_L => open,            -- out std_logic;
 
-    SEL         => '0',
-    MODE        => '1',
-
-    ACTIVE      => open,
-
-    IOA_in      => (others => '0'),
-    IOA_out     => open,
-
-    IOB_in      => (others => '0'),
-    IOB_out     => open
-    );
-
-  ay2_audio <= "0000000000" + ay2_chan_a + ay2_chan_b + ay2_chan_c;
+  ENA        => '1', --cpu_ena,         -- in  std_logic; -- clock enable for higher speed operation
+  RESET_L    => reset_n,         -- in  std_logic;
+  CLK        => clock_E          -- in  std_logic
+);
 
 end struct;

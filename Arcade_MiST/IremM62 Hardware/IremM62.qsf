@@ -263,13 +263,14 @@ set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/YM2149.sv
 set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
 set_global_assignment -name QIP_FILE ../../common/Sound/jt5205/jt5205.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE ../../common/CPU/T80/Z80.vhd
 set_global_assignment -name VHDL_FILE ../../common/CPU/6800/cpu68.vhd
+set_global_assignment -name VHDL_FILE ../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../common/Sound/ym2149/vol_table_array.vhd
 set_global_assignment -name SIGNALTAP_FILE output_files/sp.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/tilemap.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/sprite.stp

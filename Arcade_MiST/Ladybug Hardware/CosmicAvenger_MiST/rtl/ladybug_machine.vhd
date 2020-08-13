@@ -77,10 +77,10 @@ entity ladybug_machine is
     hsync_n_o         : out std_logic;
     vsync_n_o         : out std_logic;
     comp_sync_n_o     : out std_logic;
-	 vblank_o          : out std_logic;
-	 hblank_o          : out std_logic;
+    vblank_o          : out std_logic;
+    hblank_o          : out std_logic;
     -- Audio Interface --------------------------------------------------------
-    audio_o           : out signed( 7 downto 0);
+    audio_o           : out std_logic_vector( 8 downto 0);
     -- CPU ROM Interface ------------------------------------------------------
     rom_cpu_a_o       : out std_logic_vector(14 downto 0);
     rom_cpu_d_i       : in  std_logic_vector( 7 downto 0);

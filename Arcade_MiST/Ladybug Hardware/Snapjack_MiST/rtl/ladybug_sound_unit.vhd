@@ -59,7 +59,7 @@ entity ladybug_sound_unit is
     wr_n_i         : in  std_logic;
     d_from_cpu_i   : in  std_logic_vector(7 downto 0);
     sound_wait_n_o : out std_logic;
-    audio_o        : out signed(7 downto 0)
+    audio_o        : out std_logic_vector(8 downto 0)
   );
 
 end ladybug_sound_unit;
@@ -70,7 +70,7 @@ architecture struct of ladybug_sound_unit is
          ready_c1_s  : std_logic;
 
   signal aout_b1_s,
-         aout_c1_s   : signed(7 downto 0);
+         aout_c1_s   : std_logic_vector(7 downto 0);
 
 begin
 
@@ -117,23 +117,7 @@ begin
   --
   -- Purpose:
   --   Mix the digital audio of the two SN76489 instances.
-  --   Additional care is taken to avoid audio overfow/clipping.
-  --
-  mix: process (aout_b1_s,
-                aout_c1_s)
-    variable sum_v : signed(8 downto 0);
-  begin
-    sum_v := RESIZE(aout_b1_s, 9) + RESIZE(aout_c1_s, 9);
-
-    if sum_v > 127 then
-      audio_o <= to_signed(127, 8);
-    elsif sum_v < -128 then
-      audio_o <= to_signed(-128, 8);
-    else
-      audio_o <= RESIZE(sum_v, 8);
-    end if;
-
-  end process mix;
+  audio_o <= std_logic_vector(unsigned('0'&aout_b1_s) + unsigned('0'&aout_c1_s));
   -- 
   -----------------------------------------------------------------------------
 

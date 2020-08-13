@@ -21,14 +21,14 @@
 
 module Snapjack
 (
-	output        LED,						
+	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
 	output  [5:0] VGA_B,
 	output        VGA_HS,
 	output        VGA_VS,
 	output        AUDIO_L,
-	output        AUDIO_R,	
+	output        AUDIO_R,
 	input         SPI_SCK,
 	output        SPI_DO,
 	input         SPI_DI,
@@ -41,12 +41,15 @@ module Snapjack
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Snapjack;;",
+	"SNAPJACK;;",
+	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"T6,Reset;",
+	"T0,Reset;",
 	"V,v1.10.",`BUILD_DATE
 };
+
+wire rotate = status[2];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -67,17 +70,43 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
-reg	[7:0] audio;
-wire 			hb, vb;
-wire        blankn = ~(hb | vb);
-wire 			ce_vid;
-wire 			hs, vs;
-wire  [1:0] r, g, b;
+wire        no_csync;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
 
-ladybugt snapjack(
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+);
+
+wire  [8:0] audio;
+wire        hb, vb;
+wire        blankn = ~(hb | vb);
+wire        ce_vid;
+wire        hs, vs;
+wire  [1:0] r,g,b;
+
+ladybugt ladybug(
 	.CLK_IN(clk_sys),
-	.I_RESET(status[0] | status[6] | buttons[1]),
+	.I_RESET(status[0] | buttons[1]),
 	.O_PIXCE(ce_vid),
 	.O_VIDEO_R(r),
 	.O_VIDEO_G(g),
@@ -87,15 +116,15 @@ ladybugt snapjack(
 	.O_VBLANK(vb),
 	.O_HBLANK(hb),
 	.O_AUDIO(audio),
-	.but_coin_s(~{1'b0,btn_coin}),
-	.but_fire_s(~{m_fire,m_fire}),
-	.but_bomb_s(~{m_bomb,m_bomb}),
-	.but_tilt_s(~{1'b0,1'b0}),
-	.but_select_s(~{btn_two_players, btn_one_player}),
-	.but_up_s(~{m_up,m_up}),
-	.but_down_s(~{m_down,m_down}),
-	.but_left_s(~{m_left,m_left}),
-	.but_right_s(~{m_right,m_right})
+	.but_coin_s(~{m_coin2,m_coin1}),
+	.but_fire_s(~{m_fire2A,m_fireA}),
+	.but_bomb_s(~{m_fire2B,m_fireB}),
+	.but_tilt_s(~{m_tilt,m_tilt}),
+	.but_select_s(~{m_two_players, m_one_player}),
+	.but_up_s(~{m_up2,m_up}),
+	.but_down_s(~{m_down2,m_down}),
+	.but_left_s(~{m_left2,m_left}),
+	.but_right_s(~{m_right2,m_right})
 	);
 
 mist_video #(.COLOR_DEPTH(2),.SD_HCNT_WIDTH(10)) mist_video(
@@ -113,79 +142,40 @@ mist_video #(.COLOR_DEPTH(2),.SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.rotate({1'b0,status[2]}),
+	.rotate({1'b0,rotate}),
 	.ce_divider(1'b1),
 	.blend(status[5]),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
-	.ypbpr(ypbpr)
+	.ypbpr(ypbpr),
+	.no_csync(no_csync)
 );
 
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
-);
-
-dac dac(
+dac #(9) dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({~audio[7], audio[6:0]}),
+	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
 
-wire m_up     = btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
-
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      		<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-			'h14: btn_fire3 			<= key_pressed; // ctrl
-			'h11: btn_fire2 			<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b00       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule 

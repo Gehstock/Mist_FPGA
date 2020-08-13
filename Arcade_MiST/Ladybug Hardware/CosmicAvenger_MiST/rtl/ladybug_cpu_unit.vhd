@@ -119,14 +119,14 @@ begin
   -- "wait" has to be modelled with the clock enable because the T80 is not
   -- able to enlarge write accesses properly when they are delayed with "wait"
   t80_clk_en_s <= clk_en_4mhz_i and wait_n_s;
-  T80a_b : entity work.T80a
+  T80a_b : entity work.T80s
     generic map (
       Mode => 0
     )
     port map (
       RESET_n    => res_n_i,
-      CLK_n      => clk_20mhz_i,
-      CLK_EN_SYS => t80_clk_en_s,
+      CLK        => clk_20mhz_i,
+      CEN        => t80_clk_en_s,
       WAIT_n     => wait_n_s,
       INT_n      => int_n_s,
       NMI_n      => nmi_n_s,

@@ -23,34 +23,6 @@ end sonson_soundboard;
 
 architecture SYN of sonson_soundboard is
 
-  component YM2149
-  port (
-    CLK         : in  std_logic;
-    CE          : in  std_logic;
-    RESET       : in  std_logic;
-    A8          : in  std_logic := '1';
-    A9_L        : in  std_logic := '0';
-    BDIR        : in  std_logic; -- Bus Direction (0 - read , 1 - write)
-    BC          : in  std_logic; -- Bus control
-    DI          : in  std_logic_vector(7 downto 0);
-    DO          : out std_logic_vector(7 downto 0);
-    CHANNEL_A   : out std_logic_vector(7 downto 0);
-    CHANNEL_B   : out std_logic_vector(7 downto 0);
-    CHANNEL_C   : out std_logic_vector(7 downto 0);
-
-    SEL         : in  std_logic;
-    MODE        : in  std_logic;
-
-    ACTIVE      : out std_logic_vector(5 downto 0);
-
-    IOA_in      : in  std_logic_vector(7 downto 0);
-    IOA_out     : out std_logic_vector(7 downto 0);
-
-    IOB_in      : in  std_logic_vector(7 downto 0);
-    IOB_out     : out std_logic_vector(7 downto 0)
-    );
-  end component;
-  
   COMPONENT mc6809i
   GENERIC ( ILLEGAL_INSTRUCTIONS : STRING := "GHOST" );
   PORT
@@ -201,62 +173,42 @@ begin
     q    		=> wram_do
   );
 
-  ay83910_inst1: YM2149
+  ay83910_inst1: work.YM2149
   port map (
     CLK         => clk,
-    CE          => clk_en_snd,
-    RESET       => reset,
-    A8          => '1',
-    A9_L        => not ay1_cs,
-    BDIR        => not cpu_rw,
-    BC          => not cpu_addr(0) or cpu_rw,
-    DI          => cpu_do,
-    DO          => ay1_do,
-    CHANNEL_A   => ay1_chan_a,
-    CHANNEL_B   => ay1_chan_b,
-    CHANNEL_C   => ay1_chan_c,
+    ENA         => clk_en_snd,
+    RESET_L     => not reset,
+    I_A8        => '1',
+    I_A9_L      => not ay1_cs,
+    I_BDIR      => not cpu_rw,
+    I_BC1       => not cpu_addr(0) or cpu_rw,
+    I_DA        => cpu_do,
+    O_DA        => ay1_do,
 
-    SEL         => '0',
-    MODE        => '1',
+		O_AUDIO_L   => audio_out_l,
 
-    ACTIVE      => open,
+    I_IOA       => (others => '0'),
 
-    IOA_in      => (others => '0'),
-    IOA_out     => open,
-
-    IOB_in      => (others => '0'),
-    IOB_out     => open
+    I_IOB       => (others => '0')
     );
 
-  audio_out_l <= "0000000000" + ay1_chan_a + ay1_chan_b + ay1_chan_c;
-
-  ay83910_inst2: YM2149
+  ay83910_inst2: work.YM2149
   port map (
     CLK         => clk,
-    CE          => clk_en_snd,
-    RESET       => reset,
-    A8          => '1',
-    A9_L        => not ay2_cs,
-    BDIR        => not cpu_rw,
-    BC          => not cpu_addr(0) or cpu_rw,
-    DI          => cpu_do,
-    DO          => ay2_do,
-    CHANNEL_A   => ay2_chan_a,
-    CHANNEL_B   => ay2_chan_b,
-    CHANNEL_C   => ay2_chan_c,
+    ENA         => clk_en_snd,
+    RESET_L     => not reset,
+    I_A8        => '1',
+    I_A9_L      => not ay2_cs,
+    I_BDIR      => not cpu_rw,
+    I_BC1       => not cpu_addr(0) or cpu_rw,
+    I_DA        => cpu_do,
+    O_DA        => ay2_do,
 
-    SEL         => '0',
-    MODE        => '1',
+		O_AUDIO_L   => audio_out_r,
 
-    ACTIVE      => open,
+    I_IOA       => (others => '0'),
 
-    IOA_in      => (others => '0'),
-    IOA_out     => open,
-
-    IOB_in      => (others => '0'),
-    IOB_out     => open
+    I_IOB       => (others => '0')
     );
-
-  audio_out_r <= "0000000000" + ay2_chan_a + ay2_chan_b + ay2_chan_c;
 
 end SYN;
