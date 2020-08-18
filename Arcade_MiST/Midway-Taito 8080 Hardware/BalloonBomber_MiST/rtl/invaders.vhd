@@ -195,26 +195,19 @@ begin
 			HSync => HSync,
 			VSync => VSync);
 
---	with AD_i(9 downto 8) select
---		GDB <= GDB0 when "00",
---				GDB1 when "01",
---				GDB2 when "10",
---				S when others;
-				
-			GDB_A <= not AD_i(9) & AD_i(8);
-
-	with GDB_A select
+	with AD_i(9 downto 8) select
 		GDB <= GDB0 when "00",
 				GDB1 when "01",
 				GDB2 when "10",
 				S when others;
+				
 	GDB0(0) <= '0';
 	GDB0(1) <= '0';
 	GDB0(2) <= '0';
 	GDB0(3) <= '0';
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
+	GDB0(4) <= '0';
+	GDB0(5) <= '0';
+	GDB0(6) <= '0';
 	GDB0(7) <= '0';
 	
 	GDB1(0) <= Coin;

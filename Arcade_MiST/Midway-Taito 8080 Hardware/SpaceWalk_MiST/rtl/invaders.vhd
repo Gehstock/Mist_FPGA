@@ -63,8 +63,7 @@ entity invaders is
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
 		Fire            : in  std_logic;
-		MoveLeft        : in  std_logic;
-		MoveRight       : in  std_logic;
+		Paddle          : in  std_logic_vector(7 downto 0);
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -122,7 +121,7 @@ architecture rtl of invaders is
 	signal DB           : std_logic_vector(7 downto 0);
 	signal Sounds       : std_logic_vector(7 downto 0);
 	signal AD_i         : std_logic_vector(15 downto 0);
-	signal PortWr       : std_logic_vector(7 downto 0);
+	signal PortWr       : std_logic_vector(7 downto 1);
 	signal EA           : std_logic_vector(2 downto 0);
 	signal D5           : std_logic_vector(15 downto 0);
 	signal WD_Cnt       : unsigned(7 downto 0);
@@ -200,19 +199,12 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= '0';--
-	GDB0(1) <= '0';--
-	GDB0(2) <= '0';--
-	GDB0(3) <= '0';--
-	GDB0(4) <= '0';--
-	GDB0(5) <= '0';--
-	GDB0(6) <= '0';--
-	GDB0(7) <= '0';--
+	GDB0 <= Paddle;
 
 	GDB1(0) <= '1';-- Unused ?
 	GDB1(1) <= '1';-- Unused ?
 	GDB1(2) <= '1';-- Unused ?
-	GDB1(2) <= '1';-- Unused ?
+	GDB1(3) <= '1';-- Unused ?
 	GDB1(4) <= not Sel2Player;
 	GDB1(5) <= not Sel1Player;
 	GDB1(6) <= not Coin;
@@ -227,11 +219,13 @@ begin
 	GDB2(6) <= '0';--Springboard Alignment
 	GDB2(7) <= '0';--unused
 
+	PortWr(1) <= '1' when AD_i(10 downto 8) = "001" and Sample = '1' else '0';
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
 	PortWr(4) <= '1' when AD_i(10 downto 8) = "100" and Sample = '1' else '0';
 	PortWr(5) <= '1' when AD_i(10 downto 8) = "101" and Sample = '1' else '0';
 	PortWr(6) <= '1' when AD_i(10 downto 8) = "110" and Sample = '1' else '0';
+	PortWr(7) <= '1' when AD_i(10 downto 8) = "111" and Sample = '1' else '0';
 
 	process (Rst_n_s_i, Clk)
 		variable OldSample : std_logic;
@@ -245,16 +239,16 @@ begin
 			SoundCtrl6 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
-			if PortWr(2) = '1' then
+			if PortWr(1) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
 			if PortWr(3) = '1' then
 				SoundCtrl3 <= DB(5 downto 0);--audio_1_w
 			end if;
-			--if PortWr(4) = '1' and OldSample = '0' then
-				--D5(15 downto 8) <= DB;
-				--D5(7 downto 0) <= D5(15 downto 8);
-			--end if;
+			if PortWr(2) = '1' and OldSample = '0' then
+				D5(15 downto 8) <= DB;
+				D5(7 downto 0) <= D5(15 downto 8);
+			end if;
 			if PortWr(5) = '1' then
 				SoundCtrl5 <= DB(5 downto 0);--tone_generator_lo_w
 			end if;

@@ -118,11 +118,12 @@ architecture rtl of invaderst is
 	signal GDB2         : std_logic_vector(7 downto 0);
 	signal GDB3         : std_logic_vector(7 downto 0);
 	signal S            : std_logic_vector(7 downto 0);
+	signal S_Rev        : std_logic_vector(7 downto 0);
 	signal GDB          : std_logic_vector(7 downto 0);
 	signal DB           : std_logic_vector(7 downto 0);
 	signal Sounds       : std_logic_vector(7 downto 0);
 	signal AD_i         : std_logic_vector(15 downto 0);
-	signal PortWr       : std_logic_vector(6 downto 2);
+	signal PortWr       : std_logic_vector(6 downto 1);
 	signal EA           : std_logic_vector(2 downto 0);
 	signal D5           : std_logic_vector(15 downto 0);
 	signal WD_Cnt       : unsigned(7 downto 0);
@@ -194,21 +195,23 @@ begin
 			HSync => HSync,
 			VSync => VSync);
 
-	with AD_i(9 downto 8) select
-		GDB <= GDB0 when "00",
-				GDB1 when "01",
-				GDB2 when "10",
-				GDB3 when "11";
---				S when others;
-				
+	with AD_i(10 downto 8) select
+		GDB <= GDB0 when "010",
+				GDB1 when "100",
+				GDB2 when "101",
+				GDB3 when "110",
+				not S when "001",
+				S_rev when "011",
+				(others=>'0') when others;
+
 	GDB0(0) <= '0';  -- Language
 	GDB0(1) <= '0';  -- Language
 	GDB0(2) <= '0';  -- Demo_Sounds
 	GDB0(3) <= '0';  -- Game_Time 
 	GDB0(4) <= '0';  -- Coinage
 	GDB0(5) <= '0';  -- Difficulty
-	GDB0(6) <= '1';  -- Cabinet
-	GDB0(7) <= '1';  -- Unused
+	GDB0(6) <= '0';  -- Cabinet
+	GDB0(7) <= '0';  -- Unused
 
 	GDB1(0) <= not Coin;-- Active High !
 	GDB1(1) <= not Fire;
@@ -237,6 +240,7 @@ begin
 	GDB3(6) <= '0';  -- TRACKBALL X
 	GDB3(7) <= '0';  -- TRACKBALL X	
 
+	PortWr(1) <= '1' when AD_i(10 downto 8) = "001" and Sample = '1' else '0';
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
 	PortWr(4) <= '1' when AD_i(10 downto 8) = "100" and Sample = '1' else '0';
@@ -253,13 +257,13 @@ begin
 			SoundCtrl5 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
-			if PortWr(2) = '1' then
+			if PortWr(1) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
 			if PortWr(3) = '1' then
 				SoundCtrl3 <= DB(5 downto 0);
 			end if;
-			if PortWr(4) = '1' and OldSample = '0' then
+			if PortWr(2) = '1' and OldSample = '0' then
 				D5(15 downto 8) <= DB;
 				D5(7 downto 0) <= D5(15 downto 8);
 			end if;
@@ -280,4 +284,5 @@ begin
 			 D5( 9 downto 2) when "110",
 			 D5( 8 downto 1) when others;
 
+	 S_rev <= S(0)&S(1)&S(2)&S(3)&S(4)&S(5)&S(6)&S(7);
 end;

@@ -63,10 +63,11 @@ entity invaderst is
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
 		Fire            : in  std_logic;
+		Fire2           : in  std_logic;
 		MoveLeft        : in  std_logic;
 		MoveRight       : in  std_logic;
-		MoveUp          : in  std_logic;
-		MoveDown        : in  std_logic;
+		MoveLeft2       : in  std_logic;
+		MoveRight2      : in  std_logic;
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -232,9 +233,9 @@ begin
 	GDB2(1) <= '0';--active high
 	GDB2(2) <= '0';--active high
 	GDB2(3) <= '0';--active high
-	GDB2(4) <= not Fire;--controller 2
-	GDB2(5) <= not MoveLeft;--controller 2
-	GDB2(6) <= not MoveRight;--controller 2
+	GDB2(4) <= not Fire2;--controller 2
+	GDB2(5) <= not MoveLeft2;--controller 2
+	GDB2(6) <= not MoveRight2;--controller 2
 	GDB2(7) <= '0';--active low
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';

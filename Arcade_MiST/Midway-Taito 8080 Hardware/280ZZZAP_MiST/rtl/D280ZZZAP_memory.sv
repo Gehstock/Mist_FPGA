@@ -75,7 +75,7 @@ u_rom_c (
 	.Address(Addr[9:0]),
 	.q(rom_data_5)
 	);
-	
+
 always @(Addr, rom_data_0, rom_data_1, rom_data_2, rom_data_3, rom_data_4, rom_data_5) begin
 	Rom_out = 8'b00000000;
 		case (Addr[15:10])
@@ -89,7 +89,7 @@ always @(Addr, rom_data_0, rom_data_1, rom_data_2, rom_data_3, rom_data_4, rom_d
 			default : Rom_out = 8'b00000000;
 		endcase
 end
-		
+
 spram #(
 	.addr_width_g(13),
 	.data_width_g(8)) 

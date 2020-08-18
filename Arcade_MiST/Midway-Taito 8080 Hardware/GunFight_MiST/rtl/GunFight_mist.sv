@@ -19,33 +19,38 @@ module GunFight_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Gun Fight;;",
+	"GUNFIGHT;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-//	"O5,Overlay, On, Off;",
-	"T6,Reset;",
+	"O6,Joystick swap,Off,On;",
+	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
+
+wire  [1:0] scanlines = status[4:3];
+wire        rotate = 0;
+wire        joyswap = status[6];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 
-wire clk_sys;
+wire clk_sys, clk_vid;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
-	.c0(clk_sys)
+	.c0(clk_sys),
+	.c1(clk_vid)
 );
 
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] kbjoy;
 wire  [7:0] joystick_0,joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
@@ -68,25 +73,25 @@ wire HSync;
 wire VSync;
 
 invaderst invaderst(
-	.Rst_n(~(status[0] | status[6] | buttons[1])),
+	.Rst_n(~(status[0] | buttons[1])),
 	.Clk(clk_sys),
 	.ENA(),
-	.Coin(btn_coin),
-	.Sel1Player(btn_one_player),
-	.Fire1(~joystick_0[4]),
-	.Fire2(~joystick_1[4]),
-	.GunUp1(gun1_up),
-	.GunDown1(gun1_dw),
-	.MoveLeft1(~joystick_0[1]),
-	.MoveRight1(~joystick_0[0]),
-	.MoveUp1(~joystick_0[3]),
-	.MoveDown1(~joystick_0[2]),
-	.GunUp2(gun2_up),
-	.GunDown2(gun2_dw),
-	.MoveLeft2(~joystick_1[1]),
-	.MoveRight2(~joystick_1[0]),
-	.MoveUp2(~joystick_1[3]),
-	.MoveDown2(~joystick_1[2]),
+	.Coin(m_coin1 | m_coin2),
+	.Sel1Player(m_one_player),
+	.Fire1(~m_fireA),
+	.Fire2(~m_fire2A),
+	.GunUp1(m_fireB),
+	.GunDown1(m_fireC),
+	.MoveLeft1(~m_left),
+	.MoveRight1(~m_right),
+	.MoveUp1(~m_up),
+	.MoveDown1(~m_down),
+	.GunUp2(m_fire2B),
+	.GunDown2(m_fire2C),
+	.MoveLeft2(~m_left2),
+	.MoveRight2(~m_right2),
+	.MoveUp2(~m_up2),
+	.MoveDown2(~m_down2),
 //	.DIP(dip),
 	.RDB(RDB),
 	.IB(IB),
@@ -119,14 +124,14 @@ invaders_audio invaders_audio (
 	.Aud(audio)
 	);
 
-mist_video #(.COLOR_DEPTH(3)) mist_video(
-	.clk_sys(clk_sys),
+mist_video #(.COLOR_DEPTH(1)) mist_video(
+	.clk_sys(clk_vid),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({Video,Video,Video}),
-	.G({Video,Video,Video}),
-	.B(3'b000),
+	.R(Video),
+	.G(Video),
+	.B(1'b0),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -134,10 +139,12 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
+	.rotate({1'b0,rotate}),
 	.scandoubler_disable(scandoublerD),
-	.ce_divider(1),
-	.scanlines(status[4:3]),
-	.ypbpr(ypbpr)
+	.scanlines(scanlines),
+	.ce_divider(1'b0),
+	.ypbpr(ypbpr),
+	.no_csync(no_csync)
 	);
 
 user_io #(
@@ -153,6 +160,7 @@ user_io(
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -170,28 +178,24 @@ dac (
 	.dac_o(AUDIO_L)
 	);
 
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_coin  = 0;
-
-reg gun1_up  = 0;
-reg gun1_dw  = 0;
-reg gun2_up  = 0;
-reg gun2_dw  = 0;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h15: gun1_up       <= key_pressed; // Q
-			'h35: gun1_dw       <= key_pressed; // Y
-			'h75: gun2_up       <= key_pressed; // Arrow up
-			'h72: gun2_dw       <= key_pressed; // Arrow down
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b00       ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( 1'b0        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule
