@@ -36,7 +36,7 @@ assign 		AUDIO_R = AUDIO_L;
 wire clock_24, clock_6;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_24),//W_CLK_24576M
+	.c0(clock_24)//W_CLK_24576M
 	);
 
 wire [31:0] status;
