@@ -1,15 +1,15 @@
 /*
- * Release 1 7/3/2019
+ * Release 2 12/23/2019 (2019/12/23 <- new year's resolution practice)
  * Verilog description of the AY-3-8500 (NTSC varient)
  * Generated from a transistor-level netlist by DLAET
  * Some manual patches have been made (marked by comments)
  *
  * Thanks to Sean Riddle for decapping the speciman
- * and to: Suverman, Erika, Ewen McNeill, and Dylan Lipsitz
- * for supporting me on Patreon
+ * and to: Suverman, Erika, Ewen McNeill, Dylan Lipsitz, Ewen McNeill,
+ * Alan Steremberg, and JM Blandin for supporting me on Patreon
  */
+`default_nettype none
 
-/*verilator lint_off UNOPTFLAT */
 module ay38500NTSC(
 	output pinRPout,
 	output pinLPout,
@@ -37,13 +37,15 @@ module ay38500NTSC(
 	input pinSquash,
 	input pinPractice,
 	input reset,
-   output vsync,
-   output hsync);
+	output syncH,//MC: split syncs were accessed
+	output syncV,
+	input superclock);
 
-	assign vsync = flop6;
-	assign hsync=  !flop7;
-
-	assign pinRPout = !or28;
+	//wire pinLPin = counter3 > 50;
+	//wire pinRPin = counter3 > 70;
+	assign syncH = !flop7;
+	assign syncV = flop6;
+	assign pinRPout = !or28;//temp
 	assign pinLPout = !or38;
 	assign pinBallOut = !or2;
 	assign pinRPin_DWN = flop6;//MC: The ORs were bypassed 
@@ -53,304 +55,249 @@ module ay38500NTSC(
 	assign pinRifle1_DWN = !or150;
 	assign pinTennis_DWN = !or211;
 	assign pinSFout = or212;
-	wire pulser0 = flop6;
-	wire pulser1 = (!or170 | pulser1_delay);
+	reg pulser0 = 0;//flop6;
+	reg pulser1 = 0;//(!or170 | pulser1_delay);
+	reg pulser0_delay = 0;
 	reg pulser1_delay = 0;
-	always @(negedge clk) begin
+	//MC: Pulsers always added manually
+	always @(posedge superclock) begin
+		pulser0_delay <= flop6;
+		pulser0 <= flop6 & !pulser0_delay;
 		pulser1_delay <= or170;
+		pulser1 <= or170 & !pulser1_delay;//was negedge
 	end
+	//MC: flop0 was tweaked
 	reg flop0 = 0;
-	always @(posedge clk) begin
+	always @(posedge superclock) begin
 		flop0 <= flop2;
 	end
 	reg flop1 = 0;
-	wire flop1_reset = !or213 | counter5_2268;
-	wire flop1_set = !or3 | !or6;
-	always @(posedge flop1_reset or posedge flop1_set) begin
-		if(flop1_reset)
+	always @(posedge superclock) begin
+		if(!or213 | counter5_2268)
 			flop1 <= 0;
-		else
+		else if(!or3 | !or6)
 			flop1 <= 1;
 	end
 	reg flop2 = 0;
-	wire flop2_reset = !or213 | counter4_2130;
-	wire flop2_set = !or18 | !or19;
-	always @(posedge flop2_reset or posedge flop2_set) begin
-		if(flop2_reset)
+	always @(posedge superclock) begin
+		if(!or213 | counter4_2130)
 			flop2 <= 0;
-		else
+		else if(!or18 | !or19)
 			flop2 <= 1;
 	end
-	reg flop3 = 0;
-	wire flop3_reset = !or4;
-	wire flop3_set = !pinManualServe & reset;//MC: set/reset priority have been reversed + reset added to flop3_set's OR
-	always @(posedge flop3_set or posedge flop3_reset) begin
-		if(flop3_set)
+	reg flop3 = 0;//MC: set/reset priority have been reversed + reset added to flop3_set's OR
+	always @(posedge superclock) begin
+		if(!pinManualServe)// | reset
 			flop3 <= 0;
-		else
+		else if(!or4)
 			flop3 <= 1;
 	end
 	reg flop4 = 0;
-	wire flop4_reset = !or16 | or24 | or27 | !or213;
-	wire flop4_set = !or15 | or23 | or22;
-	always @(posedge flop4_reset or posedge flop4_set) begin
-		if(flop4_reset)
+	always @(posedge superclock) begin
+		if(!or16 | or24 | or27 | !or213)
 			flop4 <= 0;
-		else
+		else if(!or15 | or23 | or22)
 			flop4 <= 1;
 	end
 	reg flop5 = 0;
-	wire flop5_reset = or27 | or22;
-	wire flop5_set = or24 | or23 | !or213;
-	always @(posedge flop5_reset or posedge flop5_set) begin
-		if(flop5_reset)
+	always @(posedge superclock) begin
+		if(or27 | or22)
 			flop5 <= 0;
-		else
+		else if(or24 | or23 | !or213)
 			flop5 <= 1;
 	end
 	reg flop6 = 0;
-	wire flop6_reset = !reset | !or88;
-	wire flop6_set = !or86;
-	always @(posedge flop6_reset or posedge flop6_set) begin
-		if(flop6_reset)
+	always @(posedge superclock) begin
+		if(!reset | !or88)
 			flop6 <= 0;
-		else
+		else if(!or86)
 			flop6 <= 1;
 	end
 	reg flop7 = 0;
-	wire flop7_reset = !reset | !or63;
-	wire flop7_set = !or74;
-	always @(posedge flop7_reset or posedge flop7_set) begin
-		if(flop7_reset)
+	always @(posedge superclock) begin
+		if(!reset | !or63)
 			flop7 <= 0;
-		else
+		else if(!or74)
 			flop7 <= 1;
 	end
 	reg flop8 = 0;
-	always @(negedge or8) begin
-		flop8 <= or55;
-	end
 	reg flop9 = 0;
-	always @(negedge or8) begin
-		flop9 <= !or49;
-	end
 	reg flop10 = 0;
-	always @(negedge or8) begin
-		flop10 <= or66;
-	end
 	reg flop11 = 0;
-	always @(negedge or8) begin
-		flop11 <= !or51;
+	reg or8_delay = 0;
+	always @(posedge superclock) begin
+		or8_delay <= or8;
+		if(!or8 & or8_delay) begin
+			flop8 <= or55;
+			flop9 <= !or49;
+			flop10 <= or66;
+			flop11 <= !or51;
+		end
 	end
 	reg flop12 = 0;
-	wire flop12_reset = !or92;
-	wire flop12_set = !or90;
-	always @(posedge flop12_reset or posedge flop12_set) begin
-		if(flop12_reset)
+	always @(posedge superclock) begin
+		if(!or92)
 			flop12 <= 0;
-		else
+		else if(!or90)
 			flop12 <= 1;
 	end
 	reg flop13 = 0;
-	wire flop13_reset = !or169;
-	wire flop13_set = !flop26 | !and18;
-	always @(posedge flop13_reset or posedge flop13_set) begin
-		if(flop13_reset)
+	always @(posedge superclock) begin
+		if(!or169)
 			flop13 <= 0;
-		else
+		else if(!flop26 | !and18)
 			flop13 <= 1;
 	end
 	reg flop14 = 0;
-	wire flop14_reset = !pulser1;
-	wire flop14_set = !and18;
-	always @(posedge flop14_reset or posedge flop14_set) begin
-		if(flop14_reset)
+	always @(posedge superclock) begin
+		if(pulser1)
 			flop14 <= 0;
-		else
+		else if(!and18)
 			flop14 <= 1;
 	end
 	reg flop15 = 0;
-	wire flop15_reset = !or135;
-	wire flop15_set = !or136;
-	always @(posedge flop15_reset or posedge flop15_set) begin
-		if(flop15_reset)
+	always @(posedge superclock) begin
+		if(!or135)
 			flop15 <= 0;
-		else
+		else if(!or136)
 			flop15 <= 1;
 	end
 	reg flop16 = 0;
-	wire flop16_reset = or144;
-	wire flop16_set = !and18;
-	always @(posedge flop16_reset or posedge flop16_set) begin
-		if(flop16_reset)
+	always @(posedge superclock) begin
+		if(or144)
 			flop16 <= 0;
-		else
+		else if(!and18)
 			flop16 <= 1;
 	end
 	reg flop17 = 0;
-	wire flop17_reset = or149;
-	wire flop17_set = or127 | !or153 | !or213;
-	always @(posedge flop17_reset or posedge flop17_set) begin
-		if(flop17_reset)
+	always @(posedge superclock) begin
+		if(or149)
 			flop17 <= 0;
-		else
+		else if(or127 | !or153 | !or213)
 			flop17 <= 1;
 	end
 	reg flop18 = 0;
-	wire flop18_reset = !reset;
-	wire flop18_set = !or193 | !or200;
-	always @(posedge flop18_reset or posedge flop18_set) begin
-		if(flop18_reset)
+	always @(posedge superclock) begin
+		if(!reset)
 			flop18 <= 0;
-		else
+		else if(!or193 | !or200)
 			flop18 <= 1;
 	end
 	reg flop19 = 0;
-	wire flop19_reset = !or155;
-	wire flop19_set = !and18;
-	always @(posedge flop19_reset or posedge flop19_set) begin
-		if(flop19_reset)
+	always @(posedge superclock) begin
+		if(!or155)
 			flop19 <= 0;
-		else
+		else if(!and18)
 			flop19 <= 1;
 	end
 	reg flop20 = 0;
-	wire flop20_reset = !or143;
-	wire flop20_set = !or142;
-	always @(posedge flop20_reset or posedge flop20_set) begin
-		if(flop20_reset)
+	always @(posedge superclock) begin
+		if(!or143)
 			flop20 <= 0;
-		else
+		else if(!or142)
 			flop20 <= 1;
 	end
 	reg flop21 = 0;
-	wire flop21_reset = or146;
-	wire flop21_set = !or138;
-	always @(posedge flop21_reset or posedge flop21_set) begin
-		if(flop21_reset)
+	always @(posedge superclock) begin
+		if(or146)
 			flop21 <= 0;
-		else
+		else if(!or138)
 			flop21 <= 1;
 	end
 	reg flop22 = 0;
-	always @(posedge or152) begin
-		flop22 <= flop21;
+	always @(posedge superclock) begin
+		if(or152)
+			flop22 <= flop21;
 	end
 	reg flop23 = 0;
-	wire flop23_reset = !or70;
-	wire flop23_set = !or68;
-	always @(posedge flop23_reset or posedge flop23_set) begin
-		if(flop23_reset)
+	always @(posedge superclock) begin
+		if(!or70)
 			flop23 <= 0;
-		else
+		else if(!or68)
 			flop23 <= 1;
 	end
-	reg flop24 = 0;
-	wire flop24_reset = !ripple_ctr9_2;
-	wire flop24_set = flop25;
-	always @(posedge flop24_reset or posedge flop24_set) begin
-		if(flop24_reset)
-			flop24 <= 0;
-		else
+	reg flop24 = 0;//MC: Set/Reset priority has been swapped
+	always @(posedge superclock) begin
+		if(flop25)
 			flop24 <= 1;
+		else if(!ripple_ctr9_2)
+			flop24 <= 0;
 	end
-	reg flop25 = 0;
-	wire flop25_reset = !ripple_ctr9_2 | flop24;
-	wire flop25_set = !or141;
-	always @(posedge flop25_reset or posedge flop25_set) begin
-		if(flop25_reset)
-			flop25 <= 0;
-		else
+	reg flop25 = 0;//MC: Set/Reset priority has been swapped
+	always @(posedge superclock) begin
+		if(!or141)
 			flop25 <= 1;
+		else if(!ripple_ctr9_2 | flop24)
+			flop25 <= 0;
 	end
 	reg flop26 = 0;
-	wire flop26_reset = !pinHitIn;
-	wire flop26_set = !and18;
-	always @(posedge flop26_reset or posedge flop26_set) begin
-		if(flop26_reset)
+	always @(posedge superclock) begin
+		if(!pinHitIn)
 			flop26 <= 0;
-		else
+		else if(!and18)
 			flop26 <= 1;
 	end
 	reg flop27 = 0;
-	wire flop27_reset = !or199;
-	wire flop27_set = !or166;
-	always @(posedge flop27_reset or posedge flop27_set) begin
-		if(flop27_reset)
+	always @(posedge superclock) begin
+		if(!or199)
 			flop27 <= 0;
-		else
+		else if(!or166)
 			flop27 <= 1;
 	end
 	reg flop28 = 0;
-	wire flop28_reset = !or124;
-	wire flop28_set = !or70;
-	always @(posedge flop28_reset or posedge flop28_set) begin
-		if(flop28_reset)
+	always @(posedge superclock) begin
+		if(!or124)
 			flop28 <= 0;
-		else
+		else if(!or70)
 			flop28 <= 1;
 	end
 	reg flop29 = 0;
-	wire flop29_reset = !or164;
-	wire flop29_set = !or199;
-	always @(posedge flop29_reset or posedge flop29_set) begin
-		if(flop29_reset)
+	always @(posedge superclock) begin
+		if(!or164)
 			flop29 <= 0;
-		else
+		else if(!or199)
 			flop29 <= 1;
 	end
 	reg flop30 = 0;
-	wire flop30_reset = !or199 | or205;
-	wire flop30_set = !reset;
-	always @(posedge flop30_reset or posedge flop30_set) begin
-		if(flop30_reset)
+	always @(posedge superclock) begin
+		if(!or199 | or205)
 			flop30 <= 0;
-		else
+		else if(!reset)
 			flop30 <= 1;
 	end
 	reg flop31 = 0;
-	wire flop31_reset = !or188;
-	wire flop31_set = !and18;
-	always @(posedge flop31_reset or posedge flop31_set) begin
-		if(flop31_reset)
+	always @(posedge superclock) begin
+		if(!or188)
 			flop31 <= 0;
-		else
+		else if(!and18)
 			flop31 <= 1;
 	end
 	reg flop32 = 0;
-	wire flop32_reset = !flop13 | !or155 | or144 | !pulser1;
-	wire flop32_set = !and18;
-	always @(posedge flop32_reset or posedge flop32_set) begin
-		if(flop32_reset)
+	always @(posedge superclock) begin
+		if(!flop13 | !or155 | or144 | pulser1)
 			flop32 <= 0;
-		else
+		else if(!and18)
 			flop32 <= 1;
 	end
 	reg flop33 = 0;
-	wire flop33_reset = !or193 | !or200 | !or205;
-	wire flop33_set = !or210;
-	always @(posedge flop33_reset or posedge flop33_set) begin
-		if(flop33_reset)
+	always @(posedge superclock) begin
+		if(!or193 | !or200 | !or205)
 			flop33 <= 0;
-		else
+		else if(!or210)
 			flop33 <= 1;
 	end
 	reg flop34 = 0;
-	wire flop34_reset = !or181;
-	wire flop34_set = !or177;
-	always @(posedge flop34_reset or posedge flop34_set) begin
-		if(flop34_reset)
+	always @(posedge superclock) begin
+		if(!or181)
 			flop34 <= 0;
-		else
+		else if(!or177)
 			flop34 <= 1;
 	end
 	reg flop35 = 0;
-	wire flop35_reset = !or168;
-	wire flop35_set = !or178;
-	always @(posedge flop35_reset or posedge flop35_set) begin
-		if(flop35_reset)
+	always @(posedge superclock) begin
+		if(!or168)
 			flop35 <= 0;
-		else
+		else if(!or178)
 			flop35 <= 1;
 	end
 	wire and0 = !or26 & !or147;
@@ -545,7 +492,7 @@ module ay38500NTSC(
 	wire or169 = flop26 | !pinHitIn;
 	wire or170 = !flop29 | flop27;
 	wire or171 = !or161 | !or158;
-	wire or172 = flop12 | !flop20 | ripple_ctr9_2;
+	wire or172 = flop12 | !flop20 | !ripple_ctr9_2;
 	wire or173 = !flop27 | or205 | flop18;
 	wire or174 = ripple_ctr10_2 | !or171 | flop34;
 	wire or175 = !or124 | !or70;
@@ -555,7 +502,7 @@ module ay38500NTSC(
 	wire or179 = !or205 | flop18 | !pinShotIn;
 	wire or180 = !flop7 | !counter3_2116;
 	wire or181 = !flop7 | !counter3_2021;
-	wire or182 = flop12 | !flop15 | ripple_ctr9_2;
+	wire or182 = flop12 | !flop15 | !ripple_ctr9_2;//172&182's Rin were not inverted
 	wire or183 = flop30 | !or179 | !or173;
 	wire or184 = !or160 | !or198 | !or174;
 	wire or185 = !or150 | !pinSoccer;
@@ -590,153 +537,179 @@ module ay38500NTSC(
 	wire or214 = pinSoccer | pinRifle2;
 	reg [5:0] shift_reg0 = 0;
 	reg [3:0] shift_reg0_spot = 0;
-/* verilator lint_off WIDTH */
-	wire shift_reg0_104 = shift_reg0[shift_reg0_spot];
-/* verilator lint_on WIDTH */
-	always @(negedge or145 or posedge flop24) begin
-		if(flop24) begin
+	reg sr0_delay = 0;
+	wire shift_reg0_104 = !shift_reg0[shift_reg0_spot] | !(counter2!=29 & counter2!=38);//Last two added as temporary patch to fix score width issue
+	always @(posedge superclock) begin
+		sr0_delay <= or145;
+		if(!flop24) begin
 			shift_reg0_spot <= 5;
+			shift_reg0[0:0] <= 0;
+			shift_reg0[1:1] <= !or115;
+			shift_reg0[2:2] <= !or116;
+			shift_reg0[3:3] <= !or114;
+			shift_reg0[4:4] <= 0;
+			shift_reg0[5:5] <= !or113;
 		end
-		else if(shift_reg0_spot!=0) begin
-			shift_reg0_spot <= shift_reg0_spot - 1;
+		else if(!or145 & sr0_delay) begin
+			if(shift_reg0_spot!=0) begin
+				shift_reg0_spot <= shift_reg0_spot - 1;
+			end
 		end
-	end
-	//MC: This block had to be manually changed
-	always @(posedge flop24) begin
-		shift_reg0[0:0] <= 1;
-		shift_reg0[1:1] <= or115;
-		shift_reg0[2:2] <= or116;
-		shift_reg0[3:3] <= or114;
-		shift_reg0[4:4] <= 1;
-		shift_reg0[5:5] <= or113;
 	end
 	//MC: All ripple counter outputs (except paddle ones) have inverted resets & outputs
 	reg [4:0] ripple_ctr0 = 0;
+	reg rc0_delay = 0;
 	wire ripple_ctr0_2 = !ripple_ctr0[0:0];
 	wire ripple_ctr0_3 = !ripple_ctr0[1:1];
 	wire ripple_ctr0_4 = !ripple_ctr0[2:2];
 	wire ripple_ctr0_5 = !ripple_ctr0[3:3];
-	always @(posedge or192 or negedge reset) begin
+	always @(posedge superclock) begin
+		rc0_delay <= or192;
 		if(!reset)
 			ripple_ctr0 <= 0;
-		else
+		else if(or192 & !rc0_delay)
 			ripple_ctr0 <= ripple_ctr0 + 1;
 	end
 
 	reg [4:0] ripple_ctr1 = 0;
+	reg rc1_delay = 0;
 	wire ripple_ctr1_2 = !ripple_ctr1[0:0];
 	wire ripple_ctr1_3 = !ripple_ctr1[1:1];
 	wire ripple_ctr1_4 = !ripple_ctr1[2:2];
 	wire ripple_ctr1_5 = !ripple_ctr1[3:3];
-	always @(posedge or183 or negedge reset) begin
+	always @(posedge superclock) begin
+		rc1_delay <= or183;
 		if(!reset)
 			ripple_ctr1 <= 0;
-		else
+		else if(or183 & !rc1_delay)
 			ripple_ctr1 <= ripple_ctr1 + 1;
 	end
 
 	reg [1:0] ripple_ctr2 = 0;
+	reg rc2_delay = 0;
 	wire ripple_ctr2_2 = !ripple_ctr2[0:0];
-	always @(negedge ripple_ctr10_2 or negedge or213) begin
+	always @(posedge superclock) begin
+		rc2_delay <= ripple_ctr10_2;
 		if(!or213)
 			ripple_ctr2 <= 0;
-		else
+		else if(!ripple_ctr10_2 & rc2_delay)
 			ripple_ctr2 <= ripple_ctr2 + 1;
 	end
 
 	reg [1:0] ripple_ctr3 = 0;
+	reg rc3_delay = 0;
 	wire ripple_ctr3_2 = !ripple_ctr3[0:0];
-	always @(negedge ripple_ctr2_2 or negedge or213) begin
+	always @(posedge superclock) begin
+		rc3_delay <= ripple_ctr2_2;
 		if(!or213)
 			ripple_ctr3 <= 0;
-		else
+		else if(!ripple_ctr2_2 & rc3_delay)
 			ripple_ctr3 <= ripple_ctr3 + 1;
 	end
 
 	reg [4:0] ripple_ctr4 = 0;
+	reg rc4_delay = 0;
 	wire ripple_ctr4_2 = !ripple_ctr4[0:0];
 	wire ripple_ctr4_3 = !ripple_ctr4[1:1];
 	wire ripple_ctr4_4 = !ripple_ctr4[2:2];
 	wire ripple_ctr4_5 = !ripple_ctr4[3:3];
-	always @(negedge or188 or posedge flop31) begin
+	always @(posedge superclock) begin
+		rc4_delay <= or188;
 		if(flop31)
 			ripple_ctr4 <= 0;
-		else
+		else if(!or188 & rc4_delay)
 			ripple_ctr4 <= ripple_ctr4 + 1;
 	end
 
 	reg [1:0] ripple_ctr5 = 0;
+	reg rc5_delay = 0;
 	wire ripple_ctr5_2 = !ripple_ctr5[0:0];
-	always @(negedge ripple_ctr3_2 or negedge reset) begin
+	always @(posedge superclock) begin
+		rc5_delay <= ripple_ctr3_2;		
 		if(!reset)
 			ripple_ctr5 <= 0;
-		else
+		else if(!ripple_ctr3_2 & rc5_delay)
 			ripple_ctr5 <= ripple_ctr5 + 1;
 	end
 
 	reg [1:0] ripple_ctr6 = 0;
+	reg rc6_delay = 0;
 	wire ripple_ctr6_2 = !ripple_ctr6[0:0];
-	always @(negedge ripple_ctr5_2 or negedge reset) begin
+	always @(posedge superclock) begin
+		rc6_delay <= ripple_ctr5_2;
 		if(!reset)
 			ripple_ctr6 <= 0;
-		else
+		else if(!ripple_ctr5_2 & rc6_delay)
 			ripple_ctr6 <= ripple_ctr6 + 1;
 	end
 
 	reg [4:0] ripple_ctr7 = 0;
+	reg rc7_delay = 0;
 	wire ripple_ctr7_2 = ripple_ctr7[0:0];
 	wire ripple_ctr7_3 = ripple_ctr7[1:1];
 	wire ripple_ctr7_4 = ripple_ctr7[2:2];
 	wire ripple_ctr7_5 = ripple_ctr7[3:3];
-	always @(negedge or21 or posedge or14) begin
+	always @(posedge superclock) begin
+		rc7_delay <= or21;
 		if(or14)
 			ripple_ctr7 <= 0;
-		else
+		else if(!or21 & rc7_delay)
 			ripple_ctr7 <= ripple_ctr7 + 1;
 	end
 
 	reg [4:0] ripple_ctr8 = 0;
+	reg rc8_delay = 0;
 	wire ripple_ctr8_2 = ripple_ctr8[0:0];
 	wire ripple_ctr8_3 = ripple_ctr8[1:1];
 	wire ripple_ctr8_4 = ripple_ctr8[2:2];
 	wire ripple_ctr8_5 = ripple_ctr8[3:3];
-	always @(negedge or45 or posedge or48) begin
+	always @(posedge superclock) begin
+		rc8_delay <= or45;
 		if(or48)
 			ripple_ctr8 <= 0;
-		else
+		else if(!or45 & rc8_delay)
 			ripple_ctr8 <= ripple_ctr8 + 1;
 	end
 
 	reg [1:0] ripple_ctr9 = 0;
+	reg rc9_delay = 0;
 	wire ripple_ctr9_2 = !ripple_ctr9[0:0];
-	always @(negedge clk or negedge or213) begin
+	always @(posedge superclock) begin
+		rc9_delay <= clk;
 		if(!or213)
 			ripple_ctr9 <= 0;
-		else
+		else if(!clk & rc9_delay)
 			ripple_ctr9 <= ripple_ctr9 + 1;
 	end
 
 	reg [1:0] ripple_ctr10 = 0;
+	reg rc10_delay = 0;
 	wire ripple_ctr10_2 = !ripple_ctr10[0:0];
-	always @(posedge flop7 or negedge or213) begin
+	always @(posedge superclock) begin
+		rc10_delay <= flop7;
 		if(!or213)
 			ripple_ctr10 <= 0;
-		else
+		else if(flop7 & !rc10_delay)
 			ripple_ctr10 <= ripple_ctr10 + 1;
 	end
 
 	//MC: Add flop12 reset
 	reg [2:0] counter0 = 0;
+	reg c0_delay = 0;
 	wire counter0_2003 = (counter0==3);
-	always @(negedge flop7 or posedge flop12) begin
+	always @(posedge superclock) begin
+		c0_delay <= flop7;
 		if(flop12)
 			counter0 <= 0;		
-		else if(counter0==3)
-			counter0 <= 0;
-		else
-			counter0 <= counter0 + 1;
+		else if(!flop7 & c0_delay) begin
+			if(counter0==3)//this was 6
+				counter0 <= 0;
+			else
+				counter0 <= counter0 + 1;
+		end
 	end
 	reg [3:0] counter1 = 0;
+	reg c1_delay = 0;
 	wire counter1_2005 = (counter1==5);
 	wire counter1_2003 = (counter1==3);
 	wire counter1_2006 = (counter1==6);
@@ -744,15 +717,19 @@ module ay38500NTSC(
 	wire counter1_2001 = (counter1==1);
 	wire counter1_2002 = (counter1==2);
 	wire counter1_2004 = (counter1==4);
-	always @(negedge counter0_2003 or posedge flop12) begin
+	always @(posedge superclock) begin
+		c1_delay <= counter0_2003;
 		if(flop12)
 			counter1 <= 0;
-		else if(counter1==6)
-			counter1 <= 0;
-		else
-			counter1 <= counter1 + 1;
+		else if(!counter0_2003 & c1_delay) begin
+			if(counter1==6)
+				counter1 <= 0;
+			else
+				counter1 <= counter1 + 1;
+		end
 	end
 	reg [7:0] counter2 = 0;
+	reg c2_delay = 0;
 	wire counter2_2038 = (counter2==38);
 	wire counter2_2033 = (counter2==33);
 	wire counter2_2029 = (counter2==29);
@@ -767,15 +744,19 @@ module ay38500NTSC(
 	wire counter2_2014 = (counter2==14);
 	wire counter2_2013 = (counter2==13);
 	wire counter2_2060 = (counter2==60);
-	always @(posedge ripple_ctr9_2 or posedge or57) begin
+	always @(posedge superclock) begin
+		c2_delay <= ripple_ctr9_2;
 		if(or57)
 			counter2 <= 0;
-		else if(counter2==126)
-			counter2 <= 0;
-		else
-			counter2 <= counter2 + 1;
+		else if(ripple_ctr9_2 & !c2_delay) begin
+			if(counter2==126)
+				counter2 <= 0;
+			else
+				counter2 <= counter2 + 1;
+		end
 	end
 	reg [8:0] counter3 = 0;
+	reg c3_delay = 0;
 	wire counter3_2129 = (counter3==129);
 	wire counter3_2131 = (counter3==131);
 	wire counter3_2117 = (counter3==117);
@@ -786,13 +767,16 @@ module ay38500NTSC(
 	wire counter3_2041 = (counter3==41);
 	wire counter3_2034 = (counter3==34);
 	wire counter3_2021 = (counter3==21);
-	always @(posedge ripple_ctr10_2 or posedge or58) begin
+	always @(posedge superclock) begin
+		c3_delay <= ripple_ctr10_2;
 		if(or58)
 			counter3 <= 0;
-		else if(counter3==216)
-			counter3 <= 0;
-		else
-			counter3 <= counter3 + 1;
+		else if(ripple_ctr10_2 & !c3_delay) begin
+			if(counter3==216)
+				counter3 <= 0;
+			else
+				counter3 <= counter3 + 1;
+		end
 	end
 	//MC: Multiple changes to jumping counters
 	reg [8:0] counter4 = 0;
@@ -801,23 +785,24 @@ module ay38500NTSC(
 	wire counter4_2130 = (counter4==129);
 	wire counter4_2125 = (counter4==125);
 	wire counter4_2128 = (counter4==128);
-	always @(posedge clk) begin
-		if(!reset | flop3) begin
+	always @(posedge superclock) begin
+		counter4_delay <= clk;
+		if(!reset) begin
 			counter4 <= 0;
-			counter4_jump <= 0;
 		end
-		else begin
+		else if(clk & !counter4_delay) begin
 			if(counter4==129) begin
-				counter4 <= !counter4_jump ? 2 : !or32 ? 0 : !or37 ? 1 : !or40 ? 4 : !or44 ? 3 : 0;//MC: 3 & 4 changed to 4 & 5
+				counter4 <= !counter4_jump ? 2 : !or32 ? 0 : !or37 ? 1 : !or40 ? 4 : !or44 ? 3 : 0;
 				counter4_jump <= 0;
 			end
-			else begin
-				counter4_delay <= pulser0;
-				if(!counter4_delay && pulser0)
-					counter4_jump <= 1;
+			else
 				counter4 <= counter4 + 1;
-			end
 		end
+		if(!reset | flop3)// | counter4==129)
+			counter4_jump <= 0;
+		else if(pulser0)
+			counter4_jump <= 1;
+			
 	end
 
 	reg [9:0] counter5 = 0;
@@ -827,26 +812,26 @@ module ay38500NTSC(
 	wire counter5_2263 = (counter5==263);
 	wire counter5_2265 = (counter5==265);
 	wire counter5_2268 = (counter5==267);
-	always @(negedge flop7) begin
+	always @(posedge superclock) begin
+		counter5_delay <= flop7;
 		if(!reset) begin
 			counter5 <= 0;
-			counter5_jump <= 0;
 		end
-		else begin
-			if(counter5==267) begin//Values > non-jump must be increased by 4?
-				counter5 <= !counter5_jump ? 6 : !or59 ? 11 : !or9 ? 15 : !or10 ? 12 : !or62 ? 5 : !or61 ? 13 : !or11 ? 4 : !or12 ? 3 : !or60 ? 1 : 0;
+		else if(!flop7 & counter5_delay) begin//6-7-11-8-5-9-4-3-1-0
+			if(counter5==267) begin
+				counter5 <= !counter5_jump ? 6 : !or59 ? 7 : !or9 ? 11 : !or10 ? 8 : !or62 ? 5 : !or61 ? 9 : !or11 ? 4 : !or12 ? 3 : !or60 ? 1 : 0;
 				counter5_jump <= 0;
 			end
-			else begin
-				counter5_delay <= pulser0;
-				if(!counter5_delay && pulser0)
-					counter5_jump <= 1;
+			else
 				counter5 <= counter5 + 1;
-			end
 		end
+		if(!reset)// | counter5==267)
+			counter5_jump <= 0;
+		else if(pulser0)
+			counter5_jump <= 1;
 	end
 	wire mux0_100 = (!or78 & counter1_2001) | (!or77 & counter1_2002) | (!or76 & counter1_2004);
 	//MC: Some changes to this line
 	wire mux1_100 = (!or81 & counter1_2005) | (!or80 & counter1_2001) | (!or79 & counter1_2003) | counter1_2002 | counter1_2004;//constants had to be added manually
 	wire mux2_100 = (!or81 & counter1_2005) | (!or85 & counter1_2001) | (!or83 & counter1_2003) | (!or84 & counter1_2002) | (!or82 & counter1_2004);
-endmodule 
+endmodule
