@@ -1,13 +1,10 @@
 Games that should work on this hardware
 
-Anteater
-Calipso
-Dark Planet
+
 Fantasy
 Nibbler
 Pioneer Balloon
 Piranha
-Rescue
 The Glob/Beastie
 Titan
 Vanguard
@@ -23,17 +20,11 @@ Devil Fish
 Frog 
 Hot Shocker 
 Hunchback 
-Knock Out !! 
-Lost Tomb 
-Mars 
+Knock Out !!
 Minefield 
 New Sinbad 7  
-Speed Coin 
-Strategy X 
-Strategy X (Stern) 
 Super Bond 
 The Billiards (Bootleg) 
 Triple Punch 
 Turpin 
-Turtles 
 Ultra Dome  
