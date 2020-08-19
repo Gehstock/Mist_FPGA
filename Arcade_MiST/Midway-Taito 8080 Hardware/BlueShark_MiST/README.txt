@@ -14,7 +14,7 @@
 -- Keyboard inputs :
 --
 --   F1          : Start
---   SPACE       : Fire
+--   RIGHT CTRL  : Fire
 --   RIGHT/LEFT  : Movement
 --
 -- Joystick support.

@@ -14,7 +14,7 @@ wire [7:0]rom_data_1;
 wire [7:0]rom_data_2;
 wire [7:0]rom_data_3;
 wire [7:0]rom_data_4;
-wire [10:0]rom_addr = {Addr[11:10],~Addr[9],Addr[8:4],~Addr[3],Addr[2:1],~Addr[0]};
+wire [10:0]rom_addr =	Addr[10:0];
 
 tn01 tn01 (
 	.clk(Clock),

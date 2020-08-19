@@ -62,9 +62,12 @@ entity invaderst is
 		Coin            : in  std_logic;
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
-		Fire            : in  std_logic;
-		MoveLeft        : in  std_logic;
-		MoveRight       : in  std_logic;
+		FireA           : in  std_logic;
+		MoveLeftA       : in  std_logic;
+		MoveRightA      : in  std_logic;
+		FireB           : in  std_logic;
+		MoveLeftB       : in  std_logic;
+		MoveRightB      : in  std_logic;
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -202,27 +205,27 @@ begin
 	GDB0(1) <= '1';--DIP(7);
 	GDB0(2) <= '1';--DIP(6);  -- Unused ?
 	GDB0(3) <= '1';             -- Unused ?
-	GDB0(4) <= not Fire;
-	GDB0(5) <= not MoveLeft;
-	GDB0(6) <= not MoveRight;
+	GDB0(4) <= '1';
+	GDB0(5) <= '1';
+	GDB0(6) <= '1';
 	GDB0(7) <= '1';--DIP(5);  -- Unused ?
 
 	GDB1(0) <= not Coin;-- Active High !
 	GDB1(1) <= not Sel2Player;
 	GDB1(2) <= not Sel1Player;
 	GDB1(3) <= '1';-- Unused ?
-	GDB1(4) <= not Fire;
-	GDB1(5) <= not MoveLeft;
-	GDB1(6) <= not MoveRight;
+	GDB1(4) <= not FireA;
+	GDB1(5) <= not MoveRightA;
+	GDB1(6) <= not MoveLeftA;
 	GDB1(7) <= '1';-- Unused ?
 
 	GDB2(0) <= '1';--DIP(4);  -- LSB Lives 3-6
 	GDB2(1) <= '1';--DIP(3);  -- MSB Lives 3-6
 	GDB2(2) <= '0';-- Tilt ?
 	GDB2(3) <= '0';--DIP(2);  -- Bonus life at 1000 or 1500
-	GDB2(4) <= not Fire;
-	GDB2(5) <= not MoveLeft;
-	GDB2(6) <= not MoveRight;
+	GDB2(4) <= not FireB;
+	GDB2(5) <= not MoveRightB;
+	GDB2(6) <= not MoveLeftB;
 	GDB2(7) <= '1';--DIP(1);  -- Coin info
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';

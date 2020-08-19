@@ -63,8 +63,8 @@ entity invaderst is
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
 		Fire            : in  std_logic;
-		MoveLeft        : in  std_logic;
-		MoveRight       : in  std_logic;
+		Pedal           : in  std_logic_vector(3 downto 0);
+		Steering        : in  std_logic_vector(7 downto 0);
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -169,35 +169,17 @@ begin
 				GDB1 when "01",
 				GDB2 when "10",
 				S when others;
+
 --IN0
-	GDB0(0) <= '0';	-- PEDAL
-	GDB0(1) <= '0';	-- PEDAL
-	GDB0(2) <= '0';	-- PEDAL
-	GDB0(3) <= '1';	-- PEDAL
+	GDB0(3 downto 0) <= Pedal;
 	GDB0(4) <= not Fire;	-- fire
 	GDB0(5) <= '1';	-- UNUSED
 	GDB0(6) <= not Coin;	-- coin
 	GDB0(7) <= not Sel1Player;	-- start
 --IN1
-	GDB1(0) <= '0';	-- steering wheel 
-	GDB1(1) <= '0';	-- steering wheel 
-	GDB1(2) <= '0';	-- steering wheel 
-	GDB1(3) <= '0';	-- steering wheel 
-	GDB1(4) <= '0';	-- steering wheel 
-	GDB1(5) <= '0';	-- steering wheel 
-	GDB1(6) <= '0';	-- steering wheel 
-	GDB1(7) <= '1';	-- steering wheel 
+	GDB1 <= Steering;
 --IN2
-	GDB2(0) <= '0';--Coinage
-	GDB2(1) <= '0';--Coinage
-	GDB2(2) <= '1';--Game_Time
-	GDB2(3) <= '1';--Game_Time
-	GDB2(4) <= '1';--Extended Time At
-	GDB2(5) <= '1';--Extended Time At
-	GDB2(6) <= '0';--Language
-	GDB2(7) <= '0';--Language
-	
-
+	GDB2 <= DIP;
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
@@ -215,13 +197,13 @@ begin
 			SoundCtrl5 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
-			if PortWr(2) = '1' then
+			if PortWr(4) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
-			if PortWr(3) = '1' then
+			if PortWr(2) = '1' then
 				SoundCtrl3 <= DB(5 downto 0);
 			end if;
-			if PortWr(4) = '1' and OldSample = '0' then
+			if PortWr(3) = '1' and OldSample = '0' then
 				D5(15 downto 8) <= DB;
 				D5(7 downto 0) <= D5(15 downto 8);
 			end if;

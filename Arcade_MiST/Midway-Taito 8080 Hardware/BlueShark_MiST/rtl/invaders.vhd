@@ -62,9 +62,8 @@ entity invaderst is
 		Coin            : in  std_logic;
 		Sel1Player      : in  std_logic;
 		Sel2Player      : in  std_logic;
+		Paddle          : in  std_logic_vector(7 downto 0);
 		Fire            : in  std_logic;
-		MoveLeft        : in  std_logic;
-		MoveRight       : in  std_logic;
 		DIP             : in  std_logic_vector(7 downto 0);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -92,7 +91,7 @@ architecture rtl of invaderst is
 	signal DB           : std_logic_vector(7 downto 0);
 	signal Sounds       : std_logic_vector(7 downto 0);
 	signal AD_i         : std_logic_vector(15 downto 0);
-	signal PortWr       : std_logic_vector(6 downto 2);
+	signal PortWr       : std_logic_vector(6 downto 1);
 	signal EA           : std_logic_vector(2 downto 0);
 	signal D5           : std_logic_vector(15 downto 0);
 	signal WD_Cnt       : unsigned(7 downto 0);
@@ -170,23 +169,16 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= '1';             -- Unused
-	GDB0(1) <= '1';             -- Unused
-	GDB0(2) <= '1';             -- Unused
-	GDB0(3) <= '1';             -- Unused
-	GDB0(4) <= '1';             -- Unused
-	GDB0(5) <= '1';             -- Unused
-	GDB0(6) <= '1';             -- Unused
-	GDB0(7) <= '1';             -- Unused
+	GDB0(0) <= S(7);
+	GDB0(1) <= S(6);
+	GDB0(2) <= S(5);
+	GDB0(3) <= S(4);
+	GDB0(4) <= S(3);
+	GDB0(5) <= S(2);
+	GDB0(6) <= S(1);
+	GDB0(7) <= S(0);
 
-	GDB1(0) <= '1';	-- PADDLE
-	GDB1(1) <= '1';	-- PADDLE
-	GDB1(2) <= '1';	-- PADDLE
-	GDB1(3) <= '1';	-- PADDLE
-	GDB1(4) <= '1';	-- PADDLE
-	GDB1(5) <= '1';	-- PADDLE
-	GDB1(6) <= '1';	-- PADDLE
-	GDB1(7) <= '0';	-- PADDLE
+	GDB1 <= Paddle;
 
 	GDB2(0) <= not Fire;
 	GDB2(1) <= not Coin;
@@ -197,6 +189,7 @@ begin
 	GDB2(6) <= '1';	-- Replay
 	GDB2(7) <= '1';	-- TEST
 
+	PortWr(1) <= '1' when AD_i(10 downto 8) = "001" and Sample = '1' else '0';
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';
 	PortWr(4) <= '1' when AD_i(10 downto 8) = "100" and Sample = '1' else '0';
@@ -213,13 +206,13 @@ begin
 			SoundCtrl5 <= (others => '0');
 			OldSample := '0';
 		elsif Clk'event and Clk = '1' then
-			if PortWr(2) = '1' then
+			if PortWr(1) = '1' then
 				EA <= DB(2 downto 0);
 			end if;
 			if PortWr(3) = '1' then
 				SoundCtrl3 <= DB(5 downto 0);
 			end if;
-			if PortWr(4) = '1' and OldSample = '0' then
+			if PortWr(2) = '1' and OldSample = '0' then
 				D5(15 downto 8) <= DB;
 				D5(7 downto 0) <= D5(15 downto 8);
 			end if;

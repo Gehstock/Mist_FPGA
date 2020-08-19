@@ -22,35 +22,84 @@ localparam CONF_STR = {
 	"280ZZZAP;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Overlay, On, Off;",
-	"T6,Reset;",
+	"T0,Reset;",
 	"V,v0.00.",`BUILD_DATE
 };
 
+wire  [1:0] scanlines = status[4:3];
+wire        rotate    = status[2];
+wire        overlay   = status[5];
+
 assign LED = 1;
-assign AUDIO_R = AUDIO_L;
 
-
-wire clk_core, clk_sys;
+wire clk_core, clk_vid;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
 	.c0(clk_core),
-	.c1(clk_sys)
+	.c1(clk_vid)
 );
+wire        reset = status[0] | buttons[1];
 
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] kbjoy;
 wire  [7:0] joystick_0,joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
-wire  [7:0] audio;
+
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_core       ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
+
+wire signed [7:0] steering;
+wire signed [7:0] steering_adj = -(steering + 8'h10); // range adjust and negate: 30-b0 -> 40-c0
+wire [7:0] pedal;
+
+spy_hunter_control controls (
+	.clock_40(clk_core),
+	.reset(reset),
+	.vsync(vs),
+	.gas_plus(m_up),
+	.gas_minus(m_down),
+	.steering_plus(m_right),
+	.steering_minus(m_left),
+	.steering(steering),
+	.gas(pedal)
+);
+
+wire       gear;
+input_toggle gear_sw(
+	.clk(clk_core),
+	.reset(reset),
+	.btn(m_fireA),
+	.state(gear)
+);
+
 wire 			hsync,vsync;
 wire 			hs, vs;
 wire 			r,g,b;
@@ -67,6 +116,8 @@ wire RWE_n;
 wire Video;
 wire HSync;
 wire VSync;
+wire  [7:0] audio;
+
 /*
 Dip Switch:E3
 1		2		3		4		5		6		7		8		Function	Option
@@ -96,18 +147,19 @@ Language
 												Off	On		German
 												Off	Off	Spanish
 */
+wire  [8:1] dip = 8'b00111100;
 
 invaderst invaderst(
-	.Rst_n(~(status[0] | status[6] | buttons[1])),
+	.Rst_n(~reset),
 	.Clk(clk_core),
 	.ENA(),
-	.Coin(btn_coin),
-	.Sel1Player(~btn_one_player),
-	.Sel2Player(~btn_two_players),
-	.Fire(~m_fire),
-	.MoveLeft(~m_left),
-	.MoveRight(~m_right),
-	.DIP("00000000"),
+	.Coin(m_coin1 | m_coin2),
+	.Sel1Player(m_one_player),
+	.Sel2Player(m_two_players),
+	.Fire(gear),
+	.Pedal(pedal[7:4]),
+	.Steering(steering_adj),
+	.DIP(dip),
 	.RDB(RDB),
 	.IB(IB),
 	.RWD(RWD),
@@ -121,7 +173,7 @@ invaderst invaderst(
 	.HSync(HSync),
 	.VSync(VSync)
 	);
-		
+
 D280ZZZAP_memory D280ZZZAP_memory (
 	.Clock(clk_core),
 	.RW_n(RWE_n),
@@ -131,17 +183,10 @@ D280ZZZAP_memory D280ZZZAP_memory (
 	.Ram_in(RWD),
 	.Rom_out(IB)
 	);
-		
-invaders_audio invaders_audio (
-	.Clk(clk_core),
-	.S1(SoundCtrl3),
-	.S2(SoundCtrl5),
-	.Aud(audio)
-	);		
-	  
+
 D280ZZZAP_Overlay D280ZZZAP_Overlay (
 	.Video(Video),
-	.Overlay(~status[5]),
+	.Overlay(~overlay),
 	.CLK(clk_core),
 	.Rst_n_s(Rst_n_s),
 	.HSync(HSync),
@@ -153,14 +198,14 @@ D280ZZZAP_Overlay D280ZZZAP_Overlay (
 	.O_VSYNC(vs)
 	);
 
-mist_video #(.COLOR_DEPTH(3)) mist_video(
-	.clk_sys(clk_sys),
+mist_video #(.COLOR_DEPTH(1)) mist_video(
+	.clk_sys(clk_vid),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R({r,r,r}),
-	.G({g,g,g}),
-	.B({b,b,b}),
+	.R(r),
+	.G(g),
+	.B(b),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -169,60 +214,41 @@ mist_video #(.COLOR_DEPTH(3)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.scandoubler_disable(scandoublerD),
-	.scanlines(status[4:3]),
+	.scanlines(scanlines),
 	.ce_divider(0),
-	.ypbpr(ypbpr)
+	.ypbpr(ypbpr),
+	.no_csync(no_csync)
 	);
 
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys       ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
-	);
-
+assign AUDIO_L = 0;
+assign AUDIO_R = 0;
+/*
 dac dac (
-	.clk_i(clk_sys),
+	.clk_i(clk_core),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
+*/
 
-wire m_left   = btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_fire1 = 0;
-reg btn_coin  = 0;
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin        <= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h29: btn_fire1       <= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_core    ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b00       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule
