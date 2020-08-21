@@ -99,7 +99,8 @@ begin
 						gas_timer <= (others => '0');
 				else
 					if vsync_r ='0' and vsync = '1' then 
-						if (gas_timer >= 5 and (gas_minus_r = '1' or gas_plus_r = '1')) then --tune inc/dec rate
+						if (gas_timer >= 5 and gas_plus_r = '1') or
+						   (gas_timer >= 3 and gas_minus_r = '1') then --tune inc/dec rate
 							gas_timer <= (others => '0');
 						else
 							gas_timer <= gas_timer + 1;
