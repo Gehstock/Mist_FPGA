@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:27:39  NOVEMBER 20, 2017"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 
@@ -155,18 +155,21 @@ set_global_assignment -name EDA_OUTPUT_DATA_FORMAT NONE -section_id eda_simulati
 # --------------------------
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp1.stp
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/D280ZZZAP_mist.sv
 set_global_assignment -name VHDL_FILE rtl/spy_hunter_control.vhd
 set_global_assignment -name VHDL_FILE rtl/invaders.vhd
 set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/D280ZZZAP_memory.sv
 set_global_assignment -name VHDL_FILE rtl/D280ZZZAP_Overlay.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/sprint1_sound.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/screech.vhd
+set_global_assignment -name VHDL_FILE rtl/sound/EngineSound.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_global_assignment -name SIGNALTAP_FILE output_files/stp1.stp
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
-set_global_assignment -name SMART_RECOMPILE ON
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

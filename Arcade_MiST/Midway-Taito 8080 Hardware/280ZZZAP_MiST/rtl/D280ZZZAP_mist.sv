@@ -32,14 +32,15 @@ wire        overlay   = status[5];
 
 assign LED = 1;
 
-wire clk_core, clk_vid;
+wire clk_core, clk_vid, clk_aud;
 wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
 	.areset(),
 	.c0(clk_core),
-	.c1(clk_vid)
+	.c1(clk_vid),
+	.c2(clk_aud)
 );
 wire        reset = status[0] | buttons[1];
 
@@ -219,17 +220,45 @@ mist_video #(.COLOR_DEPTH(1)) mist_video(
 	.ypbpr(ypbpr),
 	.no_csync(no_csync)
 	);
-
-assign AUDIO_L = 0;
-assign AUDIO_R = 0;
 /*
+ --* Port 3:
+ --* bit 0= sound freq
+ --* bit 1= sound freq
+ --* bit 2= sound freq
+ --* bit 3= sound freq
+ --* bit 4= HI SHIFT MODIFIER
+ --* bit 5= LO SHIFT MODIFIER
+ --* bit 6= NC
+ --* bit 7= NC
+ --*
+ --* Port 5:
+ --* bit 0= BOOM sound
+ --* bit 1= ENGINE sound
+ --* bit 2= Screeching Sound
+ --* bit 3= after car blows up, before it appears again
+ --* bit 4= NC
+ --* bit 5= coin counter
+ --* bit 6= NC
+ --* bit 7= NC
+*/
+audio audio_inst (
+	.Clk_5(clk_aud),
+	.Motor1_n(SoundCtrl5[1]),
+	.Skid1(SoundCtrl5[2]),
+	.Crash_n(~SoundCtrl5[0]),
+	.NoiseReset_n(1'b1),
+	.motorspeed(SoundCtrl3[3:0]),
+	.Audio1(audio)
+);
+
+assign AUDIO_R = AUDIO_L;
+
 dac dac (
-	.clk_i(clk_core),
+	.clk_i(clk_aud),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
-*/
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
