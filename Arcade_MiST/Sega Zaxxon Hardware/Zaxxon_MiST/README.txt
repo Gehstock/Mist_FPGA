@@ -1,15 +1,9 @@
--- Zaxxon port to MiST
+-- Zaxxon (Super Zaxxon, Future Spy) port to MiST
 --
 -- Usage:
--- Create ZAXXON.ROM from MAME ROM zaxxon.zip file using the mra utility and the Zaxxon.mra file.
+-- Create .ROM and ARC files from MAME ROM zip files using the mra utility and the meta/mra files.
 -- Example: mra -A -z /path/to/mame/roms Zaxxon.mra
--- Create the sound ROM file from MAME WAVE ROM zaxxon.zip (rename it to zaxxon_sample.zip) file
--- using the mra utility and the Zaxxon_sound.mra file.
--- Example: mra -A -z /path/to/mame/roms Zaxxon_sound.mra
--- Concatenate the zaxxon.rom and Zaxxound.rom into ZAXXON.ROM.
--- Copy the ZAXXON.ROM file to the root of the SD Card.
---
--- Sound is optional, if you created the ROM with the samples, then enable sound in the OSD menu!
+-- Copy the resulting ROM and ARC files to the root of the SD Card, next to the Zaxxon.rbf.
 --
 -- MRA utilty: https://github.com/sebdel/mra-tools-c
 --

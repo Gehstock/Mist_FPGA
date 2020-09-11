@@ -32,15 +32,13 @@ module Zaxxon_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"ZAXXON;ROM;",
+	"ZAXXON;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Flip,Off,On;",
 	"O7,Service,Off,On;",
-	"O8,Sound,Off,On;",
-	"O9A,Lives,3,5,4,Free ships;",
-	"OBC,Extra ship,40k,20k,30k,10k;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v2.0.",`BUILD_DATE
 };
@@ -50,11 +48,28 @@ wire [1:0] scanlines = status[4:3];
 wire           blend = status[5];
 wire           flip  = status[6];
 wire        service  = status[7];
-wire           sound = status[8];
-wire [1:0]     ships = ~status[10:9];
-wire [1:0] extraship = status[12:11];
 
-wire [7:0]       sw1 = {1'b0, sound, ships, 2'b11, extraship }; // cocktail(1) / sound(1) / ships(2) / N.U.(2) /  extra ship (2)
+wire [7:0]       sw1 = status[23:16];
+wire [7:0]       sw2 = status[31:24];
+
+reg  [7:0] p1_input, p2_input;
+
+always @(*) begin
+	case (core_mod)
+	7'h22: // FUTSPY 
+	begin
+		p1_input = {2'b00, m_fireB, m_fireA, m_down, m_up, m_left, m_right};
+		p2_input = {2'b00, m_fire2B, m_fire2A, m_down2, m_up2, m_left2, m_right2};
+	end
+
+	default: // ZAXXON, SZAXXON
+	begin
+		p1_input = {3'b000, m_fireA, m_down, m_up, m_left, m_right};
+		p2_input = {3'b000, m_fire2A, m_down2, m_up2, m_left2, m_right2};
+	end
+	endcase
+
+end
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
@@ -65,7 +80,7 @@ wire clk_sys, clk_sd;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_sd),//36
+	.c0(clk_sd),//48
 	.c1(clk_sys),//24
 	.locked(pll_locked)
 	);
@@ -81,6 +96,7 @@ wire  [7:0] key_code;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
+wire  [6:0] core_mod;
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
@@ -101,7 +117,8 @@ user_io(
 	.key_code       (key_code       ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.status         (status         ),
+	.core_mod       (core_mod       )
 	);
 
 wire [15:0] audio_l;
@@ -111,8 +128,10 @@ wire  [2:0] g, r;
 wire  [1:0] b;
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
-wire [13:0] gfx_addr;
-wire [15:0] gfx_do;
+wire [12:0] bg_addr;
+wire [31:0] bg_do;
+wire [13:0] sp_addr;
+wire [31:0] sp_do;
 wire [19:0] wave_addr;
 wire [15:0] wave_do;
 wire        ioctl_downl;
@@ -122,14 +141,14 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 // ROM structure
-// 00000-06FFF CPU ROM   28k  u27-u28-u29-u29-u29
+// 00000-06FFF CPU ROM   28k  u27-u28-u29-(u29-u29)
 // 07000-0EFFF Tiledata  32k  u91-u90-u93-u92
 // 0F000-0F7FF char1      2k  u68
 // 0F800-0FFFF char2      2k  u69
-// 10000-05FFF bg        24k  u113-u112-u111
-// 16000-1BFFF spr       24k  u77-u78-u79
-// 1C000-1C0FF          256b  u76
-// 1C100-1C1FF          256b  u72
+// 10000-17FFF bg        32k  u113-u112-u111-(u111)
+// 18000-27FFF spr       64k  u77-u78-u79-(u79)
+// 28000-280FF          256b  u76
+// 28100-281FF          256b  u72
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -143,10 +162,10 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] gfx_ioctl_addr = ioctl_addr - 16'h7000;
+wire [24:0] gfx_ioctl_addr = ioctl_addr - 17'h10000;
 
 reg port1_req, port2_req;
-sdram #(36) sdram(
+sdram #(48) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
 	.clk           ( clk_sd       ),
@@ -160,22 +179,24 @@ sdram #(36) sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]}),
+	.cpu1_addr     ( ioctl_downl ? 19'h7ffff : {5'd0, rom_addr[14:1]}),
 	.cpu1_q        ( rom_do ),
-	.snd_addr      ( wave_addr[19:1] + 16'he100 ),
-	.snd_q         ( wave_do ),
+	.cpu2_addr     ( wave_addr[19:1] + 17'h13100 ),
+	.cpu2_q        ( wave_do ),
 
 	// port2 for gfx
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {gfx_ioctl_addr[23:15], gfx_ioctl_addr[13:0]} ),
-	.port2_ds      ( {gfx_ioctl_addr[14], ~gfx_ioctl_addr[14]} ),
+	.port2_a       ( gfx_ioctl_addr[23:1] ),
+	.port2_ds      ( {gfx_ioctl_addr[0], ~gfx_ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.gfx_addr      ( gfx_addr ),
-	.gfx_q         ( gfx_do )
+	.bg_addr       ( bg_addr ),
+	.bg_q          ( bg_do ),
+	.sp_addr       ( sp_addr + 16'h2000),
+	.sp_q          ( sp_do )
 );
 
 always @(posedge clk_sys) begin
@@ -200,7 +221,7 @@ always @(posedge clk_sd) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-wire dl_wr = ioctl_wr && ioctl_addr < 17'h1c200;
+wire dl_wr = ioctl_wr && ioctl_addr < 18'h28200;
 
 zaxxon zaxxon(
 	.clock_24(clk_sys),
@@ -216,15 +237,13 @@ zaxxon zaxxon(
 
 	.audio_out_l(audio_l),
 
+	.hwsel(core_mod[1]),
 	.coin1(m_coin1),
 	.coin2(m_coin2),
 	.start2(m_two_players),
 	.start1(m_one_player),
-	.left(m_left),
-	.right(m_right),
-	.up(m_up),
-	.down(m_down),
-	.fire(m_fireA),
+	.p1_input(p1_input),
+	.p2_input(p2_input),
 	.service(service),
 
 	.sw1_input(sw1), // cocktail(1) / sound(1) / ships(2) / N.U.(2) /  extra ship (2)
@@ -232,14 +251,18 @@ zaxxon zaxxon(
 
 	.flip_screen(flip),
 
+	.enc_type     ( core_mod[6:4]) ,
 	.cpu_rom_addr ( rom_addr  ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.map_addr     ( gfx_addr  ),
-	.map_do       ( gfx_do    ),
 	.wave_addr    ( wave_addr ),
 	.wave_data    ( wave_do   ),
 
-	.dl_addr      ( ioctl_addr[16:0] ),
+	.bg_graphics_addr( bg_addr ),
+	.bg_graphics_do  ( bg_do   ),
+	.sp_graphics_addr( sp_addr ),
+	.sp_graphics_do  ( sp_do   ),
+
+	.dl_addr      ( ioctl_addr[17:0] ),
 	.dl_data      ( ioctl_dout ),
 	.dl_wr        ( dl_wr )
 );
