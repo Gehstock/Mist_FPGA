@@ -181,13 +181,13 @@ end
 wire [7:0] W_3P_DO, W_3N_DO;
 vid1 vid1 (
 	.clk(CLK_12M & ROM_3PN_CE),
-	.addr({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.addr({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.data(W_3P_DO)
 	);
 	
 vid2 vid2 (
 	.clk(CLK_12M & ROM_3PN_CE),
-	.addr({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.addr({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.data(W_3N_DO)
 	);
 
