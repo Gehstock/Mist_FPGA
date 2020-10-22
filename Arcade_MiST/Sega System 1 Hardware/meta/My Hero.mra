@@ -1,0 +1,56 @@
+<misterromdescription>
+	<name>My Hero (US, not encrypted)</name>
+	<mameversion>0217</mameversion>
+	<setname>myhero</setname>
+	<mratimestamp>202001060000</mratimestamp>
+	<year>1985</year>
+	<manufacturer>Coreland / Sega</manufacturer>
+	<category>Fighter / Hero</category>
+	<rbf>segasys1</rbf>
+    <switches default="FF,7E" base="8">
+		<dip bits="9" name="Demo Sound" ids="On,Off"/>
+		<dip bits="10,11" name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="12,13" name="Extend" ids="90000,70000,50000,30000"/>
+		<dip bits="14" name="Difficulty" ids="Hard,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>00</part>
+	</rom>
+	<rom index="0" zip="myhero.zip" md5="08d9e275da478606db8cdeae79b92b5c" type="merged|nonmerged|split">
+		<part name="epr-6963b.116"/>
+		<part name="epr-6964a.109"/>
+		<part name="epr-6927.96"/>
+		<part name="epr-69xx.120"/>
+		<part name="epr-69xx.120"/>
+		<part name="epr-6921.117"/>
+		<part name="epr-6923.04"/>
+		<part name="epr-6922.110"/>
+		<part name="epr-6924.05"/>
+
+		<group width="32">
+			<part name="epr-6966.62"/>
+			<part name="epr-6960.64"/>
+			<part name="epr-6958.66"/>
+			<part name="epr-6958.66"/>
+		</group>
+
+		<group width="32">
+			<part name="epr-6961.61"/>
+			<part name="epr-6959.63"/>
+			<part name="epr-6957.65"/>
+			<part name="epr-6957.65"/>
+		</group>
+
+		<part name="pr-5317.76"/>
+		<part>
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		</part>
+	</rom>
+</misterromdescription>

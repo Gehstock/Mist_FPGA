@@ -1,0 +1,63 @@
+<misterromdescription>
+	<name>Wonder Boy (set 1, 315-5177)</name>
+	<mameversion>0217</mameversion>
+	<setname>wboy</setname>
+	<mratimestamp>20200107000000</mratimestamp>
+	<year>1986</year>
+	<manufacturer>Escape (Sega license)</manufacturer>
+	<category>Platform / Extra</category>
+	<rbf>segasys1</rbf>
+	<switches default="FF,7E" base="8">
+		<dip bits="9" name="Demo Sound" ids="On,Off"/>
+		<dip bits="10,11" name="Lives" ids="Free Play,5,4,3"/>
+		<dip bits="12" name="Extend" ids="30k 120k 210k 300k,30k 100k 170k 240k"/>
+		<dip bits="13" name="Allow Continue" ids="No,Yes"/>
+		<dip bits="14" name="Difficulty" ids="Hard,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>00</part>
+	</rom>
+	<rom index="0" zip="wboy.zip" md5="7cc14dd978cab8fbf13dd4120692086f" type="merged|nonmerged|split">
+		<part name="epr-7489.116"/>
+		<part name="epr-7490.109"/>
+		<part name="epr-7491.96"/>
+		<part name="epr-7498.120"/>
+		<part name="epr-7498.120"/>
+		<part name="epr-7485.117"/>
+		<part name="epr-7487.04"/>
+		<part name="epr-7486.110"/>
+		<part name="epr-7488.05"/>
+		<group width="32">
+			<part name="epr-7497.62"/>
+			<part name="epr-7495.64"/>
+			<part name="epr-7493.66"/>
+			<part name="epr-7493.66"/>
+		</group>
+		<group width="32">
+			<part name="epr-7496.61"/>
+			<part name="epr-7494.63"/>
+			<part name="epr-7492.65"/>
+			<part name="epr-7492.65"/>
+		</group>
+
+		<part name="pr-5317.76"/>
+		<part>
+04 54 51 15 40 44 01 51 55 10 44 41 05 55 50 14
+41 45 00 50 54 11 45 40 04 54 51 15 40 44 01 51
+55 10 44 41 05 55 50 14 41 45 00 50 54 11 45 40
+04 54 51 15 40 44 01 51 55 10 44 41 05 55 50 14
+04 54 51 15 40 44 01 51 55 10 44 41 05 55 50 14
+41 45 00 50 54 11 45 40 04 54 51 15 40 44 01 51
+55 10 44 41 05 55 50 14 41 45 00 50 54 11 45 40
+04 54 51 15 40 44 01 51 55 10 44 41 05 55 50 14
+00 00 00 00 01 01 01 01 01 02 02 02 02 02 03 03
+03 03 04 04 04 04 04 05 05 05 05 05 06 06 06 06
+06 07 07 07 07 07 08 08 08 08 09 09 09 09 09 0a
+0a 0a 0a 0a 0b 0b 0b 0b 0b 0c 0c 0c 0c 0c 0d 0d
+08 08 08 08 09 09 09 09 09 0a 0a 0a 0a 0a 0b 0b
+0b 0b 0c 0c 0c 0c 0c 0d 0d 0d 0d 0d 0e 0e 0e 0e
+0e 0f 0f 0f 0f 0f 10 10 10 10 11 11 11 11 11 12
+12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15
+		</part>
+	</rom>
+</misterromdescription>

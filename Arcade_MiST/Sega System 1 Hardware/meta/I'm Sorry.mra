@@ -1,0 +1,55 @@
+<misterromdescription>
+	<name>I'm Sorry (315-5110, US)</name>
+	<mameversion>0217</mameversion>
+	<setname>imsorry</setname>
+	<mratimestamp>202001070000</mratimestamp>
+	<year>1985</year>
+	<manufacturer>Coreland / Sega</manufacturer>
+	<category>Maze</category>
+	<rbf>segasys1</rbf>
+	<switches default="FF,7E" base="8">
+		<dip bits="9" name="Demo Sound" ids="On,Off"/>
+		<dip bits="10,11" name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="12,13" name="Extend" ids="None,70000,50000,30000"/>
+	</switches>
+	<rom index="1">
+		<part>00</part>
+	</rom>
+	<rom index="0" zip="imsorry.zip" md5="f8c20005acedc939c0a56623189b2b35" type="merged|nonmerged|split">
+		<part name="epr-6676.116"/>
+		<part name="epr-6677.109"/>
+		<part name="epr-6678.96"/>
+		<part name="epr-6656.120"/>
+		<part name="epr-6656.120"/>
+		<part name="epr-6645.117"/>
+		<part name="epr-6646.04"/>
+		<part name="epr-6645.117"/>
+		<part name="epr-6646.04"/>
+
+		<group width="32">
+			<part name="epr-6684.62"/>
+			<part name="epr-6682.64"/>
+			<part name="epr-6680.66"/>
+			<part name="epr-6680.66"/>
+		</group>
+
+		<group width="32">
+			<part name="epr-6683.61"/>
+			<part name="epr-6681.63"/>
+			<part name="epr-6674.65"/>
+			<part name="epr-6674.65"/>
+		</group>
+
+		<part name="pr-5317.76"/>
+		<part>
+88 08 80 00 00 20 80 a0 00 20 80 a0 88 08 80 00 
+88 08 a8 28 00 20 80 a0 00 20 80 a0 88 08 a8 28 
+00 20 80 a0 08 00 88 80 00 20 80 a0 20 28 a0 a8 
+20 28 a0 a8 00 20 80 a0 20 28 a0 a8 88 08 a8 28 
+88 08 80 00 08 00 88 80 08 00 88 80 88 08 80 00 
+08 28 00 20 08 28 00 20 88 08 80 00 08 28 00 20 
+08 28 00 20 08 00 88 80 08 28 00 20 20 28 a0 a8 
+20 28 a0 a8 08 28 00 20 20 28 a0 a8 08 28 00 20 
+		</part>
+	</rom>
+</misterromdescription>

@@ -1,0 +1,56 @@
+<misterromdescription>
+	<name>Sega Ninja (315-5102)</name>
+	<mameversion>0217</mameversion>
+	<setname>seganinj</setname>
+	<mratimestamp>20200107000000</mratimestamp>
+	<year>1985</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Fighter / Asian</category>
+	<rbf>segasys1</rbf>
+    <switches default="FF,7E" base="8">
+		<dip bits="9" name="Demo Sound" ids="On,Off"/>
+		<dip bits="10,11" name="Lives" ids="240,4,2,3"/>
+		<dip bits="12" name="Extend" ids="50k 100k 150k 200k,20k 70k 120k 170k"/>
+		<dip bits="13" name="Allow Continue" ids="No,Yes"/>
+		<dip bits="14" name="Difficulty" ids="Hard,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>00</part>
+	</rom>
+	<rom index="0" zip="seganinj.zip" md5="2ab698c59d739fdbfc7a267ace9df24f" type="merged|nonmerged|split">
+		<part name="epr-6594a.116"/>
+		<part name="epr-6595a.109"/>
+		<part name="epr-6596a.96"/>
+		<part name="epr-6559.120"/>
+		<part name="epr-6559.120"/>
+		<part name="epr-6546.117"/>
+		<part name="epr-6548.04"/>
+		<part name="epr-6547.110"/>
+		<part name="epr-6549a.05"/>
+
+		<group width="32">
+			<part name="epr-6558.62"/>
+			<part name="epr-6556.64"/>
+			<part name="epr-6554.66"/>
+			<part name="epr-6554.66"/>
+		</group>
+		<group width="32">
+			<part name="epr-6592.61"/>
+			<part name="epr-6590.63"/>
+			<part name="epr-6588.65"/>
+			<part name="epr-6588.65"/>
+		</group>
+
+		<part name="pr-5317.76"/>
+		<part>
+88 a8 80 a0 88 08 80 00 28 a8 08 88 a0 a8 80 88 
+a8 a0 28 20 a8 a0 28 20 28 a8 08 88 a0 a8 80 88 
+28 08 a8 88 28 08 a8 88 28 a8 08 88 88 08 80 00 
+28 08 a8 88 28 08 a8 88 28 a8 08 88 a8 a0 28 20 
+88 08 80 00 88 a8 80 a0 a0 a8 80 88 28 a8 08 88 
+a8 a0 28 20 88 a8 80 a0 a8 a0 28 20 28 a8 08 88 
+28 08 a8 88 88 a8 80 a0 28 08 a8 88 28 08 a8 88 
+88 a8 80 a0 88 a8 80 a0 a8 a0 28 20 28 08 a8 88 
+		</part>
+	</rom>
+</misterromdescription>

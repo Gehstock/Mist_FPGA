@@ -1,0 +1,58 @@
+<misterromdescription>
+	<name>Up'n Down</name>
+	<mameversion>0216</mameversion>
+	<setname>upndown</setname>
+	<mratimestamp>202001100000</mratimestamp>
+	<year>1984</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Shmup</category>
+	<rbf>segasys1</rbf>
+    <switches default="FF,BF" base="8">
+		<dip bits="9,10"   name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="11,13"  name="Binus at" ids="Never,70k,60k,50k,40k,30k,20k,10k"/>
+		<dip bits="14,15" name="Difficulty" ids="Hardest,Hard,Medium,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>06</part>
+	</rom>
+	<rom index="0" zip="upndown.zip" md5="013c5bfc7a9a7a68e3eeb12c8ce37e8e" type="merged|nonmerged|split">
+		<part name="epr5516a.129"/>
+		<part name="epr5517a.130"/>
+		<part name="epr-5518.131"/>
+		<part name="epr-5519.132"/>
+		<part name="epr-5520.133"/>
+		<part name="epr-5521.134"/>
+		<part name="epr-5535.3"/>
+		<part name="epr-5535.3"/>
+		<part name="epr-5514.86"/>
+		<part name="epr-5515.93"/>
+		<part name="epr-5514.86"/>
+		<part name="epr-5515.93"/>
+
+		<group width="32">
+			<part name="epr-5527.82"/>
+			<part name="epr-5525.81"/>
+			<part name="epr-5523.80"/>
+			<part name="epr-5523.80"/>
+		</group>
+
+		<group width="32">
+			<part name="epr-5526.65"/>
+			<part name="epr-5524.64"/>
+			<part name="epr-5522.63"/>
+			<part name="epr-5522.63"/>
+		</group>
+
+		<part name="pr-5317.106"/>
+		<part>
+08 88 00 80 a0 20 80 00 a8 a0 28 20 88 a8 80 a0
+88 80 08 00 28 08 a8 88 88 a8 80 a0 28 08 a8 88
+88 a8 80 a0 a0 20 80 00 a8 a0 28 20 a8 a0 28 20
+88 80 08 00 88 a8 80 a0 88 a8 80 a0 88 a8 80 a0
+a0 20 80 00 a0 20 80 00 08 88 00 80 28 08 a8 88
+88 a8 80 a0 88 80 08 00 88 a8 80 a0 28 08 a8 88
+88 a8 80 a0 88 a8 80 a0 88 a8 80 a0 88 a8 80 a0
+88 80 08 00 88 80 08 00 08 88 00 80 28 08 a8 88
+		</part>
+	</rom>
+</misterromdescription>

@@ -1,0 +1,59 @@
+<misterromdescription>
+	<name>Mister Viking (315-5041)</name>
+	<mameversion>0217</mameversion>
+	<setname>mrviking</setname>
+	<mratimestamp>202001070000</mratimestamp>
+	<year>1984</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Fighter / Warriors</category>
+	<rbf>segasys1</rbf>
+	<switches default="FF,7E" base="8">
+		<dip bits="9" name="Maximum Credits" ids="99,9"/>
+		<dip bits="10,11" name="Lives"  ids="Infinite,5,4,3"/>
+		<dip bits="12,13" name="Extend" ids="40k ev.30k,30k ev.30k,20k 40k ev.30k,10k 30k ev.30k"/>
+		<dip bits="14" name="Difficulty" ids="Hard,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>06</part>
+	</rom>
+	<rom index="0" zip="mrviking.zip" md5="cfbeafcd3f71d2045f81e0401afdc11c" type="merged|nonmerged|split">
+		<part name="epr-5873.129"/>
+		<part name="epr-5874.130"/>
+		<part name="epr-5875.131"/>
+		<part name="epr-5876.132"/>
+		<part name="epr-5755.133"/>
+		<part name="epr-5756.134"/>
+
+		<part name="epr-5763.3"/>
+		<part name="epr-5763.3"/>
+
+		<part name="epr-5749.86"/>
+		<part name="epr-5750.93"/>
+		<part repeat="0x8000">FF</part>
+
+		<group width="32">
+			<part name="epr-5762.82"/>
+			<part name="epr-5760.81"/>
+			<part name="epr-5758.80"/>
+			<part name="epr-5758.80"/>
+		</group>
+		<group width="32">
+			<part name="epr-5761.65"/>
+			<part name="epr-5759.64"/>
+			<part name="epr-5757.63"/>
+			<part name="epr-5757.63"/>
+		</group>
+
+		<part name="pr-5317.106"/>
+		<part>
+28 a8 08 88 88 80 08 00 88 08 80 00 88 80 08 00 
+28 08 a8 88 28 a8 08 88 88 08 80 00 88 08 80 00 
+28 08 a8 88 88 80 08 00 88 80 08 00 28 a8 08 88 
+a0 80 a8 88 28 08 a8 88 a0 80 a8 88 a0 80 a8 88 
+88 80 08 00 88 80 08 00 88 08 80 00 88 80 08 00 
+a0 80 20 00 28 08 a8 88 a0 80 20 00 88 08 80 00 
+28 08 a8 88 a0 80 20 00 a0 80 20 00 a0 80 20 00 
+a0 80 a8 88 28 08 a8 88 a0 80 20 00 a0 80 a8 88 
+		</part>
+	</rom>
+</misterromdescription>
