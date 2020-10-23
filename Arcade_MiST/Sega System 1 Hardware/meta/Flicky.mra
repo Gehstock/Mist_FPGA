@@ -1,0 +1,59 @@
+<misterromdescription>
+	<name>Flicky (128k Version, 315-5051)</name>
+	<mameversion>0217</mameversion>
+	<setname>flicky</setname>
+	<mratimestamp>202001070000</mratimestamp>
+	<year>1984</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Maze / Cat and Mouse</category>
+	<category>Platform</category>
+	<rbf>segasys1</rbf>
+	<switches default="FF,7C" base="8">
+		<dip bits="10,11" name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="12,13" name="Extend" ids="40k 140k 280k,40k 120k 240k,30k 100k 200k,30k 80k 160k"/>
+		<dip bits="14"    name="Difficulty" ids="Hard,Easy"/>
+	</switches>
+	<rom index="1">
+		<part>00</part>
+	</rom>
+	<rom index="0" zip="flicky.zip" md5="1d3e6b48d8123a56b9b579dfba94704b" type="merged|nonmerged|split">
+		<!-- Main CPU -->
+		<part name="epr-5978a.116"/>
+		<part name="epr-5979a.109"/>
+		<part name="epr-5979a.109"/>
+		<!-- Sound CPU -->
+		<part name="epr-5869.120"/>
+		<part name="epr-5869.120"/>
+		<!-- Sprites -->
+		<part name="epr-5855.117"/>
+		<part name="epr-5856.110"/>
+		<part name="epr-5855.117"/>
+		<part name="epr-5856.110"/>
+		<!-- Tiles -->
+		<group width="32">
+			<part name="epr-5868.62"/>
+			<part name="epr-5866.64"/>
+			<part name="epr-5864.66"/>
+			<part name="epr-5864.66"/>
+		</group>
+
+		<group width="32">
+			<part name="epr-5867.61"/>
+			<part name="epr-5865.63"/>
+			<part name="epr-5863.65"/>
+			<part name="epr-5863.65"/>
+		</group>
+		<!-- CLUT -->
+		<part name="pr-5317.76"/>
+		<part>
+08 88 00 80 a0 80 a8 88 80 00 a0 20 88 80 08 00 
+a0 80 a8 88 28 08 20 00 28 08 20 00 a0 80 a8 88 
+08 88 00 80 80 00 a0 20 80 00 a0 20 88 80 08 00 
+28 08 20 00 28 08 20 00 28 08 20 00 88 80 08 00 
+08 88 00 80 a8 88 28 08 a8 88 28 08 80 00 a0 20 
+28 08 20 00 88 80 08 00 a8 88 28 08 88 80 08 00 
+08 88 00 80 80 00 a0 20 a8 88 28 08 80 00 a0 20 
+28 08 20 00 28 08 20 00 08 88 00 80 88 80 08 00 
+		</part>
+	</rom>
+</misterromdescription>

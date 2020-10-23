@@ -1,0 +1,57 @@
+<misterromdescription>
+	<name>Regulus</name>
+	<mameversion>0216</mameversion>
+	<setname>regulus</setname>
+	<mratimestamp>202001100000</mratimestamp>
+	<year>1983</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Shmup</category>
+	<rbf>segasys1</rbf>
+    <switches default="FF,7F" base="8">
+		<dip bits="10,11"  name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="14"     name="Difficulty" ids="Hard,Easy"/>
+		<dip bits="15"     name="Allow Continue" ids="Yes,No"/>
+	</switches>
+	<rom index="1">
+		<part>06</part>
+	</rom>
+	<rom index="0" zip="regulus.zip" md5="69bf2d45b0a5e13df70d60ba6505dfad" type="merged|nonmerged|split">
+		<part name="epr-5640a.129"/>
+		<part name="epr-5641a.130"/>
+		<part name="epr-5642a.131"/>
+		<part name="epr-5643a.132"/>
+		<part name="epr-5644.133"/>
+		<part name="epr-5645a.134"/>
+		<part name="epr-5652.3"/>
+		<part name="epr-5652.3"/>
+		<part name="epr-5638.86"/>
+		<part name="epr-5639.93"/>
+		<part name="epr-5638.86"/>
+		<part name="epr-5639.93"/>
+
+		<group width="32">
+			<part name="epr-5651.82"/>
+			<part name="epr-5649.81"/>
+			<part name="epr-5647.80"/>
+			<part name="epr-5647.80"/>
+		</group>
+
+		<group width="32">
+			<part name="epr-5650.65"/>
+			<part name="epr-5648.64"/>
+			<part name="epr-5646.63"/>
+			<part name="epr-5646.63"/>
+		</group>
+		<part name="pr-5317.106"/>
+		<part>
+28 08 a8 88 88 80 08 00 28 08 a8 88 28 a8 08 88
+88 80 08 00 88 08 80 00 88 08 80 00 28 a8 08 88
+28 08 a8 88 88 80 08 00 88 80 08 00 88 80 08 00
+88 08 80 00 88 08 80 00 a0 80 a8 88 a0 80 a8 88
+80 a0 00 20 28 08 a8 88 28 a8 08 88 28 08 a8 88
+80 a0 00 20 80 a0 00 20 28 a8 08 88 80 a0 00 20
+a0 80 a8 88 28 08 a8 88 80 a0 00 20 a0 80 a8 88
+a0 80 a8 88 80 a0 00 20 a0 80 a8 88 a0 80 a8 88
+		</part>
+	</rom>
+</misterromdescription>
