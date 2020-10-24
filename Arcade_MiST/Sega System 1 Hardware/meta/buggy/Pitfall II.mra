@@ -28,19 +28,19 @@
 		<part name="epr-6454a.117"/>
 		<part name="epr-6455.05"/>
 
-		<group width="32">
-			<part name="epr-6474a.62"/>
-			<part name="epr-6472a.64"/>
-			<part name="epr-6470a.66"/>
-			<part name="epr-6470a.66"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-6474a.62" map="0001"/>
+			<part name="epr-6472a.64" map="0010"/>
+			<part name="epr-6470a.66" map="0100"/>
+			<part name="epr-6470a.66" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part name="epr-6473a.61"/>
-			<part name="epr-6471a.63"/>
-			<part name="epr-6469a.65"/>
-			<part name="epr-6469a.65"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-6473a.61" map="0001"/>
+			<part name="epr-6471a.63" map="0010"/>
+			<part name="epr-6469a.65" map="0100"/>
+			<part name="epr-6469a.65" map="1000"/>
+		</interleave>
 
 		<part name="pr-5317.76"/>
 		<part>

@@ -27,18 +27,18 @@
 		<part name="epr-7487.04"/>
 		<part name="epr-7486.110"/>
 		<part name="epr-7488.05"/>
-		<group width="32">
-			<part name="epr-7497.62"/>
-			<part name="epr-7495.64"/>
-			<part name="epr-7493.66"/>
-			<part name="epr-7493.66"/>
-		</group>
-		<group width="32">
-			<part name="epr-7496.61"/>
-			<part name="epr-7494.63"/>
-			<part name="epr-7492.65"/>
-			<part name="epr-7492.65"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-7497.62" map="0001"/>
+			<part name="epr-7495.64" map="0010"/>
+			<part name="epr-7493.66" map="0100"/>
+			<part name="epr-7493.66" map="1000"/>
+		</interleave>
+		<interleave output="32">
+			<part name="epr-7496.61" map="0001"/>
+			<part name="epr-7494.63" map="0010"/>
+			<part name="epr-7492.65" map="0100"/>
+			<part name="epr-7492.65" map="1000"/>
+		</interleave>
 
 		<part name="pr-5317.76"/>
 		<part>

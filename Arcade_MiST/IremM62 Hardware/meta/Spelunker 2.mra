@@ -27,46 +27,46 @@
       <part name="sp2-a.3f"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="sp2-r.1d"/>
-          <part name="sp2-r.3b"/>
-          <part name="sp2-r.1b"/>
-          <part name="sp2-r.1b"/>
-      </group>
+      <interleave output="32">
+          <part name="sp2-r.1d" map="0001"/>
+          <part name="sp2-r.3b" map="0010"/>
+          <part name="sp2-r.1b" map="0100"/>
+          <part name="sp2-r.1b" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="sp2-b.4k"/>
-          <part name="sp2-b.3n"/>
-          <part name="sp2-b.4c"/>
-          <part name="sp2-b.4c"/>
-      </group>
-      <group width="32">
-          <part name="sp2-b.4f"/>
-          <part name="sp2-b.4n"/>
-          <part name="sp2-b.4e"/>
-          <part name="sp2-b.4e"/>
-      </group>
-      <group width="32">
-          <part name="sp2-b.4k"/>
-          <part name="sp2-b.3n"/>
-          <part name="sp2-b.4c"/>
-          <part name="sp2-b.4c"/>
-      </group>
-      <group width="32">
-          <part name="sp2-b.4f"/>
-          <part name="sp2-b.4n"/>
-          <part name="sp2-b.4e"/>
-          <part name="sp2-b.4e"/>
-      </group>
+      <interleave output="32">
+          <part name="sp2-b.4k" map="0001"/>
+          <part name="sp2-b.3n" map="0010"/>
+          <part name="sp2-b.4c" map="0100"/>
+          <part name="sp2-b.4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sp2-b.4f" map="0001"/>
+          <part name="sp2-b.4n" map="0010"/>
+          <part name="sp2-b.4e" map="0100"/>
+          <part name="sp2-b.4e" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sp2-b.4k" map="0001"/>
+          <part name="sp2-b.3n" map="0010"/>
+          <part name="sp2-b.4c" map="0100"/>
+          <part name="sp2-b.4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sp2-b.4f" map="0001"/>
+          <part name="sp2-b.4n" map="0010"/>
+          <part name="sp2-b.4e" map="0100"/>
+          <part name="sp2-b.4e" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
-      <group width="32">
-          <part name="sp2-r.4p"/>
-          <part name="sp2-r.4m"/>
-          <part name="sp2-r.4l"/>
-          <part name="sp2-r.4l"/>
-      </group>
+      <interleave output="32">
+          <part name="sp2-r.4p" map="0001"/>
+          <part name="sp2-r.4m" map="0010"/>
+          <part name="sp2-r.4l" map="0100"/>
+          <part name="sp2-r.4l" map="1000"/>
+      </interleave>
 
       <!-- spr_color_proms, 3*256b -->
       <part name="sp2-b.1m"/>

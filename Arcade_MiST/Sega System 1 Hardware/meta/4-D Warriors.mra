@@ -7,7 +7,7 @@
 	<manufacturer>Sega</manufacturer>
 	<category>Shmup</category>
 	<rbf>segasys1</rbf>
-    <switches default="FF,FF" base="8">
+	<switches default="FF,FF" base="8">
 		<dip bits="9,10"   name="Lives" ids="Free Play,5,4,3"/> 
 		<dip bits="11,13"  name="Bonus at" ids="Never,90k,80k,70k,60k,50k,40k,30k"/>
 		<dip bits="14"     name="Difficulty" ids="Hard,Easy"/>
@@ -26,19 +26,19 @@
 		<part name="4d.110"/>
 		<part name="4d.05"/>
 
-		<group width="32">
-			<part name="4d.62"/>
-			<part name="4d.64"/>
-			<part name="4d.66"/>
-			<part name="4d.66"/>
-		</group>
+		<interleave output="32">
+			<part name="4d.62" map="0001"/>
+			<part name="4d.64" map="0010"/>
+			<part name="4d.66" map="0100"/>
+			<part name="4d.66" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part name="4d.61"/>
-			<part name="4d.63"/>
-			<part name="4d.65"/>
-			<part name="4d.65"/>
-		</group>
+		<interleave output="32">
+			<part name="4d.61" map="0001"/>
+			<part name="4d.63" map="0010"/>
+			<part name="4d.65" map="0100"/>
+			<part name="4d.65" map="1000"/>
+		</interleave>
 
 		<part name="pr5317.76"/>
 		<part>

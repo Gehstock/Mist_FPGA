@@ -20,94 +20,94 @@
       <part repeat="8" name="lot-a-3h"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
+      <interleave output="32">
           <part name="lot-k-4a"/>
           <part name="lot-k-4c"/>
           <part name="lot-k-4b"/>
           <part name="lot-k-4b"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-k-4a"/>
           <part name="lot-k-4c"/>
           <part name="lot-k-4b"/>
           <part name="lot-k-4b"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-k-4a"/>
           <part name="lot-k-4c"/>
           <part name="lot-k-4b"/>
           <part name="lot-k-4b"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-k-4a"/>
           <part name="lot-k-4c"/>
           <part name="lot-k-4b"/>
           <part name="lot-k-4b"/>
-      </group>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-b-4k"/>
           <part name="lot-b-3n"/>
           <part name="lot-b-4c"/>
           <part name="lot-b-4c"/>
-      </group>
+      </interleave>
 
       <!-- GFX3, 64k -->
-      <group width="32">
+      <interleave output="32">
           <part name="lot-k-4p"/>
           <part name="lot-k-4l"/>
           <part name="lot-k-4n"/>
           <part name="lot-k-4n"/>
-      </group>
-      <group width="32">
+      </interleave>
+      <interleave output="32">
           <part name="lot-k-4p"/>
           <part name="lot-k-4l"/>
           <part name="lot-k-4n"/>
           <part name="lot-k-4n"/>
-      </group>
+      </interleave>
 
       <!-- spr_color_proms, 3*256b -->
       <part name="lot-b-1m"/>

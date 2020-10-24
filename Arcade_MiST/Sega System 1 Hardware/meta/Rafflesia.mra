@@ -26,19 +26,19 @@
 		<part name="epr-7408.110"/>
 		<part name="epr-7410.05"/>
 
-		<group width="32">
-			<part name="epr-7419.62"/>
-			<part name="epr-7417.64"/>
-			<part name="epr-7415.66"/>
-			<part name="epr-7415.66"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-7419.62" map="0001"/>
+			<part name="epr-7417.64" map="0010"/>
+			<part name="epr-7415.66" map="0100"/>
+			<part name="epr-7415.66" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part name="epr-7418.61"/>
-			<part name="epr-7416.63"/>
-			<part name="epr-7414.65"/>
-			<part name="epr-7414.65"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-7418.61" map="0001"/>
+			<part name="epr-7416.63" map="0010"/>
+			<part name="epr-7414.65" map="0100"/>
+			<part name="epr-7414.65" map="1000"/>
+		</interleave>
 
 		<part name="pr-5317.76"/>
 		<part>

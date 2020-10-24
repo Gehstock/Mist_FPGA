@@ -34,94 +34,94 @@
       <part name="br-a-3h"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="br-c-6h"/>
-          <part name="br-c-6n"/>
-          <part name="br-c-6k"/>
-          <part name="br-c-6k"/>
-      </group>
-      <group width="32">
-          <part name="br-c-6h"/>
-          <part name="br-c-6n"/>
-          <part name="br-c-6k"/>
-          <part name="br-c-6k"/>
-      </group>
-      <group width="32">
-          <part name="br-c-6h"/>
-          <part name="br-c-6n"/>
-          <part name="br-c-6k"/>
-          <part name="br-c-6k"/>
-      </group>
-      <group width="32">
-          <part name="br-c-6h"/>
-          <part name="br-c-6n"/>
-          <part name="br-c-6k"/>
-          <part name="br-c-6k"/>
-      </group>
+      <interleave output="32">
+          <part name="br-c-6h" map="0001"/>
+          <part name="br-c-6n" map="0010"/>
+          <part name="br-c-6k" map="0100"/>
+          <part name="br-c-6k" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-c-6h" map="0001"/>
+          <part name="br-c-6n" map="0010"/>
+          <part name="br-c-6k" map="0100"/>
+          <part name="br-c-6k" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-c-6h" map="0001"/>
+          <part name="br-c-6n" map="0010"/>
+          <part name="br-c-6k" map="0100"/>
+          <part name="br-c-6k" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-c-6h" map="0001"/>
+          <part name="br-c-6n" map="0010"/>
+          <part name="br-c-6k" map="0100"/>
+          <part name="br-c-6k" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="br-b-4k.a"/>
-          <part name="br-b-3n.a"/>
-          <part name="br-b-4c.a"/>
-          <part name="br-b-4c.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4f.a"/>
-          <part name="br-b-4n.a"/>
-          <part name="br-b-4e.a"/>
-          <part name="br-b-4e.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4k.a"/>
-          <part name="br-b-3n.a"/>
-          <part name="br-b-4c.a"/>
-          <part name="br-b-4c.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4f.a"/>
-          <part name="br-b-4n.a"/>
-          <part name="br-b-4e.a"/>
-          <part name="br-b-4e.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4k.a"/>
-          <part name="br-b-3n.a"/>
-          <part name="br-b-4c.a"/>
-          <part name="br-b-4c.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4f.a"/>
-          <part name="br-b-4n.a"/>
-          <part name="br-b-4e.a"/>
-          <part name="br-b-4e.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4k.a"/>
-          <part name="br-b-3n.a"/>
-          <part name="br-b-4c.a"/>
-          <part name="br-b-4c.a"/>
-      </group>
-      <group width="32">
-          <part name="br-b-4f.a"/>
-          <part name="br-b-4n.a"/>
-          <part name="br-b-4e.a"/>
-          <part name="br-b-4e.a"/>
-      </group>
+      <interleave output="32">
+          <part name="br-b-4k.a" map="0001"/>
+          <part name="br-b-3n.a" map="0010"/>
+          <part name="br-b-4c.a" map="0100"/>
+          <part name="br-b-4c.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4f.a" map="0001"/>
+          <part name="br-b-4n.a" map="0010"/>
+          <part name="br-b-4e.a" map="0100"/>
+          <part name="br-b-4e.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4k.a" map="0001"/>
+          <part name="br-b-3n.a" map="0010"/>
+          <part name="br-b-4c.a" map="0100"/>
+          <part name="br-b-4c.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4f.a" map="0001"/>
+          <part name="br-b-4n.a" map="0010"/>
+          <part name="br-b-4e.a" map="0100"/>
+          <part name="br-b-4e.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4k.a" map="0001"/>
+          <part name="br-b-3n.a" map="0010"/>
+          <part name="br-b-4c.a" map="0100"/>
+          <part name="br-b-4c.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4f.a" map="0001"/>
+          <part name="br-b-4n.a" map="0010"/>
+          <part name="br-b-4e.a" map="0100"/>
+          <part name="br-b-4e.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4k.a" map="0001"/>
+          <part name="br-b-3n.a" map="0010"/>
+          <part name="br-b-4c.a" map="0100"/>
+          <part name="br-b-4c.a" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-b-4f.a" map="0001"/>
+          <part name="br-b-4n.a" map="0010"/>
+          <part name="br-b-4e.a" map="0100"/>
+          <part name="br-b-4e.a" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
-      <group width="32">
-          <part name="br-c-1c"/>
-          <part name="br-c-1b"/>
-          <part name="br-c-1c"/>
-          <part name="br-c-1b"/>
-      </group>
-      <group width="32">
-          <part name="br-c-1c"/>
-          <part name="br-c-1b"/>
-          <part name="br-c-1c"/>
-          <part name="br-c-1b"/>
-      </group>
+      <interleave output="32">
+          <part name="br-c-1c" map="0001"/>
+          <part name="br-c-1b" map="0010"/>
+          <part name="br-c-1c" map="0100"/>
+          <part name="br-c-1b" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="br-c-1c" map="0001"/>
+          <part name="br-c-1b" map="0010"/>
+          <part name="br-c-1c" map="0100"/>
+          <part name="br-c-1b" map="1000"/>
+      </interleave>
 
       <!-- spr_color_proms, 3*256b -->
       <part name="br-b-1m"/>
