@@ -30,44 +30,44 @@
       <part name="lr4-a-3f"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="lr4-v-2b"/>
-          <part name="lr4-v-2d"/>
-          <part name="lr4-v-2c"/>
-          <part name="lr4-v-2c"/>
-      </group>
-      <group width="32">
-          <part name="lr4-v-2b"/>
-          <part name="lr4-v-2d"/>
-          <part name="lr4-v-2c"/>
-          <part name="lr4-v-2c"/>
-      </group>
+      <interleave output="32">
+          <part name="lr4-v-2b" map="0001"/>
+          <part name="lr4-v-2d" map="0010"/>
+          <part name="lr4-v-2c" map="0100"/>
+          <part name="lr4-v-2c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr4-v-2b" map="0001"/>
+          <part name="lr4-v-2d" map="0010"/>
+          <part name="lr4-v-2c" map="0100"/>
+          <part name="lr4-v-2c" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="lr4-b-4k"/>
-          <part name="lr4-b-3n"/>
-          <part name="lr4-b-4c"/>
-          <part name="lr4-b-4c"/>
-      </group>
-      <group width="32">
-          <part name="lr4-b-4f"/>
-          <part name="lr4-b-4n"/>
-          <part name="lr4-b-4e"/>
-          <part name="lr4-b-4e"/>
-      </group>
-      <group width="32">
-          <part name="lr4-b-4k"/>
-          <part name="lr4-b-3n"/>
-          <part name="lr4-b-4c"/>
-          <part name="lr4-b-4c"/>
-      </group>
-      <group width="32">
-          <part name="lr4-b-4f"/>
-          <part name="lr4-b-4n"/>
-          <part name="lr4-b-4e"/>
-          <part name="lr4-b-4e"/>
-      </group>
+      <interleave output="32">
+          <part name="lr4-b-4k" map="0001"/>
+          <part name="lr4-b-3n" map="0010"/>
+          <part name="lr4-b-4c" map="0100"/>
+          <part name="lr4-b-4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr4-b-4f" map="0001"/>
+          <part name="lr4-b-4n" map="0010"/>
+          <part name="lr4-b-4e" map="0100"/>
+          <part name="lr4-b-4e" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr4-b-4k" map="0001"/>
+          <part name="lr4-b-3n" map="0010"/>
+          <part name="lr4-b-4c" map="0100"/>
+          <part name="lr4-b-4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr4-b-4f" map="0001"/>
+          <part name="lr4-b-4n" map="0010"/>
+          <part name="lr4-b-4e" map="0100"/>
+          <part name="lr4-b-4e" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
       <part repeat="0x10000">FF</part>

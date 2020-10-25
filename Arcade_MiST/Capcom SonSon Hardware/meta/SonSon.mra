@@ -16,10 +16,10 @@
       <part name="ss.03e"/>
 
       <!-- gfx1, 16k -->
-      <group width="16">
-          <part name="ss_7.b6"/>
-          <part name="ss_8.b5"/>
-      </group>
+      <interleave output="16">
+          <part name="ss_7.b6" map="01"/>
+          <part name="ss_8.b5" map="10"/>
+      </interleave>
 
       <!-- gfx2, 48k -->
       <part name="ss_9.m5"/>

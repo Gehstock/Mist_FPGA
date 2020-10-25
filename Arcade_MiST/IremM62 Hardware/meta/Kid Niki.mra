@@ -25,46 +25,46 @@
       <part name="dr02.3f"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="dr06.2b"/>
-          <part name="dr07.2dc"/>
-          <part name="dr05.2a"/>
-          <part name="dr05.2a"/>
-      </group>
+      <interleave output="32">
+          <part name="dr06.2b"  map="0001"/>
+          <part name="dr07.2dc" map="0010"/>
+          <part name="dr05.2a"  map="0100"/>
+          <part name="dr05.2a"  map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="dr21.4k"/>
-          <part name="dr14.3p"/>
-          <part name="dr16.4cb"/>
-          <part name="dr16.4cb"/>
-      </group>
-      <group width="32">
-          <part name="dr19.4f"/>
-          <part name="dr24.4p"/>
-          <part name="dr18.4e"/>
-          <part name="dr18.4e"/>
-      </group>
-      <group width="32">
-          <part name="dr22.4l"/>
-          <part name="dr23.4nm"/>
-          <part name="dr17.4dc"/>
-          <part name="dr17.4dc"/>
-      </group>
-      <group width="32">
-          <part name="dr20.4jh"/>
-          <part name="dr13.3nm"/>
-          <part name="dr15.4a"/>
-          <part name="dr15.4a"/>
-      </group>
+      <interleave output="32">
+          <part name="dr21.4k"  map="0001"/>
+          <part name="dr14.3p"  map="0010"/>
+          <part name="dr16.4cb" map="0100"/>
+          <part name="dr16.4cb" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="dr19.4f" map="0001"/>
+          <part name="dr24.4p" map="0010"/>
+          <part name="dr18.4e" map="0100"/>
+          <part name="dr18.4e" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="dr22.4l"  map="0001"/>
+          <part name="dr23.4nm" map="0010"/>
+          <part name="dr17.4dc" map="0100"/>
+          <part name="dr17.4dc" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="dr20.4jh" map="0001"/>
+          <part name="dr13.3nm" map="0010"/>
+          <part name="dr15.4a"  map="0100"/>
+          <part name="dr15.4a"  map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
-      <group width="32">
-          <part name="dr10.4n"/>
-          <part name="dr09.4m"/>
-          <part name="dr08.4l"/>
-          <part name="dr08.4l"/>
-      </group>
+      <interleave output="32">
+          <part name="dr10.4n" map="0001"/>
+          <part name="dr09.4m" map="0010"/>
+          <part name="dr08.4l" map="0100"/>
+          <part name="dr08.4l" map="1000"/>
+      </interleave>
 
       <!-- spr_color_proms, 3*256b -->
       <part name="dr30.1m"/>

@@ -29,19 +29,19 @@
 		<part name="epr-5638.86"/>
 		<part name="epr-5639.93"/>
 
-		<group width="32">
-			<part name="epr-5651.82"/>
-			<part name="epr-5649.81"/>
-			<part name="epr-5647.80"/>
-			<part name="epr-5647.80"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-5651.82" map="0001"/>
+			<part name="epr-5649.81" map="0010"/>
+			<part name="epr-5647.80" map="0100"/>
+			<part name="epr-5647.80" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part name="epr-5650.65"/>
-			<part name="epr-5648.64"/>
-			<part name="epr-5646.63"/>
-			<part name="epr-5646.63"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-5650.65" map="0001"/>
+			<part name="epr-5648.64" map="0010"/>
+			<part name="epr-5646.63" map="0100"/>
+			<part name="epr-5646.63" map="1000"/>
+		</interleave>
 		<part name="pr-5317.106"/>
 		<part>
 28 08 a8 88 88 80 08 00 28 08 a8 88 28 a8 08 88

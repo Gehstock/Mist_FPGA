@@ -25,52 +25,52 @@
       <part name="spra.3f"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="sprm.1d"/>
-          <part name="sprm.3c"/>
-          <part name="sprm.1c"/>
-          <part name="sprm.1c"/>
-      </group>
-      <group width="32">
-          <part name="sprm.1e"/>
-          <part name="sprm.3b"/>
-          <part name="sprm.1b"/>
-          <part name="sprm.1b"/>
-      </group>
+      <interleave output="32">
+          <part name="sprm.1d" map="0001"/>
+          <part name="sprm.3c" map="0010"/>
+          <part name="sprm.1c" map="0100"/>
+          <part name="sprm.1c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sprm.1e" map="0001"/>
+          <part name="sprm.3b" map="0010"/>
+          <part name="sprm.1b" map="0100"/>
+          <part name="sprm.1b" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="sprb.4k"/>
-          <part name="sprb.3p"/>
-          <part name="sprb.4c"/>
-          <part name="sprb.4c"/>
-      </group>
-      <group width="32">
-          <part name="sprb.4f"/>
-          <part name="sprb.4p"/>
-          <part name="sprb.4e"/>
-          <part name="sprb.4e"/>
-      </group>
-      <group width="32">
-          <part name="sprb.4k"/>
-          <part name="sprb.3p"/>
-          <part name="sprb.4c"/>
-          <part name="sprb.4c"/>
-      </group>
-      <group width="32">
-          <part name="sprb.4f"/>
-          <part name="sprb.4p"/>
-          <part name="sprb.4e"/>
-          <part name="sprb.4e"/>
-      </group>
+      <interleave output="32">
+          <part name="sprb.4k" map="0001"/>
+          <part name="sprb.3p" map="0010"/>
+          <part name="sprb.4c" map="0100"/>
+          <part name="sprb.4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sprb.4f" map="0001"/>
+          <part name="sprb.4p" map="0010"/>
+          <part name="sprb.4e" map="0100"/>
+          <part name="sprb.4e" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sprb.4k" map="0001"/>
+          <part name="sprb.3p" map="0010"/>
+          <part name="sprb.4c" map="0100"/>
+          <part name="sprb.4c" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="sprb.4f" map="0001"/>
+          <part name="sprb.4p" map="0010"/>
+          <part name="sprb.4e" map="0100"/>
+          <part name="sprb.4e" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
-      <group width="32">
-          <part name="sprm.4m"/>
-          <part name="sprm.4l"/>
-          <part name="sprm.4p"/>
-          <part name="sprm.4p"/>
-      </group>
+      <interleave output="32">
+          <part name="sprm.4m" map="0001"/>
+          <part name="sprm.4l" map="0010"/>
+          <part name="sprm.4p" map="0100"/>
+          <part name="sprm.4p" map="1000"/>
+      </interleave>
 
       <!-- spr_color_proms, 3*256b -->
       <part name="sprb.1m"/>

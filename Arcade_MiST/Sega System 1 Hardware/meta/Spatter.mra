@@ -12,7 +12,7 @@
 		<dip bits="9" name="Demo Sound" ids="On,Off"/>
 		<dip bits="10,11" name="Lives" ids="Infinite,4,2,3"/>
 		<dip bits="12,13" name="Extend" ids="None,100k only,50k 200k,40k 120k 480k"/>
-		<dip bits="14" name="Reset Timer and Objects" ids="Yes,No"/>
+		<dip bits="14" name="Reset Timer &amp; Objects" ids="Yes,No"/>
 	</switches>
 	<rom index="1">
 		<part>04</part>
@@ -27,20 +27,20 @@
 		<part name="epr-6308.117"/>
 		<part name="epr-6307.05"/>
 		<part name="epr-6309.110"/>
-		<group width="32">
-			<part name="epr-6328.62"/>
-			<part name="epr-6326.64"/>
-			<part name="epr-6324.66"/>
-			<part name="epr-6324.66"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-6328.62" map="0001"/>
+			<part name="epr-6326.64" map="0010"/>
+			<part name="epr-6324.66" map="0100"/>
+			<part name="epr-6324.66" map="1000"/>
+		</interleave>
 
 
-		<group width="32">
-			<part name="epr-6397.61"/>
-			<part name="epr-6396.63"/>
-			<part name="epr-6395.65"/>
-			<part name="epr-6395.65"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-6397.61" map="0001"/>
+			<part name="epr-6396.63" map="0010"/>
+			<part name="epr-6395.65" map="0100"/>
+			<part name="epr-6395.65" map="1000"/>
+		</interleave>
 
 		<part name="pr-5317.106"/>
 		<part>

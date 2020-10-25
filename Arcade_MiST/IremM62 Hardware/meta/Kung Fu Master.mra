@@ -29,80 +29,80 @@
       <part name="a-3h-.bin"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="g-4c-a.bin"/>
-          <part name="g-4d-a.bin"/>
-          <part name="g-4e-a.bin"/>
-          <part name="g-4e-a.bin"/>
-      </group>
-      <group width="32">
-          <part name="g-4c-a.bin"/>
-          <part name="g-4d-a.bin"/>
-          <part name="g-4e-a.bin"/>
-          <part name="g-4e-a.bin"/>
-      </group>
-      <group width="32">
-          <part name="g-4c-a.bin"/>
-          <part name="g-4d-a.bin"/>
-          <part name="g-4e-a.bin"/>
-          <part name="g-4e-a.bin"/>
-      </group>
-      <group width="32">
-          <part name="g-4c-a.bin"/>
-          <part name="g-4d-a.bin"/>
-          <part name="g-4e-a.bin"/>
-          <part name="g-4e-a.bin"/>
-      </group>
+      <interleave output="32">
+          <part name="g-4c-a.bin" map="0001"/>
+          <part name="g-4d-a.bin" map="0010"/>
+          <part name="g-4e-a.bin" map="0100"/>
+          <part name="g-4e-a.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="g-4c-a.bin" map="0001"/>
+          <part name="g-4d-a.bin" map="0010"/>
+          <part name="g-4e-a.bin" map="0100"/>
+          <part name="g-4e-a.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="g-4c-a.bin" map="0001"/>
+          <part name="g-4d-a.bin" map="0010"/>
+          <part name="g-4e-a.bin" map="0100"/>
+          <part name="g-4e-a.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="g-4c-a.bin" map="0001"/>
+          <part name="g-4d-a.bin" map="0010"/>
+          <part name="g-4e-a.bin" map="0100"/>
+          <part name="g-4e-a.bin" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="b-4k-.bin"/>
-          <part name="b-3n-.bin"/>
-          <part name="b-4c-.bin"/>
-          <part name="b-4c-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4f-.bin"/>
-          <part name="b-4n-.bin"/>
-          <part name="b-4e-.bin"/>
-          <part name="b-4e-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4l-.bin"/>
-          <part name="b-4m-.bin"/>
-          <part name="b-4d-.bin"/>
-          <part name="b-4d-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4h-.bin"/>
-          <part name="b-3m-.bin"/>
-          <part name="b-4a-.bin"/>
-          <part name="b-4a-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4k-.bin"/>
-          <part name="b-3n-.bin"/>
-          <part name="b-4c-.bin"/>
-          <part name="b-4c-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4f-.bin"/>
-          <part name="b-4n-.bin"/>
-          <part name="b-4e-.bin"/>
-          <part name="b-4e-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4l-.bin"/>
-          <part name="b-4m-.bin"/>
-          <part name="b-4d-.bin"/>
-          <part name="b-4d-.bin"/>
-      </group>
-      <group width="32">
-          <part name="b-4h-.bin"/>
-          <part name="b-3m-.bin"/>
-          <part name="b-4a-.bin"/>
-          <part name="b-4a-.bin"/>
-      </group>
+      <interleave output="32">
+          <part name="b-4k-.bin" map="0001"/>
+          <part name="b-3n-.bin" map="0010"/>
+          <part name="b-4c-.bin" map="0100"/>
+          <part name="b-4c-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4f-.bin" map="0001"/>
+          <part name="b-4n-.bin" map="0010"/>
+          <part name="b-4e-.bin" map="0100"/>
+          <part name="b-4e-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4l-.bin" map="0001"/>
+          <part name="b-4m-.bin" map="0010"/>
+          <part name="b-4d-.bin" map="0100"/>
+          <part name="b-4d-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4h-.bin" map="0001"/>
+          <part name="b-3m-.bin" map="0010"/>
+          <part name="b-4a-.bin" map="0100"/>
+          <part name="b-4a-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4k-.bin" map="0001"/>
+          <part name="b-3n-.bin" map="0010"/>
+          <part name="b-4c-.bin" map="0100"/>
+          <part name="b-4c-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4f-.bin" map="0001"/>
+          <part name="b-4n-.bin" map="0010"/>
+          <part name="b-4e-.bin" map="0100"/>
+          <part name="b-4e-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4l-.bin" map="0001"/>
+          <part name="b-4m-.bin" map="0010"/>
+          <part name="b-4d-.bin" map="0100"/>
+          <part name="b-4d-.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="b-4h-.bin" map="0001"/>
+          <part name="b-3m-.bin" map="0010"/>
+          <part name="b-4a-.bin" map="0100"/>
+          <part name="b-4a-.bin" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
       <part repeat="0x10000">FF</part>

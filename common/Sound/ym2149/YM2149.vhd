@@ -62,7 +62,8 @@ library ieee;
 
 entity YM2149 is
   generic (
-    MIXER_VOLTABLE      : std_logic := '0'
+    MIXER_VOLTABLE      : std_logic := '0';
+    IO_OUT_READ_IN      : std_logic := '1'
   );
   port (
   -- data bus
@@ -246,15 +247,15 @@ begin
         when x"B" => O_DA <= reg(11);
         when x"C" => O_DA <= reg(12);
         when x"D" => O_DA <= "0000" & reg(13)(3 downto 0);
-        when x"E" => if (reg(7)(6) = '0') then -- input
+        when x"E" => if reg(7)(6) = '0' or IO_OUT_READ_IN = '1' then -- input
                        O_DA <= ioa_inreg;
                      else
-                       O_DA <= reg(14) and ioa_inreg; -- read output reg
+                       O_DA <= reg(14); -- read output reg
                      end if;
-        when x"F" => if (Reg(7)(7) = '0') then
+        when x"F" => if Reg(7)(7) = '0' or IO_OUT_READ_IN = '1' then
                        O_DA <= iob_inreg;
                      else
-                       O_DA <= reg(15) and iob_inreg;
+                       O_DA <= reg(15);
                      end if;
         when others => null;
       end case;

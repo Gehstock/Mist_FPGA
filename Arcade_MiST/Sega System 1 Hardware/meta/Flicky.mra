@@ -30,19 +30,19 @@
 		<part name="epr-5855.117"/>
 		<part name="epr-5856.110"/>
 		<!-- Tiles -->
-		<group width="32">
-			<part name="epr-5868.62"/>
-			<part name="epr-5866.64"/>
-			<part name="epr-5864.66"/>
-			<part name="epr-5864.66"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-5868.62" map="0001"/>
+			<part name="epr-5866.64" map="0010"/>
+			<part name="epr-5864.66" map="0100"/>
+			<part name="epr-5864.66" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part name="epr-5867.61"/>
-			<part name="epr-5865.63"/>
-			<part name="epr-5863.65"/>
-			<part name="epr-5863.65"/>
-		</group>
+		<interleave output="32">
+			<part name="epr-5867.61" map="0001"/>
+			<part name="epr-5865.63" map="0010"/>
+			<part name="epr-5863.65" map="0100"/>
+			<part name="epr-5863.65" map="1000"/>
+		</interleave>
 		<!-- CLUT -->
 		<part name="pr-5317.76"/>
 		<part>

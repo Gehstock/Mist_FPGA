@@ -30,44 +30,44 @@
       <part name="lr3-a-3f"/>
 
       <!-- GFX1, 128k -->
-      <group width="32">
-          <part name="lr3-n-2a"/>
-          <part name="lr3-n-2c"/>
-          <part name="lr3-n-2b"/>
-          <part name="lr3-n-2b"/>
-      </group>
-      <group width="32">
-          <part name="lr3-n-2a"/>
-          <part name="lr3-n-2c"/>
-          <part name="lr3-n-2b"/>
-          <part name="lr3-n-2b"/>
-      </group>
+      <interleave output="32">
+          <part name="lr3-n-2a" map="0001"/>
+          <part name="lr3-n-2c" map="0010"/>
+          <part name="lr3-n-2b" map="0100"/>
+          <part name="lr3-n-2b" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr3-n-2a" map="0001"/>
+          <part name="lr3-n-2c" map="0010"/>
+          <part name="lr3-n-2b" map="0100"/>
+          <part name="lr3-n-2b" map="1000"/>
+      </interleave>
 
       <!-- GFX2, 256k -->
-      <group width="32">
-          <part name="lr3b4kb.bin"/>
-          <part name="lr3b3nb.bin"/>
-          <part name="snxb4cb.bin"/>
-          <part name="snxb4cb.bin"/>
-      </group>
-      <group width="32">
-          <part name="snxb4fb.bin"/>
-          <part name="snxb4nb.bin"/>
-          <part name="snxb4eb.bin"/>
-          <part name="snxb4eb.bin"/>
-      </group>
-      <group width="32">
-          <part name="lr3b4kb.bin"/>
-          <part name="lr3b3nb.bin"/>
-          <part name="snxb4cb.bin"/>
-          <part name="snxb4cb.bin"/>
-      </group>
-      <group width="32">
-          <part name="snxb4fb.bin"/>
-          <part name="snxb4nb.bin"/>
-          <part name="snxb4eb.bin"/>
-          <part name="snxb4eb.bin"/>
-      </group>
+      <interleave output="32">
+          <part name="lr3b4kb.bin" map="0001"/>
+          <part name="lr3b3nb.bin" map="0010"/>
+          <part name="snxb4cb.bin" map="0100"/>
+          <part name="snxb4cb.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="snxb4fb.bin" map="0001"/>
+          <part name="snxb4nb.bin" map="0010"/>
+          <part name="snxb4eb.bin" map="0100"/>
+          <part name="snxb4eb.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="lr3b4kb.bin" map="0001"/>
+          <part name="lr3b3nb.bin" map="0010"/>
+          <part name="snxb4cb.bin" map="0100"/>
+          <part name="snxb4cb.bin" map="1000"/>
+      </interleave>
+      <interleave output="32">
+          <part name="snxb4fb.bin" map="0001"/>
+          <part name="snxb4nb.bin" map="0010"/>
+          <part name="snxb4eb.bin" map="0100"/>
+          <part name="snxb4eb.bin" map="1000"/>
+      </interleave>
 
       <!-- GFX3, 64k -->
       <part repeat="0x10000">FF</part>
