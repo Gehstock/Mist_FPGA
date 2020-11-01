@@ -6,13 +6,17 @@
 module nrx_sound
 (
 	input					CLK24M,
-	input					CCLK,
 	output reg [7:0]	SND,
 	input	 [15:0]	AD,
 	input  [3:0]	DI,
 	input				WR,
 
-	input				BANG
+	input				BANG,
+
+	input         ROMCL,
+	input  [15:0] ROMAD,
+	input   [7:0] ROMDT,
+	input         ROMEN
 );
 
 reg [11:0] ccnt;
@@ -24,25 +28,29 @@ wire	SCLK    = ccnt[7];
 
 wire  [7:0]		wa0, wa1, wa2;
 wire  [3:0]		wd0, wd1, wd2;
-nrx_namco namco(
-	.clk(SCLKx8),
-	.a0(wa0),
-	.a1(wa1),
-	.a2(wa2),
-	.d0(wd0),
-	.d1(wd1),
-	.d2(wd2)
-	);
+
+NPSG_WAV waverom(
+        SCLKx8, wa0, wa1, wa2, wd0, wd1, wd2,
+        ROMCL,ROMAD[7:0],ROMDT[3:0],ROMEN & (ROMAD[15:8]==8'hA1)
+);
 
 reg		  		bWavPlay = 1'b0;
 reg  [13:0] 	wap = 14'h0000;
 wire  [7:0] 	wdp;
 wire  [7:0]		wo = bWavPlay ? wdp : 8'h80;
 
-nrx_wav_rom nrx_wav_rom (
-	.clk(CLK6K),
-	.addr(wap),
-	.data(wdp)
+dpram #(8,14) bangpcm(
+	.clk_a(CLK6K),
+	.addr_a(wap),
+	.we_a(1'b0),
+	.d_a(),
+	.q_a(wdp),
+
+	.clk_b(ROMCL),
+	.addr_b(ROMAD[13:0]),
+	.d_b(ROMDT),
+	.we_b(ROMEN & (ROMAD[15:14]==2'b01)),
+	.q_b()
 	);
 
 always @( posedge CLK6K ) begin
@@ -99,7 +107,7 @@ nrx_psg_voice voice2(
 reg [7:0] wout;
 always @( posedge SCLK ) SND <= ( { 2'b0, wo } ) + ( o0 + o1 + o2 );
 
-always @( posedge CCLK ) begin
+always @( posedge CLK24M ) begin
 	if ( WR ) case ( AD[4:0] )
 
 		5'h05:	n0         <= DI[2:0];
@@ -128,6 +136,53 @@ always @( posedge CCLK ) begin
 		default: ;
 
 	endcase
+end
+
+endmodule
+
+module NPSG_WAV
+(
+        input                   clk,
+        input [7:0] a0,
+        input   [7:0] a1,
+        input   [7:0] a2,
+                
+        output reg [3:0] d0,
+        output reg [3:0] d1,
+        output reg [3:0] d2,
+        
+        input                    ROMCL,
+        input  [7:0] ROMAD,
+        input  [3:0] ROMDT,
+        input            ROMEN
+);
+
+reg  [1:0] ph=0;
+
+reg  [7:0] ad;  
+wire [3:0] dt;
+
+dpram #(4,8) wrom(
+	.clk_a(clk),
+	.addr_a(ad),
+	.we_a(1'b0),
+	.d_a(),
+	.q_a(dt),
+
+	.clk_b(ROMCL),
+	.addr_b(ROMAD),
+	.we_b(ROMEN),
+	.d_b(ROMDT),
+	.q_b()
+	);
+
+always @(negedge clk) begin
+        case (ph)
+        0: begin d2 <= dt; ad <= a0; ph <= 1; end
+        1: begin d0 <= dt; ad <= a1; ph <= 2; end
+        2: begin d1 <= dt; ad <= a2; ph <= 0; end
+        default:;
+        endcase
 end
 
 endmodule
