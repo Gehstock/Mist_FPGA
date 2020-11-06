@@ -65,6 +65,9 @@ entity invaderst is
 		Fire            : in  std_logic;
 		MoveLeft        : in  std_logic;
 		MoveRight       : in  std_logic;
+		Fire2           : in  std_logic;
+		MoveLeft2       : in  std_logic;
+		MoveRight2      : in  std_logic;
 		DIP             : in  std_logic_vector(8 downto 1);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
@@ -194,9 +197,9 @@ begin
 	GDB2(1) <= '0';--unknown
 	GDB2(2) <= '0';--unknown
 	GDB2(3) <= '0';--unknown
-	GDB2(4) <= not Fire;--player2
-	GDB2(5) <= not MoveLeft;--player2
-	GDB2(6) <= not MoveRight;--player2
+	GDB2(4) <= not Fire2;--player2
+	GDB2(5) <= not MoveLeft2;--player2
+	GDB2(6) <= not MoveRight2;--player2
 	GDB2(7) <= '1';-- Coinage
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
