@@ -41,7 +41,7 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:27:39  NOVEMBER 20, 2017"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 
@@ -107,7 +107,7 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
 # EDA Netlist Writer Assignments
 # ==============================
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+set_global_assignment -name EDA_SIMULATION_TOOL "<None>"
 
 # Assembler Assignments
 # =====================
@@ -131,7 +131,7 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 	# EDA Netlist Writer Assignments
 	# ==============================
-	set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT NONE -section_id eda_simulation
 
 # end EDA_TOOL_SETTINGS(eda_simulation)
 # -------------------------------------
@@ -161,18 +161,13 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/OzmaWars_memory.sv
 set_global_assignment -name VHDL_FILE rtl/OzmaWars_overlay.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
 set_global_assignment -name VHDL_FILE rtl/roms/mw01.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/mw02.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/mw03.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/mw04.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/mw05.vhd
 set_global_assignment -name VHDL_FILE rtl/roms/mw06.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
