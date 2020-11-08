@@ -1,0 +1,10 @@
+
+0000-3FFF	CPU instruction
+4000-7FFF	"BANG!" PCM data or CPU ROM / TimePilot sound board CPU ROM
+8000-9FFF	Background/Object pattern
+A000-A0FF	Rader dot pattern
+A100-A1FF	Sound wave
+A200-A2FF	Lookup table
+A300-A31F	Palette
+
+[EOF]

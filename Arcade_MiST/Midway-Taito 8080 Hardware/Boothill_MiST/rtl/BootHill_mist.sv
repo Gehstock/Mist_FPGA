@@ -1,4 +1,4 @@
-module SpaceLaser_mist(
+module BootHill_mist(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -19,19 +19,16 @@ module SpaceLaser_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"SpaceLaser;;",
-	"O2,Rotate Controls,Off,On;",
+	"BOOTHILL;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-	"O5,Overlay, On, Off;",
-	"O6,Joystick Swap,Off,On;",
+	"O6,Joystick swap,Off,On;",
 	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
 
 wire  [1:0] scanlines = status[4:3];
-wire        overlay   = status[5];
+wire        rotate = 0;
 wire        joyswap = status[6];
-wire        rotate = status[2];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -53,41 +50,48 @@ wire  [1:0] switches;
 wire  [7:0] joystick_0,joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
 wire  [7:0] audio;
-wire 			hsync,vsync;
-wire 			hs, vs;
-wire 			r,g,b;
+wire        hsync,vsync;
+wire        hs, vs;
+wire        r,g,b;
 
 wire [15:0]RAB;
 wire [15:0]AD;
 wire [7:0]RDB;
-wire [7:0]CAB;
 wire [7:0]RWD;
 wire [7:0]IB;
 wire [5:0]SoundCtrl3;
 wire [5:0]SoundCtrl5;
+wire [5:0]SoundCtrl6;
 wire Rst_n_s;
 wire RWE_n;
 wire Video;
-wire HSync;
-wire VSync;
 
 invaderst invaderst(
 	.Rst_n(~(status[0] | buttons[1])),
 	.Clk(clk_sys),
 	.ENA(),
-	.Coin(m_coin1),
-	.Sel1Player(~m_one_player),
-	.Sel2Player(~m_two_players),
-	.Fire(~m_fireA),
-	.MoveLeft(~m_left),
-	.MoveRight(~m_right),
-	.Fire2(~m_fire2A),
-	.MoveLeft2(~m_left2),
-	.MoveRight2(~m_right2),
+	.Coin(m_coin1 | m_coin2),
+	.Sel1Player(m_one_player),
+	.Fire1(m_fireA),
+	.Fire2(m_fire2A),
+	.GunUp1(m_fireB),
+	.GunDown1(m_fireC),
+	.MoveLeft1(m_left),
+	.MoveRight1(m_right),
+	.MoveUp1(m_up),
+	.MoveDown1(m_down),
+	.GunUp2(m_fire2B),
+	.GunDown2(m_fire2C),
+	.MoveLeft2(m_left2),
+	.MoveRight2(m_right2),
+	.MoveUp2(m_up2),
+	.MoveDown2(m_down2),
+//	.DIP(dip),
 	.RDB(RDB),
 	.IB(IB),
 	.RWD(RWD),
@@ -98,12 +102,11 @@ invaderst invaderst(
 	.Rst_n_s(Rst_n_s),
 	.RWE_n(RWE_n),
 	.Video(Video),
-	.CAB(CAB),
-	.HSync(HSync),
-	.VSync(VSync)
+	.HSync(hs),
+	.VSync(vs)
 	);
-		
-spacelaser_memory spacelaser_memory (
+
+invaders_memory invaders_memory (
 	.Clock(clk_sys),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -112,37 +115,24 @@ spacelaser_memory spacelaser_memory (
 	.Ram_in(RWD),
 	.Rom_out(IB)
 	);
-		
+/*
 invaders_audio invaders_audio (
 	.Clk(clk_sys),
-	.S1(SoundCtrl3),
-	.S2(SoundCtrl5),
+	.S0(SoundCtrl3 | SoundCtrl4),
+	.S1(SoundCtrl4),
+	.S2(SoundCtrl5 | SoundCtrl6),//hi
+	.S3(SoundCtrl6),//lo
 	.Aud(audio)
-	);		
-	  
-spacelaser_overlay spacelaser_overlay (
-	.Video(Video),
-	.Overlay(~overlay),
-	.CLK(clk_sys),
-	.Rst_n_s(Rst_n_s),
-	.HSync(HSync),
-	.VSync(VSync),
-	.CAB(CAB),
-	.O_VIDEO_R(r),
-	.O_VIDEO_G(g),
-	.O_VIDEO_B(b),
-	.O_HSYNC(hs),
-	.O_VSYNC(vs)
 	);
-
+*/
 mist_video #(.COLOR_DEPTH(1)) mist_video(
 	.clk_sys(clk_vid),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
-	.R(r),
-	.G(g),
-	.B(b),
+	.R(Video),
+	.G(Video),
+	.B(Video),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -150,10 +140,9 @@ mist_video #(.COLOR_DEPTH(1)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.rotate({1'b0,rotate}),
+	.ce_divider(0),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(scanlines),
-	.ce_divider(0),
 	.ypbpr(ypbpr),
 	.no_csync(no_csync)
 	);
@@ -199,7 +188,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b01       ),
+	.orientation ( 2'b00       ),
 	.joyswap     ( joyswap     ),
 	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
