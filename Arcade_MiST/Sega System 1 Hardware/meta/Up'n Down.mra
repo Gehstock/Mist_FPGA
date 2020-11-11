@@ -9,7 +9,7 @@
 	<rbf>segasys1</rbf>
     <switches default="FF,BF" base="8">
 		<dip bits="9,10"   name="Lives" ids="Infinite,5,4,3"/>
-		<dip bits="11,13"  name="Binus at" ids="Never,70k,60k,50k,40k,30k,20k,10k"/>
+		<dip bits="11,13"  name="Bonus at" ids="Never,70k,60k,50k,40k,30k,20k,10k"/>
 		<dip bits="14,15" name="Difficulty" ids="Hardest,Hard,Medium,Easy"/>
 	</switches>
 	<rom index="1">
