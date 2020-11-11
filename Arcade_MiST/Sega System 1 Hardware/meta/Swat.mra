@@ -9,13 +9,11 @@
 	<category>Shooter</category>
 	<rbf>segasys1</rbf>
     <switches default="FF,7E" base="8">
-		<dip bits="9" name="Demo Sound" ids="On,Off"/>
-		<dip bits="10,11" name="Lives" ids="Infinite,4,2,3"/>
-		<dip bits="12,13" name="Extend" ids="None,100k only,50k 200k,40k 120k 480k"/>
-		<dip bits="14" name="Reset Timer &amp; Objects" ids="Yes,No"/>
+		<dip bits="9,10"   name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="11,13"  name="Bonus at" ids="Never,90k,80k,70k,60k,50k,40k,30k"/>
 	</switches>
 	<rom index="1">
-		<part>04</part>
+		<part>06</part>
 	</rom>
 	<rom index="0" zip="swat.zip" md5="692cf43b6f18dd8aa75c287293257830" type="merged|nonmerged|split">
 		<part name="epr5807b.129"/>
