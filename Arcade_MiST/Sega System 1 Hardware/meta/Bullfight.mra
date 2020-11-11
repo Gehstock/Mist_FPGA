@@ -1,0 +1,62 @@
+<misterromdescription>
+	<name>Bull Fight (315-5065)</name>
+	<mameversion>0217</mameversion>
+	<setname>bullfgt</setname>
+	<mratimestamp>202001070000</mratimestamp>
+	<year>1984</year>
+	<manufacturer>Sega</manufacturer>
+	<category>Sport</category>
+	<category>Sport</category>
+	<rbf>segasys1</rbf>
+    <switches default="FF,7E" base="8">
+		<dip bits="9" name="Demo Sound" ids="On,Off"/>
+		<dip bits="10,11" name="Lives" ids="Infinite,5,4,3"/>
+		<dip bits="12,13" name="Extend" ids="None,70000,50000,30000"/>
+	</switches>
+	<rom index="1">
+		<part>06</part>
+	</rom>
+	<rom index="0" zip="bullfgt.zip" md5="ea1314a026a422e747d3891087a63d84" type="merged|nonmerged|split">
+		<part name="epr-.129"/>
+		<part name="epr-.130"/>
+		<part name="epr-.131"/>
+		<part name="epr-.132"/>
+		<part name="epr-.133"/>
+		<part name="epr-.134"/>
+
+		<part name="epr-6077.120"/>
+		<part name="epr-6077.120"/>
+
+		<part name="epr-6069.86"/>
+		<part name="epr-6070.93"/>
+		<part name="epr-6069.86"/>
+		<part name="epr-6070.93"/>
+
+		<interleave output="32">
+			<part name="epr-.82" map="0001"/>
+			<part name="epr-6087.81" map="0010"/>
+			<part name="epr-6085.80" map="0100"/>
+			<part name="epr-6085.80" map="1000"/>
+		</interleave>
+
+
+		<interleave output="32">
+			<part name="epr-.65" map="0001"/>
+			<part name="epr-.64" map="0010"/>
+			<part name="epr-.63" map="0100"/>
+			<part name="epr-.63" map="1000"/>
+		</interleave>
+
+		<part name="pr-5317.106"/>
+		<part>
+a0 a8 20 28 80 a0 00 20 20 28 00 08 20 28 00 08
+a0 a8 20 28 08 28 00 20 88 08 a8 28 88 08 a8 28
+a0 a8 20 28 20 28 00 08 28 a8 20 a0 20 28 00 08
+a0 a8 20 28 08 28 00 20 88 08 a8 28 88 08 a8 28
+28 a8 20 a0 a0 a8 20 28 88 08 a8 28 80 a0 00 20
+28 a8 20 a0 08 28 00 20 28 a8 20 a0 80 a0 00 20
+20 28 00 08 20 28 00 08 88 08 a8 28 20 28 00 08
+08 28 00 20 80 a0 00 20 08 28 00 20 88 08 a8 28
+		</part>
+	</rom>
+</misterromdescription>
