@@ -6,7 +6,6 @@
 	<year>1984</year>
 	<manufacturer>Sega</manufacturer>
 	<category>Maze / Extra</category>
-	<category>Racing / Bicycle</category>
 	<rbf>segasys1</rbf>
     <switches default="FF,7E" base="8">
 		<dip bits="9" name="Demo Sound" ids="On,Off"/>
