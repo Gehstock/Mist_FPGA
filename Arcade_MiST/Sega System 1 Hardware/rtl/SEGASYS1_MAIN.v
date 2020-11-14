@@ -127,7 +127,7 @@ end
 // CPU data selector
 dataselector6 mcpudisel(
 	CPUDI,
-	VIDCS,		  VIDDO,
+	VIDCS & cpu_mreq, VIDDO,
 	cpu_cs_vidm,  VIDMD,
 	cpu_cs_port,  cpu_rd_port,
 	cpu_cs_mram,  cpu_rd_mram,
