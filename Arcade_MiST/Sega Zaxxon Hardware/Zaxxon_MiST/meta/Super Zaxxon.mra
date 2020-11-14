@@ -32,26 +32,26 @@
 		<part crc="bccf560c" name="1815b.u68"/>
 		<part crc="d28c628b" name="1816b.u69"/>
 
-		<group width="32">
-			<part crc="f51af375" name="1807b.u113"/>
-			<part crc="a7de021d" name="1806b.u112"/>
-			<part crc="5bfb3b04" name="1805b.u111"/>
-			<part crc="5bfb3b04" name="1805b.u111"/>
-		</group>
+		<interleave output="32">
+			<part crc="f51af375" name="1807b.u113" map="0001"/>
+			<part crc="a7de021d" name="1806b.u112" map="0010"/>
+			<part crc="5bfb3b04" name="1805b.u111" map="0100"/>
+			<part crc="5bfb3b04" name="1805b.u111" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part crc="1503ae41" name="1812e.u77"/>
-			<part crc="3b53d83f" name="1813e.u78"/>
-			<part crc="581e8793" name="1814e.u79"/>
-			<part crc="581e8793" name="1814e.u79"/>
-		</group>
+		<interleave output="32">
+			<part crc="1503ae41" name="1812e.u77" map="0001"/>
+			<part crc="3b53d83f" name="1813e.u78" map="0010"/>
+			<part crc="581e8793" name="1814e.u79" map="0100"/>
+			<part crc="581e8793" name="1814e.u79" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part crc="1503ae41" name="1812e.u77"/>
-			<part crc="3b53d83f" name="1813e.u78"/>
-			<part crc="581e8793" name="1814e.u79"/>
-			<part crc="581e8793" name="1814e.u79"/>
-		</group>
+		<interleave output="32">
+			<part crc="1503ae41" name="1812e.u77" map="0001"/>
+			<part crc="3b53d83f" name="1813e.u78" map="0010"/>
+			<part crc="581e8793" name="1814e.u79" map="0100"/>
+			<part crc="581e8793" name="1814e.u79" map="1000"/>
+		</interleave>
 
 		<part crc="15727a9f" name="pr-5168.u98"/>
 		<part crc="deaa21f7" name="pr-5167.u72"/>

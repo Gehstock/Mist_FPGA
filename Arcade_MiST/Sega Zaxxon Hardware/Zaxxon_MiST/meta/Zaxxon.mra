@@ -31,25 +31,25 @@
 		<part crc="07bf8c52" name="zaxxon_rom14.u68"/>
 		<part crc="c215edcb" name="zaxxon_rom15.u69"/>
 
-		<group width="32">
-			<part crc="6e07bb68" name="zaxxon_rom6.u113"/>
-			<part crc="0a5bce6a" name="zaxxon_rom5.u112"/>
-			<part crc="a5bf1465" name="zaxxon_rom4.u111"/>
-			<part crc="a5bf1465" name="zaxxon_rom4.u111"/>
-		</group>
+		<interleave output="32">
+			<part crc="6e07bb68" name="zaxxon_rom6.u113" map="0001"/>
+			<part crc="0a5bce6a" name="zaxxon_rom5.u112" map="0010"/>
+			<part crc="a5bf1465" name="zaxxon_rom4.u111" map="0100"/>
+			<part crc="a5bf1465" name="zaxxon_rom4.u111" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part crc="eaf0dd4b" name="zaxxon_rom11.u77"/>
-			<part crc="1c5369c7" name="zaxxon_rom12.u78"/>
-			<part crc="ab4e8a9a" name="zaxxon_rom13.u79"/>
-			<part crc="ab4e8a9a" name="zaxxon_rom13.u79"/>
-		</group>
-		<group width="32">
-			<part crc="eaf0dd4b" name="zaxxon_rom11.u77"/>
-			<part crc="1c5369c7" name="zaxxon_rom12.u78"/>
-			<part crc="ab4e8a9a" name="zaxxon_rom13.u79"/>
-			<part crc="ab4e8a9a" name="zaxxon_rom13.u79"/>
-		</group>
+		<interleave output="32">
+			<part crc="eaf0dd4b" name="zaxxon_rom11.u77" map="0001"/>
+			<part crc="1c5369c7" name="zaxxon_rom12.u78" map="0010"/>
+			<part crc="ab4e8a9a" name="zaxxon_rom13.u79" map="0100"/>
+			<part crc="ab4e8a9a" name="zaxxon_rom13.u79" map="1000"/>
+		</interleave>
+		<interleave output="32">
+			<part crc="eaf0dd4b" name="zaxxon_rom11.u77" map="0001"/>
+			<part crc="1c5369c7" name="zaxxon_rom12.u78" map="0010"/>
+			<part crc="ab4e8a9a" name="zaxxon_rom13.u79" map="0100"/>
+			<part crc="ab4e8a9a" name="zaxxon_rom13.u79" map="1000"/>
+		</interleave>
 
 		<part crc="6cc6695b" name="mro16.u76"/>
 		<part crc="deaa21f7" name="zaxxon.u72"/>
