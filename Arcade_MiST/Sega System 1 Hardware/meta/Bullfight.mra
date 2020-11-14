@@ -7,13 +7,13 @@
 	<manufacturer>Coreland / Sega</manufacturer>
 	<category>Sport</category>
 	<rbf>segasys1</rbf>
-    <switches default="FF,7E" base="8">
+	<switches default="FF,7E" base="8">
 		<dip bits="9" name="Demo Sound" ids="On,Off"/>
 		<dip bits="10,11" name="Lives" ids="Infinite,5,4,3"/>
 		<dip bits="12,13" name="Extend" ids="None,70000,50000,30000"/>
 	</switches>
 	<rom index="1">
-		<part>06</part>
+		<part>00</part>
 	</rom>
 	<rom index="0" zip="bullfgt.zip" md5="ea1314a026a422e747d3891087a63d84" type="merged|nonmerged|split">
 		<part name="epr-.129"/>

@@ -7,14 +7,16 @@
 	<manufacturer>Sega</manufacturer>
 	<category>Sport</category>
 	<rbf>segasys1</rbf>
-    <switches default="FF,7E" base="8">
-		<dip bits="9,10"   name="Lives" ids="Infinite,5,4,3"/>
-		<dip bits="11,13"  name="Bonus at" ids="Never,90k,80k,70k,60k,50k,40k,30k"/>
+	<switches default="FF,7E" base="8">
+		<dip bits="8"      name="Cabinet" ids="Upright,Cocktail"/>
+		<dip bits="9"      name="Demo Sounds" ids="On,Off"/>
+		<dip bits="10,11"  name="Time" ids="Fastest,Faster,Fast,Normal"/>
+		<dip bits="14"     name="Difficulty" ids="Hard,Easy"/>
 	</switches>
 	<rom index="1">
-		<part>06</part>
+		<part>0E</part>
 	</rom>
-	<rom index="0" zip="wmatch.zip" md5="08e27ac5ddafccaccaef721cdade2ec2" type="merged|nonmerged|split">
+	<rom index="0" zip="wmatch.zip" md5="1b67822537b11d05b6252d118ffbf985" type="merged|nonmerged|split">
 		<part name="wm.129"/>
 		<part name="wm.130"/>
 		<part name="wm.131"/>

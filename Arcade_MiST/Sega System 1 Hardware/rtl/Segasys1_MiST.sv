@@ -46,17 +46,23 @@ wire        rotate    = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend = status[5];
 
-wire  [7:0] INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireB,m_fireA,m_fireC};
-wire  [7:0] INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2B,m_fire2A,m_fire2C};
-wire  [7:0] INP2 = ~{2'b00,m_two_players, m_one_player,3'b000, m_coin1};
-//WaterMatch
-//wire  [7:0] INP0 = ~{m_left, m_right,m_up, m_down,m_left2, m_right2,m_up2, m_down2};
-//wire  [7:0] INP1 = ~{m_left3, m_right3,m_up3, m_down3,m_left4, m_right4,m_up4, m_down4};
-//wire  [7:0] INP2 = ~{m_fire2C,m_fireC,m_two_players, m_one_player,3'b000, m_coin1};
+reg   [7:0] INP0, INP1, INP2;
+always @(*) begin
+	INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireB,m_fireA,m_fireC};
+	INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2B,m_fire2A,m_fire2C};
+	INP2 = ~{2'b00,m_two_players, m_one_player,3'b000, m_coin1};
+	if (core_mod[3]) begin
+		//WaterMatch
+		INP0 = ~{m_left, m_right, m_up, m_down, m_left2,m_right2,m_up2,m_down2};
+		INP1 = ~{m_left3,m_right3,m_up3,m_down3,m_left4,m_right4,m_up4,m_down4};
+		INP2 = ~{m_fire3A | m_fire4A,m_fireA | m_fire2A,m_two_players, m_one_player,3'b000, m_coin1};
+	end
+end
+
 wire  [7:0] DSW0 = status[15: 8];
 wire  [7:0] DSW1 = status[23:16];
 
-wire  [6:0] core_mod;  // [0]=SYS1/SYS2,[1]=H/V,[2]=H256/H240
+wire  [6:0] core_mod;  // [0]=SYS1/SYS2,[1]=H/V,[2]=H256/H240,[3]=4controllers
 wire  [1:0] orientation = { 1'b0, core_mod[1] };
 
 assign LED = ~ioctl_downl;
@@ -78,6 +84,8 @@ wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
+wire  [7:0] joystick_2;
+wire  [7:0] joystick_3;
 wire        key_pressed;
 wire        key_strobe;
 wire  [7:0] key_code;
@@ -295,7 +303,7 @@ arcade_inputs inputs (
 	.rotate      ( rotate      ),
 	.orientation ( orientation ),
 	.joyswap     ( 1'b0        ),
-	.oneplayer   ( 1'b1        ),
+	.oneplayer   ( ~core_mod[3]),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
