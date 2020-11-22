@@ -1,0 +1,2 @@
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) mc6801_core.sv      ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) MC6803_gen2.sv      ]
