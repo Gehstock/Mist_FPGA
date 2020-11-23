@@ -43,10 +43,7 @@ module TimePilot84_CPU(
 	output [12:0] sub_cpu_rom_addr,
 	input   [7:0] sub_cpu_rom_do,
 	output [12:0] sp_rom_addr,
-	input  [31:0] sp_rom_do	
-//	input  [24:0] ioctl_addr,
-//	input   [7:0] ioctl_data,
-//	input         ioctl_wr
+	input  [31:0] sp_rom_do
 );
 
 //Assign active high HBlank and VBlank outputs
@@ -1357,7 +1354,7 @@ assign sub_cpu_rom_addr = sA[12:0];
 //The PCB connects these signals directly to the chip enable signals on the EPROMs at 2J (character) and 12A/13A (sprite) and
 //invert them through one inverter at 6F (character) and 13F (sprite) for the second set of character ROMs (3J) and sprite
 //ROMs (14A/15A).
-wire [7:0] charrom_D = ~n_charrom0_ce ? eprom7_D : eprom8_D;
+wire [7:0] charrom_D =  ~n_charrom0_ce ? eprom7_D : eprom8_D;
 wire [12:0] charrom_A;
 wire [7:0] eprom7_D;
 wire [7:0] eprom8_D;
@@ -1376,7 +1373,7 @@ char_rom2 u1J(
 //Sprite ROM
 //wire [15:0] spriterom_D = ~n_spriterom0_en ? {eprom11_D, eprom9_D} : {eprom12_D, eprom10_D};
 assign sp_rom_addr = spriterom_A;
-wire [15:0] spriterom_D = ~n_spriterom0_en ? sp_rom_do[15:0] : sp_rom_do[31:16];
+wire [15:0] spriterom_D =  ~n_spriterom0_en ? sp_rom_do[15:0] : sp_rom_do[31:16];
 
 //Sprite ROM 1/4
 wire [12:0] spriterom_A;

@@ -49,16 +49,15 @@ wire        service  = status[7];
 wire [1:0] orientation = 2'b11;
 
 assign 		LED = ~ioctl_downl;
-assign 		SDRAM_CLK = clock_sd;
+assign 		SDRAM_CLK = clock_48;
 assign 		SDRAM_CKE = 1;
 assign 		AUDIO_R = AUDIO_L;
 
-wire clock_48, clock_14, clock_sd, pll_locked;
+wire clock_48, clock_14, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clock_48),//49.152MHz
 	.c1(clock_14),//14.31818MHz
-	.c2(clock_sd),
 	.locked(pll_locked)
 	);
 
@@ -109,7 +108,7 @@ reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clock_sd      ),
+	.clk           ( clock_48      ),
 
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
