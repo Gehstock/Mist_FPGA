@@ -61,6 +61,7 @@ GND     |_|14         15|_| NC
 module k083
 (
 	input        CK,
+	input        CK_EN,
 	input        FLIP,
 	input        LOAD,
 	input  [7:0] DB0i, DB1i,
@@ -72,7 +73,7 @@ reg [7:0] pixel_D0_l, pixel_D0_r;
 reg [7:0] pixel_D1_l, pixel_D1_r;
 
 //Latch and shift pixel data
-always_ff @(posedge CK) begin
+always_ff @(posedge CK) if (CK_EN) begin
 	if(LOAD) begin
 		pixel_D0_l <= DB0i;
 		pixel_D1_l <= DB1i;

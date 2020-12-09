@@ -72,6 +72,8 @@ GND   |_|20         21|_| NC
 
 module k503
 (
+	input        clk,
+	input        clk_en,
 	input  [7:0] OB,
 	input  [7:0] VCNT,
 	input        H4, H8,
@@ -89,17 +91,20 @@ wire [7:0] obj_sum = OB + VCNT;
 wire obj_ctl = ~(&obj_sum[7:4]);
 
 //Sprite control
-wire sprite_ctrl = ~(~LD & ~H4 & ~H8);
+wire sprite_ctrl = ~(~LD & ~H4 & ~H8) /* synthesis keep */;
 reg ob6_lat, ob7_lat;
-always_ff @(posedge sprite_ctrl) begin
-	ob6_lat <= OB[6];
-	ob7_lat <= OB[7];
+always_ff @(posedge clk) begin
+	if (clk_en & ~sprite_ctrl) begin
+		ob6_lat <= OB[6];
+		ob7_lat <= OB[7];
+	end
 end
 
 //Latch object information
 reg [6:0] obj;
-always_ff @(posedge objdata) begin
-	obj <= {obj_ctl, ob6_lat, ob7_lat, obj_sum[3:0]};
+always_ff @(posedge clk) begin
+	if (clk_en & ~objdata)
+		obj <= {obj_ctl, ob6_lat, ob7_lat, obj_sum[3:0]};
 end
 wire obj_dat = obj[4];
 assign NE83 = obj[5];
@@ -107,7 +112,7 @@ assign OCS = obj[6];
 
 //Assign OCOL and ODAT outputs
 assign OCOL = ~(~LD & ~H4 & H8);
-wire objdata = ~(~LD & H4 & ~H8);
+wire objdata = ~(~LD & H4 & ~H8) /* synthesis keep */;
 assign ODAT = objdata;
 
 //XOR final output for R

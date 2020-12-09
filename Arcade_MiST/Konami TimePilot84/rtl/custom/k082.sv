@@ -63,25 +63,26 @@ been modelled yet.
 module k082
 (
 	input      clk,
+	input      clk_en,
 	output     n_vsync, sync,
 	output     n_hsync, //Not exposed on the original chip
 	output reg vblk = 1,
 	output     n_vblk,
 	output     h1, h2, h4, h8, h16, h32, h64, h128, h256, n_h256,
-	output     v1, v2, v4, v8, v16, v32, v64, v128
+	output     v1, v2, v4, v8, v16, v32, v64, v128,
+	output     h1_en, h2_en, h4_en, h8_en, h16_en, h32_en, h64_en, h128_en, h256_en, n_h256_en
 );
 
 reg [8:0] h_cnt = 9'd0;
 reg [8:0] v_cnt = 9'd0;
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) if (clk_en) begin
+	h_cnt <= h_cnt + 9'd1;
 	case(h_cnt)
 		48: begin
 			v_cnt <= v_cnt + 9'd1;
-			h_cnt <= h_cnt + 9'd1;
 		end
 		176: begin
-			h_cnt <= h_cnt + 9'd1;
 			case(v_cnt)
 				16: begin
 					vblk <= 0;
@@ -100,7 +101,7 @@ always_ff @(posedge clk) begin
 			endcase
 		end
 		511: h_cnt <= 9'd128;
-		default: h_cnt <= h_cnt + 9'd1;
+		default: ;
 	endcase
 end
 
@@ -119,6 +120,17 @@ assign h64 = h_cnt[6];
 assign h128 = h_cnt[7];
 assign h256 = ~h_cnt[8];
 assign n_h256 = h_cnt[8];
+
+assign h1_en = !h_cnt[0];
+assign h2_en = h_cnt[1:0] == 2'b01;
+assign h4_en = h_cnt[2:0] == 3'b011;
+assign h8_en = h_cnt[3:0] == 4'b0111;
+assign h16_en = h_cnt[4:0] == 5'b01111;
+assign h32_en = h_cnt[5:0] == 6'b011111;
+assign h64_en = h_cnt[6:0] == 7'b0111111;
+assign h128_en = h_cnt[7:0] == 8'b01111111;
+assign h256_en = h_cnt[8:0] == 9'b111111111;
+assign n_h256_en = h_cnt[8:0] == 9'b011111111;
 
 assign v1 = v_cnt[0];
 assign v2 = v_cnt[1];

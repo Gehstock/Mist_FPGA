@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		TimePilot84_assignment_defaults.qdf
+#		TP84_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -41,38 +41,8 @@
 # ========================
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_MiST.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_CPU.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_SND.sv
-set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/rom/cpu1_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/cpu2_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/cpu3_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/cpu4_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/sub_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/snd_rom.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/char_rom1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/char_rom2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/spr_rom1.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/spr_rom2.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/spr_rom3.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/spr_rom4.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/pal_b.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/pal_g.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/pal_r.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/char_lut.vhd
-set_global_assignment -name VHDL_FILE rtl/rom/sprite_lut.vhd
-set_global_assignment -name QIP_FILE rtl/custom/tp84_custom.qip
-set_global_assignment -name QIP_FILE rtl/tp84_sound.qip
-set_global_assignment -name QIP_FILE rtl/ttl/tp84_logic.qip
-set_global_assignment -name QIP_FILE ../../../Mist_FPGA/common/CPU/T80/T80.qip
-set_global_assignment -name QIP_FILE ../../../Mist_FPGA/common/mist/mist.qip
-set_global_assignment -name VHDL_FILE ../../../Mist_FPGA/common/CPU/MC6809/cpu09l_128a.vhd
 
 # Pin & Location Assignments
 # ==========================
@@ -184,7 +154,7 @@ set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 # SignalTap II Assignments
 # ========================
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/zaxx.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/snd.stp
 
 # Power Estimation Assignments
 # ============================
@@ -199,57 +169,79 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
 # ------------------------------
-# start ENTITY(TimePilot84_MiST)
+# start ENTITY(TP84_MiST)
 
 	# Pin & Location Assignments
 	# ==========================
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
-	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
-	set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
-	set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 
 	# Fitter Assignments
 	# ==================
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(TimePilot84_MiST)
+# end ENTITY(TP84_MiST)
 # ----------------------------
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_MiST.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_CPU.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/TimePilot84_SND.sv
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name QIP_FILE rtl/ram_rom/tp84_ram_rom.qip
+set_global_assignment -name QIP_FILE rtl/custom/tp84_custom.qip
+set_global_assignment -name QIP_FILE rtl/tp84_sound.qip
+set_global_assignment -name VHDL_FILE ../../common/CPU/MC6809/cpu09l_128a.vhd
+set_global_assignment -name VERILOG_FILE ../../common/CPU/MC6809/mc6809is.v
+set_global_assignment -name QIP_FILE ../../common/Sound/sn76489/sn76489.qip
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name SIGNALTAP_FILE output_files/char.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/cpu.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/sdram.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/spr.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/snd.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

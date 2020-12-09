@@ -1,7 +1,10 @@
 //============================================================================
 // 
 //  Time Pilot '84 sound PCB replica
+//  Based on the simulation model
 //  Copyright (C) 2020 Ace, ElectronAsh & Enforcer
+//
+//  Completely rewritten using fully syncronous logic by Gyorgy Szombathelyi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -38,45 +41,62 @@ module TimePilot84_SND
 	input                ioen, in5,
 	input                cpubrd_A5, cpubrd_A6,
 	input          [7:0] cpubrd_Din,
+
 	output         [7:0] sndbrd_Dout,
-	output signed [15:0] sound
+	output signed [15:0] sound,
+
+	input                ep6_cs_i,
+	input         [24:0] ioctl_addr,
+	input          [7:0] ioctl_data,
+	input                ioctl_wr
 	//The sound board contains a video passthrough but video will instead be tapped
 	//straight from the CPU board implementation (this passthrough is redundant for
 	//an FPGA implementation)
 );
 
-//Clock division for jt49_dcrm2
-wire dcrm_cen, clk_12m;
-always_ff @(posedge clk_49m) begin
-	reg [6:0] div;
-	div <= div + 1'd1;
-	clk_12m <= div[1];
-	dcrm_cen <= !div[6:0];
+wire n_reset = reset;
+
+reg [7:0] ctrl_dip_mux;
+
+always @(*) begin
+	case({cpubrd_A6, cpubrd_A5})
+		2'b00: ctrl_dip_mux = { 1'b1, 1'b1, 1'b1, start_buttons[1], start_buttons[0], btn_service, coin[1:0] };
+		2'b01: ctrl_dip_mux = { 1'b1, p1_buttons[2], p1_buttons[1], p1_buttons[0], p1_joystick[1], p1_joystick[0], p1_joystick[3], p1_joystick[2] };
+		2'b10: ctrl_dip_mux = { 1'b1, 1'b1, p2_buttons[1], p2_buttons[0], p2_joystick[1], p2_joystick[0], p2_joystick[3], p2_joystick[2] };
+		2'b11: ctrl_dip_mux = dip_sw[7:0];
+		default: ;
+	endcase
 end
+
+//Multiplex data output to CPU board
+assign sndbrd_Dout =
+		~ioen    ? ctrl_dip_mux:
+		~in5     ? dip_sw[15:8]:
+		8'hFF;
 
 //Remove DC offset from SN76489s (uses jt49_dcrm2 from JT49 by Jotego)
 wire signed [15:0] sn0_dcrm, sn2_dcrm, sn3_dcrm;
 jt49_dcrm2 #(16) dcrm_sn0
 (
-	.clk(clk_12m),
-	.cen(dcrm_cen),
-	.rst(~reset),
+	.clk(clk_14m),
+	.cen(1'b1),
+	.rst(n_reset),
 	.din({8'd0, sn0_unfilt}),
 	.dout(sn0_dcrm)
 );
 jt49_dcrm2 #(16) dcrm_sn2
 (
-	.clk(clk_12m),
-	.cen(dcrm_cen),
-	.rst(~reset),
+	.clk(clk_14m),
+	.cen(1'b1),
+	.rst(n_reset),
 	.din({8'd0, sn2_unfilt}),
 	.dout(sn2_dcrm)
 );
 jt49_dcrm2 #(16) dcrm_sn3
 (
-	.clk(clk_12m),
-	.cen(dcrm_cen),
-	.rst(~reset),
+	.clk(clk_14m),
+	.cen(1'b1),
+	.rst(n_reset),
 	.din({8'd0, sn3_unfilt}),
 	.dout(sn3_dcrm)
 );
@@ -89,40 +109,40 @@ wire signed [15:0] sn0_light, sn0_med, sn0_heavy;
 wire signed [15:0] sn0_sound, sn1_sound, sn2_sound, sn3_sound;
 tp84_lpf_light sn0_lpf_light
 (
-	.clk(clk_12m),
-	.reset(~reset),
+	.clk(clk_14m),
+	.reset(n_reset),
 	.in(sn0_dcrm),
 	.out(sn0_light)
 );
 
 tp84_lpf_medium sn0_lpf_medium
 (
-	.clk(clk_12m),
-	.reset(~reset),
+	.clk(clk_14m),
+	.reset(n_reset),
 	.in(sn0_dcrm),
 	.out(sn0_med)
 );
 
 tp84_lpf_heavy sn0_lpf_heavy
 (
-	.clk(clk_12m),
-	.reset(~reset),
+	.clk(clk_14m),
+	.reset(n_reset),
 	.in(sn0_dcrm),
 	.out(sn0_heavy)
 );
 
 tp84_lpf_light sn2_lpf
 (
-	.clk(clk_12m),
-	.reset(~reset),
+	.clk(clk_14m),
+	.reset(n_reset),
 	.in(sn2_dcrm),
 	.out(sn2_filt)
 );
 
 tp84_lpf_light sn3_lpf
 (
-	.clk(clk_12m),
-	.reset(~reset),
+	.clk(clk_14m),
+	.reset(n_reset),
 	.in(sn3_dcrm),
 	.out(sn3_filt)
 );
@@ -143,19 +163,24 @@ assign sn3_sound = sn3_filter ? sn3_filt : sn3_dcrm;
 //externally)
 assign sound = (sn0_sound + sn2_sound + sn3_sound) * 16'd176;
 
-//Multiplex data output to CPU board
-assign sndbrd_Dout =
-		~ioen    ? ctrl_dip_mux:
-		~in5     ? dip_sw[15:8]:
-		8'hFF;
+//Clock division
+reg        clk_3m58_en;
+reg        clk_1m79_en;
+reg  [7:0] timer;
+always @(posedge clk_14m) begin
+	reg [7:0] cnt;
 
-//------------------------------------------------- Chip-level logic modelling -------------------------------------------------//
+	cnt <= cnt + 1'd1;
+	clk_3m58_en <= cnt[1:0] == 2'b00;
+	clk_1m79_en <= cnt[2:0] == 3'b000;
+	if (cnt == 0) timer <= timer + 1'd1;
+end
 
 //Z80 RAM (lower 4 bits)
 wire [7:0] sndram_D;
 spram #(4, 10) A2
 (
-	.clk(clk_3m58),
+	.clk(clk_14m),
 	.we(~n_wr & ~n_sndram_en),
 	.addr(sound_A[9:0]),
 	.data(sound_Dout[3:0]),
@@ -165,7 +190,7 @@ spram #(4, 10) A2
 //Z80 RAM (upper 4 bits)
 spram #(4, 10) A3
 (
-	.clk(clk_3m58),
+	.clk(clk_14m),
 	.we(~n_wr & ~n_sndram_en),
 	.addr(sound_A[9:0]),
 	.data(sound_Dout[7:4]),
@@ -176,10 +201,17 @@ spram #(4, 10) A3
 
 //Sound ROM
 wire [7:0] eprom6_D;
-snd_rom A6(
-	.clk(clk_3m58),
-	.addr(sound_A[12:0]),
-	.data(eprom6_D)
+
+eprom_6 A6
+(
+	.ADDR(sound_A[12:0]),
+	.CLK(clk_14m),
+	.DATA(eprom6_D),
+	.ADDR_DL(ioctl_addr),
+	.CLK_DL(clk_49m),
+	.DATA_IN(ioctl_data),
+	.CS_DL(ep6_cs_i),
+	.WR(ioctl_wr)
 );
 
 //Sound CPU (Zilog Z80 - uses T80s version of the T80 soft core)
@@ -188,9 +220,9 @@ wire [7:0] sound_Dout;
 wire n_m1, n_mreq, n_iorq, n_rd, n_wr, n_rfsh;
 T80s A9
 (
-	.RESET_n(z80_n_reset),
-	.CLK(clk_3m58),
-	.CEN(1),
+	.RESET_n(n_reset),
+	.CLK(clk_14m),
+	.CEN(clk_3m58_en),
 	.INT_n(s_int),
 	.M1_n(n_m1),
 	.MREQ_n(n_mreq),
@@ -202,115 +234,98 @@ T80s A9
 	.DI(sound_Din),
 	.DO(sound_Dout)
 );
+
+//Address decoder 1/2
+wire n_dec2_en, filter_latch, n_timer_en, n_cpubrd_en, n_sndram_en, n_sndrom1_en, n_sndrom0_en;
+always @(*) begin
+	n_dec2_en = 1;
+	filter_latch = 1;
+	n_timer_en = 1;
+	n_cpubrd_en = 1;
+	n_sndram_en = 1;
+	n_sndrom1_en = 1;
+	n_sndrom0_en = 1;
+	if (!((n_rd & n_wr) | n_mreq | !n_rfsh))
+		case(sound_A[15:13])
+			3'b000: n_sndrom0_en = 0;
+			3'b001: n_sndrom1_en = 0;
+			3'b010: n_sndram_en = 0;
+			3'b011: n_cpubrd_en = 0;
+			3'b100: n_timer_en = 0;
+			3'b101: filter_latch = 0;
+			3'b110: n_dec2_en = 0;
+			default :;
+		endcase
+end
+
+//Address decoder 2/2
+wire n_sn0_en, n_sn2_en, n_sn3_en, sn_latch;
+always @(*) begin
+	n_sn0_en = 1;
+	n_sn2_en = 1;
+	n_sn3_en = 1;
+	sn_latch = 1;
+	if (!n_dec2_en)
+		case(sound_A[2:0])
+			3'b000: sn_latch = 0;
+			3'b001: n_sn0_en = 0;
+			3'b011: n_sn2_en = 0;
+			3'b100: n_sn3_en = 0;
+			default: ;
+		endcase
+end
+
 //Multiplex data input to Z80
 wire [7:0] sound_Din =
 		~n_sndrom0_en         ? eprom6_D:
 		(~n_sndram_en & n_wr) ? sndram_D:
 		~n_cpubrd_en          ? cpubrd_Dlatch:
-		~n_timer_en           ? {4'hF, timer}:
+		~n_timer_en           ? {4'hF, timer[7:4]}:
 		8'hFF;
 
 //Latch data coming in from CPU board
 wire [7:0] cpubrd_Dlatch;
-ls374 B4
-(
-	.d(cpubrd_Din),
-	.clk(sound_data),
-	.out_ctl(1'b0), //Directly modelled, keep permanently enabled
-	.q(cpubrd_Dlatch)
-);
-
-//Address decoder 1/2
-wire n_dec2_en, filter_latch, n_timer_en, n_cpubrd_en, n_sndram_en, n_sndrom1_en, n_sndrom0_en;
-ls138 B7
-(
-	.n_e1(n_rw),
-	.n_e2(n_mreq),
-	.e3(n_rfsh),
-	.a(sound_A[15:13]),
-	.o({1'bZ, n_dec2_en, filter_latch, n_timer_en, n_cpubrd_en, n_sndram_en, n_sndrom1_en, n_sndrom0_en})
-);
-
-//Generate the following signals:
-//Inverted reset, Z80 IRQ clear, reset for Z80, NOR of IORQ and M1
-wire reset_h, irq_clr, n_iorq_m1, z80_n_reset;
-ls02 B9
-(
-	.a1(reset),
-	.b1(1'b0),
-	.y1(reset_h),
-	.a2(reset_h),
-	.b2(n_iorq_m1),
-	.y2(irq_clr),
-	.a3(n_iorq),
-	.b3(n_m1),
-	.y3(n_iorq_m1),
-	.a4(reset_h),
-	.b4(1'b0),
-	.y4(z80_n_reset)
-);
+always @(posedge clk_49m) begin
+	reg sound_data_d, sound_data_d2, sound_data_d3;
+	// synchronize between the cpu board and the sound board clock domains
+	{sound_data_d3, sound_data_d2, sound_data_d} <= {sound_data_d2, sound_data_d, sound_data};
+	if (sound_data_d3 & !sound_data_d2) cpubrd_Dlatch <= cpubrd_Din;
+end
 
 //Latch low-pass filter control lines
+//Latch data from Z80 to SN76489s
 wire [1:0] sn0_filter;
 wire sn2_filter, sn3_filter;
-ls174 C7
-(
-	.d({sound_A[7], sound_A[8], 2'b00, sound_A[3], sound_A[4]}),
-	.clk(filter_latch),
-	.mr(1'b1),
-	.q({sn2_filter, sn3_filter, 2'bZZ, sn0_filter[0], sn0_filter[1]})
-);
+wire [7:0] sn_D;
 
-//AND together read and write outputs from Z80
-wire n_rw;
-ls08 C8
-(
-	.a4(n_rd),
-	.b4(n_wr),
-	.y4(n_rw)
-);
+always @(posedge clk_49m) begin
+	if (!filter_latch) {sn2_filter, sn3_filter, sn0_filter[0], sn0_filter[1]} <= {sound_A[7], sound_A[8], sound_A[3], sound_A[4]}; // C7
+	if (!sn_latch) sn_D <= sound_Dout;  // E8
+end
 
 //Generate interrupts for the Z80
-//Second half of chip unused
-wire s_int;
-ls74 C9
-(
-	.n_pre1(1'b1),
-	.n_clr1(irq_clr),
-	.clk1(sound_on),
-	.d1(1'b1),
-	.n_q1(s_int)
-);
+reg s_int;
+always @(posedge clk_49m) begin
+	reg sound_on_d3, sound_on_d2, sound_on_d;
+	{sound_on_d3, sound_on_d2, sound_on_d} <= {sound_on_d2, sound_on_d, sound_on};
+	if (!n_reset) s_int <= 1;
+	else if (!(n_iorq | n_m1)) s_int <= 1;
+	else if (sound_on_d3 & !sound_on_d2) s_int <= 0;
+end
 
-//Multiplex P1 button 3 and DIP switch bank 1 switches 7 and 8 (pull all other inputs high)
-wire [7:0] ctrl_dip_mux;
-ls253 D2
-(
-	.i_a({dip_sw[6], 1'b1, p1_buttons[2], 1'b1}),
-	.i_b({dip_sw[7], 3'b111}),
-	.n_e(2'b00), //Directly modelled on CPU board, keep permanently enabled
-	.s({cpubrd_A6, cpubrd_A5}),
-	.z(ctrl_dip_mux[7:6])
-);
-
-//Multiplex P1/P2 joystick left/right, coin inputs and DIP switch bank 1 switches 2 and 1
-ls253 E2
-(
-	.i_a({dip_sw[1], p2_joystick[2], p1_joystick[2], coin[0]}),
-	.i_b({dip_sw[0], p2_joystick[3], p1_joystick[3], coin[1]}),
-	.n_e(2'b00), //Directly modelled on CPU board, keep permanently enabled
-	.s({cpubrd_A6, cpubrd_A5}),
-	.z(ctrl_dip_mux[1:0])
-);
+//Generate chip enables for all SN76489s
+wire n_sn0_ce = sn0_ready & n_sn0_en;
+wire n_sn2_ce = sn2_ready & n_sn2_en;
+wire n_sn3_ce = sn3_ready & n_sn3_en;
 
 //Sound chip 1 (Texas Instruments SN76489 - uses Arnim Laeuger's SN76489 implementation with bugfixes)
 wire [7:0] sn0_unfilt;
 wire sn0_ready;
 sn76489_top E5
 (
-	.clock_i(clk_1m79),
-	.clock_en_i(1),
-	.res_n_i(reset),
+	.clock_i(clk_14m),
+	.clock_en_i(clk_1m79_en),
+	.res_n_i(n_reset),
 	.ce_n_i(n_sn0_ce),
 	.we_n_i(sn0_ready),
 	.ready_o(sn0_ready),
@@ -323,9 +338,9 @@ wire [7:0] sn2_unfilt;
 wire sn2_ready;
 sn76489_top E6
 (
-	.clock_i(clk_1m79),
-	.clock_en_i(1),
-	.res_n_i(reset),
+	.clock_i(clk_14m),
+	.clock_en_i(clk_1m79_en),
+	.res_n_i(n_reset),
 	.ce_n_i(n_sn2_ce),
 	.we_n_i(sn2_ready),
 	.ready_o(sn2_ready),
@@ -338,105 +353,14 @@ wire [7:0] sn3_unfilt;
 wire sn3_ready;
 sn76489_top E7
 (
-	.clock_i(clk_1m79),
-	.clock_en_i(1),
-	.res_n_i(reset),
+	.clock_i(clk_14m),
+	.clock_en_i(clk_1m79_en),
+	.res_n_i(n_reset),
 	.ce_n_i(n_sn3_ce),
 	.we_n_i(sn3_ready),
 	.ready_o(sn3_ready),
 	.d_i(sn_D),
 	.aout_o(sn3_unfilt)
-);
-
-//Latch data from Z80 to SN76489s
-wire [7:0] sn_D;
-ls374 E8
-(
-	.d({sound_Dout[4], sound_Dout[7], sound_Dout[2:0], sound_Dout[3], sound_Dout[6:5]}),
-	.clk(sn_latch),
-	.out_ctl(1'b0),
-	.q({sn_D[4], sn_D[7], sn_D[2:0], sn_D[3], sn_D[6:5]})
-);
-
-//Z80 timer
-wire [3:0] timer;
-wire tmr2;
-ls393 E9
-(
-	.clk1(tmr_clk),
-	.clk2(tmr2),
-	.clr1(1'b0),
-	.clr2(1'b0),
-	.q1({tmr2, 3'bZZZ}),
-	.q2(timer)
-);
-
-//Multiplex P1/P2 joystick up/down, P1 start button, service credit and DIP switch bank 1
-//switches 4 and 3
-ls253 F2
-(
-	.i_a({dip_sw[2], p2_joystick[0], p1_joystick[0], btn_service}),
-	.i_b({dip_sw[3], p2_joystick[1], p1_joystick[1], start_buttons[0]}),
-	.n_e(2'b00), //Directly modelled on CPU board, keep permanently enabled
-	.s({cpubrd_A6, cpubrd_A5}),
-	.z(ctrl_dip_mux[3:2])
-);
-
-//Generate chip enables for all SN76489s
-wire n_sn0_ce, n_sn2_ce, n_sn3_ce;
-ls08 F7
-(
-	.a1(sn3_ready),
-	.b1(n_sn3_en),
-	.y1(n_sn3_ce),
-	.a3(n_sn0_en),
-	.b3(sn0_ready),
-	.y3(n_sn0_ce),
-	.a4(sn2_ready),
-	.b4(n_sn2_en),
-	.y4(n_sn2_ce)
-);
-
-//Address decoder 2/2
-wire n_sn0_en, n_sn2_en, n_sn3_en, sn_latch;
-ls138 F8
-(
-	.n_e1(n_dec2_en),
-	.n_e2(1'b0),
-	.e3(1'b1),
-	.a(sound_A[2:0]),
-	.o({3'bZZZ, n_sn3_en, n_sn2_en, 1'bZ, n_sn0_en, sn_latch})
-);
-
-//Clock division
-wire div2, clk_3m58, clk_1m79, tmr_clk;
-ls393 F9
-(
-	.clk1(n_clk_14m),
-	.clk2(div2),
-	.clr1(1'b0),
-	.clr2(1'b0),
-	.q1({div2, clk_1m79, clk_3m58, 1'bZ}),
-	.q2({tmr_clk, 3'bZZZ})
-);
-
-//Multiplex P2 start button, player buttons 1/2 and DIP switch bank 1 switches 6 and 5
-ls253 G1
-(
-	.i_a({dip_sw[4], p2_buttons[0], p1_buttons[0], start_buttons[1]}),
-	.i_b({dip_sw[5], p2_buttons[1], p1_buttons[1], 1'b1}),
-	.n_e(2'b00), //Directly modelled on CPU board, keep permanently enabled
-	.s({cpubrd_A6, cpubrd_A5}),
-	.z(ctrl_dip_mux[5:4])
-);
-
-//Invert 14.318181MHz clock for division with the 74LS393 at F9 (the 74LS393 works on the falling edge
-//of an incoming clock)
-wire n_clk_14m;
-ls04 G9
-(
-	.a3(clk_14m),
-	.y3(n_clk_14m)
 );
 
 endmodule
