@@ -28,18 +28,20 @@ module data_io
 	input             SPI_SS2,
 	input             SPI_SS4,
 	input             SPI_DI,
-	input             SPI_DO, // yes, SPI_DO is input when SS4 active
+	inout reg         SPI_DO,
 
 	input             clkref_n, // assert ioctl_wr one cycle after clkref stobe (negative active)
 
 	// ARM -> FPGA download
 	output reg        ioctl_download = 0, // signal indicating an active download
+	output reg        ioctl_upload = 0,   // signal indicating an active upload
 	output reg  [7:0] ioctl_index,        // menu index used to upload the file ([7:6] - extension index, [5:0] - menu index)
 	                                      // Note: this is also set for user_io mounts.
 	                                      // Valid when ioctl_download = 1 or when img_mounted strobe is active in user_io.
 	output reg        ioctl_wr,           // strobe indicating ioctl_dout valid
 	output reg [24:0] ioctl_addr,
 	output reg  [7:0] ioctl_dout,
+	input       [7:0] ioctl_din,
 	output reg [23:0] ioctl_fileext,      // file extension
 	output reg [31:0] ioctl_filesize      // file size
 );
@@ -55,18 +57,34 @@ reg        rclk   = 0;
 reg        rclk2  = 0;
 reg        addr_reset = 0;
 reg        downloading_reg = 0;
+reg        uploading_reg = 0;
 
 localparam DIO_FILE_TX      = 8'h53;
 localparam DIO_FILE_TX_DAT  = 8'h54;
 localparam DIO_FILE_INDEX   = 8'h55;
 localparam DIO_FILE_INFO    = 8'h56;
+localparam DIO_FILE_RX      = 8'h57;
+localparam DIO_FILE_RX_DAT  = 8'h58;
 
 // data_io has its own SPI interface to the io controller
+always@(negedge SPI_SCK or posedge SPI_SS2) begin : SPI_TRANSMITTER
+	reg [7:0] dout_r;
+
+	if(SPI_SS2) begin
+		SPI_DO <= 1'bZ;
+	end else begin
+
+		if (cnt == 15) dout_r <= ioctl_din;
+		SPI_DO <= dout_r[~cnt[2:0]];
+	end
+end
+
+reg  [7:0] cmd;
+reg  [3:0] cnt;
+reg  [5:0] bytecnt;
+
 always@(posedge SPI_SCK, posedge SPI_SS2) begin : SPI_RECEIVER
 	reg  [6:0] sbuf;
-	reg  [7:0] cmd;
-	reg  [3:0] cnt;
-	reg  [5:0] bytecnt;
 	reg [24:0] addr;
 
 	if(SPI_SS2) begin
@@ -95,9 +113,24 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin : SPI_RECEIVER
 			end
 		end
 
+		if((cmd == DIO_FILE_RX) && (cnt == 15)) begin
+			// prepare
+			if(SPI_DI) begin
+				addr_reset <= ~addr_reset;
+				uploading_reg <= 1;
+			end else begin
+				uploading_reg <= 0;
+			end
+		end
+
 		// command 0x54: UIO_FILE_TX
 		if((cmd == DIO_FILE_TX_DAT) && (cnt == 15)) begin
 			data_w <= {sbuf, SPI_DI};
+			rclk <= ~rclk;
+		end
+
+		// command 0x57: UIO_FILE_RX
+		if((cmd == DIO_FILE_RX_DAT) && (cnt == 15)) begin
 			rclk <= ~rclk;
 		end
 
@@ -162,7 +195,7 @@ always@(posedge clk_sys) begin : DATA_OUT
 	reg rclk2D, rclk2D2;
 	reg addr_resetD, addr_resetD2;
 
-	reg wr_int, wr_int_direct;
+	reg wr_int, wr_int_direct, rd_int;
 	reg [24:0] addr;
 	reg [31:0] filepos;
 
@@ -179,7 +212,13 @@ always@(posedge clk_sys) begin : DATA_OUT
 		wr_int_direct <= 0;
 	end
 
+	if (!uploading_reg) begin
+		ioctl_upload <= 0;
+		rd_int <= 0;
+	end
+
 	if (~clkref_n) begin
+		rd_int <= 0;
 		wr_int <= 0;
 		wr_int_direct <= 0;
 		if (wr_int || wr_int_direct) begin
@@ -188,17 +227,25 @@ always@(posedge clk_sys) begin : DATA_OUT
 			addr <= addr + 1'd1;
 			ioctl_addr <= addr;
 		end
+		if (rd_int) begin
+			ioctl_addr <= ioctl_addr + 1'd1;
+		end
 	end
 
 	// detect transfer start from the SPI receiver
 	if(addr_resetD ^ addr_resetD2) begin
 		addr <= START_ADDR;
+		ioctl_addr <= START_ADDR;
 		filepos <= 0;
-		ioctl_download <= 1;
+		ioctl_download <= downloading_reg;
+		ioctl_upload <= uploading_reg;
 	end
 
 	// detect new byte from the SPI receiver
-	if (rclkD ^ rclkD2)   wr_int <= 1;
+	if (rclkD ^ rclkD2) begin
+		wr_int <= downloading_reg;
+		if (uploading_reg) rd_int <= uploading_reg;
+	end
 	if (rclk2D ^ rclk2D2 && filepos != ioctl_filesize) begin
 		filepos <= filepos + 1'd1;
 		wr_int_direct <= 1;
