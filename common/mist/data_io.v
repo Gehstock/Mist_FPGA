@@ -73,7 +73,8 @@ always@(negedge SPI_SCK or posedge SPI_SS2) begin : SPI_TRANSMITTER
 	if(SPI_SS2) begin
 		SPI_DO <= 1'bZ;
 	end else begin
-		{SPI_DO, dout_r} <= (cnt == 15) ? {dout_r[7], ioctl_din} : {dout_r, 1'b0};
+		if (cnt == 15) dout_r <= ioctl_din;
+		SPI_DO <= dout_r[~cnt[2:0]];
 	end
 end
 
