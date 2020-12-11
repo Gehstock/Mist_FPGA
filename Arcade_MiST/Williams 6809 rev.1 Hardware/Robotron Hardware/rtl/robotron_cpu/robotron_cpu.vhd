@@ -40,6 +40,7 @@ entity robotron_cpu is
         blitter_sc2      : in    std_logic;
         sinistar         : in    std_logic;
         speedball        : in    std_logic;
+        pause            : in    std_logic;
         -- MC6809 signals
         A                : in    std_logic_vector(15 downto 0);
         Dout             : in    std_logic_vector(7 downto 0);
@@ -1017,7 +1018,7 @@ begin
             -- on Q falling edge. Present once per processor clock,
             -- on Q rising edge -- just because.
             RESET_N <= not mpu_reset;
-            HALT_N <= not mpu_halt;
+            HALT_N <= not (mpu_halt or pause);
             IRQ_N <= not mpu_irq;
             FIRQ_N <= not mpu_firq;
             NMI_N <= not mpu_nmi;

@@ -35,6 +35,7 @@ entity robotron_soc is
 port (
 	clock            : in    std_logic; -- 12MHz
 	clock_snd        : in    std_logic; -- 0.89MHz
+	pause            : in    std_logic;
 
 	-- Cellular RAM / StrataFlash
 	MemOE            : out   std_logic;
@@ -172,6 +173,7 @@ port map (
 	blitter_sc2      => blitter_sc2,
 	sinistar         => sinistar,
 	speedball        => speedball,
+	pause            => pause,
 	A                => cpu_a,
 	Dout             => cpu_dout,
 	Din              => cpu_din,

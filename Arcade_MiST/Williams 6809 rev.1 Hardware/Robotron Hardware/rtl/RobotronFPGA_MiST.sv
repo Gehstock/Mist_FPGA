@@ -42,13 +42,14 @@ module RobotronFPGA_MiST(
 `define CORE_NAME "ROBOTRON"
 
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
 	"O7,Auto up,Off,On;",
 	"T8,Advance;",
+	"R1024,Save settings;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -263,10 +264,12 @@ user_io(
 	);
 
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
 /*
 ROM Structure:
@@ -282,14 +285,18 @@ data_io data_io (
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 
 reg         port1_req;
+wire [15:0] port1_do;
 wire [23:1] mem_addr;
 wire [15:0] mem_do;
 wire [15:0] mem_di;
@@ -316,7 +323,7 @@ sdram #(.MHZ(96)) sdram(
 	.port1_ds      ( 2'b11 ),
 	.port1_we      ( ioctl_downl ),
 	.port1_d       ( {ioctl_dout[7:4], ioctl_dout[7:4], ioctl_dout[3:0], ioctl_dout[3:0]} ),
-	.port1_q       ( ),
+	.port1_q       ( port1_do ),
 
 	// CPU/video access
 	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : sdram_addr ),
@@ -333,16 +340,30 @@ sdram #(.MHZ(96)) sdram(
 wire [17:1] sdram_addr = ~romcs ? {1'b0, mem_addr[16], ~mem_addr[16] & mem_addr[15], mem_addr[14:1]} : { 1'b1, mem_addr[16:1] };
 
 // IOCTL address to SDRAM address:
-// D000-D3FF -> 1CC00-1CFFF (CMOS), otherwise direct mapping
+// D000-D3FF (ROM) or 000-3FFF (RAM) -> 1CC00-1CFFF (CMOS), otherwise direct mapping
 
-wire [22:0] downl_addr = (ioctl_addr[22:10] == { 7'h0, 4'hD, 2'b00 }) ? { 1'b1, 4'hC, 2'b11, ioctl_addr[9:0] } : ioctl_addr[22:0];
+wire [22:0] downl_addr = 
+  ((ioctl_index == 0 && ioctl_addr[22:10] == { 7'h0, 4'hD, 2'b00 }) || ioctl_index == 8'hff) ? { 1'b1, 4'hC, 2'b11, ioctl_addr[9:0] } :
+	ioctl_addr[22:0];
+
+assign ioctl_din = { port1_do[11:8], port1_do[3:0] };
 
 always @(posedge clk_mem) begin
 	reg        ioctl_wr_last = 0;
+	reg  [9:0] cmos_addr;
+	reg        ioctl_upl_d;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
+			port1_req <= ~port1_req;
+		end
+	end
+
+	ioctl_upl_d <= ioctl_upl;
+	cmos_addr <= ioctl_addr[9:0];
+	if (ioctl_upl) begin
+		if (cmos_addr != ioctl_addr[9:0] || !ioctl_upl_d) begin
 			port1_req <= ~port1_req;
 		end
 	end
@@ -378,7 +399,8 @@ robotron_soc robotron_soc (
 
 	.blitter_sc2 ( blitter_sc2 ),
 	.sinistar    ( sinistar    ),
-	.speedball	 ( speedball	),
+	.speedball   ( speedball   ),
+	.pause       ( ioctl_upl   ),
 	.BTN         ( BTN         ),
 	.SIN_FIRE    ( ~m_fireA & ~m_fire2A ),
 	.SIN_BOMB    ( ~m_fireB & ~m_fire2B ),
@@ -403,7 +425,7 @@ robotron_soc robotron_soc (
 	.dl_clock    ( clk_mem  ),
 	.dl_addr     ( ioctl_addr[16:0] ),
 	.dl_data     ( ioctl_dout ),
-	.dl_wr       ( ioctl_wr )
+	.dl_wr       ( ioctl_wr && ioctl_index == 0 )
 );
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
