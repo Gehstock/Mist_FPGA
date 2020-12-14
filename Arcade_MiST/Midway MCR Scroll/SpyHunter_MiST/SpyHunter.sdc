@@ -88,11 +88,11 @@ set_input_delay -clock [get_clocks $sdram_clk] -reference_pin [get_ports {SDRAM_
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}] 1.000 [get_ports {SPI_DO}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $sys_clk]  1.000 [get_ports {AUDIO_L}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $sys_clk]  1.000 [get_ports {AUDIO_R}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $sys_clk]  1.000 [get_ports {LED}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $sys_clk]  1.000 [get_ports {VGA_*}]
+set_output_delay -clock [get_clocks {SPI_SCK}] 1.000 [get_ports {SPI_DO}]
+set_output_delay -clock [get_clocks $sys_clk]  1.000 [get_ports {AUDIO_L}]
+set_output_delay -clock [get_clocks $sys_clk]  1.000 [get_ports {AUDIO_R}]
+set_output_delay -clock [get_clocks $sys_clk]  1.000 [get_ports {LED}]
+set_output_delay -clock [get_clocks $sys_clk]  1.000 [get_ports {VGA_*}]
 
 set_output_delay -clock [get_clocks $sdram_clk] -reference_pin [get_ports {SDRAM_CLK}] -max 1.5 [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
 set_output_delay -clock [get_clocks $sdram_clk] -reference_pin [get_ports {SDRAM_CLK}] -min -0.8 [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
@@ -115,6 +115,9 @@ set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks 
 
 set_multicycle_path -to {VGA_*[*]} -setup 2
 set_multicycle_path -to {VGA_*[*]} -hold 1
+
+set_multicycle_path -from [get_clocks $sys_clk] -to [get_clocks $sdram_clk] -setup 2
+set_multicycle_path -from [get_clocks $sys_clk] -to [get_clocks $sdram_clk] -hold 1
 
 #**************************************************************
 # Set Maximum Delay
