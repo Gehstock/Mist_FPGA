@@ -3,6 +3,8 @@
 //  Time Pilot '84 top-level module
 //  Copyright (C) 2020 Ace
 //
+//  Completely rewritten using fully syncronous logic by Gyorgy Szombathelyi
+//
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -39,22 +41,56 @@ module TimePilot84
 	output               video_hblank, video_vblank,
 	output         [3:0] video_r, video_g, video_b,
 	output signed [15:0] sound,
-	
+
 	input                is_set3, //Flag to remap primary CPU address space for Time Pilot '84 (Set 3)
-	output 		  [15:0] main_cpu_rom_addr,
-	input   			[7:0] main_cpu_rom_do,
-	output 		  [12:0] sub_cpu_rom_addr,
-	input   			[7:0] sub_cpu_rom_do,
-	output 		  [12:0] sp_rom_addr,
-	input   		  [31:0] sp_rom_do
+
+	input         [24:0] ioctl_addr,
+	input          [7:0] ioctl_data,
+	input                ioctl_wr,
+
+	output        [15:0] main_cpu_rom_addr,
+	input          [7:0] main_cpu_rom_do,
+	output        [12:0] sub_cpu_rom_addr,
+	input          [7:0] sub_cpu_rom_do,
+	output        [12:0] char_rom_addr,
+	input         [15:0] char_rom_do
 );
 
 //Linking signals between PCBs
 wire A5, A6, sound_on, sound_data, ioen, in5, in6;
 wire [7:0] cpubrd_Dout, sndbrd_Dout;
 
+//ROM loader signals for MISTer (loads ROMs from SD card)
+wire ep1_cs_i, ep2_cs_i, ep3_cs_i, ep4_cs_i, ep5_cs_i, ep6_cs_i, ep7_cs_i, ep8_cs_i,
+	ep9_cs_i, ep10_cs_i, ep11_cs_i, ep12_cs_i;
+wire cp1_cs_i, cp2_cs_i, cp3_cs_i, cl_cs_i, sl_cs_i;
+
+//MiSTer data write selector
+selector DLSEL
+(
+	.ioctl_addr(ioctl_addr),
+	.ep1_cs(ep1_cs_i),
+	.ep2_cs(ep2_cs_i),
+	.ep3_cs(ep3_cs_i),
+	.ep4_cs(ep4_cs_i),
+	.ep5_cs(ep5_cs_i),
+	.ep6_cs(ep6_cs_i),
+	.ep7_cs(ep7_cs_i),
+	.ep8_cs(ep8_cs_i),
+	.ep9_cs(ep9_cs_i),
+	.ep10_cs(ep10_cs_i),
+	.ep11_cs(ep11_cs_i),
+	.ep12_cs(ep12_cs_i),
+	.cp1_cs(cp1_cs_i),
+	.cp2_cs(cp2_cs_i),
+	.cp3_cs(cp3_cs_i),
+	.cl_cs(cl_cs_i),
+	.sl_cs(sl_cs_i)
+);
+
 //Instantiate main PCB
-TimePilot84_CPU main_pcb(
+TimePilot84_CPU main_pcb
+(
 	.reset(reset),
 	.clk_49m(clk_49m),
 	.red(video_r),
@@ -65,6 +101,7 @@ TimePilot84_CPU main_pcb(
 	.video_csync(video_csync),
 	.video_hblank(video_hblank),
 	.video_vblank(video_vblank),
+	
 	.sndbrd_D(sndbrd_Dout),
 	.cpubrd_D(cpubrd_Dout),
 	.cpubrd_A5(A5),
@@ -73,17 +110,40 @@ TimePilot84_CPU main_pcb(
 	.n_son(sound_on),
 	.in5(in5),
 	.ioen(ioen),
+	
 	.is_set3(is_set3),
+	
+	.ep1_cs_i(ep1_cs_i),
+	.ep2_cs_i(ep2_cs_i),
+	.ep3_cs_i(ep3_cs_i),
+	.ep4_cs_i(ep4_cs_i),
+	.ep5_cs_i(ep5_cs_i),
+	.ep7_cs_i(ep7_cs_i),
+	.ep8_cs_i(ep8_cs_i),
+	.ep9_cs_i(ep9_cs_i),
+	.ep10_cs_i(ep10_cs_i),
+	.ep11_cs_i(ep11_cs_i),
+	.ep12_cs_i(ep12_cs_i),
+	.cp1_cs_i(cp1_cs_i),
+	.cp2_cs_i(cp2_cs_i),
+	.cp3_cs_i(cp3_cs_i),
+	.cl_cs_i(cl_cs_i),
+	.sl_cs_i(sl_cs_i),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_data(ioctl_data),
+
 	.main_cpu_rom_addr(main_cpu_rom_addr),
 	.main_cpu_rom_do(main_cpu_rom_do),
 	.sub_cpu_rom_addr(sub_cpu_rom_addr),
 	.sub_cpu_rom_do(sub_cpu_rom_do),
-	.sp_rom_addr(sp_rom_addr),
-	.sp_rom_do(sp_rom_do)
+	.char_rom_addr(char_rom_addr),
+	.char_rom_do(char_rom_do)
 );
 
 //Instantiate sound PCB
-TimePilot84_SND sound_pcb(
+TimePilot84_SND sound_pcb
+(
 	.reset(reset),
 	.clk_49m(clk_49m),
 	.clk_14m(clk_14m),
@@ -97,13 +157,19 @@ TimePilot84_SND sound_pcb(
 	.p1_buttons(p1_buttons),
 	.p2_buttons(p2_buttons),
 	.btn_service(btn_service),
+	
 	.ioen(ioen),
 	.in5(in5),
 	.cpubrd_A5(A5),
 	.cpubrd_A6(A6),
 	.cpubrd_Din(cpubrd_Dout),	
 	.sndbrd_Dout(sndbrd_Dout),
-	.sound(sound)
+	.sound(sound),
+	
+	.ep6_cs_i(ep6_cs_i),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_data(ioctl_data)
 );
 
 endmodule

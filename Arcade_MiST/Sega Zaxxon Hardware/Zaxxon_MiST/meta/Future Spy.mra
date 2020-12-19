@@ -33,19 +33,19 @@
 		<part crc="305FAE2D" name="fs_snd.u68"/>
 		<part crc="3C5658C0" name="fs_snd.u69"/>
 
-		<group width="32">
-			<part crc="36D2BDF6" name="fs_vid.u113"/>
-			<part crc="3740946A" name="fs_vid.u112"/>
-			<part crc="4CD4DF98" name="fs_vid.u111"/>
-			<part crc="4CD4DF98" name="fs_vid.u111"/>
-		</group>
+		<interleave output="32">
+			<part crc="36D2BDF6" name="fs_vid.u113" map="0001"/>
+			<part crc="3740946A" name="fs_vid.u112" map="0010"/>
+			<part crc="4CD4DF98" name="fs_vid.u111" map="0100"/>
+			<part crc="4CD4DF98" name="fs_vid.u111" map="1000"/>
+		</interleave>
 
-		<group width="32">
-			<part crc="1B93C9EC" name="fs_vid.u77"/>
-			<part crc="50E55262" name="fs_vid.u78"/>
-			<part crc="BFB02E3E" name="fs_vid.u79"/>
-			<part crc="BFB02E3E" name="fs_vid.u79"/>
-		</group>
+		<interleave output="32">
+			<part crc="1B93C9EC" name="fs_vid.u77" map="0001"/>
+			<part crc="50E55262" name="fs_vid.u78" map="0010"/>
+			<part crc="BFB02E3E" name="fs_vid.u79" map="0100"/>
+			<part crc="BFB02E3E" name="fs_vid.u79" map="1000"/>
+		</interleave>
 
 		<part crc="9BA2ACAA" name="futrprom.u98"/>
 		<part crc="F9E26790" name="futrprom.u72"/>

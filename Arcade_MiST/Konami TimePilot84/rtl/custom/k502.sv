@@ -64,7 +64,9 @@ Note: The SPLB pins are bidirectional - this model splits these pins into separa
 module k502
 (
 	input        CK1,
+	input        CK1_EN,
 	input        CK2,
+	input        CK2_EN,
 	input        LD0,
 	input        H2,
 	input        H256,
@@ -80,29 +82,57 @@ module k502
 //As the Konami 502 doesn't have a dedicated input for bit 2 of the horizontal counter (H4), generate
 //this signal internally by dividing H2 by 2
 reg h2_div = 0;
+`ifdef SIM
 always_ff @(posedge H2) begin
 	h2_div <= ~h2_div;
 end
+`else
+reg h2_d;
+always @(posedge CK2) begin
+	if (CK2_EN) begin
+		h2_d <= H2;
+		if (h2_d & H2) h2_div <= !h2_div; // falling edge of H2
+	end
+end
+`endif
 wire h4 = h2_div;
 
-//Latch H256 on rising edge of LD0 and delay by one cycle
 reg h256_lat = 0;
+reg h256_dly = 0;
+`ifdef SIM
+//Latch H256 on rising edge of LD0 and delay by one cycle
 always_ff @(posedge LD0) begin
 	h256_lat <= H256;
 end
-reg h256_dly = 0;
 always_ff @(posedge h256_lat) begin
 	h256_dly <= ~h256_dly;
 end
-
+`else
+always @(posedge CK2) begin
+	if (CK2_EN & !LD0) begin
+		h256_lat <= H256;
+		if (!h256_lat & H256) h256_dly <= ~h256_dly;
+	end
+end
+`endif
 //Generate OSEL, OLD and OCLR
 reg [1:0] osel_reg;
+`ifdef SIM
 always_ff @(negedge H2) begin
 	if(!h4)
 		osel_reg[1] <= h256_dly;
 	else
 		osel_reg[0] <= osel_reg[1];
 end
+`else
+assign osel_reg[1] = h256_dly;
+always @(posedge CK2) begin
+	if (CK2_EN & h2_d & H2) begin // falling edge of H2
+		if(!h4) osel_reg[0] <= osel_reg[1];
+	end
+end
+`endif
+
 assign OLD = ~osel_reg[1];
 assign OSEL = osel_reg[0];
 assign OCLR = ~osel_reg[0];
@@ -110,17 +140,22 @@ assign OCLR = ~osel_reg[0];
 //Multiplex incoming line buffer RAM data
 wire [3:0] lbuff_Dmux = OCLR ? SPLBi[3:0] : SPLBi[7:4];
 
-//Latch incoming line buffer RAM data on the falling edge of CK1
+//Latch incoming line buffer RAM data on the rising edge of CK1
 reg [7:0] lbuff_lat;
-always_ff @(negedge CK1) begin
-	lbuff_lat <= SPLBi;
-end
-
-//Latch multiplexed line buffer RAM data on the falling edge of CK2
 reg [3:0] lbuff_mux_lat;
-always_ff @(negedge CK2) begin
+`ifdef SIM
+always_ff @(posedge CK1) begin
+	lbuff_lat <= SPLBi;
 	lbuff_mux_lat <= lbuff_Dmux;
 end
+`else
+always_ff @(posedge CK1) begin
+	if (CK1_EN) begin
+		lbuff_lat <= SPLBi;
+		lbuff_mux_lat <= lbuff_Dmux;
+	end
+end
+`endif
 
 //Assign sprite data output
 assign COL[4] = ~(|lbuff_mux_lat[3:0]);

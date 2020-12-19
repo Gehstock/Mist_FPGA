@@ -83,6 +83,7 @@ entity T80pa is
         A           : out std_logic_vector(15 downto 0);
         DI          : in  std_logic_vector(7 downto 0);
         DO          : out std_logic_vector(7 downto 0);
+        R800_mode   : in  std_logic := '0';
         REG         : out std_logic_vector(211 downto 0); -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
         DIRSet      : in  std_logic := '0';
         DIR         : in  std_logic_vector(211 downto 0) := (others => '0') -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
@@ -101,12 +102,9 @@ architecture rtl of T80pa is
     signal MCycle           : std_logic_vector(2 downto 0);
     signal TState           : std_logic_vector(2 downto 0);
     signal CEN_pol          : std_logic;
-    signal A_int            : std_logic_vector(15 downto 0);
-    signal A_last           : std_logic_vector(15 downto 0);
     signal CEN              : std_logic;
 begin
 
-    A <= A_int when NoRead = '0' or Write = '1' else A_last;
     CEN <= CEN_p and not CEN_pol;
     BUSAK_n <= BUSAK;
 
@@ -130,7 +128,7 @@ begin
             BUSRQ_n => BUSRQ_n,
             BUSAK_n => BUSAK,
             CLK_n   => CLK,
-            A       => A_int,
+            A       => A,
             DInst   => DI,     -- valid   at beginning of T3
             DI      => DI_Reg, -- latched at middle    of T3
             DO      => DO,
@@ -138,6 +136,7 @@ begin
             MC      => MCycle,
             TS      => TState,
             OUT0    => OUT0,
+            R800_mode => R800_mode,
             IntCycle_n => IntCycle_n,
             DIRSet  => DIRSet,
             DIR     => DIR
@@ -183,7 +182,6 @@ begin
                         RD_n   <= not IntCycle_n;
                         MREQ_n <= not IntCycle_n;
                         IORQ_n <= IntCycleD_n(1);
-                        A_last <= A_int;
                     end if;
                     if TState = "011" then
                         IntCycleD_n <= "11";
@@ -198,7 +196,6 @@ begin
                         if TState = "001" then
                             RD_n   <= Write;
                             MREQ_n <= '0';
-                            A_last <= A_int;
                         end if;
                     end if;
                     if TState = "010" then
