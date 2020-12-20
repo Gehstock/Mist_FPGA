@@ -59,7 +59,7 @@ localparam CONF_STR = {
 	"O4,Spinner speed,Low,High;",
 	"DIP;",
 	"O7,Service,Off,On;",
-	"R2048,Save settings;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v2.0.",`BUILD_DATE
 };

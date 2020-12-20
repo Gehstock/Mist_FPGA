@@ -42,7 +42,7 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"DIP;",
-	"R256,Save settings;",
+	"R256,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.2.",`BUILD_DATE
 };

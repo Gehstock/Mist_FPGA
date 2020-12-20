@@ -18,7 +18,7 @@
 -- MRA utilty: https://github.com/sebdel/mra-tools-c
 --
 -- Some games are storing settings/high scores in a non-volatile RAM. It can be saved to
--- the SD Card with the "Save settings" option in the OSD menu. It'll be restored when
+-- the SD Card with the "Save NVRAM" option in the OSD menu. It'll be restored when
 -- the core is loaded next time.
 --
 ---------------------------------------------------------------------------------

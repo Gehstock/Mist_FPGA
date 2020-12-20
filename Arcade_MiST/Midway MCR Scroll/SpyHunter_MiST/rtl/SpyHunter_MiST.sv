@@ -55,7 +55,7 @@ localparam CONF_STR = {
 	"O6,Service,Off,On;",
 	"O8,Demo Sounds,Off,On;",
 	"O9,Show Lamps,Off,On;",
-	"R2048,Save settings;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };

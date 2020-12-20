@@ -49,7 +49,7 @@ localparam CONF_STR = {
 	"O6,Swap Joysticks,Off,On;",
 	"O7,Auto up,Off,On;",
 	"T8,Advance;",
-	"R1024,Save settings;",
+	"R1024,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
