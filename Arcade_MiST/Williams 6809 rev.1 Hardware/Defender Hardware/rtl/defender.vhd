@@ -153,7 +153,9 @@ port(
  dl_clock       : in  std_logic;
  dl_addr        : in  std_logic_vector(15 downto 0);
  dl_data        : in  std_logic_vector( 7 downto 0);
- dl_wr          : in  std_logic
+ dl_wr          : in  std_logic;
+ up_data        : out std_logic_vector(7 downto 0);
+ cmos_wr        : in std_logic
 );
 end defender;
 
@@ -567,14 +569,19 @@ port map(
 );
 
 -- cmos ram 
-cmos_ram : entity work.defender_cmos_ram
+cmos_ram : entity work.dpram
 generic map( dWidth => 4, aWidth => 8)
 port map(
- clk  => clock_6,
- we   => cmos_we,
- addr => cpu_addr(7 downto 0),
- d    => cpu_do(3 downto 0),
- q    => cmos_do
+ clk_a  => clock_6,
+ we_a   => cmos_we,
+ addr_a => cpu_addr(7 downto 0),
+ d_a    => cpu_do(3 downto 0),
+ q_a    => cmos_do,
+ clk_b  => dl_clock,
+ we_b   => cmos_wr,
+ addr_b => dl_addr(7 downto 0),
+ d_b    => dl_data(3 downto 0),
+ q_b    => up_data(3 downto 0)
 );
 
 -- cpu to video addr decoder

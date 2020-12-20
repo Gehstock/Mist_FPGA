@@ -54,12 +54,13 @@ module MCR3_MiST(
 wire [6:0] core_mod;
 
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joystick,Off,On;",
 	"DIP;",
 	"O7,Service,Off,On;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -220,10 +221,12 @@ user_io(
 	);
 
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
 /*
 ROM structure:
@@ -249,10 +252,12 @@ data_io #(.ROM_DIRECT_UPLOAD(1)) data_io(
 	.SPI_DI        ( SPI_DI       ),
 	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 
 wire [15:0] rom_addr;
@@ -328,7 +333,7 @@ always @(posedge clk_sys) begin
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		if (~ioctl_wr_last && ioctl_wr) begin
+		if (~ioctl_wr_last && ioctl_wr && ioctl_index == 0) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
@@ -397,9 +402,11 @@ mcr3 mcr3 (
 	.sp_addr      ( sp_addr         ),
 	.sp_graphx32_do ( sp_do         ),
 
-	.dl_addr(ioctl_addr-gfx1_offset),
-	.dl_data(ioctl_dout),
-	.dl_wr(ioctl_wr)
+	.dl_addr      ( ioctl_addr-(ioctl_index == 0 ? gfx1_offset : 0) ),
+	.dl_data      ( ioctl_dout ),
+	.dl_wr        ( ioctl_wr && ioctl_index == 0 ),
+	.up_data      ( ioctl_din  ),
+	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )
 );
 
 wire vs_out;

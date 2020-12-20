@@ -26,10 +26,11 @@ module SpyHunter_MiST(
 	output        AUDIO_L,
 	output        AUDIO_R,
 	input         SPI_SCK,
-	output        SPI_DO,
+	inout         SPI_DO,
 	input         SPI_DI,
 	input         SPI_SS2,
 	input         SPI_SS3,
+	input         SPI_SS4,
 	input         CONF_DATA0,
 	input         CLOCK_27,
 	output [12:0] SDRAM_A,
@@ -54,6 +55,7 @@ localparam CONF_STR = {
 	"O6,Service,Off,On;",
 	"O8,Demo Sounds,Off,On;",
 	"O9,Show Lamps,Off,On;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -91,7 +93,8 @@ wire  [7:0] key_code;
 wire        key_strobe;
 
 user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
+	.STRLEN(($size(CONF_STR)>>3)),
+	.ROM_DIRECT_UPLOAD(1'b1))
 user_io(
 	.clk_sys        (clk_sys        ),
 	.conf_str       (CONF_STR       ),
@@ -121,21 +124,29 @@ wire [15:0] csd_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
-data_io data_io(
+data_io #(
+	.ROM_DIRECT_UPLOAD(1'b1))
+data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_SS4       ( SPI_SS4      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 
 // ROM structure:
@@ -200,7 +211,7 @@ always @(posedge clk_sys) begin
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		if (~ioctl_wr_last && ioctl_wr) begin
+		if (~ioctl_wr_last && ioctl_wr && ioctl_index == 0) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
@@ -281,7 +292,9 @@ spy_hunter spy_hunter(
 	.sp_graphx32_do ( sp_do         ),
 	.dl_addr      ( ioctl_addr[18:0]),
 	.dl_data      ( ioctl_dout      ),
-	.dl_wr        ( ioctl_wr        )
+	.dl_wr        ( ioctl_wr && ioctl_index == 0 ),
+	.up_data      ( ioctl_din       ),
+	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )
 );
 
 wire vs_out;

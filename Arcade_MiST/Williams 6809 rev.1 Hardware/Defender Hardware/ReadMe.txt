@@ -13,6 +13,10 @@
 --
 -- MRA utility: https://github.com/sebdel/mra-tools-c/
 --
+-- Defender stores its settings and the high score table in a non-volatile RAM.
+-- It can be saved to the SD Card with the "Save NVRAM" OSD option, and it'll
+-- be restored next time the core is loaded.
+--
 ---------------------------------------------------------------------------------
 -- A simulation model of Williams 6809 hardware
 -- by Dar (darfpga@aol.fr)

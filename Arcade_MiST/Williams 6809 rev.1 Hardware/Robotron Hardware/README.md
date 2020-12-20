@@ -19,7 +19,8 @@ Usage:
 
 Note: the MRA files contains a dump of the CMOS RAM. It will be included in the generated ROM file.
 Change it for permanent settings (search for the format online). It's possible to change these values
-inside the core, with turning on "Auto-up" switch, and activate the "Advance" trigger in the OSD.
+inside the core, with turning on "Auto-up" switch, and activate the "Advance" trigger in the OSD. Then
+it's possible to save these settings and high scores into a RAM file via the "Save NVRAM" OSD item.
 Refer to the arcade's user manual for further info.
 
 

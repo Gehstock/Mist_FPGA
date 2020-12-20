@@ -71,6 +71,10 @@ Copy the ROM files to the root of the SD Card.
 
 MRA utilty: https://github.com/sebdel/mra-tools-c
 
+Some games are storing settings/high scores in a non-volatile RAM. It can be saved to
+the SD Card with the "Save NVRAM" option in the OSD menu. It'll be restored when
+the core is loaded next time.
+
 Based on Darfpga's work:
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Timber (Midway MCR) by Dar (darfpga@aol.fr) (22/11/2019)

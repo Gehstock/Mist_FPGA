@@ -52,13 +52,14 @@ module MCR2_MiST(
 wire [6:0] core_mod;
 
 localparam CONF_STR = {
-	`CORE_NAME,";ROM;",
+	`CORE_NAME,";;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Swap Joysticks,Off,On;",
 	"O4,Spinner speed,Low,High;",
 	"DIP;",
 	"O7,Service,Off,On;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v2.0.",`BUILD_DATE
 };
@@ -202,10 +203,12 @@ wire [15:0] rom_do;
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
 /* ROM structure
 00000 - 0BFFF  48k CPU1
@@ -219,11 +222,14 @@ data_io data_io(
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 reg port1_req, port2_req;
 sdram sdram(
@@ -261,7 +267,7 @@ always @(posedge clk_sys) begin
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		if (~ioctl_wr_last && ioctl_wr) begin
+		if (~ioctl_wr_last && ioctl_wr && ioctl_index == 0) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
@@ -310,8 +316,10 @@ satans_hollow satans_hollow(
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 
 	.dl_addr      ( ioctl_addr[16:0]),
-	.dl_wr        ( ioctl_wr        ),
-	.dl_data      ( ioctl_dout      )
+	.dl_wr        ( ioctl_wr && ioctl_index == 0 ),
+	.dl_data      ( ioctl_dout ),
+	.up_data      ( ioctl_din  ),
+	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )
 );
 
 wire vs_out;

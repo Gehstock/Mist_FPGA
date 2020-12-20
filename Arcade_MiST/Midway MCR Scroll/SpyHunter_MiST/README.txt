@@ -23,7 +23,10 @@ C	SPACE		: Shift
 X	Z		: Oil
 Y	X		: Smoke
 
-
+-- The settings in the service mode can be preserved by choosing the "Save NVRAM"
+-- option in the OSD menu. It'll be saved to a .RAM file, and restored when the core
+-- is loaded.
+--
 ---------------------------------------------------------------------------------
 -- DE10_lite Top level for Spy hunter (Midway MCR) by Dar (darfpga@aol.fr) (06/12/2019)
 -- http://darfpga.blogspot.fr
