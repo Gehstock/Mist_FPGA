@@ -28,7 +28,7 @@ module data_io
 	input             SPI_SS2,
 	input             SPI_SS4,
 	input             SPI_DI,
-	inout reg         SPI_DO,
+	inout             SPI_DO,
 
 	input             clkref_n, // assert ioctl_wr one cycle after clkref stobe (negative active)
 
@@ -53,11 +53,13 @@ parameter ROM_DIRECT_UPLOAD = 0;
 
 reg  [7:0] data_w;
 reg  [7:0] data_w2  = 0;
+reg  [3:0] cnt;
 reg        rclk   = 0;
 reg        rclk2  = 0;
 reg        addr_reset = 0;
 reg        downloading_reg = 0;
 reg        uploading_reg = 0;
+reg        reg_do;
 
 localparam DIO_FILE_TX      = 8'h53;
 localparam DIO_FILE_TX_DAT  = 8'h54;
@@ -66,19 +68,20 @@ localparam DIO_FILE_INFO    = 8'h56;
 localparam DIO_FILE_RX      = 8'h57;
 localparam DIO_FILE_RX_DAT  = 8'h58;
 
+assign SPI_DO = reg_do;
+
 // data_io has its own SPI interface to the io controller
 always@(negedge SPI_SCK or posedge SPI_SS2) begin : SPI_TRANSMITTER
 	reg [7:0] dout_r;
 
 	if(SPI_SS2) begin
-		SPI_DO <= 1'bZ;
+		reg_do <= 1'bZ;
 	end else begin
 		if (cnt == 15) dout_r <= ioctl_din;
-		SPI_DO <= dout_r[~cnt[2:0]];
+		reg_do <= dout_r[~cnt[2:0]];
 	end
 end
 
-reg  [3:0] cnt;
 
 always@(posedge SPI_SCK, posedge SPI_SS2) begin : SPI_RECEIVER
 	reg  [6:0] sbuf;

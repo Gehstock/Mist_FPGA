@@ -30,7 +30,7 @@ port (
 	joystick_4        : out std_logic_vector(31 downto 0);
 	joystick_analog_0 : out std_logic_vector(15 downto 0);
 	joystick_analog_1 : out std_logic_vector(15 downto 0);
-	status            : out std_logic_vector(31 downto 0);
+	status            : out std_logic_vector(63 downto 0);
 	switches          : out std_logic_vector(1 downto 0);
 	buttons           : out std_logic_vector(1 downto 0);
 	scandoubler_disable : out std_logic;
