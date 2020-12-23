@@ -31,11 +31,7 @@ del /s *.bsf
 del /s *.f
 del /s *.sopcinfo
 del /s *.xml
-del *.cdf
 del /s new_rtl_netlist
 del /s old_rtl_netlist
-del sys\vip.qip
-del sys\sysmem.qip
-del sys\sdram.sv
-del sys\ddram.sv
+
 pause
