@@ -50,7 +50,7 @@ architecture SYN of mpatrol is
   signal video_o        : to_VIDEO_t;
   --MIST
   signal audio       	: std_logic;
-  signal status     		: std_logic_vector(31 downto 0); 
+  signal status     		: std_logic_vector(63 downto 0);
   signal joystick1      : std_logic_vector(31 downto 0);
   signal joystick2      : std_logic_vector(31 downto 0);
   signal joystick       : std_logic_vector(7 downto 0);
@@ -69,6 +69,7 @@ architecture SYN of mpatrol is
   constant CONF_STR : string :=
 	"MPATROL;;"&
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;"&
+	"OB,Video timings,Original,PAL;"&
 	"O34,Patrol cars,5,3,2,1;"&
 	"O56,New car at,10/30/50K,20/40/60K,10K,Never;"&
 	"OA,Freeze,Disable,Enable;"&
@@ -260,6 +261,7 @@ switches_i( 3 downto 2) <= not status(6 downto 5); -- New car
 pace_inst : entity work.pace                                            
 	port map (
 		clkrst_i				=> clkrst_i,
+		palmode         => status(11),
 		buttons_i         => buttons_i,
 		switches_i        => switches_i,
 		leds_o            => open,
@@ -286,8 +288,8 @@ mist_video: work.mist.mist_video
 		SPI_SS3     => SPI_SS3,
 		SPI_DI      => SPI_DI,
 
-		HSync       => video_o.hsync,
-		VSync       => video_o.vsync,
+		HSync       => not video_o.hsync,
+		VSync       => not video_o.vsync,
 		R           => video_o.rgb.r(9 downto 4),
 		G           => video_o.rgb.g(9 downto 4),
 		B           => video_o.rgb.b(9 downto 4),

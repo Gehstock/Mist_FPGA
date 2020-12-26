@@ -15,6 +15,7 @@ entity PACE is
   (
   	-- clocks and resets
     clkrst_i        : in from_CLKRST_t;
+    palmode         : in std_logic;
 
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
@@ -134,6 +135,7 @@ begin
       graphics_o      => from_graphics,
 
 			-- video (incl. clk)
+      palmode         => palmode,
 			video_i					=> video_i,
 			video_o					=> video_o
     );

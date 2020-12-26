@@ -744,7 +744,7 @@ if rising_edge(clock_36) and pix_ena = '1' then
 	end if;
 
 	-- vcnt : [230-511] 282 lines
-	if    vcnt = 230 then vblank <= '1';
+	if    vcnt = 200 or vcnt = 230 then vblank <= '1';
 	elsif vcnt = 256 then vblank <= '0';
 	end if;
 

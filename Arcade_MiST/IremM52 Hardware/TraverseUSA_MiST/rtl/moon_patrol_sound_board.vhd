@@ -241,7 +241,11 @@ adpcm_clocks : process(clock_E, ay1_port_b_do)
 	variable dn : integer range -32768 to 32767;
 	variable adpcm_signal_n : integer range -32768 to 32767;
 begin
-	if rising_edge(clock_E) then
+	if reset='1' then
+		adpcm_vclk <= '0';
+		clock_div_a := 0;
+		clock_div_b := 0;
+	elsif rising_edge(clock_E) then
 		if clock_div_a = 37 then   -- 24kHz
 			clock_div_a := 0;
 			

@@ -25,7 +25,8 @@ entity Graphics is
     
     graphics_i      : in to_GRAPHICS_t;
     graphics_o      : out from_GRAPHICS_t;
-    
+
+		palmode         : in std_logic;
 		video_i					: in from_VIDEO_t;
 		video_o					: out to_VIDEO_t
   );
@@ -68,29 +69,46 @@ begin
   graphics_o.vblank <= video_o_s.vblank;
   --graphics_o.vblank <= from_video_ctl.vblank;
     
-  pace_video_controller_inst : entity work.pace_video_controller
-    generic map
-    (
-      CONFIG		  => PACE_VIDEO_CONTROLLER_TYPE,
-      DELAY       => PACE_VIDEO_PIPELINE_DELAY,
-      H_SIZE      => PACE_VIDEO_H_SIZE,
-      V_SIZE      => PACE_VIDEO_V_SIZE,
-      L_CROP      => PACE_VIDEO_L_CROP,
-      R_CROP      => PACE_VIDEO_R_CROP,
-      H_SCALE     => PACE_VIDEO_H_SCALE,
-      V_SCALE     => PACE_VIDEO_V_SCALE,
-      H_SYNC_POL  => PACE_VIDEO_H_SYNC_POLARITY,
-      V_SYNC_POL  => PACE_VIDEO_V_SYNC_POLARITY,
-      BORDER_RGB  => PACE_VIDEO_BORDER_RGB
-    )
+--  pace_video_controller_inst : entity work.pace_video_controller
+--    generic map
+--    (
+--      CONFIG		  => PACE_VIDEO_CONTROLLER_TYPE,
+--      DELAY       => PACE_VIDEO_PIPELINE_DELAY,
+--      H_SIZE      => PACE_VIDEO_H_SIZE,
+--      V_SIZE      => PACE_VIDEO_V_SIZE,
+--      L_CROP      => PACE_VIDEO_L_CROP,
+--      R_CROP      => PACE_VIDEO_R_CROP,
+--      H_SCALE     => PACE_VIDEO_H_SCALE,
+--      V_SCALE     => PACE_VIDEO_V_SCALE,
+--      H_SYNC_POL  => PACE_VIDEO_H_SYNC_POLARITY,
+--      V_SYNC_POL  => PACE_VIDEO_V_SYNC_POLARITY,
+--      BORDER_RGB  => PACE_VIDEO_BORDER_RGB
+--    )
+--    port map
+--    (
+--      -- clocking etc
+--      video_i         => video_i,
+--      
+--			-- register interface
+--			reg_i.h_scale	=> "000",
+--			reg_i.v_scale 	=> "000",
+--      -- video data signals (in)
+--      rgb_i		    		=> rgb_data,
+--
+--      -- video control signals (out)
+--      video_ctl_o     => from_video_ctl,
+--
+--      -- VGA signals (out)
+--      video_o     		=> video_o_s
+--    );
+
+  pace_video_controller_inst : entity work.iremm52_video_controller
     port map
     (
       -- clocking etc
       video_i         => video_i,
-      
-			-- register interface
-			reg_i.h_scale	=> "000",
-			reg_i.v_scale 	=> "000",
+      palmode         => palmode,
+
       -- video data signals (in)
       rgb_i		    		=> rgb_data,
 

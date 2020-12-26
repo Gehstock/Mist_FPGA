@@ -201,6 +201,7 @@ set_global_assignment -name VHDL_FILE src/sprite_pkg_body.vhd
 set_global_assignment -name VHDL_FILE src/sprite_pkg.vhd
 set_global_assignment -name VHDL_FILE src/video_controller_pkg_body.vhd
 set_global_assignment -name VHDL_FILE src/video_controller_pkg.vhd
+set_global_assignment -name VHDL_FILE src/iremm52_video_controller.vhd
 set_global_assignment -name VHDL_FILE src/video_controller.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_board.vhd
 set_global_assignment -name VHDL_FILE src/moon_patrol_sound_prog.vhd
