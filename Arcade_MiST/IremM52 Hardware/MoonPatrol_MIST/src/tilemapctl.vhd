@@ -37,7 +37,8 @@ begin
   ctl_o.tile_a(ctl_o.tile_a'left downto 12) <= (others => '0');
 
   -- screen rotation
-  x <=  video_ctl.x when unsigned(y) < 192 else
+--  x <=  video_ctl.x when unsigned(y) < 192 else
+  x <=  video_ctl.x when unsigned(y) < '1'&x"C0" else
         std_logic_vector(unsigned(video_ctl.x) + not unsigned(scroll)); 
         -- when rot_en = '0' else not video_ctl.y;
   --y <= not video_ctl.y when rot_en = '0' else 32 + video_ctl.x;
@@ -95,7 +96,7 @@ begin
         ctl_o.rgb.b <= pal_rgb(2) & "00";
         ctl_o.set <= '0'; -- default
         -- lines 0-6 are opaque apparently
-        if unsigned(y) < 7*8 or 
+        if unsigned(y) < '1'&x"38" or 
             pel /= "00" then
 --            pal_rgb(0)(7 downto 5) /= "000" or
 --            pal_rgb(1)(7 downto 5) /= "000" or

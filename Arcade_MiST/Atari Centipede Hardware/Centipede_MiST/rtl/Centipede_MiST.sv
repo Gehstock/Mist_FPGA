@@ -18,7 +18,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Centipede
+module Centipede_MiST
 (
 	output        LED,
 	output  [5:0] VGA_R,
@@ -45,6 +45,11 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O7,Test,Off,On;",
+	"O89,Language,English,German,French,Spanish;",
+	"OAB,Lives,2,3,4,5;",
+	"OCD,Bonus Life,10000,12000,15000,20000;",
+	"OE,Difficulty,Hard,Easy;",
+	"OF,Credit minimum,1,2;",
 	"T0,Reset;",
 	"V,v1.50.",`BUILD_DATE
 };
@@ -54,6 +59,10 @@ wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
 wire       joyswap   = status[6];
 wire       service   = status[7];
+
+wire [15:0] dipsw;
+assign dipsw[ 7:0] = status[15:8];
+assign dipsw[15:8] = 8'h01;
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -80,9 +89,11 @@ wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
 wire	[7:0] RGB;
-wire 			hs, vs, vb, hb;
-wire 			blankn = ~(hb | vb);
+wire        hs, vs, vb, hb;
+reg         blankn;
 wire  [3:0] audio;
+
+always @(posedge clk_12) blankn <= ~(hb | vb);
 
 centipede centipede(
 	.clk_100mhz(clk_100mhz),
@@ -91,8 +102,8 @@ centipede centipede(
 	.playerinput_i(~{ 1'b0, 1'b0, m_coin1, service, 1'b0, 1'b0, m_two_players, m_one_player, m_fireB, m_fireA }),
 	.trakball_i(),
 	.joystick_i(~{m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
-	.sw1_i("01010100"),
-	.sw2_i("00000000"),
+	.sw1_i(dipsw[7:0]),
+	.sw2_i(dipsw[15:8]),
 	.rgb_o(RGB),
 	.hsync_o(hs),
 	.vsync_o(vs),
@@ -120,14 +131,14 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.ce_divider     ( 1'b1             ),
 	.blend          ( blend            ),
 	.scandoubler_disable(scandoublerD  ),
-	.no_csync       ( 1'b1             ),
+	.no_csync       ( no_csync         ),
 	.ypbpr          ( ypbpr            )
 	);	
 	
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_24         ),
+	.clk_sys        (clk_12         ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -149,7 +160,7 @@ user_io(
 dac #(
 	.C_bits(15))
 dac (
-	.clk_i(clk_24),
+	.clk_i(clk_100mhz),
 	.res_n_i(1),
 	.dac_i({2{audio,audio}}),
 	.dac_o(AUDIO_L)
@@ -160,7 +171,7 @@ wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, 
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
-	.clk         ( clk_24     ),
+	.clk         ( clk_12      ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),
 	.key_code    ( key_code    ),
