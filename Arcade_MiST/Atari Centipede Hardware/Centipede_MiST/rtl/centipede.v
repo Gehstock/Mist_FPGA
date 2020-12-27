@@ -37,8 +37,10 @@ module centipede(
    //
    wire s_12mhz, s_12mhz_n;
    wire s_6mhz, s_6mhz_n;
+   wire s_6mhz_en, s_6mhz_n_en;
 
    wire phi0, phi2;
+   wire phi0_en;
    reg 	phi0a;
 
    //
@@ -82,9 +84,12 @@ module centipede(
    wire       hsync_reset;
    
    wire       s_1h, s_2h, s_4h, s_8h, s_16h, s_32h, s_64h, s_128h, s_256h;
+   wire       s_1h_en, s_4h_en, s_8h_en, s_32h_en, s_256h_n_en;
    wire       s_1v, s_2v, s_4v, s_8v, s_16v, s_32v, s_64v, s_128v;
+   wire       s_16v_en;
 
    wire       s_4h_n, s_8h_n, s_256h_n;
+   wire       s_4h_n_en;
    wire       s_256hd_n;
    wire       s_256h2d_n;
    wire	      vblankd_n;
@@ -164,7 +169,7 @@ module centipede(
    wire [3:0]  coloram_out;
    wire [3:0]  coloram_rgbi;
    wire        coloram_w_n;
-   reg 	      coloren;
+   reg 	       coloren;
 
    wire [1:0]  rama_sel;
    wire [1:0]  rama_hi;
@@ -204,43 +209,52 @@ module centipede(
 	 h_counter <= h_counter + 12'd1;
 
    assign s_6mhz = h_counter[0];
+   assign s_6mhz_en = !h_counter[0];
    assign s_1h   = h_counter[1];
+   assign s_1h_en = h_counter[1:0] == 2'b01;
    assign s_2h   = h_counter[2];
    assign s_4h   = h_counter[3];
+   assign s_4h_en = h_counter[3:0] == 4'b0111;
    assign s_8h   = h_counter[4];
+   assign s_8h_en = h_counter[4:0] == 5'b01111;
    assign s_16h  = h_counter[5];
    assign s_32h  = h_counter[6];
+   assign s_32h_en = h_counter[6:0] == 7'b0111111;
    assign s_64h  = h_counter[7];
    assign s_128h = h_counter[8];
    assign s_256h = h_counter[9];
 
    assign s_4h_n = ~s_4h;
+   assign s_4h_n_en = h_counter[3:0] == 4'b1111;
    assign s_8h_n = ~s_8h;
    assign s_256h_n = ~s_256h;
+   assign s_256h_n_en = h_counter[9:0] == 10'b1111111111;
 
    assign pload_n = ~(s_1h & s_2h & s_4h);
 
    assign s_12mhz = clk_12mhz;
    assign s_12mhz_n = ~clk_12mhz;
    assign s_6mhz_n = ~s_6mhz;
+	 assign s_6mhz_n_en = h_counter[0];
 
    assign v_counter_reset = reset | ~vreset == 0;
 
-   always @(posedge s_256h_n or posedge reset)
+   always @(posedge s_12mhz or posedge reset)
      if (reset)
        v_counter <= 0;
-     else
+     else if (s_256h_n_en)
        /* ld# is on positive clock edge */
        if (vreset == 1)
-	 v_counter <= 0;
+         v_counter <= 0;
        else
-	 v_counter <= v_counter + 8'd1;
-   
+         v_counter <= v_counter + 8'd1;
+
    assign s_1v   = v_counter[0];
    assign s_2v   = v_counter[1];
    assign s_4v   = v_counter[2];
    assign s_8v   = v_counter[3];
    assign s_16v  = v_counter[4];
+	 assign s_16v_en = s_256h_n_en & v_counter[4:0] == 5'b01111;
    assign s_32v  = v_counter[5];
    assign s_64v  = v_counter[6];
    assign s_128v = v_counter[7];
@@ -248,55 +262,55 @@ module centipede(
    assign vprom_addr = {vblank, s_128v, s_64v, s_32v, s_8v, s_4v, s_2v, s_1v};
 
 P4 P4(
-	.clk(s_6mhz),
+	.clk(s_12mhz),
 	.addr(vprom_addr),
 	.data(vprom_out)
 	);
 
-always @(posedge s_256h_n or posedge reset)
+always @(posedge s_12mhz or posedge reset)
 	if (reset)
 		vprom_reg <= 0;
-   else
-      vprom_reg <= vprom_out;
+  else if (s_256h_n_en)
+    vprom_reg <= vprom_out;
 		
 assign vsync = vprom_reg[0];
 assign vreset = vprom_reg[2];
 assign hs_set = reset | ~s_256h_n;
    
-always @(posedge s_32h or posedge hs_set)
-	if (hs_set)
-		hs <= 1;
-   else
-      hs <= s_64h;
+always @(posedge s_12mhz or posedge hs_set)
+  if (hs_set)
+    hs <= 1;
+  else if (s_32h_en)
+    hs <= s_64h;
 
 assign hsync_reset = reset | hs;
    
-always @(posedge s_8h or posedge hsync_reset)
-	if (hsync_reset)
-      hsync <= 0;
-   else
-      hsync <= s_32h;
+always @(posedge s_12mhz or posedge hsync_reset)
+  if (hsync_reset)
+    hsync <= 0;
+  else if (s_8h_en)
+    hsync <= s_32h;
 
-always @(posedge s_6mhz)
+always @(posedge s_12mhz)
 	if (reset)
       coloren <= 0;
-   else
+   else if (s_6mhz_en)
       coloren <= s_256hd;
 
 assign s_6_12 = ~(s_6mhz & s_12mhz);
 reg xxx1;
    
-always @(posedge s_6mhz)//s_6_12)
-	if (reset)
-      xxx1 <= 0;
-   else
-      xxx1 <= coloren;
+always @(posedge s_12mhz)//s_6_12)
+  if (reset)
+    xxx1 <= 0;
+  else if (s_6mhz_en)
+    xxx1 <= coloren;
 
 assign vblank = vprom_reg[3];
-assign hblank = (~xxx1 & ~coloren);
+assign hblank = ~(xxx1 | coloren);
 
 PROG PROG (
-	.clk(s_6mhz & ~rom_n),
+	.clk(s_12mhz),
 	.addr(ab[12:0]),
 	.data(rom_out[7:0])
 	);	
@@ -306,18 +320,18 @@ spram #(
 	.data_width_g(8))
 ram(
 	.address(ab[9:0]),
-	.clock(s_6mhz & ~ram0_n),
-	.wren(~write_n),
+	.clock(s_12mhz),
+	.wren(~write_n & ~ram0_n),
 	.data(db_out[7:0]),
 	.q(ram_out[7:0])
 	);					
 
    wire        irq_n;
    
-   always @(posedge s_16v or negedge irqres_n)
+   always @(posedge s_12mhz or negedge irqres_n)
      if (~irqres_n)
        irq <= 1'b1;
-     else
+     else if (s_16v_en)
 //       irq <= s_32v;
        irq <= ~s_32v;
 
@@ -325,15 +339,15 @@ ram(
    assign irq_n = irq;
 
 
-   always @(posedge s_1h or posedge reset)
+   always @(posedge s_12mhz or posedge reset)
      if (reset)
        phi0a <= 1'b0;
-     else
+     else if (s_1h_en)
        phi0a <= ~phi0a;
 
    assign phi0 = ~phi0a;
    assign pac_n = ~phi0a;
-
+   assign phi0_en = s_1h_en & phi0a;
 
    // watchdog?
    always @(posedge s_12mhz)
@@ -358,8 +372,8 @@ assign phi2 = ~phi0;
 T65 T65(
 	.Mode("00"),
 	.Res_n(mpu_reset_n),
-	.Enable(1'b1),
-	.Clk(phi0),
+	.Enable(phi0_en),
+	.Clk(s_12mhz),
 	.Rdy(1'b1),
 	.Abort_n(1'b1),
 	.IRQ_n(irq_n),
@@ -394,10 +408,10 @@ T65 T65(
 
 //   assign write2_n = ~(s_6mhz & ~write_n);
    reg write2_n;
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz)
      if (reset)
        write2_n <= 0;
-     else
+     else if (s_6mhz_en)
        write2_n <= write_n;
    
    assign steerclr_n = adecode[9] | write2_n;
@@ -408,7 +422,7 @@ T65 T65(
    assign coloram_n = (adecode[5] | ab[9])/* | pac_n*/;
    
    assign pokey_n = adecode[4];
-	assign pokey2_n = adecode[3];
+   assign pokey2_n = adecode[3];
 
    assign in0_n =   adecode[3] | ab[1];
    assign in1_n =   adecode[3] | ~ab[1];
@@ -439,8 +453,7 @@ T65 T65(
 						4'b1111;
 
    //
-//   assign mob_n = ~(s_256h_n & s_256hd) & ~(s_256h2d_n & s_256hd);
-   assign mob_n = ~(s_256h_n | s_256h2d_n);
+   assign mob_n = ~((s_256h_n & s_256hd) | (s_256h2d_n & s_256hd));
 
    assign blank_clk = ~s_12mhz & (h_counter[3:0] == 4'b1111);
 
@@ -494,17 +507,12 @@ T65 T65(
    assign match_sum = match_line + pfd[15:8];
    assign match_sum_top = ~(match_sum[7] & match_sum[6] & match_sum[5] & match_sum[4]);
 
-//   always @(posedge s_4h_n)
-//     if (reset)
-//       match_sum_hold <= 0;
-//     else
-//       match_sum_hold <= { match_sum_top, 1'b0, match_sum[3:0] };
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz) // E6
      if (reset)
        match_sum_hold <= 0;
      else
-       if (s_4h)
-       match_sum_hold <= { match_sum_top, 1'b0, match_sum[3:0] };
+       if (s_4h_en)
+         match_sum_hold <= { match_sum_top, 1'b0, match_sum[3:0] };
 
    assign match_mux = s_256h ? { pic[0], s_4v, s_2v, s_1v } : match_sum_hold[3:0];
 
@@ -534,35 +542,35 @@ T65 T65(
 //       pfd_hold <= 0;
 //     else
 //       pfd_hold <= pfd[29:16];
-    always @(posedge s_6mhz)
-     if (reset)
-       pfd_hold <= 0;
-     else
+    always @(posedge s_12mhz) // D6, B4
+      if (reset)
+        pfd_hold <= 0;
+      else
        /* posedge s_4h */
-       if (~s_4h)
-	 pfd_hold <= pfd[29:16];
+        if (s_4h_en)
+          pfd_hold <= pfd[29:16];
 
 //   always @(posedge s_4h_n)
 //     if (reset)
 //       pfd_hold2 <= 0;
 //     else
 //       pfd_hold2 <= pfd_hold;
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz) // C6
      if (reset)
        pfd_hold2 <= 0;
      else
        /* posedge s_4h_n */
-       if (s_1h & s_2h & s_4h)
-	   pfd_hold2 <= pfd_hold;
+       if (s_4h_n_en)
+         pfd_hold2 <= pfd_hold;
    
-   assign y[1] =
+   assign y[1] = // C7
 		(area == 2'b00) ? (s_256hd ? 1'b0 : gry[1]) :
 		(area == 2'b01) ? (s_256hd ? 1'b0 : pfd_hold2[25]) : 
 		(area == 2'b10) ? (s_256hd ? 1'b0 : pfd_hold2[27]) :
 		(area == 2'b11) ? (s_256hd ? 1'b0 : pfd_hold2[29]) :
 		1'b0;
 
-   assign y[0] =
+   assign y[0] = // C7
 		(area == 2'b00) ? (s_256hd ? 1'b0 : gry[0]) :
 		(area == 2'b01) ? (s_256hd ? 1'b0 : pfd_hold2[24]) : 
 		(area == 2'b10) ? (s_256hd ? 1'b0 : pfd_hold2[26]) :
@@ -572,24 +580,22 @@ T65 T65(
    assign line_ram_ctr_load = ~(pload_n | s_256h);
    assign line_ram_ctr_clr = ~(pload_n | ~(s_256h & s_256hd_n));
    
-   always @(posedge s_6mhz)
+   always @(posedge s_6mhz) // A5-B5
      if (reset)
        line_ram_ctr <= 0;
-     else
-       begin
-	  if (line_ram_ctr_clr)
-	    line_ram_ctr <= 0;
-	  else
-	    if (line_ram_ctr_load) 
-	      line_ram_ctr <= pfd_hold[23:16];
-	    else
-	      line_ram_ctr <= line_ram_ctr + 8'b1;
-       end
+     else /*if (s_6mhz_en)*/ begin
+       if (line_ram_ctr_clr)
+         line_ram_ctr <= 0;
+       else if (line_ram_ctr_load) 
+	       line_ram_ctr <= pfd_hold[23:16];
+	     else
+	       line_ram_ctr <= line_ram_ctr + 8'b1;
+     end
    
    assign line_ram_addr = line_ram_ctr;
 
-   always @(posedge s_6mhz)
-     line_ram[line_ram_addr] <= y;
+   always @(posedge s_12mhz)
+     if (~s_6mhz) line_ram[line_ram_addr] <= y;
 
 
    always @(posedge s_12mhz)
@@ -603,11 +609,10 @@ T65 T65(
      if (reset)
        gry <= 0;
      else
-//       if (~mob_n)
-//	 gry <= 2'b00;
-//       else
-	 gry <= mr;
-
+       if (~mob_n)
+         gry <= 2'b00;
+       else/* if (s_6mhz_n_en)*/
+         gry <= mr;
    
    //  playfield multiplexer
 
@@ -628,21 +633,20 @@ T65 T65(
 //       pic <= 0;
 //     else
 //       pic <= pf[7:0];
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz)
      if (reset)
        pic <= 0;
-     else
-       if (~s_4h)
-	 pic <= pf[7:0];
+     else if (s_4h_en)
+       pic <= pf[7:0];
 	 
 F7 F7(
-	.clk(s_6mhz_n),
+	.clk(s_12mhz),
 	.addr(pf_rom0_addr),
 	.data(pf_rom0_out)
 	);		 
 			
 HJ7 HJ7(
-	.clk(s_6mhz_n),
+	.clk(s_12mhz),
 	.addr(pf_rom1_addr),
 	.data(pf_rom1_out)
 	);
@@ -661,28 +665,28 @@ HJ7 HJ7(
    assign pf_mux0 = match_n ? 8'b0 : (pic[6] ? pf_rom0_out_rev : pf_rom0_out);
    assign pf_mux1 = match_n ? 8'b0 : (pic[6] ? pf_rom1_out_rev : pf_rom1_out);
    
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz)
      if (reset)
        pf_shift1 <= 0;
-     else
+     else if (s_6mhz_en)
        if (~pload_n)
-	 pf_shift1 <= pf_mux1;
+         pf_shift1 <= pf_mux1;
        else
-	 pf_shift1 <= { pf_shift1[6:0], 1'b0 };
+         pf_shift1 <= { pf_shift1[6:0], 1'b0 };
    
-   always @(posedge s_6mhz)
+   always @(posedge s_12mhz)
      if (reset)
        pf_shift0 <= 0;
-     else
+     else if (s_6mhz_en)
        if (~pload_n)
-	 pf_shift0 <= pf_mux0;
+         pf_shift0 <= pf_mux0;
        else
-	 pf_shift0 <= { pf_shift0[6:0], 1'b0 };
+         pf_shift0 <= { pf_shift0[6:0], 1'b0 };
    
-   always @(posedge s_6mhz_n)
+   always @(posedge s_12mhz)
      if (reset)
        area <= 0;
-     else
+     else if (s_6mhz_n_en)
        area <= { pf_shift1[7], pf_shift0[7] };
 
    //
@@ -742,8 +746,8 @@ HJ7 HJ7(
    assign pf_ce4_n = 4'b0;
 		 
    pf_ram pf_ram(
-		    .clk_a(s_6mhz),
-		    .clk_b(s_6mhz_n),
+		    .clk_a(s_12mhz),
+		    .clk_b(s_12mhz),
 		    .reset(reset),
 		    //
 		    .addr_a({ab[9:6], ab[3:0]}),
@@ -830,10 +834,10 @@ assign hs_out = 8'b0;
    // Coin Counter Output
    reg [7:0] cc_latch;
 
-   always @(posedge s_6mhz or posedge reset)
+   always @(posedge s_12mhz or posedge reset)
      if (reset)
        cc_latch <= 0;
-     else
+     else if (s_6mhz_en)
        if (~out0_n)
 	      cc_latch[ ab[2:0] ] <= db_out[7];
 
@@ -926,7 +930,7 @@ POKEY POKEY(
    .phi2(phi2),
    .readHighWriteLow(rw_n),
    .cs0Bar(pokey_n),
-	.audio(audio),
+   .audio(audio),
    .clk(clk_100mhz)
    );
 
@@ -940,10 +944,10 @@ POKEY POKEY(
    assign comp_sync = ~hsync & ~vsync;
 
    // XXX implement alternate shades of blue and green...
-   always @(posedge s_6mhz_n)
+   always @(posedge s_12mhz)
      if (reset)
        rgbi <= 0;
-     else
+     else if (s_6mhz_n_en)
        rgbi <= coloram_rgbi;
 
    assign coloram_w_n = write_n | coloram_n;
@@ -969,8 +973,8 @@ dpram #(
 	.addr_width_g(4),
 	.data_width_g(4))
 color_ram(
-	.clk_a_i(s_6mhz),
-	.clk_b_i(s_6mhz_n),
+	.clk_a_i(s_12mhz),
+	.clk_b_i(s_12mhz),
 	.we_i(~coloram_w_n),
 	.addr_a_i(ab[3:0]),
 	.data_a_o(coloram_out),
@@ -996,13 +1000,13 @@ color_ram(
 		  rgbi == 4'b1101 ? 9'b000_111_000 :
 		  rgbi == 4'b1110 ? 9'b000_000_111 :
 		  rgbi == 4'b1111 ? 9'b000_000_000 :
-		  0;
+		  9'd0;
 
 
    assign sync_o = comp_sync;
    assign hsync_o = hsync;
    assign vsync_o = vsync;
-	assign audio_o = audio ;
+   assign audio_o = audio;
    assign hblank_o = hblank;
    assign vblank_o = vblank;
 
