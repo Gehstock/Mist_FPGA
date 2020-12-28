@@ -18,8 +18,7 @@
 //================================================================================
  
 module dkong_sound(
-	input   I_CLK1,
-	input   I_CLK2,
+	input   I_CLK,
 	input   I_RST,
 	input   [7:0]I8035_DBI,
 	output  [7:0]I8035_DBO,
@@ -35,7 +34,9 @@ module dkong_sound(
 	output  I8035_T0,
 	output  I8035_T1,
 	output  I8035_RSTn,
-	output  [7:0]O_SOUND_DAT
+	output  [7:0]O_SOUND_DAT,
+	output  [11:0] ROM_A,
+	input   [7:0] ROM_D
 );
 
 assign  I8035_T0    = ~I_SOUND_CNT[3];
@@ -50,45 +51,55 @@ assign  I8035_PBO[7:6] = 2'b00;
 wire    [10:0]S_ROM_A;
 reg     [7:0]L_ROM_A;
 
-always@(negedge I8035_ALE) L_ROM_A <= I8035_DBI ;
+//always@(negedge I8035_ALE) L_ROM_A <= I8035_DBI ;
+reg I8035_ALE_D;
+always@(posedge I_CLK) begin
+	I8035_ALE_D <= I8035_ALE;
+	if (!I8035_ALE & I8035_ALE_D) L_ROM_A <= I8035_DBI;
+end
 assign  S_ROM_A = {I8035_PBI[2:0],L_ROM_A[7:0]};
+assign  ROM_A = {~I8035_PBI[6],I8035_PBI[2:0],L_ROM_A[7:0]};
 
 //----  Parts 4C ------------------------------
 reg     S_D1_CS;
-always@(posedge I_CLK1) S_D1_CS <= I8035_PBI[6]&(~I8035_RDn);
+always@(posedge I_CLK) S_D1_CS <= I8035_PBI[6]&(~I8035_RDn);
 
 wire    [7:0]S_D1 = S_D1_CS ? {4'h0,~I_SOUND_DAT[3:0]}: 8'h00 ; 
 
 wire    [7:0]S_PROG_DB;
 wire    [7:0]S_PROG_D  = I8035_PSENn ? 8'h00 : S_PROG_DB ;
-
+/*
 snd1 snd1 (
-	.clk(I_CLK2),
+	.clk(I_CLK),
 	.addr(S_ROM_A),
 	.data(S_PROG_DB)
 	);
+*/
+assign S_PROG_DB = ROM_D;
 
 //----  DATA ROM 3H ---------------------------
 wire    S_D2_CS = (~I8035_PBI[6])&(~I8035_RDn);
 
 wire    [7:0]S_DB2;
 wire    [7:0]S_D2 = S_D2_CS ? S_DB2 : 8'h00 ;
-
+/*
 snd2 snd2 (
-	.clk(I_CLK2),
+	.clk(I_CLK),
 	.addr(S_ROM_A),
 	.data(S_DB2)
 	);
+*/
+assign S_DB2 = ROM_D;
 
 //----  I8035_DB IO I/F -----------------------
 wire    [7:0]I8035_DO = S_PROG_D | S_D1 | S_D2 ;
 
 reg     [7:0]DO;
-always@(posedge I_CLK1) DO <= I8035_DO;
+always@(posedge I_CLK) DO <= I8035_DO;
 assign  I8035_DBO = DO;
 
 //----    DAC  I/F     ------------------------  
 assign  O_SOUND_DAT = I8035_PAI;
 
 
-endmodule 
+endmodule

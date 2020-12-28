@@ -30,6 +30,7 @@
 module dkong_obj(
 	input  				CLK_24M,
 	input  				CLK_12M,
+	input         CLK_12M_EN,
 	input  		[9:0]	I_AB,
 //	input  		[7:0]	I_DB,
 	input  		[7:0]	I_OBJ_D,
@@ -45,7 +46,11 @@ module dkong_obj(
 	output reg 	[5:0]	O_OBJ_DO,
 	output 				O_FLIP_VRAM,
 	output 				O_FLIP_HV,
-	output 				O_L_CMPBLKn
+	output 				O_L_CMPBLKn,
+
+	input [15:0] DL_ADDR,
+	input DL_WR,
+	input [7:0] DL_DATA
 	);
 
 //---- Debug ---------
@@ -91,11 +96,11 @@ assign O_FLIP_HV   = W_FLIP_3;
 
 //-------  VFC_CNT[7:0] ------------------------------------------------
 reg    [7:0]W_VFC_CNT;
-always@(negedge I_H_CNT[9]) W_VFC_CNT <= I_VF_CNT;
+always@(posedge CLK_24M) if (CLK_12M & I_H_CNT[9:0] == 10'b1011111111) W_VFC_CNT <= I_VF_CNT;
 
 //------  PARTS 6N
 reg    [7:0]W_6N_Q;
-always@(negedge CLK_12M) W_6N_Q <= I_OBJ_D;
+always@(posedge CLK_24M) if (CLK_12M_EN) W_6N_Q <= I_OBJ_D;
 
 wire   [7:0]W_78R_A = W_6N_Q;
 wire   [7:0]W_78R_B = {4'b1111,I_FLIPn,W_FLIP_1,W_FLIP_1,1'b1}; 
@@ -108,7 +113,7 @@ wire   [7:0]W_78P_B = I_VF_CNT[7:0];
 wire   [8:0]W_78P_Q = W_78P_A + W_78P_B;
 
 reg    W_7H;
-always@(posedge CLK_12M) W_7H <= ~(W_78P_Q[7]&W_78P_Q[6]&W_78P_Q[5]&W_78P_Q[4]);
+always@(posedge CLK_24M) if (CLK_12M) W_7H <= ~(W_78P_Q[7]&W_78P_Q[6]&W_78P_Q[5]&W_78P_Q[4]);
 
 reg    [7:0]W_5L_Q;
 reg    CLK_4L;
@@ -138,7 +143,7 @@ end
 
 //------  PARTS 6M  ----------------------------------------------
 reg    [7:0]W_6M_Q;
-always@(negedge CLK_12M) W_6M_Q <= W_6N_Q;
+always@(posedge CLK_24M) if (CLK_12M_EN) W_6M_Q <= W_6N_Q;
 //----------------------------------------------------------------
 wire   [5:0]W_RAM_7M_AB  = ~I_H_CNT[9] ? W_5L_Q[5:0]:I_H_CNT[7:2];
 wire   [8:0]W_RAM_7M_DIB = {W_6M_Q[7:0],W_3P};
@@ -169,8 +174,8 @@ wire   [7:0]W_6K_D = {W_6J_Q[7],I_CMPBLKn,~I_H_CNT[9],
                       ~(I_H_CNT[9]|W_FLIP_2),W_6J_Q[3:0]};
 
 reg    [7:0]W_6K_Q;
-always@(posedge CLK_12M)
-begin
+always@(posedge CLK_24M)
+if (CLK_12M_EN) begin
    if(W_5B == 1'b0) W_6K_Q <= W_6K_D;
    else             W_6K_Q <= W_6K_Q;
 end
@@ -214,8 +219,8 @@ reg   [15:0]reg_8CD;
 
 assign W_8C_Qa = reg_8CD[15];
 assign W_8D_Qh = reg_8CD[0];
-always@(posedge CLK_12M)
-begin
+always@(posedge CLK_24M)
+if (CLK_12M_EN) begin
    case(C_8CD)
       2'b00: reg_8CD <= reg_8CD;
       2'b10: reg_8CD <= {reg_8CD[14:0],1'b0};
@@ -231,8 +236,8 @@ reg   [15:0]reg_8EF;
 
 assign W_8E_Qa = reg_8EF[15];
 assign W_8F_Qh = reg_8EF[0];
-always@(posedge CLK_12M)
-begin
+always@(posedge CLK_24M)
+if (CLK_12M_EN) begin
    case(C_8EF)
       2'b00: reg_8EF <= reg_8EF;
       2'b10: reg_8EF <= {reg_8EF[14:0],1'b0};
@@ -247,10 +252,11 @@ assign W_8B_B = {W_8D_Qh,W_8F_Qh,W_6L1,1'b1};
 
 assign W_8B_Y = W_6K_Q[7] ? W_8B_B:W_8B_A;
 
-//------  PRATS 3E & 4E  -----------------------------------------
+//------  PARTS 3E & 4E  -----------------------------------------
 reg    CLK_3E;
 always@(negedge CLK_24M)
    CLK_3E <= ~(~(I_H_CNT[0]&W_6K_Q[5])& CLK_12M);
+//wire CLK_3E = ~(~(I_H_CNT[0]&W_6K_Q[5])& CLK_12M);
 
 wire   [7:0]W_3E_LD_DI = W_78K_Q[7:0];
 
@@ -272,7 +278,7 @@ end
 wire   [5:0]W_RAM_2EH_DO;
 wire   [5:0]W_3J_B       = {W_6K_Q[3:0],W_8B_Y[2],W_8B_Y[3]};
 
-wire   [5:0]W_RAM_2EH_DI = W_6K_Q[5] ? 8'h00 :(W_8B_Y[2]|W_8B_Y[3])? W_3J_B: W_RAM_2EH_DO;
+wire   [5:0]W_RAM_2EH_DI = W_6K_Q[5] ? 6'h00 :(W_8B_Y[2]|W_8B_Y[3])? W_3J_B: W_RAM_2EH_DO;
 
 wire   [7:0]W_RAM_2EH_AB = W_3E_Q[7:0]^{8{W_6K_Q[4]}};
 
@@ -308,30 +314,73 @@ wire   [10:0]W_ROM_OBJ_AB = {W_6H_Q[6:0],W_8H_Q[3:0]^{W_6H_Q[7],W_6H_Q[7],W_6H_Q
 
 wire   [7:0]W_OBJ_DO_7C,W_OBJ_DO_7D,W_OBJ_DO_7E,W_OBJ_DO_7F;
 
-
+/*
 obj1 obj1 (
-	.clk(CLK_12M),
+	.clk(CLK_24M),
 	.addr(W_ROM_OBJ_AB),
 	.data(W_OBJ_DO_7C)
 	);
-	
+*/
+dpram #(11,8) obj1 (
+	.clock_a(CLK_24M),
+	.address_a(W_ROM_OBJ_AB),
+	.q_a(W_OBJ_DO_7C),
+
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[10:0]),
+	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hA, 1'b0}),
+	.data_b(DL_DATA)
+	);
+/*
 obj2 obj2 (
-	.clk(CLK_12M),
+	.clk(CLK_24M),
 	.addr(W_ROM_OBJ_AB),
 	.data(W_OBJ_DO_7D)
 	);
+*/
+dpram #(11,8) obj2 (
+	.clock_a(CLK_24M),
+	.address_a(W_ROM_OBJ_AB),
+	.q_a(W_OBJ_DO_7D),
 
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[10:0]),
+	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hB, 1'b0}),
+	.data_b(DL_DATA)
+	);
+/*
 obj3 obj3 (
-	.clk(CLK_12M),
+	.clk(CLK_24M),
 	.addr(W_ROM_OBJ_AB),
 	.data(W_OBJ_DO_7E)
 	);
+*/
+dpram #(11,8) obj3 (
+	.clock_a(CLK_24M),
+	.address_a(W_ROM_OBJ_AB),
+	.q_a(W_OBJ_DO_7E),
 
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[10:0]),
+	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hC, 1'b0}),
+	.data_b(DL_DATA)
+	);
+/*
 obj4 obj4 (
-	.clk(CLK_12M),
+	.clk(CLK_24M),
 	.addr(W_ROM_OBJ_AB),
 	.data(W_OBJ_DO_7F)
 	);
+*/
+dpram #(11,8) obj4 (
+	.clock_a(CLK_24M),
+	.address_a(W_ROM_OBJ_AB),
+	.q_a(W_OBJ_DO_7F),
+
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[10:0]),
+	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hD, 1'b0}),
+	.data_b(DL_DATA)
+	);
 	
 endmodule
-

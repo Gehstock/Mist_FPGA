@@ -19,8 +19,9 @@
 
 module dkong_adec(
 
-I_CLK12M,
-I_CLK,
+I_CLK24M,
+I_CLK_EN_P,
+I_CLK_EN_N,
 I_RESET_n,
 I_AB,
 I_DB,
@@ -54,8 +55,9 @@ O_3D_Q
 
 );
 
-input  I_CLK12M;
-input  I_CLK;          //   H_CNT[1]    3.072MHz
+input  I_CLK24M;
+input  I_CLK_EN_P;          //   H_CNT[1]    3.072MHz
+input  I_CLK_EN_N;
 input  I_RESET_n;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
@@ -101,17 +103,17 @@ reg    W_7F2_Q;
 assign O_WAIT_n = W_7F1_Qn;
 //assign O_WAIT_n = 1'b1;
 
-always@(posedge I_CLK or negedge I_VBLK_n)
+always@(posedge I_CLK24M or negedge I_VBLK_n)
 begin
    if(I_VBLK_n == 1'b0)
       W_7F1_Qn <= 1'b1;
-   else
+   else if (I_CLK_EN_P)
       W_7F1_Qn <= I_VRAMBUSY_n | W_2A2_Q[1];
 end
 
-always@(negedge I_CLK)
+always@(negedge I_CLK24M)
 begin
-   W_7F2_Q <= W_7F1_Qn;
+   if (I_CLK_EN_N) W_7F2_Q <= W_7F1_Qn;
 end
 
 //  CPU NMI
@@ -237,7 +239,7 @@ logic_74xx138 U_1C(
 //---  Parts 5H ---------
 //reg    [7:0]W_5H_Q;
 
-always@(posedge I_CLK12M or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
    if(I_RESET_n == 1'b0)begin
       W_5H_Q <= 0;
@@ -261,7 +263,7 @@ end
 //---  Parts 6H ---------
 reg    [7:0]W_6H_Q;
 
-always@(posedge I_CLK12M or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
    if(I_RESET_n == 1'b0)begin
       W_6H_Q <= 0;

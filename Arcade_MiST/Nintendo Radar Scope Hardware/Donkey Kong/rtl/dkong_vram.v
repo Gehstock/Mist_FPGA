@@ -28,7 +28,8 @@
 //-----------------------------------------------------------------------------------------
 
 module dkong_vram(
-	input  CLK_12M,
+	input  CLK_24M,
+	input  CLK_EN,
 	input  [9:0]I_AB,
 	input  [7:0]I_DB,
 	input  I_VRAM_WRn,
@@ -41,7 +42,11 @@ module dkong_vram(
 	output reg [3:0]O_COL,
 	output [1:0]O_VID,
 	output O_VRAMBUSYn,
-	output O_ESBLKn
+	output O_ESBLKn,
+
+	input [15:0] DL_ADDR,
+	input DL_WR,
+	input [7:0] DL_DATA
 	);
 
 //---- Debug ----
@@ -57,12 +62,12 @@ wire   [9:0]W_vram_AB = I_CMPBLK ? W_cnt_AB : I_AB ;
 wire        W_vram_CS = I_CMPBLK ? 1'b0     : I_VRAM_WRn & I_VRAM_RDn;
 wire        W_2S4     = I_CMPBLK ? 1'b0     : 1'b1 ;
 
-reg    CLK_2M;
-always@(negedge CLK_12M) CLK_2M <= ~(I_H_CNT[1]&I_H_CNT[2]&I_H_CNT[3]);
+wire CLK_2M = ~(&I_H_CNT[3:1]) /* synthesis keep */;
+wire CLK_2M_EN = CLK_EN & I_H_CNT[3:0] == 4'b1111/* synthesis keep */;
 
 ram_1024_8 U_2PR(
 
-.I_CLK(~CLK_12M),
+.I_CLK(CLK_24M),
 .I_ADDR(W_vram_AB),
 .I_D(WI_DB),
 .I_CE(~W_vram_CS),
@@ -72,15 +77,26 @@ ram_1024_8 U_2PR(
 );
 
 wire   [3:0]W_2N_DO;
+/*
 col3 col3 (
-	.clk(CLK_12M),
+	.clk(CLK_24M),
 	.addr({W_vram_AB[9:7],W_vram_AB[4:0]}),
 	.data(W_2N_DO)
 	);
+*/
+dpram #(8,4) col3 (
+	.clock_a(CLK_24M),
+	.address_a({W_vram_AB[9:7],W_vram_AB[4:0]}),
+	.q_a(W_2N_DO),
 
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[7:0]),
+	.wren_b(DL_WR && DL_ADDR[15:8] == 8'hF2),
+	.data_b(DL_DATA[3:0])
+	);
 
 //    Parts  2M
-always@(negedge CLK_2M) O_COL[3:0] <= W_2N_DO[3:0];
+always@(posedge CLK_24M) if (CLK_2M_EN) O_COL[3:0] <= W_2N_DO[3:0];
 
 wire   ROM_3PN_CE = ~I_H_CNT[9];
 
@@ -90,7 +106,8 @@ wire   [3:0]W_4M_a,W_4M_b;
 wire   [3:0]W_4M_Y;
 wire   W_4P_Qa,W_4P_Qh,W_4N_Qa,W_4N_Qh;
 
-wire   CLK_4PN = I_H_CNT[0];
+wire   CLK_4PN = ~I_H_CNT[0] /* synthesis keep */;
+wire   CLK_4PN_EN = CLK_EN & I_H_CNT[0] /* synthesis keep */;
 
 //------  PARTS 4P  ---------------------------------------------- 
 wire   [1:0]C_4P = W_4M_Y[1:0];
@@ -99,8 +116,8 @@ reg    [7:0]reg_4P;
 
 assign W_4P_Qa = reg_4P[7];
 assign W_4P_Qh = reg_4P[0];
-always@(posedge CLK_4PN)
-begin
+always@(posedge CLK_24M)
+if (CLK_4PN_EN) begin
    case(C_4P)
       2'b00: reg_4P <= reg_4P;
       2'b10: reg_4P <= {reg_4P[6:0],1'b0};
@@ -115,8 +132,8 @@ reg    [7:0]reg_4N;
 
 assign W_4N_Qa = reg_4N[7];
 assign W_4N_Qh = reg_4N[0];
-always@(posedge CLK_4PN)
-begin
+always@(posedge CLK_24M)
+if (CLK_4PN_EN) begin
    case(C_4N)
       2'b00: reg_4N <= reg_4N;
       2'b10: reg_4N <= {reg_4N[6:0],1'b0};
@@ -136,38 +153,60 @@ assign O_VID[1] = W_4M_Y[3];
 //------  PARTS 2K1 ----------------------------------------------
 reg    W_VRAMBUSY;
 assign O_VRAMBUSYn = ~W_VRAMBUSY;
-always@(posedge I_H_CNT[2] or negedge I_H_CNT[9])
+always@(posedge CLK_24M/*I_H_CNT[2]*/ or negedge I_H_CNT[9])
 begin
    if(I_H_CNT[9] == 1'b0)
       W_VRAMBUSY <= 1'b1;
-   else
+   else if (CLK_EN & I_H_CNT[2:0] == 3'b0111)
       W_VRAMBUSY <= I_H_CNT[4]&I_H_CNT[5]&I_H_CNT[6]&I_H_CNT[7];
 end
 
 //------  PARTS 2K2 ----------------------------------------------
 reg    W_ESBLK;
 assign O_ESBLKn = ~W_ESBLK;
-always@(posedge I_H_CNT[6] or negedge I_H_CNT[9])
+always@(posedge CLK_24M/*I_H_CNT[6]*/ or negedge I_H_CNT[9])
 begin
    if(I_H_CNT[9] == 1'b0)
       W_ESBLK <= 1'b0;
-   else
+   else if (CLK_EN & I_H_CNT[6:0] == 7'b0111111)
       W_ESBLK <= ~I_H_CNT[7];
 end
 
 wire [7:0] W_3P_DO, W_3N_DO;
+/*
 vid1 vid1 (
-	.clk(CLK_12M & ROM_3PN_CE),
+	.clk(CLK_24M),
 	.addr({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.data(W_3P_DO)
 	);
-	
+*/
+dpram #(12,8) vid1 (
+	.clock_a(CLK_24M),
+	.address_a({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.q_a(W_3P_DO),
+
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'h8),
+	.data_b(DL_DATA)
+	);
+/*
 vid2 vid2 (
-	.clk(CLK_12M & ROM_3PN_CE),
+	.clk(CLK_24M),
 	.addr({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.data(W_3N_DO)
 	);
+*/
+dpram #(12,8) vid2 (
+	.clock_a(CLK_24M),
+	.address_a({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.q_a(W_3N_DO),
 
+	.clock_b(CLK_24M),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'h9),
+	.data_b(DL_DATA)
+	);
 
 endmodule
 
