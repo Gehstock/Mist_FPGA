@@ -1,17 +1,19 @@
 module dkong_soundboard(
-	input					W_RESETn,
-	input					W_CLK_24576M,
-	input					W_W0_WE,
-	input					W_W1_WE,
-	input					W_CNF_EN,
-	input		[5:0]		W_6H_Q,
-	input					W_5H_Q,
-	input					W_3D_Q,
-	output 	[15:0]	O_SOUND_DAT,
-	output  [11:0] ROM_A,
-	input    [7:0] ROM_D,
-	output  [18:0] WAV_ROM_A,
-	input    [7:0] WAV_ROM_DO
+	input         W_CLK_24576M,
+	input         W_RESETn,
+	input         I_DKJR,
+	input         W_W0_WE,
+	input         W_W1_WE,
+	input         W_CNF_EN,
+	input   [6:0] W_6H_Q,
+	input         W_5H_Q0,
+	input   [1:0] W_4H_Q,
+	input   [4:0] W_3D_Q,
+	output [15:0] O_SOUND_DAT,
+	output [11:0] ROM_A,
+	input   [7:0] ROM_D,
+	output [18:0] WAV_ROM_A,
+	input   [7:0] WAV_ROM_DO
 );
 
 wire   [7:0]W_D_S_DAT;
@@ -64,6 +66,7 @@ dkong_sound Digtal_sound
 (
 	.I_CLK(W_CLK_24576M),
 	.I_RST(W_RESETn),
+	.I_DKJR(I_DKJR),
 	.I8035_DBI(I8035_DBI),
 	.I8035_DBO(I8035_DBO),
 	.I8035_PAI(I8035_PAI),
@@ -76,8 +79,8 @@ dkong_sound Digtal_sound
 	.I8035_INTn(I8035_INTn),
 	.I8035_T0(I8035_T0),
 	.I8035_T1(I8035_T1),
-	.I_SOUND_DAT(W_3D_Q), 
-	.I_SOUND_CNT({W_6H_Q[5:3],W_5H_Q}),
+	.I_SOUND_DAT(I_DKJR ? ~W_3D_Q : {1'b1, W_3D_Q[3:0]}),
+	.I_SOUND_CNT(I_DKJR ? {W_4H_Q[1],W_6H_Q[6:3],W_5H_Q0} : {2'b11,W_6H_Q[5:3],W_5H_Q0}),
 	.O_SOUND_DAT(W_D_S_DAT),
 	.ROM_A(ROM_A),
 	.ROM_D(ROM_D)
@@ -90,11 +93,11 @@ dkong_wav_sound Analog_sound
 
 	.I_CLK(W_CLK_24576M),
 	.I_RSTn(W_RESETn),
-	.I_SW(W_6H_Q[2:0])
+	.I_SW(I_DKJR ? 3'b000 : W_6H_Q[2:0])
 );
 
 //  SOUND MIXER (WAV + DIG ) -----------------------
-wire   [8:0]sound_mix = {1'b0, WAV_ROM_DO} + {1'b0, W_D_S_DAT};
+wire   [8:0]sound_mix = {1'b0, I_DKJR ? 8'd0 : WAV_ROM_DO} + {1'b0, W_D_S_DAT};
 
 assign O_SOUND_DAT = sound_mix[8:1];
 

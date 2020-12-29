@@ -160,6 +160,7 @@ dkong_top dkong(
 	.I_S2(~m_two_players),
 	.I_C1(~m_coin1),
 	.I_DIP_SW(status[15:8]),
+	.I_DKJR(core_mod[0]),
 	.O_SOUND_DAT(audio),
 	.O_VGA_R(r),
 	.O_VGA_G(g),
@@ -212,6 +213,7 @@ wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
+wire  [6:0] core_mod;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
@@ -230,6 +232,7 @@ user_io(
 	.scandoubler_disable (scandoublerD),
 	.ypbpr          (ypbpr          ),
 	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),

@@ -23,6 +23,7 @@ I_CLK24M,
 I_CLK_EN_P,
 I_CLK_EN_N,
 I_RESET_n,
+I_DKJR,
 I_AB,
 I_DB,
 I_MREQ_n,
@@ -49,6 +50,7 @@ O_SW1_OE_n,
 O_SW2_OE_n,
 O_SW3_OE_n,
 O_DIP_OE_n,
+O_4H_Q,
 O_5H_Q,
 O_6H_Q,
 O_3D_Q
@@ -59,6 +61,7 @@ input  I_CLK24M;
 input  I_CLK_EN_P;          //   H_CNT[1]    3.072MHz
 input  I_CLK_EN_N;
 input  I_RESET_n;
+input  I_DKJR;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
 input  I_MREQ_n;
@@ -83,9 +86,10 @@ output O_SW1_OE_n;      //   7C00 H           (R mode)
 output O_SW2_OE_n;      //   7C80 H           (R mode)
 output O_SW3_OE_n;      //   7D00 H           (R mode)
 output O_DIP_OE_n;      //   7D80 H           (R mode)
+output [1:0]O_4H_Q;     //   GFX (Characters) bank switch, sound
 output [7:0]O_5H_Q;     //   FLIP,
 output [7:0]O_6H_Q;     //   sound
-output [3:0]O_3D_Q;     //   sound
+output [4:0]O_3D_Q;     //   sound
 
 output O_WAIT_n;
 output O_NMI_n;
@@ -94,6 +98,7 @@ output O_NMI_n;
 wire   [3:0]W_2A1_Q,W_2A2_Q;
 wire   [7:0]W_4D_Q,W_2B_Q,W_2C_Q,W_2D_Q;
 wire   [7:0]W_1B_Q,W_1C_Q;
+reg    [1:0]W_4H_Q;
 reg    [7:0]W_5H_Q;
 
 //  CPU WAIT
@@ -139,7 +144,7 @@ logic_74xx138 U_4D(
 
 );
 
-assign O_ROM_CS_n = W_4D_Q[0]&W_4D_Q[1]&W_4D_Q[2]&W_4D_Q[3];
+assign O_ROM_CS_n = I_DKJR ? &W_4D_Q[5:0] : &W_4D_Q[3:0];
 
 //   ADDR DEC  7000H - 7FFFH
 
@@ -236,6 +241,23 @@ logic_74xx138 U_1C(
 
 );
 
+//---  Parts 4H ---------
+
+always@(posedge I_CLK24M or negedge I_RESET_n)
+begin
+	if(I_RESET_n == 1'b0) begin
+		W_4H_Q <= 0;
+	end 
+	else begin
+		if(W_1C_Q[1] == 1'b0) begin
+			case(I_AB[0])
+				3'h0 : W_4H_Q[0] <= I_DB[0]; // VROM signal
+				3'h1 : W_4H_Q[1] <= I_DB[0]; // SOUND 8035 PB6
+			endcase
+		end
+	end
+end
+
 //---  Parts 5H ---------
 //reg    [7:0]W_5H_Q;
 
@@ -284,18 +306,23 @@ begin
    end
 end
 
+assign O_4H_Q = W_4H_Q;
 assign O_5H_Q = W_5H_Q;
 assign O_6H_Q = W_6H_Q;
 
 //  Parts 3D
-reg   [3:0]O_3D_Q;
+reg   [4:0]O_3D_Q;
 
-always@(posedge W_1C_Q[0] or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
-   if(! I_RESET_n) O_3D_Q <= 0;
-   else begin
-      O_3D_Q <= I_DB;      
-   end 
+	reg W_1C_Q0_D;
+	if(! I_RESET_n) O_3D_Q <= 0;
+	else begin
+		W_1C_Q0_D <= W_1C_Q[0];
+		if (!W_1C_Q0_D & W_1C_Q[0]) begin
+			O_3D_Q <= I_DB;
+		end
+	end
 end
 
 

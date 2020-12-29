@@ -11,6 +11,7 @@
 // An author does no guarantee about this program.
 // You can use this under your own risk.
 //
+// 2020-12-28 converted a big part to totally syncronous logic (by slingshot)
 // 2004- 3- 3 first release.
 // 2004- 6- 8 Quartus2 v4.0sp1 used (bug fix) K.Degawa
 // 2004- 8-24 T80-IP was include.  K.Degawa
@@ -34,6 +35,7 @@ module dkong_top
 	input  I_S1,I_S2,I_C1,
 
 	input  [7:0] I_DIP_SW,
+	input  I_DKJR,
 	
 	//    VGA (VIDEO) IF
 	output [2:0]O_VGA_R,
@@ -52,7 +54,7 @@ module dkong_top
 	input         DL_WR,
 	input   [7:0] DL_DATA,
 
-	output [15:0] MAIN_CPU_A,
+	output reg [15:0] MAIN_CPU_A,
 	input   [7:0] MAIN_CPU_DO,
 	output [11:0] SND_ROM_A,
 	input   [7:0] SND_ROM_DO,
@@ -92,9 +94,10 @@ wire   W_SW2_OEn ;
 wire   W_SW3_OEn ;
 wire   W_DIP_OEn ;
 
+wire   [1:0]W_4H_Q;
 wire   [7:0]W_5H_Q;
 wire   [7:0]W_6H_Q;
-wire   [3:0]W_3D_Q;
+wire   [4:0]W_3D_Q;
 
 //  RAM DATA
 wire   [7:0]W_RAM1_DO;
@@ -121,6 +124,8 @@ wire   W_CPU_M1n;
 wire   W_CPU_NMIn;
 wire   W_CPU_IORQn;
 wire   W_CPU_MREQn;
+wire   W_CPU_BUSRQ;
+wire   W_CPU_BUSAKn;
 wire   W_CPU_RDn;  
 wire   W_CPU_WRn;
 wire   [15:0]W_CPU_A;
@@ -138,7 +143,8 @@ wire   W_CPU_CLK_EN_N = W_H_CNT[1:0] == 2'b11;
 	.WAIT_n(W_CPU_WAITn | (W_CPU_IORQn & W_CPU_MREQn)),
 	.INT_n(1'b1),
 	.NMI_n(W_CPU_NMIn),
-	.BUSRQ_n(1'b1),
+	.BUSRQ_n(~W_CPU_BUSRQ),
+	.BUSAK_n(W_CPU_BUSAKn),
 	.M1_n(W_CPU_M1n),
 	.IORQ_n(W_CPU_IORQn),
 	.MREQ_n(W_CPU_MREQn),
@@ -167,7 +173,20 @@ prog ROM(
 	.data(WB_ROM_DO)
 );
 */
-assign MAIN_CPU_A = W_CPU_A[13:0];
+//assign MAIN_CPU_A = W_CPU_A[13:0];
+
+always @(*) begin
+	case({!I_DKJR, W_CPU_A[15:11]})
+		6'h02: MAIN_CPU_A = {5'h06,W_CPU_A[10:0]}; // 0x1000-0x17FF -> 0x3000-0x37FF in ROM file 
+		6'h03: MAIN_CPU_A = {5'h0B,W_CPU_A[10:0]}; // 0x1800-0x1FFF -> 0x5800-0x5FFF in ROM file
+		6'h05: MAIN_CPU_A = {5'h09,W_CPU_A[10:0]}; // 0x2800-0x2FFF -> 0x4800-0x4FFF in ROM file
+		6'h06: MAIN_CPU_A = {5'h02,W_CPU_A[10:0]}; // 0x3000-0x37FF -> 0x1000-0x17FF in ROM file
+		6'h07: MAIN_CPU_A = {5'h03,W_CPU_A[10:0]}; // 0x3800-0x3FFF -> 0x1800-0x1FFF in ROM file
+		6'h09: MAIN_CPU_A = {5'h05,W_CPU_A[10:0]}; // 0x4800-0x4FFF -> 0x2800-0x2FFF in ROM file
+		6'h0B: MAIN_CPU_A = {5'h07,W_CPU_A[10:0]}; // 0x5800-0x5FFF -> 0x3800-0x3FFF in ROM file
+		default: MAIN_CPU_A = W_CPU_A[15:0];
+	endcase
+end
 assign WB_ROM_DO = MAIN_CPU_DO;
 
 //========   INT RAM Interface  ==================================================
@@ -192,9 +211,17 @@ ram_1024_8 U_3B4B
 	.O_D(W_RAM2_DO)
 );
 
-//----    DMA   ------------------------------------------
-wire   [1:0]W_OBJ_A_offset = W_H_CNT[8]+1'd1;
-wire   [9:0]W_OBJ_AB = {W_OBJ_A_offset[1:0],W_H_CNT[7:0]};
+//=============== Sprite DMA ======================
+
+wire   [9:0]W_OBJ_AB = {W_2PSL, W_H_CNT[8:0]};
+
+wire [9:0]W_DMA_A;
+wire [7:0]W_DMA_D;
+wire W_DMA_CE;
+
+wire [9:0]W_DMA_AB;
+wire [7:0]W_DMA_DB;
+wire W_DMA_CEB;
 
 ram_1024_8_8 U_3A4A
 (
@@ -206,7 +233,41 @@ ram_1024_8_8 U_3A4A
 	.I_WEA(~W_CPU_WRn),
 	.O_DA(W_RAM3_DO),
 	//   B Port
-	.I_CLKB(W_CLK_12288M),
+	.I_CLKB(I_CLK_24576M),
+	.I_ADDRB(W_DMA_A),
+	.I_DB(8'h00),
+	.I_CEB(W_DMA_CE),
+	.I_WEB(1'b0),
+	.O_DB(W_DMA_D)
+);
+
+dkong_dma sprite_dma
+(
+	.I_CLK(I_CLK_24576M),
+	.I_CLK_EN(W_CPU_CLK_EN_P),// 3.072 Mhz
+	.I_DMA_TRIG(W_DREQ),
+	.I_DMA_DS(W_DMA_D),
+	.I_HLDA(~W_CPU_BUSAKn),
+
+	.O_HRQ(W_CPU_BUSRQ),
+	.O_DMA_AS(W_DMA_A),
+	.O_DMA_AD(W_DMA_AB),
+	.O_DMA_DD(W_DMA_DB),
+	.O_DMA_CES(W_DMA_CE),
+	.O_DMA_CED(W_DMA_CEB)
+);
+
+ram_1024_8_8 U_6PR
+(
+	//   A Port
+	.I_CLKA(I_CLK_24576M),
+	.I_ADDRA(W_DMA_AB),
+	.I_DA(W_DMA_DB),
+	.I_CEA(W_DMA_CEB),
+	.I_WEA(1'b1),
+	.O_DA(),
+	//   B Port
+	.I_CLKB(I_CLK_24576M),
 	.I_ADDRB(W_OBJ_AB[9:0]),
 	.I_DB(8'h00),
 	.I_CEB(1'b1),
@@ -214,6 +275,7 @@ ram_1024_8_8 U_3A4A
 	.O_DB(W_OBJ_DI)
 );
 
+//=========== SW Interface ========================================================
 wire   [7:0]W_SW1 = W_SW1_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J1,I_D1,I_U1,I_L1,I_R1};
 wire   [7:0]W_SW2 = W_SW2_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J2,I_D2,I_U2,I_L2,I_R2};
 wire   [7:0]W_SW3 = W_SW3_OEn ?  8'h00: ~{I_C1,1'b1,1'b1,1'b1,I_S2,I_S1,1'b1,1'b1};
@@ -230,6 +292,7 @@ dkong_adec adec
 	.I_CLK_EN_P(W_CPU_CLK_EN_P),
 	.I_CLK_EN_N(W_CPU_CLK_EN_N),
 	.I_RESET_n(W_RESETn),
+	.I_DKJR(I_DKJR),
 	.I_AB(W_CPU_A),
 	.I_DB(WI_D), 
 	.I_MREQ_n(W_CPU_MREQn),
@@ -255,6 +318,7 @@ dkong_adec adec
 	.O_SW2_OE_n(W_SW2_OEn),
 	.O_SW3_OE_n(W_SW3_OEn),
 	.O_DIP_OE_n(W_DIP_OEn),
+	.O_4H_Q(W_4H_Q),
 	.O_5H_Q(W_5H_Q),
 	.O_6H_Q(W_6H_Q),
 	.O_3D_Q(W_3D_Q)
@@ -262,6 +326,7 @@ dkong_adec adec
 
 wire   W_FLIPn = W_5H_Q[2];
 wire   W_2PSL  = W_5H_Q[3];
+wire   W_DREQ  = W_5H_Q[5]; // DMA Trigger
 
 //===========   VIDEO MODULE ( Donkey Kong )   ===================================
 //========  Assign Wire  =========================================================
@@ -337,6 +402,7 @@ dkong_vram vram
 	.I_H_CNT(W_H_CNT),
 	.I_VF_CNT(W_VF_CNT),
 	.I_CMPBLK(W_C_BLANKn),
+	.I_4H_Q0(W_4H_Q[0]),
 	//  Debug output
 	.O_DB(W_VRAM_DB),
 	.O_COL(W_VRAM_COL),
@@ -373,9 +439,11 @@ dkong_col_pal cpal
 dkong_soundboard dkong_soundboard(
 	.W_CLK_24576M(W_CLK_24576M),
 	.W_RESETn(W_RESETn),
+	.I_DKJR(I_DKJR),
 	.O_SOUND_DAT(O_SOUND_DAT),
 	.W_6H_Q(W_6H_Q),
-	.W_5H_Q(W_5H_Q),
+	.W_5H_Q0(W_5H_Q[0]),
+	.W_4H_Q(W_4H_Q),
 	.W_3D_Q(W_3D_Q),
 	.ROM_A(SND_ROM_A),
 	.ROM_D(SND_ROM_DO),

@@ -38,6 +38,7 @@ module dkong_vram(
 	input  [9:0]I_H_CNT,
 	input  [7:0]I_VF_CNT,
 	input  I_CMPBLK,
+	input  I_4H_Q0,
 	output [7:0]O_DB,
 	output reg [3:0]O_COL,
 	output [1:0]O_VID,
@@ -182,7 +183,7 @@ vid1 vid1 (
 */
 dpram #(12,8) vid1 (
 	.clock_a(CLK_24M),
-	.address_a({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.address_a({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.q_a(W_3P_DO),
 
 	.clock_b(CLK_24M),
@@ -199,7 +200,7 @@ vid2 vid2 (
 */
 dpram #(12,8) vid2 (
 	.clock_a(CLK_24M),
-	.address_a({1'b0,WO_DB[7:0],I_VF_CNT[2:0]}),
+	.address_a({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.q_a(W_3N_DO),
 
 	.clock_b(CLK_24M),
