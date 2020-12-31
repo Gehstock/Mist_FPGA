@@ -82,7 +82,7 @@ data_io data_io(
 );
 
 reg port1_req, port2_req;
-sdram sdram(
+sdram #(24) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
 	.clk           ( clock_24     ),

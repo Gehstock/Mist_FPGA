@@ -176,10 +176,7 @@ wire       need_refresh = (refresh_cnt >= RFRSH_CYCLES);
 
 // PORT1: bank 0,1
 always @(*) begin
-	if (refresh) begin
-		next_port[0] = PORT_NONE;
-		addr_latch_next[0] = addr_latch[0];
-	end else if (port1_req ^ port1_state) begin
+	if (port1_req ^ port1_state) begin
 		next_port[0] = PORT_REQ;
 		addr_latch_next[0] = { 1'b0, port1_a };
 	end else if (cpu1_addr != addr_last[PORT_CPU1]) begin
@@ -196,7 +193,10 @@ end
 
 // PORT1: bank 2,3
 always @(*) begin
-	if (port2_req ^ port2_state) begin
+	if (refresh || need_refresh) begin
+		next_port[1] = PORT_NONE;
+		addr_latch_next[1] = addr_latch[1];
+	end else if (port2_req ^ port2_state) begin
 		next_port[1] = PORT_REQ;
 		addr_latch_next[1] = { 1'b1, port2_a };
 	end else if (wav_addr != addr_last2[PORT_SP]) begin
@@ -240,6 +240,7 @@ always @(posedge clk) begin
 		// RAS phase
 		// bank 0,1
 		if(t == STATE_RAS0) begin
+			refresh <= 0;
 			addr_latch[0] <= addr_latch_next[0];
 			port[0] <= next_port[0];
 			{ oe_latch[0], we_latch[0] } <= 2'b00;
@@ -259,11 +260,16 @@ always @(posedge clk) begin
 					ds[0] <= 2'b11;
 				end
 			end
+
+			if (next_port[0] == PORT_NONE && need_refresh && !we_latch[1] && !oe_latch[1]) begin
+				refresh <= 1'b1;
+				refresh_cnt <= 0;
+				sd_cmd <= CMD_AUTO_REFRESH;
+			end
 		end
 
 		// bank 2,3
 		if(t == STATE_RAS1) begin
-			refresh <= 1'b0;
 			addr_latch[1] <= addr_latch_next[1];
 			{ oe_latch[1], we_latch[1] } <= 2'b00;
 			port[1] <= next_port[1];
@@ -282,12 +288,6 @@ always @(posedge clk) begin
 					{ oe_latch[1], we_latch[1] } <= 2'b10;
 					ds[1] <= 2'b11;
 				end
-			end
-
-			if (next_port[1] == PORT_NONE && need_refresh && !we_latch[0] && !oe_latch[0]) begin
-				refresh <= 1'b1;
-				refresh_cnt <= 0;
-				sd_cmd <= CMD_AUTO_REFRESH;
 			end
 		end
 
