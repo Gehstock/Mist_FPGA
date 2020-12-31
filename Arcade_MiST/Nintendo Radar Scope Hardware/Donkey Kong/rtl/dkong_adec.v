@@ -124,12 +124,16 @@ end
 //  CPU NMI
 wire  W_VBLK = ~I_VBLK_n;
 reg   O_NMI_n;
-always@(posedge W_VBLK or negedge W_5H_Q[4])
+always@(posedge I_CLK24M or negedge W_5H_Q[4])
 begin
-   if(~W_5H_Q[4])
-      O_NMI_n <= 1'b1;
-   else
-      O_NMI_n <= 1'b0;
+	reg W_VBLK_D;
+
+	if(~W_5H_Q[4])
+		O_NMI_n <= 1'b1;
+	else begin
+		W_VBLK_D <= W_VBLK;
+		if (!W_VBLK_D & W_VBLK)	O_NMI_n <= 1'b0;
+	end
 end
 
 //  ADDR DEC  0000H - 7FFFH

@@ -14,15 +14,15 @@
 		<dip bits="2,3"    name="Bonus Life" ids="7K,10K,15K,20K"/>
 		<dip bits="7"      name="Cabinet" ids="Cocktail,Upright"/>
         </switches>
-	<rom index="0" zip="dkong.zip" md5="05fb1dd1ce6a786c538275d5776b1db1">
+	<rom index="0" zip="dkong.zip" md5="ac7807bf1c69c3720888212143af10af">
 		<!-- Main CPU 32k -->
 		<part crc="ba70b88b" name="c_5et_g.bin"/>
 		<part crc="5ec461ec" name="c_5ct_g.bin"/>
 		<part crc="1c97d324" name="c_5bt_g.bin"/>
 		<part crc="b9005ac0" name="c_5at_g.bin"/>
-		<part crc="b9005ac0" name="c_5at_g.bin"/>
-		<part crc="b9005ac0" name="c_5at_g.bin"/>
-		<part crc="b9005ac0" name="c_5at_g.bin"/>
+		<part crc="ba70b88b" name="c_5et_g.bin"/>
+		<part crc="5ec461ec" name="c_5ct_g.bin"/>
+		<part crc="1c97d324" name="c_5bt_g.bin"/>
 		<part crc="b9005ac0" name="c_5at_g.bin"/>
 
 		<!-- GFX1 8k -->

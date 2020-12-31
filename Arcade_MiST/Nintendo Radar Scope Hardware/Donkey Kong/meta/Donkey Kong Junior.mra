@@ -12,7 +12,7 @@
 
 	<buttons names="Jump,Start 1P,Start 2P,Coin" default="A,Start,Select,R" />
 
-	<switches default="80">
+	<switches default="80" base="8">
 		<dip bits="0,1" name="Lives" ids="3,4,5,6"/>
 		<dip bits="2,3" name="Bonus" ids="10k,15k,20k,25k"/>
 		<dip bits="4,6" name="Coins" ids="1C1P,2C1P,1C1P,3C1P,1C1P,4C1P,1C1P,5C1P,1C1P"/>
@@ -20,7 +20,7 @@
 	</switches>
 
 	<rom index="1"><part>01</part></rom>
-	<rom index="0" zip="dkongjr.zip" md5="ebfc471d12606afd1408d62c7f4c90c9" type="merged|nonmerged">
+	<rom index="0" zip="dkongjr.zip" md5="bb9b77f52d45312bcf08409c76b1b8db" type="merged|nonmerged">
 		<!-- Main CPU 32k-->
 		<part crc="dea28158" name="djr1-c_5b_f-2.5b"/>
 		<part crc="6fb5faf6" name="djr1-c_5c_f-2.5c"/>

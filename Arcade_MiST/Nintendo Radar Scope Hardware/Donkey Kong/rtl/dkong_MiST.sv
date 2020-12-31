@@ -188,7 +188,7 @@ mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : 0),
 	.G(blankn ? g : 0),
-	.B(blankn ? {b, b[1]} : 0),
+	.B(blankn ? {b, 1'b1} : 0),
 	.HSync(hs_n),
 	.VSync(vs_n),
 	.VGA_R(VGA_R),
