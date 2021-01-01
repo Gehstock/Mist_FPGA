@@ -36,11 +36,12 @@ module dkong_top
 
 	input  [7:0] I_DIP_SW,
 	input  I_DKJR,
+	input  I_DK3B,
 	
 	//    VGA (VIDEO) IF
-	output [2:0]O_VGA_R,
-	output [2:0]O_VGA_G,
-	output [1:0]O_VGA_B,
+	output [3:0]O_VGA_R,
+	output [3:0]O_VGA_G,
+	output [3:0]O_VGA_B,
 	output O_H_BLANK,
 	output O_V_BLANK,
 	output O_VGA_H_SYNCn,
@@ -83,6 +84,7 @@ wire   W_ROM_CSn;
 wire   W_RAM1_CSn;
 wire   W_RAM2_CSn;
 wire   W_RAM3_CSn;
+wire   W_RAMDK3B_CSn;
 //wire   W_6A_Gn;
 wire   W_OBJ_RQn;
 wire   W_OBJ_RDn;
@@ -103,6 +105,7 @@ wire   [4:0]W_3D_Q;
 wire   [7:0]W_RAM1_DO;
 wire   [7:0]W_RAM2_DO;
 wire   [7:0]W_RAM3_DO;
+wire   [7:0]W_RAMDK3B_DO;
 
 //  ROM DATA
 wire   [7:0]W_ROM_DO;
@@ -156,7 +159,7 @@ wire   W_CPU_CLK_EN_N = W_H_CNT[1:0] == 2'b11;
 	.DO(ZDI)
 	);
 //=========   CPU  DATA BUS[7:0]    ==============================================
-wire   [7:0]WO_D = W_SW_DO | W_RAM1_DO |W_RAM2_DO |W_RAM3_DO | W_ROM_DO | W_VRAM_DB ;
+wire   [7:0]WO_D = W_SW_DO | W_RAM1_DO |W_RAM2_DO |W_RAM3_DO |W_RAMDK3B_DO | W_ROM_DO | W_VRAM_DB ;
 assign ZDO = WO_D;
 
 wire  [11:0]OBJ_ROM_A;
@@ -184,6 +187,11 @@ always @(*) begin
 		6'h07: MAIN_CPU_A = {5'h03,W_CPU_A[10:0]}; // 0x3800-0x3FFF -> 0x1800-0x1FFF in ROM file
 		6'h09: MAIN_CPU_A = {5'h05,W_CPU_A[10:0]}; // 0x4800-0x4FFF -> 0x2800-0x2FFF in ROM file
 		6'h0B: MAIN_CPU_A = {5'h07,W_CPU_A[10:0]}; // 0x5800-0x5FFF -> 0x3800-0x3FFF in ROM file
+		// dkong3b
+		6'h12: MAIN_CPU_A = {5'h0C,W_CPU_A[10:0]}; // 0x9000-0x97FF -> 0x6000-0x6FFF in ROM file
+		6'h13: MAIN_CPU_A = {5'h0D,W_CPU_A[10:0]}; // 0x9800-0x9FFF -> 0x6000-0x6FFF in ROM file
+		6'h1A: MAIN_CPU_A = {5'h0E,W_CPU_A[10:0]}; // 0xD000-0xD7FF -> 0x7000-0x7FFF in ROM file
+		6'h1B: MAIN_CPU_A = {5'h0F,W_CPU_A[10:0]}; // 0xD800-0xDFFF -> 0x7000-0x7FFF in ROM file
 		default: MAIN_CPU_A = W_CPU_A[15:0];
 	endcase
 end
@@ -209,6 +217,16 @@ ram_1024_8 U_3B4B
 	.I_CE(~W_RAM2_CSn),
 	.I_WE(~W_CPU_WRn),
 	.O_D(W_RAM2_DO)
+);
+
+ram_1024_8 U_DK3BRAM
+(
+	.I_CLK(I_CLK_24576M),
+	.I_ADDR(W_CPU_A[9:0]),
+	.I_D(WI_D),
+	.I_CE(~W_RAMDK3B_CSn),
+	.I_WE(~W_CPU_WRn),
+	.O_D(W_RAMDK3B_DO)
 );
 
 //=============== Sprite DMA ======================
@@ -293,6 +311,7 @@ dkong_adec adec
 	.I_CLK_EN_N(W_CPU_CLK_EN_N),
 	.I_RESET_n(W_RESETn),
 	.I_DKJR(I_DKJR),
+	.I_DK3B(I_DK3B),
 	.I_AB(W_CPU_A),
 	.I_DB(WI_D), 
 	.I_MREQ_n(W_CPU_MREQn),
@@ -307,6 +326,7 @@ dkong_adec adec
 	.O_RAM1_CS_n(W_RAM1_CSn),
 	.O_RAM2_CS_n(W_RAM2_CSn),
 	.O_RAM3_CS_n(W_RAM3_CSn),
+	.O_RAMDK3B_CS_n(W_RAMDK3B_CSn),
 	.O_DMA_CS_n(/*O_DMA_CSn*/),
 	.O_6A_G_n(/*W_6A_Gn*/),
 	.O_OBJ_RQ_n(W_OBJ_RQn),
@@ -422,6 +442,7 @@ dkong_col_pal cpal
 	// input
 	.CLK_24M(W_CLK_24576M),
 	.CLK_6M_EN(W_CLK_12288M & !W_H_CNT[0]),
+	.I_DK3B(I_DK3B),
 	.I_VRAM_D({W_VRAM_COL[3:0],W_VRAM_VID[1:0]}),
 	.I_OBJ_D(W_OBJ_DAT),
 	.I_CMPBLKn(W_L_CMPBLKn),

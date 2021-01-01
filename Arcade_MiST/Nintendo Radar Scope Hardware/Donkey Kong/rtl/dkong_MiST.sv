@@ -139,9 +139,7 @@ wire  [7:0] audio;
 wire        hs_n, vs_n;
 wire        hb, vb;
 wire        blankn = ~vb;//~(hb | vb);
-wire [2:0] 	r, g;
-wire [1:0] 	b;
-
+wire [3:0] 	r, g, b;
 	
 dkong_top dkong(				   
 	.I_CLK_24576M(clock_24),
@@ -161,6 +159,7 @@ dkong_top dkong(
 	.I_C1(~m_coin1),
 	.I_DIP_SW(status[15:8]),
 	.I_DKJR(core_mod[0]),
+	.I_DK3B(core_mod[1]),
 	.O_SOUND_DAT(audio),
 	.O_VGA_R(r),
 	.O_VGA_G(g),
@@ -181,14 +180,14 @@ dkong_top dkong(
 	.WAV_ROM_DO(wav_rom_a[0] ? wav_rom_do[15:8] : wav_rom_do[7:0])
 	);
 
-mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(4),.SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys(clock_24),
 	.SPI_SCK(SPI_SCK),
 	.SPI_SS3(SPI_SS3),
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : 0),
 	.G(blankn ? g : 0),
-	.B(blankn ? {b, 1'b1} : 0),
+	.B(blankn ? b : 0),
 	.HSync(hs_n),
 	.VSync(vs_n),
 	.VGA_R(VGA_R),

@@ -20,7 +20,7 @@
 	</switches>
 
 	<rom index="1"><part>01</part></rom>
-	<rom index="0" zip="dkongjr.zip" md5="bb9b77f52d45312bcf08409c76b1b8db" type="merged|nonmerged">
+	<rom index="0" zip="dkongjr.zip" md5="8ccadf69374bfc47254dfe8e5d4d8f7e" type="merged|nonmerged">
 		<!-- Main CPU 32k-->
 		<part crc="dea28158" name="djr1-c_5b_f-2.5b"/>
 		<part crc="6fb5faf6" name="djr1-c_5c_f-2.5c"/>
@@ -46,9 +46,11 @@
 
 		<!-- LUTs -->
 		<part crc="463dc7ad" name="djr1-c-2e.2e"/>
+		<part crc="463dc7ad" name="djr1-c-2e.2e"/>
+		<part crc="47ba0042" name="djr1-c-2f.2f"/>
 		<part crc="47ba0042" name="djr1-c-2f.2f"/>
 		<part crc="dbf185bf" name="djr1-v-2n.2n"/>
-		<part repeat="3328">00</part>
+		<part repeat="2816">00</part>
 
 		<!-- WAVs -->
 		<part>

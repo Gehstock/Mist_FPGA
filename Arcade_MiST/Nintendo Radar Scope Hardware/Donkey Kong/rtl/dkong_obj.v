@@ -310,7 +310,7 @@ begin
 end
 
 
-wire   [10:0]W_ROM_OBJ_AB = {W_6H_Q[6:0],W_8H_Q[3:0]^{W_6H_Q[7],W_6H_Q[7],W_6H_Q[7],W_6H_Q[7]}};
+wire   [11:0]W_ROM_OBJ_AB = {W_6J_Q[6],W_6H_Q[6:0],W_8H_Q[3:0]^{W_6H_Q[7],W_6H_Q[7],W_6H_Q[7],W_6H_Q[7]}};
 
 wire   [7:0]W_OBJ_DO_7C,W_OBJ_DO_7D,W_OBJ_DO_7E,W_OBJ_DO_7F;
 
@@ -321,14 +321,14 @@ obj1 obj1 (
 	.data(W_OBJ_DO_7C)
 	);
 */
-dpram #(11,8) obj1 (
+dpram #(12,8) obj1 (
 	.clock_a(CLK_24M),
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7C),
 
 	.clock_b(CLK_24M),
-	.address_b(DL_ADDR[10:0]),
-	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hA, 1'b0}),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hA),
 	.data_b(DL_DATA)
 	);
 /*
@@ -338,14 +338,14 @@ obj2 obj2 (
 	.data(W_OBJ_DO_7D)
 	);
 */
-dpram #(11,8) obj2 (
+dpram #(12,8) obj2 (
 	.clock_a(CLK_24M),
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7D),
 
 	.clock_b(CLK_24M),
-	.address_b(DL_ADDR[10:0]),
-	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hB, 1'b0}),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hB),
 	.data_b(DL_DATA)
 	);
 /*
@@ -355,14 +355,14 @@ obj3 obj3 (
 	.data(W_OBJ_DO_7E)
 	);
 */
-dpram #(11,8) obj3 (
+dpram #(12,8) obj3 (
 	.clock_a(CLK_24M),
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7E),
 
 	.clock_b(CLK_24M),
-	.address_b(DL_ADDR[10:0]),
-	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hC, 1'b0}),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hC),
 	.data_b(DL_DATA)
 	);
 /*
@@ -372,14 +372,14 @@ obj4 obj4 (
 	.data(W_OBJ_DO_7F)
 	);
 */
-dpram #(11,8) obj4 (
+dpram #(12,8) obj4 (
 	.clock_a(CLK_24M),
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7F),
 
 	.clock_b(CLK_24M),
-	.address_b(DL_ADDR[10:0]),
-	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hD, 1'b0}),
+	.address_b(DL_ADDR[11:0]),
+	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hD),
 	.data_b(DL_DATA)
 	);
 	

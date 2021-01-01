@@ -92,7 +92,7 @@ dpram #(8,4) col3 (
 
 	.clock_b(CLK_24M),
 	.address_b(DL_ADDR[7:0]),
-	.wren_b(DL_WR && DL_ADDR[15:8] == 8'hF2),
+	.wren_b(DL_WR && DL_ADDR[15:8] == 8'hF4),
 	.data_b(DL_DATA[3:0])
 	);
 

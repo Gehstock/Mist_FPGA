@@ -12,9 +12,10 @@
 	<switches default="80" base="8">
 		<dip bits="0,1"    name="Lives" ids="3,4,5,6"/>
 		<dip bits="2,3"    name="Bonus Life" ids="7K,10K,15K,20K"/>
+		<dip bits="4,6"    name="Coins" ids="1C1P,2C1P,1C1P,3C1P,1C1P,4C1P,1C1P,5C1P,1C1P"/>
 		<dip bits="7"      name="Cabinet" ids="Cocktail,Upright"/>
-        </switches>
-	<rom index="0" zip="dkong.zip" md5="ac7807bf1c69c3720888212143af10af">
+	</switches>
+	<rom index="0" zip="dkong.zip" md5="2b33a8e64b3ac1d361cd6d06cabc4f7c">
 		<!-- Main CPU 32k -->
 		<part crc="ba70b88b" name="c_5et_g.bin"/>
 		<part crc="5ec461ec" name="c_5ct_g.bin"/>
@@ -47,9 +48,11 @@
 
 		<!-- LUTs 3x256 -->
 		<part crc="e273ede5" name="c-2k.bpr"/>
+		<part crc="e273ede5" name="c-2k.bpr"/>
+		<part crc="d6412358" name="c-2j.bpr"/>
 		<part crc="d6412358" name="c-2j.bpr"/>
 		<part crc="b869b8f5" name="v-5e.bpr"/>
-		<part repeat="3328">00</part>
+		<part repeat="2816">00</part>
 
 		<!-- WAWs -->
 		<part>

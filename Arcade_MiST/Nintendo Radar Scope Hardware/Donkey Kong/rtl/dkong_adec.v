@@ -24,6 +24,7 @@ I_CLK_EN_P,
 I_CLK_EN_N,
 I_RESET_n,
 I_DKJR,
+I_DK3B,
 I_AB,
 I_DB,
 I_MREQ_n,
@@ -39,6 +40,7 @@ O_ROM_CS_n,
 O_RAM1_CS_n,
 O_RAM2_CS_n,
 O_RAM3_CS_n,
+O_RAMDK3B_CS_n,
 O_DMA_CS_n,
 O_6A_G_n,
 O_OBJ_RQ_n,
@@ -62,6 +64,7 @@ input  I_CLK_EN_P;          //   H_CNT[1]    3.072MHz
 input  I_CLK_EN_N;
 input  I_RESET_n;
 input  I_DKJR;
+input  I_DK3B;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
 input  I_MREQ_n;
@@ -75,6 +78,7 @@ output O_ROM_CS_n;      //   0000 H - 3FFF H  (5E,5C,5B,5A)
 output O_RAM1_CS_n;     //   6000 H - 63FF H  (3C,4C)
 output O_RAM2_CS_n;     //   6400 H - 67FF H  (3B,4B)
 output O_RAM3_CS_n;     //   6800 H - 6BFF H  (3A,4A)
+output O_RAMDK3B_CS_n;  //   6C00 H - 6FFF H  (DK3B only)
 output O_DMA_CS_n;      //   7800 H - 783F H  (DMA)
 output O_6A_G_n;        //   7000 H - 77FF H   => Active
 output O_OBJ_RQ_n;      //   7000 H - 73FF H
@@ -148,7 +152,7 @@ logic_74xx138 U_4D(
 
 );
 
-assign O_ROM_CS_n = I_DKJR ? &W_4D_Q[5:0] : &W_4D_Q[3:0];
+assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_DK3B | !(I_AB[15:12] == 4'h9 | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
 
 //   ADDR DEC  7000H - 7FFFH
 
@@ -217,6 +221,7 @@ logic_74xx138 U_2D(
 assign O_RAM1_CS_n = W_2D_Q[0];
 assign O_RAM2_CS_n = W_2D_Q[1];
 assign O_RAM3_CS_n = W_2D_Q[2];
+assign O_RAMDK3B_CS_n = !I_DK3B | W_2D_Q[3];
 
 //  ADDR DEC  7C00H - 7FFFH  (R)
 logic_74xx138 U_1B(
