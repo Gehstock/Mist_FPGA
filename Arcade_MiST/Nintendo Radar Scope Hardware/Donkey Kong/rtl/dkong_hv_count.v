@@ -29,6 +29,7 @@ module dkong_hv_count(
 	input  RST_n,
 	input  V_FLIP,
 	output O_CLK,
+	output O_CLK_EN,
 	output [9:0]H_CNT,
 	output [7:0]V_CNT,
 	output [7:0]VF_CNT,
@@ -57,11 +58,14 @@ end
 
 assign H_CNT[9:0] = H_CNT_r[10:1];
 assign O_CLK      = H_CNT_r[0]   ; 
+assign O_CLK_EN   = !H_CNT_r[0];
 
 reg    V_CLK = 1'b0;
+wire   V_CLK_EN = O_CLK & H_CNT[9:0] == V_CL_P;
 reg    H_BLANK = 1'b0;
-always@(posedge O_CLK)
-begin
+
+always@(posedge I_CLK)
+if (O_CLK) begin
   case(H_CNT[9:0])
     H_BL_P: H_BLANK <= 1;
     V_CL_P: V_CLK   <= 1;
@@ -76,21 +80,21 @@ assign H_BLANKn = ~H_BLANK;
 
 
 reg    [8:0]V_CNT_r;
-always@(posedge V_CLK or negedge RST_n)
+always@(posedge I_CLK or negedge RST_n)
 begin
    if(RST_n == 1'b0)
       V_CNT_r <= 0 ;
-   else
-      V_CNT_r <= (V_CNT_r == 255)? 504 : V_CNT_r + 1'b1 ;
+   else if (V_CLK_EN)
+      V_CNT_r <= (V_CNT_r == 255)? 9'd504 : V_CNT_r + 1'b1 ;
 end
 
 reg    V_BLANK;
-always@(posedge V_CLK or negedge RST_n)
+always@(posedge I_CLK or negedge RST_n)
 begin
    if(RST_n == 1'b0)begin
       V_BLANK <= 0 ;
    end
-   else begin
+   else if (V_CLK_EN) begin
       case(V_CNT_r[8:0])
          V_BL_P: V_BLANK <= 1;
          V_BL_W: V_BLANK <= 0;

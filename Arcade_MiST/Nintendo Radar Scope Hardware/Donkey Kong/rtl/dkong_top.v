@@ -11,6 +11,7 @@
 // An author does no guarantee about this program.
 // You can use this under your own risk.
 //
+// 2020-12-28 converted a big part to totally syncronous logic (by slingshot)
 // 2004- 3- 3 first release.
 // 2004- 6- 8 Quartus2 v4.0sp1 used (bug fix) K.Degawa
 // 2004- 8-24 T80-IP was include.  K.Degawa
@@ -34,18 +35,33 @@ module dkong_top
 	input  I_S1,I_S2,I_C1,
 
 	input  [7:0] I_DIP_SW,
+	input  I_DKJR,
+	input  I_DK3B,
 	
 	//    VGA (VIDEO) IF
-	output [2:0]O_VGA_R,
-	output [2:0]O_VGA_G,
-	output [1:0]O_VGA_B,
+	output [3:0]O_VGA_R,
+	output [3:0]O_VGA_G,
+	output [3:0]O_VGA_B,
 	output O_H_BLANK,
 	output O_V_BLANK,
 	output O_VGA_H_SYNCn,
 	output O_VGA_V_SYNCn,
 
 	//    SOUND IF
-	output [7:0] O_SOUND_DAT
+	output  [7:0] O_SOUND_DAT,
+
+	// EXTERNAL ROMS
+	input  [15:0] DL_ADDR,
+	input         DL_WR,
+	input   [7:0] DL_DATA,
+
+	output reg [15:0] MAIN_CPU_A,
+	input   [7:0] MAIN_CPU_DO,
+	output [11:0] SND_ROM_A,
+	input   [7:0] SND_ROM_DO,
+	output [18:0] WAV_ROM_A,
+	input   [7:0] WAV_ROM_DO
+
 );
 
 assign O_H_BLANK = ~W_H_BLANKn;
@@ -53,7 +69,7 @@ assign O_V_BLANK = ~W_V_BLANKn;
 
 wire   W_CLK_24576M = I_CLK_24576M;
 wire   W_CLK_12288M,WB_CLK_12288M;
-wire   WB_CLK_06144M;
+wire   W_CLK_12288M_EN;
 wire   W_RESETn = I_RESETn;
 
 //============   CPU MODULE ( Donkey Kong )   ====================================
@@ -68,6 +84,7 @@ wire   W_ROM_CSn;
 wire   W_RAM1_CSn;
 wire   W_RAM2_CSn;
 wire   W_RAM3_CSn;
+wire   W_RAMDK3B_CSn;
 //wire   W_6A_Gn;
 wire   W_OBJ_RQn;
 wire   W_OBJ_RDn;
@@ -79,14 +96,16 @@ wire   W_SW2_OEn ;
 wire   W_SW3_OEn ;
 wire   W_DIP_OEn ;
 
+wire   [1:0]W_4H_Q;
 wire   [7:0]W_5H_Q;
 wire   [7:0]W_6H_Q;
-wire   [3:0]W_3D_Q;
+wire   [4:0]W_3D_Q;
 
 //  RAM DATA
 wire   [7:0]W_RAM1_DO;
 wire   [7:0]W_RAM2_DO;
 wire   [7:0]W_RAM3_DO;
+wire   [7:0]W_RAMDK3B_DO;
 
 //  ROM DATA
 wire   [7:0]W_ROM_DO;
@@ -106,23 +125,31 @@ wire   W_CPU_WAITn;
 wire   W_CPU_RFSHn;
 wire   W_CPU_M1n;
 wire   W_CPU_NMIn;
+wire   W_CPU_IORQn;
 wire   W_CPU_MREQn;
+wire   W_CPU_BUSRQ;
+wire   W_CPU_BUSAKn;
 wire   W_CPU_RDn;  
 wire   W_CPU_WRn;
 wire   [15:0]W_CPU_A;
 
-assign WB_CLK_06144M = W_H_CNT[0];   //  6.144MHz
 assign WB_CLK_12288M = W_CLK_12288M; // 12.288MHz
-wire   W_CPU_CLK = W_H_CNT[1];       //  3.072MHz
+//wire   W_CPU_CLK = W_H_CNT[1];       //  3.072MHz
+wire   W_CPU_CLK_EN_P = W_H_CNT[1:0] == 2'b01;
+wire   W_CPU_CLK_EN_N = W_H_CNT[1:0] == 2'b11;
 
- T80as z80core(
+ T80pa z80core(
 	.RESET_n(W_RESETn),
-	.CLK_n(W_CPU_CLK),
-	.WAIT_n(W_CPU_WAITn),
+	.CLK(I_CLK_24576M),
+	.CEN_p(W_CPU_CLK_EN_N),
+	.CEN_n(W_CPU_CLK_EN_P),
+	.WAIT_n(W_CPU_WAITn | (W_CPU_IORQn & W_CPU_MREQn)),
 	.INT_n(1'b1),
 	.NMI_n(W_CPU_NMIn),
-	.BUSRQ_n(1'b1),
+	.BUSRQ_n(~W_CPU_BUSRQ),
+	.BUSAK_n(W_CPU_BUSAKn),
 	.M1_n(W_CPU_M1n),
+	.IORQ_n(W_CPU_IORQn),
 	.MREQ_n(W_CPU_MREQn),
 	.RD_n(W_CPU_RDn),
 	.WR_n(W_CPU_WRn),
@@ -132,28 +159,49 @@ wire   W_CPU_CLK = W_H_CNT[1];       //  3.072MHz
 	.DO(ZDI)
 	);
 //=========   CPU  DATA BUS[7:0]    ==============================================
-wire   [7:0]WO_D = W_SW_DO | W_RAM1_DO |W_RAM2_DO |W_RAM3_DO | W_ROM_DO | W_VRAM_DB ;
+wire   [7:0]WO_D = W_SW_DO | W_RAM1_DO |W_RAM2_DO |W_RAM3_DO |W_RAMDK3B_DO | W_ROM_DO | W_VRAM_DB ;
 assign ZDO = WO_D;
 
 wire  [11:0]OBJ_ROM_A;
 reg   [7:0]OBJ_ROM1_DO,OBJ_ROM2_DO,OBJ_ROM3_DO,OBJ_ROM4_DO;
 
-reg    [7:0]WB_ROM_DO;
+wire   [7:0]WB_ROM_DO;
 assign W_ROM_DO = (~W_ROM_CSn & ~W_CPU_RDn)? WB_ROM_DO :8'h00;
 
 //---------------------------------------------------------
-
+/*
 prog ROM(
-	.clk(W_CLK_12288M),
+	.clk(I_CLK_24576M),
 	.addr(W_CPU_A[13:0]),
 	.data(WB_ROM_DO)
 );
+*/
+//assign MAIN_CPU_A = W_CPU_A[13:0];
+
+always @(*) begin
+	case({!I_DKJR, W_CPU_A[15:11]})
+		6'h02: MAIN_CPU_A = {5'h06,W_CPU_A[10:0]}; // 0x1000-0x17FF -> 0x3000-0x37FF in ROM file 
+		6'h03: MAIN_CPU_A = {5'h0B,W_CPU_A[10:0]}; // 0x1800-0x1FFF -> 0x5800-0x5FFF in ROM file
+		6'h05: MAIN_CPU_A = {5'h09,W_CPU_A[10:0]}; // 0x2800-0x2FFF -> 0x4800-0x4FFF in ROM file
+		6'h06: MAIN_CPU_A = {5'h02,W_CPU_A[10:0]}; // 0x3000-0x37FF -> 0x1000-0x17FF in ROM file
+		6'h07: MAIN_CPU_A = {5'h03,W_CPU_A[10:0]}; // 0x3800-0x3FFF -> 0x1800-0x1FFF in ROM file
+		6'h09: MAIN_CPU_A = {5'h05,W_CPU_A[10:0]}; // 0x4800-0x4FFF -> 0x2800-0x2FFF in ROM file
+		6'h0B: MAIN_CPU_A = {5'h07,W_CPU_A[10:0]}; // 0x5800-0x5FFF -> 0x3800-0x3FFF in ROM file
+		// dkong3b
+		6'h12: MAIN_CPU_A = {5'h0C,W_CPU_A[10:0]}; // 0x9000-0x97FF -> 0x6000-0x6FFF in ROM file
+		6'h13: MAIN_CPU_A = {5'h0D,W_CPU_A[10:0]}; // 0x9800-0x9FFF -> 0x6000-0x6FFF in ROM file
+		6'h1A: MAIN_CPU_A = {5'h0E,W_CPU_A[10:0]}; // 0xD000-0xD7FF -> 0x7000-0x7FFF in ROM file
+		6'h1B: MAIN_CPU_A = {5'h0F,W_CPU_A[10:0]}; // 0xD800-0xDFFF -> 0x7000-0x7FFF in ROM file
+		default: MAIN_CPU_A = W_CPU_A[15:0];
+	endcase
+end
+assign WB_ROM_DO = MAIN_CPU_DO;
 
 //========   INT RAM Interface  ==================================================
 
 ram_1024_8 U_3C4C
 (
-	.I_CLK(W_CLK_12288M),
+	.I_CLK(I_CLK_24576M),
 	.I_ADDR(W_CPU_A[9:0]),
 	.I_D(WI_D),
 	.I_CE(~W_RAM1_CSn),
@@ -163,7 +211,7 @@ ram_1024_8 U_3C4C
 
 ram_1024_8 U_3B4B
 (
-	.I_CLK(W_CLK_12288M),
+	.I_CLK(I_CLK_24576M),
 	.I_ADDR(W_CPU_A[9:0]),
 	.I_D(WI_D),
 	.I_CE(~W_RAM2_CSn),
@@ -171,21 +219,73 @@ ram_1024_8 U_3B4B
 	.O_D(W_RAM2_DO)
 );
 
-//----    DMA   ------------------------------------------
-wire   [1:0]W_OBJ_A_offset = W_H_CNT[8]+1'd1;
-wire   [9:0]W_OBJ_AB = {W_OBJ_A_offset[1:0],W_H_CNT[7:0]};
+ram_1024_8 U_DK3BRAM
+(
+	.I_CLK(I_CLK_24576M),
+	.I_ADDR(W_CPU_A[9:0]),
+	.I_D(WI_D),
+	.I_CE(~W_RAMDK3B_CSn),
+	.I_WE(~W_CPU_WRn),
+	.O_D(W_RAMDK3B_DO)
+);
+
+//=============== Sprite DMA ======================
+
+wire   [9:0]W_OBJ_AB = {W_2PSL, W_H_CNT[8:0]};
+
+wire [9:0]W_DMA_A;
+wire [7:0]W_DMA_D;
+wire W_DMA_CE;
+
+wire [9:0]W_DMA_AB;
+wire [7:0]W_DMA_DB;
+wire W_DMA_CEB;
 
 ram_1024_8_8 U_3A4A
 (
 	//   A Port
-	.I_CLKA(~W_CLK_12288M),
+	.I_CLKA(I_CLK_24576M),
 	.I_ADDRA(W_CPU_A[9:0]),
 	.I_DA(WI_D),
 	.I_CEA(~W_RAM3_CSn),
 	.I_WEA(~W_CPU_WRn),
 	.O_DA(W_RAM3_DO),
 	//   B Port
-	.I_CLKB(W_CLK_12288M),
+	.I_CLKB(I_CLK_24576M),
+	.I_ADDRB(W_DMA_A),
+	.I_DB(8'h00),
+	.I_CEB(W_DMA_CE),
+	.I_WEB(1'b0),
+	.O_DB(W_DMA_D)
+);
+
+dkong_dma sprite_dma
+(
+	.I_CLK(I_CLK_24576M),
+	.I_CLK_EN(W_CPU_CLK_EN_P),// 3.072 Mhz
+	.I_DMA_TRIG(W_DREQ),
+	.I_DMA_DS(W_DMA_D),
+	.I_HLDA(~W_CPU_BUSAKn),
+
+	.O_HRQ(W_CPU_BUSRQ),
+	.O_DMA_AS(W_DMA_A),
+	.O_DMA_AD(W_DMA_AB),
+	.O_DMA_DD(W_DMA_DB),
+	.O_DMA_CES(W_DMA_CE),
+	.O_DMA_CED(W_DMA_CEB)
+);
+
+ram_1024_8_8 U_6PR
+(
+	//   A Port
+	.I_CLKA(I_CLK_24576M),
+	.I_ADDRA(W_DMA_AB),
+	.I_DA(W_DMA_DB),
+	.I_CEA(W_DMA_CEB),
+	.I_WEA(1'b1),
+	.O_DA(),
+	//   B Port
+	.I_CLKB(I_CLK_24576M),
 	.I_ADDRB(W_OBJ_AB[9:0]),
 	.I_DB(8'h00),
 	.I_CEB(1'b1),
@@ -193,6 +293,7 @@ ram_1024_8_8 U_3A4A
 	.O_DB(W_OBJ_DI)
 );
 
+//=========== SW Interface ========================================================
 wire   [7:0]W_SW1 = W_SW1_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J1,I_D1,I_U1,I_L1,I_R1};
 wire   [7:0]W_SW2 = W_SW2_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J2,I_D2,I_U2,I_L2,I_R2};
 wire   [7:0]W_SW3 = W_SW3_OEn ?  8'h00: ~{I_C1,1'b1,1'b1,1'b1,I_S2,I_S1,1'b1,1'b1};
@@ -205,9 +306,12 @@ wire   W_VRAMBUSYn;
 
 dkong_adec adec
 (
-	.I_CLK12M(W_CLK_12288M),
-	.I_CLK(W_CPU_CLK),
+	.I_CLK24M(I_CLK_24576M),
+	.I_CLK_EN_P(W_CPU_CLK_EN_P),
+	.I_CLK_EN_N(W_CPU_CLK_EN_N),
 	.I_RESET_n(W_RESETn),
+	.I_DKJR(I_DKJR),
+	.I_DK3B(I_DK3B),
 	.I_AB(W_CPU_A),
 	.I_DB(WI_D), 
 	.I_MREQ_n(W_CPU_MREQn),
@@ -222,6 +326,7 @@ dkong_adec adec
 	.O_RAM1_CS_n(W_RAM1_CSn),
 	.O_RAM2_CS_n(W_RAM2_CSn),
 	.O_RAM3_CS_n(W_RAM3_CSn),
+	.O_RAMDK3B_CS_n(W_RAMDK3B_CSn),
 	.O_DMA_CS_n(/*O_DMA_CSn*/),
 	.O_6A_G_n(/*W_6A_Gn*/),
 	.O_OBJ_RQ_n(W_OBJ_RQn),
@@ -233,6 +338,7 @@ dkong_adec adec
 	.O_SW2_OE_n(W_SW2_OEn),
 	.O_SW3_OE_n(W_SW3_OEn),
 	.O_DIP_OE_n(W_DIP_OEn),
+	.O_4H_Q(W_4H_Q),
 	.O_5H_Q(W_5H_Q),
 	.O_6H_Q(W_6H_Q),
 	.O_3D_Q(W_3D_Q)
@@ -240,6 +346,7 @@ dkong_adec adec
 
 wire   W_FLIPn = W_5H_Q[2];
 wire   W_2PSL  = W_5H_Q[3];
+wire   W_DREQ  = W_5H_Q[5]; // DMA Trigger
 
 //===========   VIDEO MODULE ( Donkey Kong )   ===================================
 //========  Assign Wire  =========================================================
@@ -261,6 +368,7 @@ dkong_hv_count hv
 	.V_FLIP(W_FLIP_HV),
 	// output
 	.O_CLK(W_CLK_12288M),
+	.O_CLK_EN(W_CLK_12288M_EN),
 	.H_CNT(W_H_CNT),
 	.V_CNT(/*W_V_CNT*/),
 	.VF_CNT(W_VF_CNT),
@@ -278,6 +386,7 @@ dkong_obj obj
 	// input
 	.CLK_24M(W_CLK_24576M),
 	.CLK_12M(WB_CLK_12288M),
+	.CLK_12M_EN(W_CLK_12288M_EN),
 	.I_AB(),
 	.I_DB(/*W_2N_DO*/),
 	.I_OBJ_D(W_OBJ_DI),
@@ -293,13 +402,18 @@ dkong_obj obj
 	.O_OBJ_DO(W_OBJ_DAT),
 	.O_FLIP_VRAM(W_FLIP_VRAM),
 	.O_FLIP_HV(W_FLIP_HV),
-	.O_L_CMPBLKn(W_L_CMPBLKn)
+	.O_L_CMPBLKn(W_L_CMPBLKn),
+
+	.DL_ADDR(DL_ADDR),
+	.DL_WR(DL_WR),
+	.DL_DATA(DL_DATA)
 );
 
 dkong_vram vram
 (
 	// input
-	.CLK_12M(~W_CLK_12288M),
+	.CLK_24M(W_CLK_24576M),
+	.CLK_EN(W_CLK_12288M),
 	.I_AB(W_CPU_A[9:0]),
 	.I_DB(WI_D),
 	.I_VRAM_WRn(W_VRAM_WRn),
@@ -308,12 +422,17 @@ dkong_vram vram
 	.I_H_CNT(W_H_CNT),
 	.I_VF_CNT(W_VF_CNT),
 	.I_CMPBLK(W_C_BLANKn),
+	.I_4H_Q0(W_4H_Q[0]),
 	//  Debug output
 	.O_DB(W_VRAM_DB),
 	.O_COL(W_VRAM_COL),
 	.O_VID(W_VRAM_VID),
 	.O_VRAMBUSYn(W_VRAMBUSYn),
-	.O_ESBLKn()
+	.O_ESBLKn(),
+
+	.DL_ADDR(DL_ADDR),
+	.DL_WR(DL_WR),
+	.DL_DATA(DL_DATA)
 );
 
 assign O_PIX = W_H_CNT[0];
@@ -321,8 +440,9 @@ assign O_PIX = W_H_CNT[0];
 dkong_col_pal cpal
 (
 	// input
-	.CLK_6M(W_H_CNT[0]),
-	.CLK_12M(W_CLK_12288M),
+	.CLK_24M(W_CLK_24576M),
+	.CLK_6M_EN(W_CLK_12288M & !W_H_CNT[0]),
+	.I_DK3B(I_DK3B),
 	.I_VRAM_D({W_VRAM_COL[3:0],W_VRAM_VID[1:0]}),
 	.I_OBJ_D(W_OBJ_DAT),
 	.I_CMPBLKn(W_L_CMPBLKn),
@@ -330,21 +450,26 @@ dkong_col_pal cpal
 	.I_5H_Q7(W_5H_Q[7]),
 	.O_R(O_VGA_R),
 	.O_G(O_VGA_G),
-	.O_B(O_VGA_B)
+	.O_B(O_VGA_B),
+
+	.DL_ADDR(DL_ADDR),
+	.DL_WR(DL_WR),
+	.DL_DATA(DL_DATA)
 );
 
 dkong_soundboard dkong_soundboard(
-	.WB_CLK_06144M(WB_CLK_06144M),
-	.W_CLK_12288M(W_CLK_12288M),
 	.W_CLK_24576M(W_CLK_24576M),
 	.W_RESETn(W_RESETn),
+	.I_DKJR(I_DKJR),
 	.O_SOUND_DAT(O_SOUND_DAT),
 	.W_6H_Q(W_6H_Q),
-	.W_5H_Q(W_5H_Q),
-	.W_3D_Q(W_3D_Q)
+	.W_5H_Q0(W_5H_Q[0]),
+	.W_4H_Q(W_4H_Q),
+	.W_3D_Q(W_3D_Q),
+	.ROM_A(SND_ROM_A),
+	.ROM_D(SND_ROM_DO),
+	.WAV_ROM_A(WAV_ROM_A),
+	.WAV_ROM_DO(WAV_ROM_DO)
 	);
 	
 endmodule
-
-
-

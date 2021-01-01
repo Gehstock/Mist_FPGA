@@ -19,9 +19,12 @@
 
 module dkong_adec(
 
-I_CLK12M,
-I_CLK,
+I_CLK24M,
+I_CLK_EN_P,
+I_CLK_EN_N,
 I_RESET_n,
+I_DKJR,
+I_DK3B,
 I_AB,
 I_DB,
 I_MREQ_n,
@@ -37,6 +40,7 @@ O_ROM_CS_n,
 O_RAM1_CS_n,
 O_RAM2_CS_n,
 O_RAM3_CS_n,
+O_RAMDK3B_CS_n,
 O_DMA_CS_n,
 O_6A_G_n,
 O_OBJ_RQ_n,
@@ -48,15 +52,19 @@ O_SW1_OE_n,
 O_SW2_OE_n,
 O_SW3_OE_n,
 O_DIP_OE_n,
+O_4H_Q,
 O_5H_Q,
 O_6H_Q,
 O_3D_Q
 
 );
 
-input  I_CLK12M;
-input  I_CLK;          //   H_CNT[1]    3.072MHz
+input  I_CLK24M;
+input  I_CLK_EN_P;          //   H_CNT[1]    3.072MHz
+input  I_CLK_EN_N;
 input  I_RESET_n;
+input  I_DKJR;
+input  I_DK3B;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
 input  I_MREQ_n;
@@ -70,6 +78,7 @@ output O_ROM_CS_n;      //   0000 H - 3FFF H  (5E,5C,5B,5A)
 output O_RAM1_CS_n;     //   6000 H - 63FF H  (3C,4C)
 output O_RAM2_CS_n;     //   6400 H - 67FF H  (3B,4B)
 output O_RAM3_CS_n;     //   6800 H - 6BFF H  (3A,4A)
+output O_RAMDK3B_CS_n;  //   6C00 H - 6FFF H  (DK3B only)
 output O_DMA_CS_n;      //   7800 H - 783F H  (DMA)
 output O_6A_G_n;        //   7000 H - 77FF H   => Active
 output O_OBJ_RQ_n;      //   7000 H - 73FF H
@@ -81,9 +90,10 @@ output O_SW1_OE_n;      //   7C00 H           (R mode)
 output O_SW2_OE_n;      //   7C80 H           (R mode)
 output O_SW3_OE_n;      //   7D00 H           (R mode)
 output O_DIP_OE_n;      //   7D80 H           (R mode)
+output [1:0]O_4H_Q;     //   GFX (Characters) bank switch, sound
 output [7:0]O_5H_Q;     //   FLIP,
 output [7:0]O_6H_Q;     //   sound
-output [3:0]O_3D_Q;     //   sound
+output [4:0]O_3D_Q;     //   sound
 
 output O_WAIT_n;
 output O_NMI_n;
@@ -92,6 +102,7 @@ output O_NMI_n;
 wire   [3:0]W_2A1_Q,W_2A2_Q;
 wire   [7:0]W_4D_Q,W_2B_Q,W_2C_Q,W_2D_Q;
 wire   [7:0]W_1B_Q,W_1C_Q;
+reg    [1:0]W_4H_Q;
 reg    [7:0]W_5H_Q;
 
 //  CPU WAIT
@@ -101,28 +112,32 @@ reg    W_7F2_Q;
 assign O_WAIT_n = W_7F1_Qn;
 //assign O_WAIT_n = 1'b1;
 
-always@(posedge I_CLK or negedge I_VBLK_n)
+always@(posedge I_CLK24M or negedge I_VBLK_n)
 begin
    if(I_VBLK_n == 1'b0)
       W_7F1_Qn <= 1'b1;
-   else
+   else if (I_CLK_EN_P)
       W_7F1_Qn <= I_VRAMBUSY_n | W_2A2_Q[1];
 end
 
-always@(negedge I_CLK)
+always@(negedge I_CLK24M)
 begin
-   W_7F2_Q <= W_7F1_Qn;
+   if (I_CLK_EN_N) W_7F2_Q <= W_7F1_Qn;
 end
 
 //  CPU NMI
 wire  W_VBLK = ~I_VBLK_n;
 reg   O_NMI_n;
-always@(posedge W_VBLK or negedge W_5H_Q[4])
+always@(posedge I_CLK24M or negedge W_5H_Q[4])
 begin
-   if(~W_5H_Q[4])
-      O_NMI_n <= 1'b1;
-   else
-      O_NMI_n <= 1'b0;
+	reg W_VBLK_D;
+
+	if(~W_5H_Q[4])
+		O_NMI_n <= 1'b1;
+	else begin
+		W_VBLK_D <= W_VBLK;
+		if (!W_VBLK_D & W_VBLK)	O_NMI_n <= 1'b0;
+	end
 end
 
 //  ADDR DEC  0000H - 7FFFH
@@ -137,7 +152,7 @@ logic_74xx138 U_4D(
 
 );
 
-assign O_ROM_CS_n = W_4D_Q[0]&W_4D_Q[1]&W_4D_Q[2]&W_4D_Q[3];
+assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_DK3B | !(I_AB[15:12] == 4'h9 | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
 
 //   ADDR DEC  7000H - 7FFFH
 
@@ -206,6 +221,7 @@ logic_74xx138 U_2D(
 assign O_RAM1_CS_n = W_2D_Q[0];
 assign O_RAM2_CS_n = W_2D_Q[1];
 assign O_RAM3_CS_n = W_2D_Q[2];
+assign O_RAMDK3B_CS_n = !I_DK3B | W_2D_Q[3];
 
 //  ADDR DEC  7C00H - 7FFFH  (R)
 logic_74xx138 U_1B(
@@ -234,10 +250,27 @@ logic_74xx138 U_1C(
 
 );
 
+//---  Parts 4H ---------
+
+always@(posedge I_CLK24M or negedge I_RESET_n)
+begin
+	if(I_RESET_n == 1'b0) begin
+		W_4H_Q <= 0;
+	end 
+	else begin
+		if(W_1C_Q[1] == 1'b0) begin
+			case(I_AB[0])
+				3'h0 : W_4H_Q[0] <= I_DB[0]; // VROM signal
+				3'h1 : W_4H_Q[1] <= I_DB[0]; // SOUND 8035 PB6
+			endcase
+		end
+	end
+end
+
 //---  Parts 5H ---------
 //reg    [7:0]W_5H_Q;
 
-always@(posedge I_CLK12M or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
    if(I_RESET_n == 1'b0)begin
       W_5H_Q <= 0;
@@ -261,7 +294,7 @@ end
 //---  Parts 6H ---------
 reg    [7:0]W_6H_Q;
 
-always@(posedge I_CLK12M or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
    if(I_RESET_n == 1'b0)begin
       W_6H_Q <= 0;
@@ -282,18 +315,23 @@ begin
    end
 end
 
+assign O_4H_Q = W_4H_Q;
 assign O_5H_Q = W_5H_Q;
 assign O_6H_Q = W_6H_Q;
 
 //  Parts 3D
-reg   [3:0]O_3D_Q;
+reg   [4:0]O_3D_Q;
 
-always@(posedge W_1C_Q[0] or negedge I_RESET_n)
+always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
-   if(! I_RESET_n) O_3D_Q <= 0;
-   else begin
-      O_3D_Q <= I_DB;      
-   end 
+	reg W_1C_Q0_D;
+	if(! I_RESET_n) O_3D_Q <= 0;
+	else begin
+		W_1C_Q0_D <= W_1C_Q[0];
+		if (!W_1C_Q0_D & W_1C_Q[0]) begin
+			O_3D_Q <= I_DB;
+		end
+	end
 end
 
 

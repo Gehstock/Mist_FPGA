@@ -2,10 +2,16 @@
 -- 
 -- Arcade: Donkey Kong port to MiST by Gehstock
 -- 02 Mai 2019
--- 
+--
+-- Usage:
+-- - Create ROM and ARC files from the MRA files using the MRA utility.
+--   Example: mra -A -z /path/to/mame/roms "Donkey Kong.mra"
+-- - Copy the ROM files to the root of the SD Card
+-- - Copy the RBF and ARC files to the same folder on the SD Card
 ---------------------------------------------------------------------------------
--- A simulation model of Pacman hardware
--- // Copyright(c) 2003 - 2005 Katsumi Degawa , All rights reserved
+-- FPGA DONKEY KONG TOP
+-- Version : 4.00
+-- Copyright(c) 2003 - 2004 Katsumi Degawa , All rights reserved
 ---------------------------------------------------------------------------------
 -- 
 -- Only Controls and OSD are rotated on Video output.
@@ -17,10 +23,7 @@
 --   F2          		: Start 2 players
 --   F1          		: Start 1 player
 --   UP,DOWN,LEFT,RIGHT arrows 	: Movements
---   SPACE       		: Jump
+--   CTRL       		: Jump
 
 -- Joystick support.
 ---------------------------------------------------------------------------------
-
-
-ToDo: Sound, Rotated Controls
