@@ -25,6 +25,7 @@ I_CLK_EN_N,
 I_RESET_n,
 I_DKJR,
 I_DK3B,
+I_PESTPLCE,
 I_AB,
 I_DB,
 I_MREQ_n,
@@ -55,7 +56,8 @@ O_DIP_OE_n,
 O_4H_Q,
 O_5H_Q,
 O_6H_Q,
-O_3D_Q
+O_3D_Q,
+O_AREF
 
 );
 
@@ -65,6 +67,7 @@ input  I_CLK_EN_N;
 input  I_RESET_n;
 input  I_DKJR;
 input  I_DK3B;
+input  I_PESTPLCE;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
 input  I_MREQ_n;
@@ -94,6 +97,7 @@ output [1:0]O_4H_Q;     //   GFX (Characters) bank switch, sound
 output [7:0]O_5H_Q;     //   FLIP,
 output [7:0]O_6H_Q;     //   sound
 output [4:0]O_3D_Q;     //   sound
+output [2:0]O_AREF;     //   7C80 H Radar Scope grid color (W)
 
 output O_WAIT_n;
 output O_NMI_n;
@@ -152,7 +156,7 @@ logic_74xx138 U_4D(
 
 );
 
-assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_DK3B | !(I_AB[15:12] == 4'h9 | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
+assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_PESTPLCE | I_AB[15:12] != 4'hB) & (!I_DK3B | !(I_AB[15:12] == 4'h9  | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
 
 //   ADDR DEC  7000H - 7FFFH
 
@@ -321,15 +325,23 @@ assign O_6H_Q = W_6H_Q;
 
 //  Parts 3D
 reg   [4:0]O_3D_Q;
+reg   [2:0]W_AREF;
+assign O_AREF = W_AREF;
 
 always@(posedge I_CLK24M or negedge I_RESET_n)
 begin
-	reg W_1C_Q0_D;
-	if(! I_RESET_n) O_3D_Q <= 0;
-	else begin
+	reg W_1C_Q0_D, W_1C_Q1_D;
+	if(! I_RESET_n) begin
+		O_3D_Q <= 0;
+		W_AREF <= 0;
+	end else begin
 		W_1C_Q0_D <= W_1C_Q[0];
+		W_1C_Q1_D <= W_1C_Q[1];
 		if (!W_1C_Q0_D & W_1C_Q[0]) begin
 			O_3D_Q <= I_DB;
+		end
+		if (!W_1C_Q1_D & W_1C_Q[1]) begin
+			W_AREF <= I_DB[2:0];
 		end
 	end
 end

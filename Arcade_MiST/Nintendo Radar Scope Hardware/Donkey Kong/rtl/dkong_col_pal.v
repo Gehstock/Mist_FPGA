@@ -18,6 +18,7 @@ module dkong_col_pal(
 	input  CLK_24M,
 	input  CLK_6M_EN,
 	input  I_DK3B,
+	input  I_PESTPLCE,
 	input  I_PALBNK,
 	input  [5:0]I_VRAM_D,
 	input  [5:0]I_OBJ_D,
@@ -86,8 +87,8 @@ dpram #(9,8) col2 (
 	);
 
 //assign {O_R, O_G, O_B} = I_DK3B ? {W_2F_DO, W_2E_DO} : ~{W_2F_DO[3:1], W_2F_DO[3], ~W_2E_DO};
-assign O_R = I_DK3B ? W_2F_DO[7:4] : ~{W_2F_DO[3:1], W_2F_DO[3]};
-assign O_G = I_DK3B ? W_2F_DO[3:0] : ~{W_2F_DO[0], W_2E_DO[3:2], W_2F_DO[0]};
-assign O_B = I_DK3B ? W_2E_DO[3:0] : ~{W_2E_DO[1:0], W_2E_DO[1:0]};
+assign O_R = I_DK3B ? W_2F_DO[7:4] : {4{I_PESTPLCE}} ^ ~{W_2F_DO[3:1], W_2F_DO[3]};
+assign O_G = I_DK3B ? W_2F_DO[3:0] : {4{I_PESTPLCE}} ^ ~{W_2F_DO[0], W_2E_DO[3:2], W_2F_DO[0]};
+assign O_B = I_DK3B ? W_2E_DO[3:0] : {4{I_PESTPLCE}} ^ ~{W_2E_DO[1:0], W_2E_DO[1:0]};
 
 endmodule
