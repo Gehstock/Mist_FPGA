@@ -160,6 +160,7 @@ dkong_top dkong(
 	.I_DIP_SW(status[15:8]),
 	.I_DKJR(core_mod[0]),
 	.I_DK3B(core_mod[1]),
+	.I_RADARSCP(core_mod[2]),
 	.O_SOUND_DAT(audio),
 	.O_VGA_R(r),
 	.O_VGA_G(g),

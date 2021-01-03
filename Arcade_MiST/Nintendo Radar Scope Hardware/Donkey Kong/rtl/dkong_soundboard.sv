@@ -10,6 +10,7 @@ module dkong_soundboard(
 	input   [1:0] W_4H_Q,
 	input   [4:0] W_3D_Q,
 	output [15:0] O_SOUND_DAT,
+	output        O_SACK,
 	output [11:0] ROM_A,
 	input   [7:0] ROM_D,
 	output [18:0] WAV_ROM_A,
@@ -60,6 +61,7 @@ I8035IP SOUND_CPU
 	.I_P2(I8035_PBO),
 	.O_P2(I8035_PBI)
 );
+assign O_SACK = I8035_PBI[4];
 //-------------------------------------------------
 
 dkong_sound Digtal_sound

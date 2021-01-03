@@ -37,6 +37,7 @@ module dkong_top
 	input  [7:0] I_DIP_SW,
 	input  I_DKJR,
 	input  I_DK3B,
+	input  I_RADARSCP,
 	
 	//    VGA (VIDEO) IF
 	output [3:0]O_VGA_R,
@@ -96,7 +97,7 @@ wire   W_SW2_OEn ;
 wire   W_SW3_OEn ;
 wire   W_DIP_OEn ;
 
-wire   [1:0]W_4H_Q;
+wire   [2:0]W_4H_Q;
 wire   [7:0]W_5H_Q;
 wire   [7:0]W_6H_Q;
 wire   [4:0]W_3D_Q;
@@ -294,9 +295,10 @@ ram_1024_8_8 U_6PR
 );
 
 //=========== SW Interface ========================================================
+wire        W_SACK;
 wire   [7:0]W_SW1 = W_SW1_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J1,I_D1,I_U1,I_L1,I_R1};
 wire   [7:0]W_SW2 = W_SW2_OEn ?  8'h00: ~{1'b1,1'b1,1'b1,I_J2,I_D2,I_U2,I_L2,I_R2};
-wire   [7:0]W_SW3 = W_SW3_OEn ?  8'h00: ~{I_C1,1'b1,1'b1,1'b1,I_S2,I_S1,1'b1,1'b1};
+wire   [7:0]W_SW3 = W_SW3_OEn ?  8'h00: ~{I_C1,~I_RADARSCP | W_SACK,1'b1,1'b1,I_S2,I_S1,1'b1,1'b1};
 wire   [7:0]W_DIP = W_DIP_OEn ?  8'h00:  I_DIP_SW;
 
 
@@ -341,9 +343,11 @@ dkong_adec adec
 	.O_4H_Q(W_4H_Q),
 	.O_5H_Q(W_5H_Q),
 	.O_6H_Q(W_6H_Q),
-	.O_3D_Q(W_3D_Q)
+	.O_3D_Q(W_3D_Q),
+	.O_AREF(W_AREF)
 );
 
+wire   W_DISPLAY = W_5H_Q[1]; // radar enable
 wire   W_FLIPn = W_5H_Q[2];
 wire   W_2PSL  = W_5H_Q[3];
 wire   W_DREQ  = W_5H_Q[5]; // DMA Trigger
@@ -435,7 +439,44 @@ dkong_vram vram
 	.DL_DATA(DL_DATA)
 );
 
+wire W_RADARn;
+wire W_STARn;
+wire W_NOISE;
+wire W_DISPLAY_O;
+
+radarscp_stars rstars
+(
+	.CLK_24M(W_CLK_24576M),
+	.CLK_EN(W_CLK_12288M),
+	.RESETn(W_RESETn),
+	.O_RADARn(W_RADARn),
+	.O_STARn(W_STARn),
+	.O_NOISE(W_NOISE),
+	.O_DISPLAY(W_DISPLAY_O),
+	.I_DISPLAY(W_DISPLAY),
+	.I_VBLKn(W_V_BLANKn),
+	.I_H_CNT(W_H_CNT),
+	.I_FLIPn(W_FLIPn),
+	.I_SOU2(W_6H_Q[2]),
+
+	.DL_ADDR(DL_ADDR),
+	.DL_WR(DL_WR),
+	.DL_DATA(DL_DATA)
+);
+
 assign O_PIX = W_H_CNT[0];
+wire [3:0] W_RED;
+wire [3:0] W_GREEN;
+wire [3:0] W_BLUE;
+wire [2:0] W_AREF;
+wire [2:0] W_GRID = {3{W_L_CMPBLKn & W_DISPLAY_O & ~W_RADARn & I_RADARSCP}} & W_AREF;
+wire       W_STAR = W_L_CMPBLKn & W_NOISE & ~W_STARn & I_RADARSCP;
+wire [4:0] W_RED_TOTAL = W_RED + {W_GRID[0] | W_STAR, 3'b000};
+wire [4:0] W_GREEN_TOTAL = W_GREEN + {W_GRID[1] & ~W_STAR, 3'b000};
+wire [4:0] W_BLUE_TOTAL = W_BLUE + {W_GRID[2] & ~W_STAR, I_RADARSCP & W_L_CMPBLKn, I_RADARSCP & W_L_CMPBLKn, 1'b0};
+assign O_VGA_R = W_RED_TOTAL[4] ? 4'hF : W_RED_TOTAL[3:0];
+assign O_VGA_G = W_GREEN_TOTAL[4] ? 4'hF : W_GREEN_TOTAL[3:0];
+assign O_VGA_B = W_BLUE_TOTAL[4] ? 4'hF : W_BLUE_TOTAL[3:0];
 
 dkong_col_pal cpal
 (
@@ -448,9 +489,9 @@ dkong_col_pal cpal
 	.I_CMPBLKn(W_L_CMPBLKn),
 	.I_5H_Q6(W_5H_Q[6]),
 	.I_5H_Q7(W_5H_Q[7]),
-	.O_R(O_VGA_R),
-	.O_G(O_VGA_G),
-	.O_B(O_VGA_B),
+	.O_R(W_RED),
+	.O_G(W_GREEN),
+	.O_B(W_BLUE),
 
 	.DL_ADDR(DL_ADDR),
 	.DL_WR(DL_WR),
@@ -462,6 +503,7 @@ dkong_soundboard dkong_soundboard(
 	.W_RESETn(W_RESETn),
 	.I_DKJR(I_DKJR),
 	.O_SOUND_DAT(O_SOUND_DAT),
+	.O_SACK(W_SACK),
 	.W_6H_Q(W_6H_Q),
 	.W_5H_Q0(W_5H_Q[0]),
 	.W_4H_Q(W_4H_Q),
