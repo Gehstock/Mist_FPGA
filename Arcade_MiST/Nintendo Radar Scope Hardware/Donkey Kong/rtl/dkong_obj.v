@@ -31,6 +31,7 @@ module dkong_obj(
 	input  				CLK_24M,
 	input  				CLK_12M,
 	input         CLK_12M_EN,
+	input         I_PESTPLCE,
 	input  		[9:0]	I_AB,
 //	input  		[7:0]	I_DB,
 	input  		[7:0]	I_OBJ_D,
@@ -170,8 +171,9 @@ always@(posedge W_5F2_Q[0]) W_8H_Q <= W_8H_D;
 reg    [7:0]W_6J_Q;
 always@(posedge W_5F2_Q[2]) W_6J_Q <= W_HD[7:0];
 
-wire   [7:0]W_6K_D = {W_6J_Q[7],I_CMPBLKn,~I_H_CNT[9],
-                      ~(I_H_CNT[9]|W_FLIP_2),W_6J_Q[3:0]};
+wire   [7:0]W_6K_D = !I_PESTPLCE ? 
+	{W_6J_Q[7],I_CMPBLKn,~I_H_CNT[9],~(I_H_CNT[9]|W_FLIP_2),W_6J_Q[3:0]} :
+	{W_6H_Q[7],I_CMPBLKn,~I_H_CNT[9],~(I_H_CNT[9]|W_FLIP_2),W_6H_Q[3:0]};
 
 reg    [7:0]W_6K_Q;
 always@(posedge CLK_24M)
@@ -309,8 +311,9 @@ begin
       O_OBJ_DO <= O_OBJ_DO ;
 end
 
-
-wire   [11:0]W_ROM_OBJ_AB = {W_6J_Q[6],W_6H_Q[6:0],W_8H_Q[3:0]^{W_6H_Q[7],W_6H_Q[7],W_6H_Q[7],W_6H_Q[7]}};
+wire   [11:0]W_ROM_OBJ_AB = !I_PESTPLCE ? 
+	{W_6J_Q[6],W_6H_Q[6:0],W_8H_Q[3:0]^{{4{W_6H_Q[7]}}}} :
+	{W_6J_Q[7:0],W_8H_Q[3:0]^{4{W_6H_Q[6]}}};
 
 wire   [7:0]W_OBJ_DO_7C,W_OBJ_DO_7D,W_OBJ_DO_7E,W_OBJ_DO_7F;
 

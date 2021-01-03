@@ -25,6 +25,7 @@ I_CLK_EN_N,
 I_RESET_n,
 I_DKJR,
 I_DK3B,
+I_PESTPLCE,
 I_AB,
 I_DB,
 I_MREQ_n,
@@ -66,6 +67,7 @@ input  I_CLK_EN_N;
 input  I_RESET_n;
 input  I_DKJR;
 input  I_DK3B;
+input  I_PESTPLCE;
 input  [15:0]I_AB;
 input  [3:0]I_DB;
 input  I_MREQ_n;
@@ -154,7 +156,7 @@ logic_74xx138 U_4D(
 
 );
 
-assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_DK3B | !(I_AB[15:12] == 4'h9 | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
+assign O_ROM_CS_n = I_DKJR ? (&W_4D_Q[5:0] & (!I_PESTPLCE | I_AB[15:12] != 4'hB) & (!I_DK3B | !(I_AB[15:12] == 4'h9  | I_AB[15:12] == 4'hD))) : &W_4D_Q[3:0];
 
 //   ADDR DEC  7000H - 7FFFH
 

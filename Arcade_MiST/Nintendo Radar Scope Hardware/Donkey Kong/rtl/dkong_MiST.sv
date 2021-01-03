@@ -44,6 +44,8 @@ wire        rotate = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend = status[5];
 
+wire        landscape = core_mod[3];
+
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
 assign 		SDRAM_CLK = clock_24;
@@ -161,6 +163,7 @@ dkong_top dkong(
 	.I_DKJR(core_mod[0]),
 	.I_DK3B(core_mod[1]),
 	.I_RADARSCP(core_mod[2]),
+	.I_PESTPLCE(core_mod[3]),
 	.O_SOUND_DAT(audio),
 	.O_VGA_R(r),
 	.O_VGA_G(g),
@@ -263,7 +266,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b11       ),
+	.orientation ( {1'b1, ~landscape} ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),

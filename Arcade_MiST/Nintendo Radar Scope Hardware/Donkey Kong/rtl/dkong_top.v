@@ -38,6 +38,7 @@ module dkong_top
 	input  I_DKJR,
 	input  I_DK3B,
 	input  I_RADARSCP,
+	input  I_PESTPLCE,
 	
 	//    VGA (VIDEO) IF
 	output [3:0]O_VGA_R,
@@ -188,6 +189,9 @@ always @(*) begin
 		6'h07: MAIN_CPU_A = {5'h03,W_CPU_A[10:0]}; // 0x3800-0x3FFF -> 0x1800-0x1FFF in ROM file
 		6'h09: MAIN_CPU_A = {5'h05,W_CPU_A[10:0]}; // 0x4800-0x4FFF -> 0x2800-0x2FFF in ROM file
 		6'h0B: MAIN_CPU_A = {5'h07,W_CPU_A[10:0]}; // 0x5800-0x5FFF -> 0x3800-0x3FFF in ROM file
+		//pestplace
+		6'h16: MAIN_CPU_A = {5'h0C,W_CPU_A[10:0]}; // 0xB000-0xB7FF -> 0x6000-0x6FFF in ROM file
+		6'h17: MAIN_CPU_A = {5'h0D,W_CPU_A[10:0]}; // 0xB800-0xBFFF -> 0x6000-0x6FFF in ROM file
 		// dkong3b
 		6'h12: MAIN_CPU_A = {5'h0C,W_CPU_A[10:0]}; // 0x9000-0x97FF -> 0x6000-0x6FFF in ROM file
 		6'h13: MAIN_CPU_A = {5'h0D,W_CPU_A[10:0]}; // 0x9800-0x9FFF -> 0x6000-0x6FFF in ROM file
@@ -314,6 +318,7 @@ dkong_adec adec
 	.I_RESET_n(W_RESETn),
 	.I_DKJR(I_DKJR),
 	.I_DK3B(I_DK3B),
+	.I_PESTPLCE(I_PESTPLCE),
 	.I_AB(W_CPU_A),
 	.I_DB(WI_D), 
 	.I_MREQ_n(W_CPU_MREQn),
@@ -348,7 +353,7 @@ dkong_adec adec
 );
 
 wire   W_DISPLAY = W_5H_Q[1]; // radar enable
-wire   W_FLIPn = W_5H_Q[2];
+wire   W_FLIPn = I_PESTPLCE ^ W_5H_Q[2];
 wire   W_2PSL  = W_5H_Q[3];
 wire   W_DREQ  = W_5H_Q[5]; // DMA Trigger
 
@@ -391,6 +396,7 @@ dkong_obj obj
 	.CLK_24M(W_CLK_24576M),
 	.CLK_12M(WB_CLK_12288M),
 	.CLK_12M_EN(W_CLK_12288M_EN),
+	.I_PESTPLCE(I_PESTPLCE),
 	.I_AB(),
 	.I_DB(/*W_2N_DO*/),
 	.I_OBJ_D(W_OBJ_DI),
@@ -484,6 +490,7 @@ dkong_col_pal cpal
 	.CLK_24M(W_CLK_24576M),
 	.CLK_6M_EN(W_CLK_12288M & !W_H_CNT[0]),
 	.I_DK3B(I_DK3B),
+	.I_PESTPLCE(I_PESTPLCE),
 	.I_VRAM_D({W_VRAM_COL[3:0],W_VRAM_VID[1:0]}),
 	.I_OBJ_D(W_OBJ_DAT),
 	.I_CMPBLKn(W_L_CMPBLKn),
