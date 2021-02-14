@@ -1,14 +1,21 @@
+-- Xevious by Namco MiST port
+--
+-- Create ROM file from the MRA file using the MRA utility.
+--  Example: mra -z /path/to/mame/roms Xevious.mra
+-- Copy the ROM files to the root of the SD Card
+-- Copy the RBF files to the SD Card
+--
+-- MRA utility: https://github.com/sebdel/mra-tools-c/
+--
+-- Based on:
 ---------------------------------------------------------------------------------
 -- Xevious by Dar (darfpga@aol.fr) (01 May 2017)
 -- http://darfpga.blogspot.fr
 --
 --  Terasic board DE2-35 or MAX10 DE10 Lite
 --
--- Modified for external SDRAM controller as ROM storage for MiST by Slingshot
--- 
-XEVIOUS.ROM is required at the root of the SD-Card.
-Menu Item for Super Xevious
-SXEVIOUS.ROM for Super Xevious (buggy for the First Game then it´s ok)
+-- Modified for external SDRAM controller as ROM storage for MiST by Slingshot 
+--
 --------------------------------------------------------------------------------
 -- gen_ram.vhd & io_ps2_keyboard
 -------------------------------- 

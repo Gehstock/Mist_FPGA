@@ -32,14 +32,22 @@ module xevious_mist
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"XEVIOUS;ROM;",
-	"O7,Game,Xevious,SXevious;",
+	"XEVIOUS;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"T6,Reset;",
+	"DIP;",
+	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
+
+wire        rotate    = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend     = status[5];
+wire  [7:0] dipA      = status[15:8];
+wire  [7:0] dipB      = status[23:16];
+
+wire  [6:0] core_mod;
 
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
@@ -58,23 +66,51 @@ pll pll(
 wire        clk_sys = clk_18;
 wire        clk_mem = clk_72;
 
-reg         reset;
-always @(posedge clk_sys)
-	reset <= status[0] | status[6] | buttons[1] | ioctl_downl;
+reg         rom_loaded = 0;
+reg         reset = 1;
+
+always @(posedge clk_sys) begin
+	reg ioctl_downlD;
+	ioctl_downlD <= ioctl_downl;
+
+	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
+	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
+end
 
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [9:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
-wire [10:0] audio;
-wire hs, vs;
-wire blankn;
-wire [3:0] r,g,b;
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
+
+user_io #(
+	.STRLEN($size(CONF_STR)>>3))
+user_io(
+	.clk_sys        (clk_sys        ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.core_mod       (core_mod       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -168,6 +204,11 @@ always @(posedge clk_sys) begin
 	end
 end
 
+wire [10:0] audio;
+wire hs, vs;
+wire blankn;
+wire [3:0] r,g,b;
+
 xevious xevious(
 	.clock_18          ( clk_sys ),
 	.reset             ( reset ),
@@ -195,16 +236,22 @@ xevious xevious(
 	.video_vs(vs),
 	.video_blankn(blankn),
 	.audio(audio),
-	.freeze(status[7]),
-	.coin(btn_coin),
-	.start1(btn_one_player),
+	.dipA(dipA),
+	.dipB(dipB),
+	.coin(m_coin1 | m_coin2),
+	.start1(m_one_player),
 	.left(m_left),
 	.right(m_right),
 	.up(m_up),
 	.down(m_down),
-	.fire(m_fire),
-	.bomb(m_bomb),
-	.start2(btn_two_players)
+	.fire(m_fireA),
+	.bomb(m_fireB),
+	.start2(m_two_players),
+	.b_test(),
+	.b_svce(),
+	.dl_addr(ioctl_addr[16:0]),
+	.dl_wr(ioctl_wr),
+	.dl_data(ioctl_dout)
 	);
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
@@ -223,32 +270,12 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
 	.ce_divider(1'b1),
-	.rotate({1'b1,status[2]}),
-	.scanlines(status[4:3]),
-	.blend(status[5]),
+	.rotate({1'b1,rotate}),
+	.scanlines(scanlines),
+	.blend(blend),
 	.scandoubler_disable(scandoublerD),
-	.ypbpr(ypbpr)
-	);
-
-user_io #(
-	.STRLEN(($size(CONF_STR)>>3)))
-user_io(
-	.clk_sys        (clk_sys        ),
-	.conf_str       (CONF_STR       ),
-	.SPI_CLK        (SPI_SCK        ),
-	.SPI_SS_IO      (CONF_DATA0     ),
-	.SPI_MISO       (SPI_DO         ),
-	.SPI_MOSI       (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.key_strobe     (key_strobe     ),
-	.key_pressed    (key_pressed    ),
-	.key_code       (key_code       ),
-	.joystick_0     (joystick_0     ),
-	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.ypbpr(ypbpr),
+	.no_csync(no_csync)
 	);
 
 dac #(
@@ -260,44 +287,24 @@ dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+arcade_inputs inputs (
+	.clk         ( clk_sys     ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_sys) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      	<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin			<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-			'h14: btn_fire3 		<= key_pressed; // ctrl
-			'h11: btn_fire2 		<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
-
-endmodule 
+endmodule
