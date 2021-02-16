@@ -17,6 +17,9 @@
 -- Do not redistribute roms whatever the form
 -- Use at your own risk
 ---------------------------------------------------------------------------------
+-- Version 0.4 -- 02/14/2021 by Slingshot
+--             Use mb88 for cs51xx - Super Xevious works
+--
 -- MiST changes for using SDRAM as external ROM storage
 --             Export all ROM access address/data lines for an external priority controller
 --             Latch ROM data a bit later to allow the SDRAM controller to perform
@@ -34,7 +37,6 @@
 --  Features :
 --   TV 15KHz mode only (atm)
 --   Cocktail mode : todo 
---   Replace cs51xx with true mb88 processor : todo
 --
 --   Sound ok, Ship explode ok with true mb88 processor
 
@@ -104,10 +106,10 @@
 --      simplified emulation in vhdl
 --
 --    Namco 50XX for protection management 
---      simplified emulation in vhdl
-
+--      true mb88 processor ok
+--
 --    Namco 51XX for coin/credit management 
---      simplified emulation in vhdl : 1coin/1credit, 1 or 2 players start
+--      true mb88 processor ok
 --
 --    Namco 54XX for sound effects 
 --      true mb88 processor ok
@@ -163,7 +165,8 @@ port(
  sp_grphx_1_do  : in std_logic_vector(7 downto 0);
  sp_grphx_2_addr_o : out std_logic_vector(16 downto 0);
  sp_grphx_2_do  : in std_logic_vector(7 downto 0);
- freeze         : in std_logic;
+ dipA           : in std_logic_vector(7 downto 0);
+ dipB           : in std_logic_vector(7 downto 0);
  b_test         : in std_logic;
  b_svce         : in std_logic;
  coin           : in std_logic;
@@ -174,7 +177,11 @@ port(
  left           : in std_logic;
  right          : in std_logic;
  fire           : in std_logic;
- bomb           : in std_logic
+ bomb           : in std_logic;
+
+ dl_addr        : in std_logic_vector(16 downto 0);
+ dl_wr          : in std_logic;
+ dl_data        : in std_logic_vector( 7 downto 0)
  );
 end xevious;
 
@@ -187,6 +194,7 @@ architecture struct of xevious is
  signal slot            : std_logic_vector(2 downto 0) := (others => '0');
  signal hcnt            : std_logic_vector(8 downto 0);
  signal vcnt            : std_logic_vector(8 downto 0);
+ signal vblank          : std_logic;
  signal ena_vidgen      : std_logic;
  signal ena_snd_machine : std_logic;
  signal ena_sprite      : std_logic;
@@ -264,29 +272,27 @@ architecture struct of xevious is
  signal cs06XX_control : std_logic_vector( 7 downto 0);
  signal cs06XX_do      : std_logic_vector( 7 downto 0);
  signal cs06XX_di      : std_logic_vector( 7 downto 0);
+ signal cs06XX_nmi_state_next : std_logic;
+ signal cs06XX_nmi_stretch : std_logic;
+ signal cs06XX_nmi_cnt : std_logic_vector( 7 downto 0);
 
- signal cs51XX_data_cnt           : std_logic_vector( 1 downto 0);
- signal cs51XX_coin_mode_cnt      : std_logic_vector( 2 downto 0);
- signal cs51XX_switch_mode        : std_logic;
- signal cs51XX_credit_mode        : std_logic;
+ signal cs51xx_rom_addr : std_logic_vector(10 downto 0); 
+ signal cs51xx_rom_do   : std_logic_vector( 7 downto 0); 
+
+ signal cs51xx_irq_n      : std_logic := '1'; 
+ signal cs51xx_ol_port_out: std_logic_vector( 3 downto 0); 
+ signal cs51xx_oh_port_out: std_logic_vector( 3 downto 0); 
+ signal cs51xx_k_port_in  : std_logic_vector( 3 downto 0); 
  signal cs51XX_do                 : std_logic_vector( 7 downto 0);
- signal cs51XX_switch_mode_do     : std_logic_vector( 7 downto 0);
- signal cs51XX_non_switch_mode_do : std_logic_vector( 7 downto 0);
  signal change_next               : std_logic;
- signal credit_bcd_0              : std_logic_vector( 3 downto 0);
- signal credit_bcd_1              : std_logic_vector( 3 downto 0);
- 
--- signal cs54XX_cmd        : std_logic_vector( 3 downto 0);
--- signal cs54XX_do         : std_logic_vector( 7 downto 0);
- 
- signal cs54xx_ena      : std_logic;
+
+ signal cs5Xxx_ena      : std_logic;
  signal cs5Xxx_rw       : std_logic;
  
  signal cs54xx_rom_addr : std_logic_vector(10 downto 0); 
  signal cs54xx_rom_do   : std_logic_vector( 7 downto 0); 
  
  signal cs54xx_irq_n      : std_logic := '1'; 
- signal cs54xx_irq_cnt    : std_logic_vector( 3 downto 0); 
  signal cs54xx_k_port_in  : std_logic_vector( 3 downto 0); 
  signal cs54xx_r0_port_in : std_logic_vector( 3 downto 0); 
  signal cs54xx_audio_1    : std_logic_vector( 3 downto 0); 
@@ -303,7 +309,6 @@ architecture struct of xevious is
  signal cs50xx_rom_do     : std_logic_vector( 7 downto 0); 
 
  signal cs50xx_irq_n      : std_logic := '1'; 
- signal cs50xx_irq_cnt    : std_logic_vector( 3 downto 0); 
  signal cs50xx_k_port_in  : std_logic_vector( 3 downto 0); 
  signal cs50xx_r0_port_in : std_logic_vector( 3 downto 0); 
  signal cs50xx_ol_port_out: std_logic_vector( 3 downto 0); 
@@ -341,10 +346,13 @@ architecture struct of xevious is
  
  signal terrain_bs0         : std_logic_vector( 7 downto 0); 
  signal terrain_bs1         : std_logic_vector( 7 downto 0);
+ signal terrain_2a_we       : std_logic;
  signal terrain_2a_rom_addr : std_logic_vector(11 downto 0);
  signal terrain_2a_rom_do   : std_logic_vector( 7 downto 0);
+ signal terrain_2b_we       : std_logic;
  signal terrain_2b_rom_addr : std_logic_vector(12 downto 0);
  signal terrain_2b_rom_do   : std_logic_vector( 7 downto 0);
+ signal terrain_2c_we       : std_logic;
  signal terrain_2c_rom_addr : std_logic_vector(11 downto 0);
  signal terrain_2c_rom_do   : std_logic_vector( 7 downto 0);
  signal terrain_mux_do      : std_logic_vector( 2 downto 0);
@@ -432,12 +440,11 @@ sp_grphx_2_addr_o <= ('0'&X"F000") + ("0000"&sp_grphx_addr(12 downto 0)); -- 0x0
 clock_18n <= not clock_18;
 reset_n   <= not reset;
 
-dip_switch_a <= "11111111"; -- | cabinet(1) | lives(2)| bonus life(3) | coinage A(2) |
---dip_switch_b <= not freeze &"110001" & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
-dip_switch_b <= not freeze &"11" & not bomb & "111" & not bomb;
+dip_switch_a <= dipa; -- | cabinet(1) | lives(2)| bonus life(3) | coinage A(2) |
+dip_switch_b <= dipb(7 downto 5) & not bomb & dipb(3 downto 1) & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
 dip_switch_do <= 	dip_switch_a(to_integer(unsigned(ram_bus_addr(3 downto 0)))) & 
 									dip_switch_b(to_integer(unsigned(ram_bus_addr(3 downto 0))));
-									
+
 audio <= ("00" & cs54xx_audio_1 &  "00000" ) + ("00" & cs54xx_audio_2 &  "00000" )+ ('0'&snd_audio);
 --audio <= ("00" & cs54xx_audio_1 &  "00000" ) + ('0'&snd_audio);
 --audio <= ('0'&snd_audio);
@@ -501,7 +508,7 @@ begin
 	ena_sprite       <= '0';
 	ena_sprite_grph0 <= '0';
 	ena_sprite_grph1 <= '0';
-	cs54xx_ena       <= '0';
+	cs5Xxx_ena       <= '0';
 
 	if slot = "100" or slot = "001" then ena_vidgen       <= '1';	end if;	 
 	if slot = "010" or slot = "100" then ena_snd_machine  <= '1';	end if;	 -- sound ram access
@@ -517,9 +524,9 @@ begin
 	if slot = "000" then cpu2_ena <= '1';	end if;	
 	if slot = "001" then cpu3_ena <= '1';	end if;
 		
-	if slot24 = "00000" then cs54xx_ena <= '1';	end if;	 
---	if slot24 = "00000" or slot24 = "01100" then cs54xx_ena <= '1';	end if;	 
---	if slot = "000" or slot = "011" then cs54xx_ena <= '1';	end if;	 
+--	if slot24 = "00000" then cs5Xxx_ena <= '1';	end if;	 
+	if slot24 = "00000" or slot24 = "01100" then cs5Xxx_ena <= '1';	end if;	 
+--	if slot = "000" or slot = "011" then cs5Xxx_ena <= '1';	end if;	 
 	
  end if;
 end process;
@@ -981,7 +988,6 @@ terrain_we   <= '1' when mux_cpu_we = '1' and ram_bus_addr(15 downto 12) = "1111
 
 -- manage irq reset/enable, cpu1 and 2 reset, namco custom chips, misc. lacthes/registers
 process (reset, clock_18n, io_we) 
-	variable cs06XX_nmi_cnt : natural range 0 to 10000;
 begin
  if reset='1' then
 			irq1_clr_n  <= '0';
@@ -990,14 +996,11 @@ begin
 			reset_cpu_n <= '0';
 			cpu1_irq_n  <= '1';
 			cpu2_irq_n  <= '1';
-			cs51XX_coin_mode_cnt <= "000";
-			cs51XX_data_cnt <= "00";
-			cs50XX_cmd <= X"00";
 			flip_h <= '0';	
+			cs51xx_irq_n <= '1';
+			cs51xx_k_port_in <= X"0";
 			cs54xx_irq_n <= '1';
-			cs54xx_irq_cnt <= X"0";
 			cs50xx_irq_n <= '1';
-			cs50xx_irq_cnt <= X"0";
 			cs50xx_r0_port_in <= X"0";
 			cs50xx_k_port_in <= X"0";
  else 
@@ -1031,120 +1034,91 @@ begin
 		elsif vcnt = std_logic_vector(to_unsigned(240,9)) and hcnt = std_logic_vector(to_unsigned(128,9)) then cpu2_irq_n <= '0';
 		end if;
 
-		if cs54xx_irq_cnt = X"0" then 
-		  cs54xx_irq_n <= '1';
-		else 
-			if cs54xx_ena = '1' then
-				cs54xx_irq_cnt <= cs54xx_irq_cnt - '1';
-			end if;
-		end if;
-
-		if cs50xx_irq_cnt = X"0" then 
-		  cs50xx_irq_n <= '1';
-		else 
-			if cs54xx_ena = '1' then
-				cs50xx_irq_cnt <= cs50xx_irq_cnt - '1';
-			end if;
-		end if;
-	
 		-- write to cs06XX
 		if io_we = '1' then 
 			-- write to data register (0x7000)
 		  if ram_bus_addr(8) = '0' then
 				-- write data to device#4 (cs54XX)
 				if cs06XX_control(3 downto 0) = "1000" then
-						-- write data for k and r#0 port and launch irq to advice cs50xx
-						cs54xx_k_port_in <= mux_cpu_do(7 downto 4);
-						cs54xx_r0_port_in <= mux_cpu_do(3 downto 0);
-						cs54xx_irq_n <= '0';
-						cs54xx_irq_cnt <= X"7";						
+					-- write data for k and r#0 port and launch irq to advice cs50xx
+					cs54xx_irq_n <= '0';
+					cs54xx_k_port_in <= mux_cpu_do(7 downto 4);
+					cs54xx_r0_port_in <= mux_cpu_do(3 downto 0);
 				end if;
 				-- write data to device#1 (cs51XX)
 				if cs06XX_control(3 downto 0) = "0001" then
-					-- when not in coin mode
-					if cs51XX_coin_mode_cnt = "000" then
-						-- if data = 1 enter coin mode for next 4 write operations
-						if mux_cpu_do(2 downto 0) = "001" then
-							cs51XX_coin_mode_cnt <= "100";
-						end if;
-						-- if data = 2 enter credit mode
-						if mux_cpu_do(2 downto 0) = "010" then
-							cs51XX_switch_mode <= '0';
-							cs51XX_credit_mode <= '1';
-							cs51XX_data_cnt <= "00";
-						end if;
-						-- if data = 5 enter switch mode 
-						if mux_cpu_do(2 downto 0) = "101" then
-							cs51XX_switch_mode <= '1';  -- '1' for galaga '0' for xevious (see klugde mode ) TBC
-							cs51XX_credit_mode <= '0';
-							cs51XX_data_cnt <= "00";
-						end if;
-					-- when in coin mode	
-					else
-						-- written coin/credit data are ignored atm 
-						-- only count down to exit coin_mode (request 4 write operations)
-						cs51XX_coin_mode_cnt <= cs51XX_coin_mode_cnt - "001";
-					end if;	
+					cs51xx_irq_n <= '0';
+					cs51xx_k_port_in <= mux_cpu_do(3 downto 0);
 				end if;
 				-- write data to device#3 (cs50XX)
--- rough emulation
 				if cs06XX_control(3 downto 0) = "0100" then
-						-- keep written data as cmd and reset read counter
-						cs50XX_cmd <= mux_cpu_do;
-						cs50XX_data_cnt <= "00";     -- !!!! cs51xx_data_cnt TBC
+					cs50xx_irq_n <= '0';
+					cs50xx_k_port_in <= mux_cpu_do(7 downto 4);
+					cs50xx_r0_port_in <= mux_cpu_do(3 downto 0);
 				end if;
 
--- mb88 emulation
-				if cs06XX_control(3 downto 0) = "0100" then
-				-- write data for k and r#0 port and reset irq counter
-						cs5Xxx_rw <= cs06XX_control(4);
-						cs50xx_k_port_in <= mux_cpu_do(7 downto 4);
-						cs50xx_r0_port_in <= mux_cpu_do(3 downto 0);
-						cs50xx_irq_n <= '0';
-						cs50xx_irq_cnt <= X"7";						
-				end if;
-
-				
 			end if;
-			
+
 			-- write to control register (0x7100) 
 			-- data(3..0) select custom chip 50xx/51xx/54xx
 			-- data (4)   read/write mode for custom chip (1 = read mode)
 			if ram_bus_addr(8) = '1' then
 				cs06XX_control <= mux_cpu_do;
 			  -- start/stop nmi timer (stop if no chip selected)
-				if mux_cpu_do(3 downto 0) = "0000" then
-					cs06XX_nmi_cnt := 0;  -- stop
+				if mux_cpu_do(7 downto 5) = "000" then
+					cs06XX_nmi_cnt <= (others => '0');
 					cpu1_nmi_n <= '1';
+					cs51xx_irq_n <= '1';
+					cs50xx_irq_n <= '1';
+					cs54xx_irq_n <= '1';
 				else
-					cs06XX_nmi_cnt := 1;  -- start
-					
-					if mux_cpu_do(4 downto 0) = "10100" then  -- prepare next read to cs50xx
-						cs5Xxx_rw <= mux_cpu_do(4);             -- *must* launch irq to cs50xx
-						cs50xx_irq_n <= '0';          
-						cs50xx_irq_cnt <= X"7";						
-					end if;
-
+					cs06XX_nmi_cnt <= (others => '0');
+					cpu1_nmi_n <= '1';
+					cs06XX_nmi_stretch <= mux_cpu_do(4);
+					cs06XX_nmi_state_next <= '1';
 				end if;
 			end if;
 		end if;	
-		
+
 		-- generate periodic nmi when timer is on
-		if cs06XX_nmi_cnt >= 1 then
+		if cs06XX_control(7 downto 5) /= "000" then
 			if cpu1_ena = '1' then  -- to get 333ns tick
---				-- 600 * 333ns = 200µs
---				if cs06XX_nmi_cnt < 600 then  
-				-- 2000 * 333ns = 666µs
-				if cs06XX_nmi_cnt < 600 then  
-					cs06XX_nmi_cnt := cs06XX_nmi_cnt + 1;
-					cpu1_nmi_n <= '1';
+
+				if cs06XX_nmi_cnt = 0 then
+					case cs06XX_control(7 downto 5) is --32 * cs06XX_control(7 downto 5);
+					when "111" =>	 cs06XX_nmi_cnt <= X"E0";
+					when "110" =>  cs06XX_nmi_cnt <= X"C0";
+					when "101" =>	 cs06XX_nmi_cnt <= X"A0";
+					when "100" =>  cs06XX_nmi_cnt <= X"80";
+					when "011" =>	 cs06XX_nmi_cnt <= X"60";
+					when "010" =>  cs06XX_nmi_cnt <= X"40";
+					when others => cs06XX_nmi_cnt <= X"20";
+					end case;
+
+					if cs06XX_nmi_state_next = '1' then
+						cs5Xxx_rw <= cs06XX_control(4);
+					end if;
+
+					if cs06XX_nmi_state_next = '1' and cs06XX_nmi_stretch = '0' then
+						cpu1_nmi_n <= '0';
+					else
+						cpu1_nmi_n <= '1';
+					end if;
+
+					if cs06XX_nmi_state_next = '0' or cs06XX_nmi_stretch = '1' then
+						cs51xx_irq_n <= not (cs06XX_control(0) and cs06XX_nmi_state_next);
+						cs50xx_irq_n <= not (cs06XX_control(2) and cs06XX_nmi_state_next);
+						cs54xx_irq_n <= not (cs06XX_control(3) and cs06XX_nmi_state_next);
+					end if;
+
+					cs06XX_nmi_state_next <= not cs06xx_nmi_state_next;
+					cs06XX_nmi_stretch <= '0';
 				else
-					cs06XX_nmi_cnt := 1;
-					cpu1_nmi_n <= '0';
-				end if;	
+					cs06XX_nmi_cnt <= cs06XX_nmi_cnt - 1;
+				end if;
 			end if;
 		end if;
-		
+
 		-- manage cs06XX data read (0x7000)
 		change_next <= '0';
 		if mux_cpu_mreq = '1' and mux_cpu_we ='0' and ram_bus_addr(15 downto 11) = "01110" then
@@ -1154,141 +1128,22 @@ begin
 		end if ;
 		-- cycle data_cnt at each read
 		if change_next = '1' then
-			if cs06XX_control(3 downto 0) = "0001" then
-				if cs51XX_data_cnt = "10" then cs51XX_data_cnt <= "00"; 
-				else cs51XX_data_cnt <= cs51XX_data_cnt + "01"; end if;
+			if cs06XX_control(4 downto 0) = "10001" then
+				cs51xx_irq_n <= '0';
 			end if;
-			if cs06XX_control(3 downto 0) = "0100" then
-				-- cs50xx (rough emulation)
-				if cs50XX_data_cnt = "11" then cs50XX_data_cnt <= "00"; 
-				else cs50XX_data_cnt <= cs50XX_data_cnt + "01"; end if;
+			if cs06XX_control(4 downto 0) = "10100" then
 				-- cs50xx (m88 emulation)
-				cs5Xxx_rw <= cs06XX_control(4);  -- launch irq to request next read
 				cs50xx_irq_n <= '0';
-				cs50xx_irq_cnt <= X"7";						
-	
 			end if;				
-		end if;
-		
-		-- manage credit count (bcd)
-		--   increase at each coin up to 99
-		coin_r <= coin;
-		start1_r <= start1;
-		start2_r <= start2;
-		if coin = '1' and coin_r = '0' then 
-			if credit_bcd_0 = "1001" then 
-				if credit_bcd_1 /= "1001" then
-					credit_bcd_1 <= credit_bcd_1 + "0001";
-					credit_bcd_0 <= "0000";
-				end if;
-			else
-				credit_bcd_0 <= credit_bcd_0 + "0001";
-			end if; 
-		end if;
-		
-	  -- decrease credit only when in credit mode
-		-- CPU spy this counter to start a new game
-		if cs51XX_credit_mode = '1' then
-			  -- decreasing credit by 1 will start a new game for 1 player
-			if (start1 = '1' and start1_r = '0') then
-				cs51XX_credit_mode <= '0';
-				if credit_bcd_0 = "0000" then 
-					if credit_bcd_1 /= "0000" then
-						credit_bcd_1 <= credit_bcd_1 - "0001";
-						credit_bcd_0 <= "1001";
-					end if;
-				else
-					credit_bcd_0 <= credit_bcd_0 - "0001";
-				end if; 		
-			end if;
-
-		  -- decreasing credit by 2 (at once) will start a new game for 2 player
-			if (start2 = '1' and start2_r = '0') then
-				if credit_bcd_0 = "0000" or credit_bcd_0 = "0001" then
- 					if credit_bcd_1 /= "0000" then
-						cs51XX_credit_mode <= '0';
-						credit_bcd_1 <= credit_bcd_1 - "0001";
-						if credit_bcd_0 = "0000" then 
-							credit_bcd_0 <= "1000";
-						else
-							credit_bcd_0 <= "1001";
-						end if;
-					end if;
-				else
-					cs51XX_credit_mode <= '0';
-					credit_bcd_0 <= credit_bcd_0 - "0010";					
-				end if;
-			end if;
 		end if;
 		
   end if;
  end if;
 end process;
 
--- namco cs51XX joy remap LUT (active for xevious)
-buttons <= left & down & right & up;
-with buttons select
-joy <= X"8" when "0000",
-       X"0" when "0001",
-			 X"2" when "0010",
-			 X"1" when "0011",
-			 X"4" when "0100",
-			 X"A" when "0101",
-			 X"3" when "0110",
-			 X"B" when "0111",
-			 X"6" when "1000",
-			 X"7" when "1001",
-			 X"9" when "1010",
-			 X"C" when "1011",
-			 X"5" when "1100",
-			 X"D" when "1101",
-			 X"E" when "1110",
-			 X"F" when others;
+cs51XX_do <= cs51XX_oh_port_out & cs51XX_ol_port_out;
 
--- swicth mode reply with respect to reply rank
-with cs51XX_data_cnt select
-cs51XX_switch_mode_do <= 	not (left & '0' & right & '0' & left & '0' & right & '0' )         when "00",
-													not (b_test & b_svce & '0' & coin & start2 & start1 & fire & fire) when "01",
-													X"00" when others;	
--- N.U. (galaga configuration)
---cs51XX_switch_mode_do <= 	not (left2 & '0' & right2 & '0' & left1 & '0' & right1 & '0' )       when "00",
---													not (b_test & b_svce & '0' & coin & start2 & start1 & fire2 & fire1) when "01",
---													X"00" when others;	
-
--- non swicth mode reply with respect to reply rank
-with cs51XX_data_cnt select
-cs51XX_non_switch_mode_do <= 	credit_bcd_1 & credit_bcd_0 when "00", -- credits (cpu spy this to start a new game)
-															"00" & not fire & '1' & joy when "01",
-															X"38" when "10",
-															X"00" when "11"; -- N.U.	
-															
--- N.U. (galaga configuration)
---cs51XX_non_switch_mode_do <= 	credit_bcd_1 & credit_bcd_0 when "00", -- credits (cpu spy this)
---															not ("110" & fire1 & left1 & '0' & right1 & '0' ) when "01",
---															not ("110" & fire2 & left2 & '0' & right2 & '0' ) when "10",
---															X"00" when "11"; -- N.U.	
-
--- select reply with respect to current mode 
-cs51XX_do <= cs51XX_switch_mode_do when cs51XX_switch_mode = '1' else cs51XX_non_switch_mode_do;
-
--- reply for cmd_80 mode (rough emulation)
-with cs50XX_data_cnt select
-cs50XX_cmd_80_do <= 	X"80" when "00",
-											X"00" when "01",
-											X"00" when "10",
-										  X"05"	when others;	
-
--- reply for cmd_E5 mode (rough emulation)
-with cs50XX_data_cnt select
-cs50XX_cmd_E5_do <= 	X"F0" when "00",
-											X"00" when "01",
-											X"00" when "10",
-										  X"95"	when others;	
-
--- select reply with respect to current mode (rough emulation)
---cs50XX_do <= cs50XX_cmd_80_do when cs50XX_cmd = X"80" else cs50XX_cmd_E5_do;
--- mb88 emulation
-cs50XX_do <= cs50XX_oh_port_out & cs50XX_ol_port_out; -- keep this line for cs50xx true mb88 emulation
+cs50XX_do <= cs50XX_oh_port_out & cs50XX_ol_port_out;
 
 -- select custom chip reply depending on current control mode for data read request
 with cs06XX_control(3 downto 0) select
@@ -1354,6 +1209,7 @@ vcnt    => vcnt,
 hsync   => video_hs,
 vsync   => video_vs,
 csync   => video_csync,
+vbl     => vblank,
 blankn  => video_blankn
 );
 
@@ -1431,12 +1287,53 @@ port map(
   DO      => cpu3_do
 );
 
+-- mb88 - cs51xx (42 pins IC, 1024 bytes rom)
+mb88_51xx : entity work.mb88
+port map(
+ reset_n    => reset_cpu_n, --reset_n,
+ clock      => clock_18,
+ ena        => cs5Xxx_ena,
+
+ r0_port_in  => not left&not down&not right&not up, -- pin 22,23,24,25
+ r1_port_in  => x"F", -- pin 26,27,28,29
+ r2_port_in  => not start2&not start1&'1'&not fire, -- pin 30,31,32,33
+ r3_port_in  => not b_test&"11"&not coin, -- pin 34,35,36,37
+ r0_port_out => open, 
+ r1_port_out => open,
+ r2_port_out => open,
+ r3_port_out => open,
+ k_port_in   => cs5Xxx_rw&cs51xx_k_port_in(2 downto 0), -- pin 38,39,40,41
+ ol_port_out => cs51XX_ol_port_out, -- pin 13,14,15,16
+ oh_port_out => cs51XX_oh_port_out, -- pin 17,18,19,20
+ p_port_out  => open, -- pin 9,10,11,12
+
+ stby_n    => '0',
+ tc_n      => not vblank, -- pin 8
+ irq_n     => cs51xx_irq_n, -- pin 4
+ sc_in_n   => '0', -- pin 7
+ si_n      => '0', -- pin 6
+ sc_out_n  => open, -- pin 7
+ so_n      => open, -- pin 5
+ to_n      => open, -- pin 7
+ 
+ rom_addr  => cs51xx_rom_addr,
+ rom_data  => cs51xx_rom_do
+);
+
+-- cs51xx program ROM
+cs51xx_prog : entity work.cs51xx_prog
+port map(
+ clk  => clock_18n,
+ addr => cs51xx_rom_addr(9 downto 0),
+ data => cs51xx_rom_do
+);
+
 -- mb88 - cs54xx (28 pins IC, 1024 bytes rom)
 mb88_54xx : entity work.mb88
 port map(
  reset_n    => reset_cpu_n, --reset_n,
  clock      => clock_18,
- ena        => cs54xx_ena,
+ ena        => cs5Xxx_ena,
 
  r0_port_in  => cs54xx_r0_port_in, -- pin 12,13,15,16
  r1_port_in  => X"0",
@@ -1477,7 +1374,7 @@ mb88_50xx : entity work.mb88
 port map(
  reset_n    => reset_cpu_n, --reset_n,
  clock      => clock_18,
- ena        => cs54xx_ena, -- same clock for 50XX, 51XX, 54XX 
+ ena        => cs5Xxx_ena, -- same clock for 50XX, 51XX, 54XX
 
  r0_port_in  => cs50xx_r0_port_in,  -- pin 12,13,15,16 (data in 0-3)
  r1_port_in  => X"0",
@@ -1516,27 +1413,57 @@ port map(
 
 
 -- terrain map 2a ROM
-terrain_2a : entity work.terrain_2a
+terrain_2a_we <= '1' when dl_wr = '1' and dl_addr(16 downto 12) = "10001" else '0';
+terrain_2a : entity work.dpram
+generic map (
+ aWidth => 12,
+ dWidth => 8
+)
 port map(
- clk  => clock_18n,
- addr => terrain_2a_rom_addr,
- data => terrain_2a_rom_do
+ clk_a  => clock_18n,
+ addr_a => terrain_2a_rom_addr,
+ q_a => terrain_2a_rom_do,
+
+ clk_b => clock_18,
+ addr_b => dl_addr(11 downto 0),
+ d_b => dl_data,
+ we_b => terrain_2a_we
 );
 
 -- terrain map 2b ROM
-terrain_2b : entity work.terrain_2b
+terrain_2b_we <= '1' when dl_wr = '1' and dl_addr(16 downto 13) = "1001" else '0';
+terrain_2b : entity work.dpram
+generic map (
+ aWidth => 13,
+ dWidth => 8
+)
 port map(
- clk  => clock_18n,
- addr => terrain_2b_rom_addr,
- data => terrain_2b_rom_do
+ clk_a  => clock_18n,
+ addr_a => terrain_2b_rom_addr,
+ q_a => terrain_2b_rom_do,
+
+ clk_b => clock_18,
+ addr_b => dl_addr(12 downto 0),
+ d_b => dl_data,
+ we_b => terrain_2b_we
 );
 
 -- terrain map 2c ROM
-terrain_2c : entity work.terrain_2c
+terrain_2c_we <= '1' when dl_wr = '1' and dl_addr(16 downto 12) = "10100" else '0';
+terrain_2c : entity work.dpram
+generic map (
+ aWidth => 12,
+ dWidth => 8
+)
 port map(
- clk  => clock_18n,
- addr => terrain_2c_rom_addr,
- data => terrain_2c_rom_do
+ clk_a  => clock_18n,
+ addr_a => terrain_2c_rom_addr,
+ q_a => terrain_2c_rom_do,
+
+ clk_b => clock_18,
+ addr_b => dl_addr(11 downto 0),
+ d_b => dl_data,
+ we_b => terrain_2c_we
 );
 
 -- foreground/background attr RAM   0xB000-0xBFFF

@@ -6,7 +6,7 @@
 	<manufacturer>Crazy Ivan</manufacturer>
 	<category>Maze / Digging</category>
 	<rbf>galaxian</rbf>
-	<switches default="FF,1F,04">
+	<switches default="00,1F,04">
 		<dip bits="5"    name="Cabinet" ids="Upright,Cocktail"/>
 	</switches>
 	<setname>mrdonigh</setname>

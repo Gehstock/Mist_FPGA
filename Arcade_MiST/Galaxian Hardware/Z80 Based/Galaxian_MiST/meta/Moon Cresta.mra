@@ -7,7 +7,7 @@
 	<manufacturer>bootleg</manufacturer>
 	<category>Space / Shooter</category>
 	<rbf>galaxian</rbf>
-        <switches default="1F,5F,04">
+        <switches default="00,5F,04">
                 <dip bits="16" name="Bonus Life After" ids="30000,50000"/>
                 <dip bits="19"    name="Cabinet" ids="Upright,Cocktail"/>
         </switches>
