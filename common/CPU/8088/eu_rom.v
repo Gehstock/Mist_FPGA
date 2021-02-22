@@ -12,4 +12,4 @@ initial $readmemb("microcode.mem", memory);
 always @(posedge clka)
   douta <= memory[addra];
 
-endmodule
+endmodule 

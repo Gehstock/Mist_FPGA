@@ -326,7 +326,7 @@ assign eu_biu_req                      = eu_biu_command[9];
 assign intr_asserted = BIU_INTR & intr_enable_delayed;
 
 
-assign new_instruction = (eu_rom_address[12:8]==5'h01) ? 1'b1 : 1'b0;   
+wire new_instruction = (eu_rom_address[12:8]==5'h01) ? 1'b1 : 1'b0;   
 
         
 //------------------------------------------------------------------------------------------  
