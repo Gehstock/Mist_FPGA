@@ -7,7 +7,7 @@
 	<category>Space / Force</category>
 	<setname>catacomb</setname>
 	<rbf>galaxian</rbf>
-	<switches default="FF,DF,04">
+	<switches default="00,DF,04">
 		<dip bits="18" name="Lives" ids="5,3"/>
 	</switches>
 	<rom index="1">

@@ -606,6 +606,9 @@ begin
 		elsif I_HWSEL = HW_ZIGZAG then
 			W_STARS_ON_ADJ <= '0';
 			W_SDAT_C <= PSG_OUT(9 downto 2);
+		elsif I_HWSEL = HW_VICTORY then
+			W_STARS_ON_ADJ <= '0';
+			W_SDAT_C <= (others => '0');
 		else
 			W_STARS_ON_ADJ <= W_STARS_ON;
 			W_SDAT_C <= (others => '0');

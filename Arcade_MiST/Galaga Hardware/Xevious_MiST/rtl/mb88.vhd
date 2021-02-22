@@ -97,7 +97,10 @@ architecture struct of mb88 is
  signal r_sbcnt : std_logic_vector(3 downto 0) := (others=>'0'); 
 
  signal interrupt_pending : std_logic := '0'; 
+ signal timer_interrupt_pending : std_logic := '0'; 
  signal irq_n_r           : std_logic := '0'; 
+
+ signal tc_n_r : std_logic := '0';
 
  subtype stack_size is integer range 0 to 3;
  type    stack_def  is array(stack_size) of std_logic_vector(15 downto 0);
@@ -354,7 +357,6 @@ begin
  if rising_edge(clock) then
 --  mem <= ram_do;
 --	if ram_do = X"0" then mem_z <= '1'; else mem_z <= '0'; end if;
-
 	irq_n_r <= irq_n;
 	r_nf <= not irq_n;
 	if irq_n = '0' and irq_n_r = '1' and r_pio(2) = '1' then 
@@ -382,11 +384,28 @@ begin
 		r_sb    <= (others=>'0');
 		r_sbcnt <= (others=>'0');
 		interrupt_pending <= '0';
+		timer_interrupt_pending <= '0';
 		stack <= (others=>(others=>'0'));
 		single_byte_op <= '1';
  else
+		tc_n_r <= tc_n;
+		if (tc_n = '0' and tc_n_r = '1' and r_pio(6) = '1') or
+		   (ena = '1' and r_pio(7) = '1')
+		then
+			r_tl <= r_tl + 1;
+			if r_tl = X"F" then
+				r_th <= r_th + 1;
+				if r_th = X"F" then
+					if r_pio(1) = '1' then
+						timer_interrupt_pending <= '1';
+					end if;
+					r_vf <= '1';
+				end if;
+			end if;
+		end if;
+
 		if ena = '1' then 
-		
+
 			op_code <= rom_data;
   		single_byte_op <= '1';
 
@@ -398,12 +417,16 @@ begin
 			end if;
 			
 			if single_byte_op = '1' then
-				if interrupt_pending = '1' then
+				if interrupt_pending = '1' or timer_interrupt_pending = '1' then
 					stack(to_integer(unsigned(r_si)))(13 downto 0) <= (r_cf & r_zf & r_stf & r_pa & r_pc);
 					r_pc <= "000010";
 					r_pa <= "00000";
 					r_si <= r_si + "01";
-					interrupt_pending <= '0';
+					if interrupt_pending = '1' then
+						interrupt_pending <= '0';
+					elsif timer_interrupt_pending = '1' then
+						timer_interrupt_pending <= '0';
+					end if;
 				else -- no irq
 			  case rom_data is
 					when X"00"  => r_stf <='1';                                         -- nop

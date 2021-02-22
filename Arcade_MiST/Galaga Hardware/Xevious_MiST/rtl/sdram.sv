@@ -73,6 +73,8 @@ module sdram (
 	output     [15:0] port2_q
 );
 
+parameter MHZ = 80; // 80 MHz default clock, adjust to calculate the refresh rate correctly
+
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
 localparam BURST_LENGTH   = 3'b000; // 000=1, 001=2, 010=4, 011=8
 localparam ACCESS_TYPE    = 1'b0;   // 0=sequential, 1=interleaved
@@ -82,8 +84,8 @@ localparam NO_WRITE_BURST = 1'b1;   // 0= write burst enabled, 1=only single acc
 
 localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BURST_LENGTH}; 
 
-// 64ms/8192 rows = 7.8us -> 842 cycles@108MHz
-localparam RFRSH_CYCLES = 10'd842;
+// 64ms/8192 rows = 7.8us
+localparam RFRSH_CYCLES = 16'd78*MHZ/10;
 
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------

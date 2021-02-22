@@ -14,6 +14,7 @@ vcnt    : out std_logic_vector(8 downto 0);
 hsync   : out std_logic;
 vsync   : out std_logic;
 csync   : out std_logic; -- composite sync for TV 
+vbl     : out std_logic;
 blankn  : out std_logic
 );
 end gen_video;
@@ -34,6 +35,7 @@ begin
 hcnt  <= std_logic_vector(hcntReg);
 vcnt  <= std_logic_vector(vcntReg);
 hsync <= hsync0;
+vbl <= vblank;
 
 -- Compteur horizontal : 511-128+1=384 pixels (48 tiles)
 -- 128 à 191 :  64 pixels debut de ligne  (8 dont 2 dernières tiles affichées)
@@ -48,7 +50,7 @@ hsync <= hsync0;
 -- Synchro horizontale : hcnt=[495-511/128-140] (29 pixels)
 -- Synchro verticale   : vcnt=[260-263/000-003] ( 8 lignes)
 
-process(clk)
+process(clk, enable)
 begin
 
 if rising_edge(clk) and enable = '1' then    -- clk & ena at 6MHz : 1 pixel

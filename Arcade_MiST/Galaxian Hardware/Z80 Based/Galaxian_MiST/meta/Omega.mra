@@ -6,7 +6,7 @@
 	<setname>omegab</setname>
 	<manufacturer>bootleg?</manufacturer>
         <rbf>galaxian</rbf>
-        <switches default="FF,5F,00">
+        <switches default="00,5F,00">
                 <dip bits="16" name="Bonus Life After" ids="10000,20000"/>
                 <dip bits="18" name="Lives" ids="3,5"/>
                 <dip bits="19" name="Cabinet" ids="Upright,Cocktail"/>
