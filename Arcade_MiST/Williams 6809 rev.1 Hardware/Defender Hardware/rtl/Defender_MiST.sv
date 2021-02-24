@@ -344,14 +344,12 @@ wire dac_o;
 assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
-wire [15:0] audsum = {audio, 8'd0} >> 3; //Convert to 16bit and reduce the volume
-
 dac #(
-	.C_bits(16))
+	.C_bits(11))
 dac(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audsum), 
+	.dac_i({3'b000, audio}), 
 	.dac_o(dac_o)
 	);
 
