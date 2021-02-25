@@ -274,7 +274,7 @@ architecture struct of xevious is
  signal cs06XX_di      : std_logic_vector( 7 downto 0);
  signal cs06XX_nmi_state_next : std_logic;
  signal cs06XX_nmi_stretch : std_logic;
- signal cs06XX_nmi_cnt : std_logic_vector( 7 downto 0);
+ signal cs06XX_nmi_cnt : std_logic_vector( 8 downto 0);
 
  signal cs51xx_rom_addr : std_logic_vector(10 downto 0); 
  signal cs51xx_rom_do   : std_logic_vector( 7 downto 0); 
@@ -288,7 +288,9 @@ architecture struct of xevious is
 
  signal cs5Xxx_ena      : std_logic;
  signal cs5Xxx_rw       : std_logic;
- 
+
+ signal cs54xx_ena      : std_logic;
+ signal cs54xx_cnt      : std_logic_vector( 1 downto 0);
  signal cs54xx_rom_addr : std_logic_vector(10 downto 0); 
  signal cs54xx_rom_do   : std_logic_vector( 7 downto 0); 
  
@@ -509,6 +511,7 @@ begin
 	ena_sprite_grph0 <= '0';
 	ena_sprite_grph1 <= '0';
 	cs5Xxx_ena       <= '0';
+	cs54xx_ena       <= '0';
 
 	if slot = "100" or slot = "001" then ena_vidgen       <= '1';	end if;	 
 	if slot = "010" or slot = "100" then ena_snd_machine  <= '1';	end if;	 -- sound ram access
@@ -523,9 +526,17 @@ begin
 	if slot = "101" then cpu1_ena <= '1';	end if;	
 	if slot = "000" then cpu2_ena <= '1';	end if;	
 	if slot = "001" then cpu3_ena <= '1';	end if;
-		
---	if slot24 = "00000" then cs5Xxx_ena <= '1';	end if;	 
-	if slot24 = "00000" or slot24 = "01100" then cs5Xxx_ena <= '1';	end if;	 
+
+	if slot24 = "00000" then
+		if cs54xx_cnt = "10" then
+			cs54xx_cnt <= "00";
+			cs54xx_ena <= '1'; -- 1.5MHz/6 (??)
+		else
+			cs54xx_cnt <= cs54xx_cnt + 1;
+		end if;
+		cs5Xxx_ena <= '1'; -- 1.5MHz/2
+	end if;
+--	if slot24 = "00000" or slot24 = "01100" then cs5Xxx_ena <= '1';	end if; -- 1.5MHz
 --	if slot = "000" or slot = "011" then cs5Xxx_ena <= '1';	end if;	 
 	
  end if;
@@ -1085,15 +1096,7 @@ begin
 			if cpu1_ena = '1' then  -- to get 333ns tick
 
 				if cs06XX_nmi_cnt = 0 then
-					case cs06XX_control(7 downto 5) is --32 * cs06XX_control(7 downto 5);
-					when "111" =>	 cs06XX_nmi_cnt <= X"E0";
-					when "110" =>  cs06XX_nmi_cnt <= X"C0";
-					when "101" =>	 cs06XX_nmi_cnt <= X"A0";
-					when "100" =>  cs06XX_nmi_cnt <= X"80";
-					when "011" =>	 cs06XX_nmi_cnt <= X"60";
-					when "010" =>  cs06XX_nmi_cnt <= X"40";
-					when others => cs06XX_nmi_cnt <= X"20";
-					end case;
+					cs06XX_nmi_cnt <= cs06XX_control(7 downto 5) & "000000"; --64 * cs06XX_control(7 downto 5);
 
 					if cs06XX_nmi_state_next = '1' then
 						cs5Xxx_rw <= cs06XX_control(4);
@@ -1333,7 +1336,7 @@ mb88_54xx : entity work.mb88
 port map(
  reset_n    => reset_cpu_n, --reset_n,
  clock      => clock_18,
- ena        => cs5Xxx_ena,
+ ena        => cs54xx_ena,
 
  r0_port_in  => cs54xx_r0_port_in, -- pin 12,13,15,16
  r1_port_in  => X"0",
