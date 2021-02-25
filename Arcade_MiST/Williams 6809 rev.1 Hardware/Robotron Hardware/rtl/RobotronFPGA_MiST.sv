@@ -452,17 +452,21 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(11)) mist_video(
 	.ypbpr          ( ypbpr            )
 	);
 
-wire [16:0] audio_mix = speech_en ? { 1'b0, audio, audio } + { 1'b0, speech } : { 1'b0, audio, audio };
+   
+wire [16:0] audio_aud = {1'b0, audio, 8'd0} + {1'b0, speech};
+wire [15:0] audio_mix = speech_en ? audio_aud[16:1] : {audio, 8'd0};
+wire [15:0] audio_mix2 = audio_mix >> 3;
+  
 wire dac_o;
 assign AUDIO_L = dac_o;
 assign AUDIO_R = dac_o;
 
 dac #(
-	.C_bits(17))
+	.C_bits(16))
 dac(
-	.clk_i(clk_aud),
+	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_mix),
+	.dac_i(audio_mix2),
 	.dac_o(dac_o)
 	);
 

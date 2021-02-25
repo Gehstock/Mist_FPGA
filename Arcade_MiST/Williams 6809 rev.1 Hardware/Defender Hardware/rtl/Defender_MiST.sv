@@ -347,9 +347,9 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(11))
 dac(
-	.clk_i(clk_0p89),
+	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i({3'b000, audio}), // silence by 9dB
+	.dac_i({3'b000, audio}), 
 	.dac_o(dac_o)
 	);
 
