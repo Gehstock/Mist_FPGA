@@ -32,7 +32,10 @@ ENTITY f8_cpu IS
     
     clk      : IN std_logic;
     ce       : IN std_logic;
-    reset_na : IN std_logic
+    reset_na : IN std_logic;
+    acco     : OUT uv8;
+    visaro   : OUT uv6;
+    iozcso   : OUT uv5
     );
 END ENTITY;
 
@@ -126,12 +129,12 @@ BEGIN
           WHEN 0 =>
             test<=testp;
             bcc<=bccp;
-              
+            
           WHEN 1 =>
             NULL;
           WHEN 2 =>
             NULL;  -- <dw :=> <AVOIR>
-
+            
           WHEN 3 =>
             CASE mop.rd IS
               WHEN RACC => rs1_v:=acc;
@@ -205,7 +208,7 @@ BEGIN
             IF mop.rs=RISARM OR mop.rd=RISARM THEN
               visar(2 DOWNTO 0)<=visar(2 DOWNTO 0)-1;
             END IF;
-
+            
           WHEN 7 =>
             IF len_v=S THEN
               IF mop.romc=ROMC_00 THEN -- IFETCH
@@ -216,7 +219,7 @@ BEGIN
                 madrs<=madrs+1;
               END IF;
             END IF;
-
+            
           WHEN 11 =>
             IF len_v=L THEN
               IF mop.romc=ROMC_00 THEN -- IFETCH
@@ -245,6 +248,10 @@ BEGIN
 
     END IF;
   END PROCESS;
+
+  acco<=acc;
+  visaro<=visar;
+  iozcso<=iozcs;
   
 END ARCHITECTURE rtl;
 

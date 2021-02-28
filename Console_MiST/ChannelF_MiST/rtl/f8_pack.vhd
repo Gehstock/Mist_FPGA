@@ -40,7 +40,7 @@ PACKAGE f8_pack IS
                   dstm : OUT std_logic; -- Modified result reg
                   iozcs_o : OUT uv5; -- Flags after
                   test : OUT std_logic); -- Contitional branch test result
-
+  
   --------------------------------------
   CONSTANT R0     : uint5 := 0;
   CONSTANT R1     : uint5 := 1;
@@ -138,52 +138,52 @@ PACKAGE f8_pack IS
     (ROMC_00,S,1,I0,OP_MOV,R15,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 07 : r15 <= A              : LR QL,A : Store r15
     (ROMC_07,L,0,I0,OP_MOV,R12,DATA),                               -- 08 : r12 <= data <= PC1U   : LR K,P  : Store stack reg.
     (ROMC_0B,L,0,I0,OP_MOV,R13,DATA),                               --      r13 <= data <= PC1L
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_15,L,0,I0,OP_MOV,DATA,R12),                               -- 09 : PC1U <= data <= r12   : LR P,K  : Load stack reg.
     (ROMC_18,L,0,I0,OP_MOV,DATA,R13),                               --      PC1L <= data <= r13
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_00,S,1,I0,OP_MOV,RACC,ISAR), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 0A : ACC <= ISAR           : LR A,IS : Store ISAR
     (ROMC_00,S,1,I0,OP_MOV,ISAR,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 0B : ISAR <= ACC           : LR IS,A : Load ISAR
     (ROMC_12,L,0,I0,OP_MOV,DATA,R13),                               -- 0C : PC1 <= PC0 PC0L <= data <= R13  : PK      : Call subroutine
     (ROMC_14,L,0,I0,OP_MOV,DATA,R12),                               --      PC0U <= data <= R12
-    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_17,L,0,I0,OP_MOV,DATA,R15),                               -- 0D : PC0L <= data <= R15   : LR      : Load Program Counter
     (ROMC_14,L,0,I0,OP_MOV,DATA,R14),                               --      PC0U <= data <= R14
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_06,L,0,I0,OP_MOV,R14,DATA),                               -- 0E : R14 <= data <= DC0U   : LR Q,DC : Store d count r14/15
     (ROMC_09,L,0,I0,OP_MOV,R15,DATA),                               --      R15 <= data <= DC0L
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_16,L,0,I0,OP_MOV,DATA,R14),                               -- 0F : DC0U <= data <= R14   : LR DC,Q : Load d count r14/15
     (ROMC_19,L,0,I0,OP_MOV,DATA,R15),                               --      DC0L <= data <= R15
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_16,L,0,I0,OP_MOV,DATA,R10),                               -- 10 : DC0U <= data <= R10   : LR DC,H : Load d count r10/11
     (ROMC_19,L,0,I0,OP_MOV,DATA,R11),                               --      DC0L <= data <= R11
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_06,L,0,I0,OP_MOV,R10,DATA),                               -- 11 : R10 <= data <= DC0U   : LR H,DC : Store d count r10/11
     (ROMC_09,L,0,I0,OP_MOV,R11,DATA),                               --      R11 <= data <= DC0L
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,
-    (ROMC_00,S,1,I0,OP_SR1,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 12 : ACC <= ACC >> 1       : SR   1  : Shift right one
-    (ROMC_00,S,1,I0,OP_SL1,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 13 : ACC <= ACC << 1       : SL   1  : Shift left one
-    (ROMC_00,S,1,I0,OP_SR4,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 14 : ACC <= ACC >> 4       : SR   4  : Shift right four
-    (ROMC_00,S,1,I0,OP_SL4,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 15 : ACC <= ACC << 4       : SL   4  : Shift left four
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_SR1,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 12 : ACC <= ACC >> 1       : SR   1  : Shift right one
+    (ROMC_00,S,1,I0,OP_SL1,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 13 : ACC <= ACC << 1       : SL   1  : Shift left one
+    (ROMC_00,S,1,I0,OP_SR4,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 14 : ACC <= ACC >> 4       : SR   4  : Shift right four
+    (ROMC_00,S,1,I0,OP_SL4,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 15 : ACC <= ACC << 4       : SL   4  : Shift left four
     (ROMC_02,L,0,I0,OP_MOV,RACC,DATA),                              -- 16 : ACC <= DATA <= [DC0]  : LM      : LOAD mem DC0
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_05,L,0,I0,OP_MOV,DATA,RACC),                              -- 17 : [DC] <= DATA <= ACC   : ST      : STORE  mem DC0
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
-    (ROMC_00,S,1,I0,OP_COM,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 18 : ACC <= !ACC           : COM     : Complement acc.
-    (ROMC_00,S,1,I0,OP_LNK,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 19 : ACC <= ACC + carry    : LNK     : Add Carry acc.
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_COM,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 18 : ACC <= !ACC           : COM     : Complement acc.
+    (ROMC_00,S,1,I0,OP_LNK,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 19 : ACC <= ACC + carry    : LNK     : Add Carry acc.
     (ROMC_1C,S,0,IY,OP_EDI,RACC,RACC),                              -- 1A : Clear ICB             : DI      : Disable Interrupt
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_EDI,RACC,RACC),                              -- 1B : Set ICB               : EI      : Enable Interrupt
-    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_04,S,0,I0,OP_NOP,RACC,RACC),                              -- 1C : PC0 <= PC1            : POP     : Return from sub
-    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_MOV,WREG,R9),                                -- 1D : W <= R9 statusreg     : LR W,J  : Load Status reg r9
-    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
-    (ROMC_00,S,1,I0,OP_MOV,R9,WREG),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,         -- 1E : R9 <= W statusreg     : LR J,W  : Store Status reg r9
-    (ROMC_00,S,1,I0,OP_INC,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,       -- 1F : ACC <= ACC + 1        : INC     : Increment
+    (ROMC_00,S,1,IX,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_MOV,R9,WREG),   ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 1E : R9 <= W statusreg     : LR J,W  : Store Status reg r9
+    (ROMC_00,S,1,I0,OP_INC,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 1F : ACC <= ACC + 1        : INC     : Increment
     (ROMC_03,L,0,I0,OP_MOV,RACC,DATA),                              -- 20 II : ACC <= IMM         : LI ii   : LOAD immediate acc.
-    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC),  ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
+    (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_03,L,0,I0,OP_AND,RACC,DATA),                              -- 21 II : ACC <= ACC & IMM   : NI   ii : AND immediate acc.
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_03,L,0,I0,OP_OR ,RACC,DATA),                              -- 22 II : ACC <= ACC | IMM   : OI   ii : OR  immediate acc.
@@ -247,7 +247,7 @@ PACKAGE f8_pack IS
     (ROMC_00,L,1,I0,OP_DEC,R11,R11),       ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3B : R11--                       : DS   R11   : Decrement  R11
     (ROMC_00,L,1,I0,OP_DEC,RISAR,RISAR),   ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3C : (ISAR)--                    : DS (ISAR)  : Decrement  (ISAR)
     (ROMC_00,L,1,I0,OP_DEC,RISARP,RISARP), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3D : (ISAR++)--                  : DS (ISAR+) : Decrement  (ISAR++)
-    (ROMC_00,L,1,I0,OP_DEC,RISARM,RISARM), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3E : (ISAR++)--                  : DS (ISAR-) : Decrement  (ISAR--)
+    (ROMC_00,L,1,I0,OP_DEC,RISARM,RISARM), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3E : (ISAR--)--                  : DS (ISAR-) : Decrement  (ISAR--)
     (ROMC_00,L,1,I0,OP_DEC,R15,R15),       ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,    -- 3F : R15-- <INVALID>             : DS   R15   : Decrement  R15
 
     (ROMC_00,S,1,I0,OP_MOV,RACC,R0 ),       ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 40 : ACC <= R0                   : LR A,R0      : LOAD    R0
@@ -265,7 +265,7 @@ PACKAGE f8_pack IS
     (ROMC_00,S,1,I0,OP_MOV,RACC,RISAR),     ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 4C : ACC <= (ISAR)               : LR A,(ISAR)  : LOAD    (ISAR)
     (ROMC_00,S,1,I0,OP_MOV,RACC,RISARP),    ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 4D : ACC <= (ISAR++)             : LR A,(ISAR+) : LOAD    (ISAR++)
     (ROMC_00,S,1,I0,OP_MOV,RACC,RISARM),    ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 4E : ACC <= (ISAR--)             : LR A,(ISAR-) : LOAD    (ISAR--)
-    (ROMC_00,S,1,I0,OP_MOV,RACC,R15),       ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 4F : ACC <= R15- <INVALID>       : LR A,R15     : LOAD    R15
+    (ROMC_00,S,1,I0,OP_MOV,RACC,R15),       ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,   -- 4F : ACC <= R15  <INVALID>       : LR A,R15     : LOAD    R15
 
     (ROMC_00,S,1,I0,OP_MOV,R0 ,RACC),    ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,      -- 50 : R0  <= ACC                  : LR R0 ,A     : STORE   R0
     (ROMC_00,S,1,I0,OP_MOV,R1 ,RACC),    ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,      -- 51 : R1  <= ACC                  : LR R1 ,A     : STORE   R1
@@ -320,28 +320,28 @@ PACKAGE f8_pack IS
     (ROMC_00,S,1,I0,OP_LIS,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,        -- 7F : ACC <= 15                      : LIS 15    : Load ACC 15
 
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 80 : Test 0                         : Bcc  0    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 81 : Test 1                         : Bcc  1    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 82 : Test 2                         : Bcc  2    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 83 : Test 3                         : Bcc  3    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 84 : Test 4                         : Bcc  4    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 85 : Test 5                         : Bcc  5    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 86 : Test 6                         : Bcc  6    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST8,RACC,RACC),                             -- 87 : Test 7                         : Bcc  7    : Branch cond.
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
 
     (ROMC_02,L,0,I0,OP_ADD,RACC,DATA),                              -- 88 : ACC = ACC + [DC0] , DC0++      : AM      : Add Binary mem
@@ -358,56 +358,56 @@ PACKAGE f8_pack IS
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_0A,L,0,I0,OP_MOV,DATA,RACC),                              -- 8E : DC = DC + ACC (signed)         : ADC     : Add Data counter
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              -- 8F aa : Selon ISARL, PC +2 ou +imm  : BR7 aa  : Branch if ISARlo/=7
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              -- 8F aa : Test  ISARL, PC +2 or +imm  : BR7 aa  : Branch if ISARlo/=7
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,ZZ,
 
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 90 aa :                             :  BF 0   : Branch if negative
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 91 aa :                             :  BF 1   : Branch if no carry
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 92 aa :                             :  BF 2   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 93 aa :                             :  BF 3   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 94 aa :                             :  BF 4   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 95 aa :                             :  BF 5   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 96 aa :                             :  BF 6   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 97 aa :                             :  BF 7   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 98 aa :                             :  BF 8   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 99 aa :                             :  BF 9   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9A aa :                             :  BF A   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9B aa :                             :  BF B   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9C aa :                             :  BF C   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9D aa :                             :  BF D   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9E aa :                             :  BF E   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
     (ROMC_1C,S,0,I0,OP_TST9,RACC,RACC),                             -- 9F aa :                             :  BF F   : Branch if
-    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Selon test, change PC0 + 2 ou +imm
+    (ROMC_03,S,0,I0,OP_NOP,RACC,RACC),                              --      Test, change PC0 + 2 or +imm
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
 
     (ROMC_1C,S,0,I0,OP_MOV,RACC,PORT0),                             -- A0 : ACC <= IOPORT[0]               : INS  0  : Input port 0
@@ -418,7 +418,6 @@ PACKAGE f8_pack IS
     (ROMC_1C,L,0,I0,OP_LIS,DATA,R2),                                -- A2 : DATA <= IOPPORTNUM             : INS  2  : Input port 2
     (ROMC_1B,L,0,I0,OP_MOV,RACC,DATA),                              --      DB <= DATA ioport
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
-
     (ROMC_1C,L,0,I0,OP_LIS,DATA,R3),                                -- A3 : DATA <= IOPPORTNUM             : INS  3  : Input port 3
     (ROMC_1B,L,0,I0,OP_MOV,RACC,DATA),                              --      DB <= DATA ioport
     (ROMC_00,S,1,I0,OP_NOP,RACC,RACC), ZZ,ZZ,ZZ,ZZ,ZZ,
@@ -601,14 +600,14 @@ PACKAGE f8_pack IS
     "SR   4      ", "SL   4      ", "LM          ", "ST          ",
     "COM         ", "LNK         ", "DI          ", "EI          ",
     "POP         ", "LR W,J      ", "LR J,W      ", "INC         ",
-    "LI ii       ", "NI   ii     ", "OI   ii     ", "XI   ii     ", -- 20
+    "LI   ii     ", "NI   ii     ", "OI   ii     ", "XI   ii     ", -- 20
     "AI   ii     ", "CI   ii     ", "IN   aa     ", "OUT  aa     ",
     "PI  aaaa    ", "JMP aaaa    ", "DCI aaaa    ", "NOP         ",
     "XDC         ", "NOP         ", "<INTERRUPT> ", "<RESET>     ",
     "DEC  R0     ", "DEC  R1     ", "DEC  R2     ", "DEC  R3     ", -- 30
     "DEC  R4     ", "DEC  R5     ", "DEC  R6     ", "DEC  R7     ",
     "DEC  R8     ", "DEC  R9     ", "DEC  R10    ", "DEC  R11    ",
-    "DEC (ISAR)  ", "DEC (ISAR++)", "DEC (ISAR--)", "Invalid     ",
+    "DEC (ISAR)  ", "DEC  (ISAR+)", "DEC  (ISAR-)", "Invalid     ",
     "LR A,R0     ", "LR A,R1     ", "LR A,R2     ", "LR A,R3     ", -- 40
     "LR A,R4     ", "LR A,R5     ", "LR A,R6     ", "LR A,R7     ",
     "LR A,R8     ", "LR A,R9     ", "LR A,R10    ", "LR A,R11    ",
@@ -625,14 +624,14 @@ PACKAGE f8_pack IS
     "LIS 4       ", "LIS 5       ", "LIS 6       ", "LIS 7       ",
     "LIS 8       ", "LIS 9       ", "LIS 10      ", "LIS 11      ",
     "LIS 12      ", "LIS 13      ", "LIS 14      ", "LIS 15      ",
-    "BT   0      ", "BT   1      ", "BT   2      ", "BT   3      ", -- 80
-    "BT   4      ", "BT   5      ", "BT   6      ", "BT   7      ",
+    "BT   0 aa   ", "BT   1 aa   ", "BT   2 aa   ", "BT   3 aa   ", -- 80
+    "BT   4 aa   ", "BT   5 aa   ", "BT   6 aa   ", "BT   7 aa   ",
     "AM          ", "AMD         ", "NM          ", "OM          ",
     "XM          ", "CM          ", "ADC         ", "BR7 aa      ",
-    "BF 0        ", "BF 1        ", "BF 2        ", "BF 3        ", -- 90
-    "BF 4        ", "BF 5        ", "BF 6        ", "BF 7        ",
-    "BF 8        ", "BF 9        ", "BF A        ", "BF B        ",
-    "BF C        ", "BF D        ", "BF E        ", "BF F        ",
+    "BF 0   aa   ", "BF 1   aa   ", "BF 2   aa   ", "BF 3   aa   ", -- 90
+    "BF 4   aa   ", "BF 5   aa   ", "BF 6   aa   ", "BF 7   aa   ",
+    "BF 8   aa   ", "BF 9   aa   ", "BF A   aa   ", "BF B   aa   ",
+    "BF C   aa   ", "BF D   aa   ", "BF E   aa   ", "BF F   aa   ",
     "INS  0      ", "INS  1      ", "INS  2      ", "INS  3      ", -- A0
     "INS  4      ", "INS  5      ", "INS  6      ", "INS  7      ",
     "INS  8      ", "INS  9      ", "INS  10     ", "INS  11     ",
@@ -644,20 +643,39 @@ PACKAGE f8_pack IS
     "AS R0       ", "AS R1       ", "AS R2       ", "AS R3       ", -- C0
     "AS R4       ", "AS R5       ", "AS R6       ", "AS R7       ",
     "AS R8       ", "AS R9       ", "AS R10      ", "AS R11      ",
-    "AS (ISAR)   ", "AS (ISAR++) ", "AS (ISAR--) ", "Invalid     ",
+    "AS  (ISAR)  ", "AS  (ISAR+) ", "AS  (ISAR-) ", "Invalid     ",
     "ASD R0      ", "ASD R1      ", "ASD R2      ", "ASD R3      ", -- D0
     "ASD R4      ", "ASD R5      ", "ASD R6      ", "ASD R7      ",
     "ASD R8      ", "ASD R9      ", "ASD R10     ", "ASD R11     ",
-    "ASD (ISAR)  ", "ASD (ISAR++)", "ASD (ISAR--)", "Invalid     ",
+    "ASD (ISAR)  ", "ASD (ISAR+) ", "ASD (ISAR-) ", "Invalid     ",
     "XOR R0      ", "XOR R1      ", "XOR R2      ", "XOR R3      ", -- E0
     "XOR R4      ", "XOR R5      ", "XOR R6      ", "XOR R7      ",
     "XOR R8      ", "XOR R9      ", "XOR R10     ", "XOR R11     ",
-    "XOR (ISAR)  ", "XOR (ISAR++)", "XOR (ISAR--)", "Invalid     ",
+    "XOR (ISAR)  ", "XOR (ISAR+) ", "XOR (ISAR-) ", "Invalid     ",
     "AND R0      ", "AND R1      ", "AND R2      ", "AND R3      ", -- F0
     "AND R4      ", "AND R5      ", "AND R6      ", "AND R7      ",
     "AND R8      ", "AND R9      ", "AND R10     ", "AND R11     ",
-    "AND (ISAR)  ", "AND (ISAR++)", "AND (ISAR--)", "Invalid     ");
-
+    "AND (ISAR)  ", "AND (ISAR+) ", "AND (ISAR-) ", "Invalid     ");
+  
+  TYPE arr_ilen IS ARRAY(natural RANGE <>) OF uint3;
+  CONSTANT ILEN : arr_ilen(0 TO 255) :=(
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --00
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --10
+    2,2,2,2,    2,2,2,2,    3,3,3,1,    1,1,0,0,  --20
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --30
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --40
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --50
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --60
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --70
+    2,2,2,2,    2,2,2,2,    1,1,1,1,    1,1,1,2,  --80
+    2,2,2,2,    2,2,2,2,    2,2,2,2,    2,2,2,2,  --90
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --A0
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --B0
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --C0
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --D0
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --E0
+    1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0); --F0
+  
 END PACKAGE;
 
 --##############################################################################

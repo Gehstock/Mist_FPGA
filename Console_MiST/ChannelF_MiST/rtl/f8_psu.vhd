@@ -40,7 +40,7 @@ ENTITY f8_psu IS
     dv       : OUT std_logic;
     
     romc     : IN  uv5;
-    tick     : IN  std_logic;  -- 1/8 or 1/12 cycle lenght
+    tick     : IN  std_logic;  -- 1/8 or 1/12 cycle length
     phase    : IN  uint4;
 
     ext_int  : IN  std_logic;
@@ -61,7 +61,11 @@ ENTITY f8_psu IS
     
     clk      : IN std_logic;
     ce       : IN std_logic;
-    reset_na : IN std_logic
+    reset_na : IN std_logic;
+    
+    pc0o     : OUT uv16;
+    pc1o     : OUT uv16;
+    dc0o     : OUT uv16
     );
 END ENTITY f8_psu;
 
@@ -179,8 +183,8 @@ BEGIN
             
           WHEN "00110" =>
             -- L   : Place the high order byte of DC0 on the data bus.
-            dr <=dc0(15 DOWNTO 8);
             IF phase=2 THEN
+              dr <=dc0(15 DOWNTO 8);
               dv <='1';
             END IF;
             
@@ -371,7 +375,7 @@ BEGIN
             -- port on the data bus. (Note that the contents of timer
             -- and interrupt control retgisters cannot be read back onto
             -- the data bus.)
-            IF phase=6 THEN
+            IF phase=2 THEN
               io_rd<=to_std_logic(io_port(7 DOWNTO 2)=IOPAGE);
               dr<=io_dr;
               dv<=to_std_logic(io_port(7 DOWNTO 2)=IOPAGE);
@@ -386,10 +390,10 @@ BEGIN
           WHEN "11101" =>
             -- S   : Devices with DC0 and DC1 registers must switch registers.
             -- Devices without a DC1 register perform no operation.
-            IF phase=6 THEN
-              dc0<=dc1;
-              dc1<=dc0;
-            END IF;
+            --IF phase=6 THEN
+            --  dc0<=dc1;
+            --  dc1<=dc0;
+            --END IF;
             
           WHEN "11110" =>
             -- L   : The device whose address space includes the contents of
@@ -411,6 +415,12 @@ BEGIN
             NULL;
             
         END CASE;
+        
+        IF reset_na='0' THEN
+          pc0<=x"0000";
+          pc1<=x"0000";
+          dc0<=x"0000";
+        END IF;
       END IF;
     END IF;
   END PROCESS;
@@ -483,10 +493,18 @@ BEGIN
             WHEN OTHERS => icr<=io_dw(1 DOWNTO 0);
           END CASE;
         END IF;
-        
+
+        IF reset_na='0' THEN
+          po_a_l<=x"00";
+          po_b_l<=x"00";
+        END IF;
         -------------------------------
       END IF;
     END IF;
   END PROCESS;
 
+  pc0o<=pc0;
+  pc1o<=pc1;
+  dc0o<=dc0;
+  
 END ARCHITECTURE rtl;

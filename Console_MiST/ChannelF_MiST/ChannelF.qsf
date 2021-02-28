@@ -17,15 +17,15 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 19:28:53  March 07, 2019
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 20:10:17  February 28, 2021
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		Centipede_assignment_defaults.qdf
+#		ChannelF_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -46,6 +46,15 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/CannelF_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/channel_f.vhd
+set_global_assignment -name VHDL_FILE rtl/f8_cpu.vhd
+set_global_assignment -name VHDL_FILE rtl/f8_psu.vhd
+set_global_assignment -name VHDL_FILE rtl/f8_pack.vhd
+set_global_assignment -name VHDL_FILE rtl/base_pack.vhd
+set_global_assignment -name VHDL_FILE rtl/rom_pack.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -116,6 +125,11 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
 
+# SignalTap II Assignments
+# ========================
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/cent.stp
+
 # Power Estimation Assignments
 # ============================
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
@@ -128,32 +142,21 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -----------------------
-# start ENTITY(Centipede)
+# --------------------------
+# start ENTITY(CannelF_MiST)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(Centipede)
-# ---------------------
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/cent.stp
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/CannelF_MiST.sv
-set_global_assignment -name VHDL_FILE rtl/channel_f.vhd
-set_global_assignment -name VHDL_FILE rtl/f8_cpu.vhd
-set_global_assignment -name VHDL_FILE rtl/f8_psu.vhd
-set_global_assignment -name VHDL_FILE rtl/f8_pack.vhd
-set_global_assignment -name VHDL_FILE rtl/base_pack.vhd
-set_global_assignment -name VHDL_FILE rtl/rom_pack.vhd
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+# end ENTITY(CannelF_MiST)
+# ------------------------
