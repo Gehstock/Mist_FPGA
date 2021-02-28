@@ -73,8 +73,9 @@ ENTITY channel_f IS
     vga_vs           	: OUT   	std_logic; -- positive pulse!
     vga_de           	: OUT   	std_logic; -- = not (VBlank or HBlank)
     -- HPS IO
-    joystick_0        	: IN    	unsigned(31 DOWNTO 0);
-    joystick_1        	: IN    	unsigned(31 DOWNTO 0);
+	 Keys        			: IN    	unsigned(3 DOWNTO 0);
+    joystick_0        	: IN    	unsigned(7 DOWNTO 0);
+    joystick_1        	: IN    	unsigned(7 DOWNTO 0);
 	 --ROM LOAD
     ioctl_download    : IN  std_logic;
     ioctl_index       : IN  std_logic_vector(7 DOWNTO 0);
@@ -463,24 +464,24 @@ BEGIN
   ----------------------------------------------------------
   -- Joysticks / Buttons
   pi0(7 DOWNTO 4)<=po0(7 DOWNTO 4);
-  pi0(0) <= NOT (joystick_0(4) OR joystick_1(4)); -- TIME
-  pi0(1) <= NOT (joystick_0(5) OR joystick_1(5)); -- MODE
-  pi0(2) <= NOT (joystick_0(6) OR joystick_1(6)); -- HOLD
-  pi0(3) <= NOT (joystick_0(7) OR joystick_1(7)); -- START
+  pi0(0) <= NOT Keys(0); -- TIME
+  pi0(1) <= NOT Keys(1); -- MODE
+  pi0(2) <= NOT Keys(2); -- HOLD
+  pi0(3) <= NOT Keys(3); -- START
   
-  pi1i(7) <= NOT joystick_0(8);    -- RIGHT G.DOWN
-  pi1i(6) <= NOT joystick_0(9);    -- RIGHT G.UP
-  pi1i(5) <= NOT joystick_0(10);   -- RIGHT CW
-  pi1i(4) <= NOT joystick_0(11);   -- RIGHT CCW
+  pi1i(7) <= NOT joystick_0(4);    -- RIGHT G.DOWN
+  pi1i(6) <= NOT joystick_0(5);    -- RIGHT G.UP
+  pi1i(5) <= NOT joystick_0(6);    -- RIGHT CW
+  pi1i(4) <= NOT joystick_0(7);    -- RIGHT CCW
   pi1i(3) <= NOT joystick_0(3);    -- RIGHT UP
   pi1i(2) <= NOT joystick_0(2);    -- RIGHT DOWN
   pi1i(1) <= NOT joystick_0(1);    -- RIGHT LEFT
   pi1i(0) <= NOT joystick_0(0);    -- RIGHT RIGHT
   
-  pi4i(7) <= NOT joystick_1(8);    -- LEFT G.DOWN
-  pi4i(6) <= NOT joystick_1(9);    -- LEFT G.UP
-  pi4i(5) <= NOT joystick_1(10);   -- LEFT CW
-  pi4i(4) <= NOT joystick_1(11);   -- LEFT CCW
+  pi4i(7) <= NOT joystick_1(4);    -- LEFT G.DOWN
+  pi4i(6) <= NOT joystick_1(5);    -- LEFT G.UP
+  pi4i(5) <= NOT joystick_1(6);    -- LEFT CW
+  pi4i(4) <= NOT joystick_1(7);    -- LEFT CCW
   pi4i(3) <= NOT joystick_1(3);    -- LEFT UP
   pi4i(2) <= NOT joystick_1(2);    -- LEFT DOWN
   pi4i(1) <= NOT joystick_1(1);    -- LEFT LEFT
