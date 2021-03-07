@@ -235,10 +235,11 @@ assign srom_d = snd_data;
 //                    .clk_b(MCLK), .addr_b(ROMAD[12:0]), .we_b(ROMEN & (ROMAD[16:13]==4'b1_000)), .d_b(ROMDT));
 
 wire				mram_cs0 = ( MCPU_ADRS[15:11] == 5'b00000  ) & MCPU_VMA;	// $0000-$07FF
-wire				mram_cs1 = ( MCPU_ADRS[15:11] == 5'b00001  ) & MCPU_VMA;	// $0800-$0FFF
-wire				mram_cs2 = ( MCPU_ADRS[15:11] == 5'b00010  ) & MCPU_VMA;	// $1000-$17FF
-wire				mram_cs3 = ( MCPU_ADRS[15:11] == 5'b00011  ) & MCPU_VMA;	// $1800-$1FFF
-wire				mram_cs4 = ( MCPU_ADRS[15:11] == 5'b00100  ) & MCPU_VMA;	// $2000-$27FF
+//wire				mram_cs1 = ( MCPU_ADRS[15:11] == 5'b00001  ) & MCPU_VMA;	// $0800-$0FFF
+wire mram_cs1=0;
+wire				mram_cs2 = ( MCPU_ADRS[15:11] == 5'b00001  ) & MCPU_VMA;	// $1000-$17FF
+wire				mram_cs3 = ( MCPU_ADRS[15:11] == 5'b00010  ) & MCPU_VMA;	// $1800-$1FFF
+wire				mram_cs4 = ( MCPU_ADRS[15:11] == 5'b00011  ) & MCPU_VMA;	// $2000-$27FF
 wire				mram_cs5 = ( MCPU_ADRS[15:10] == 6'b010000 ) & MCPU_VMA;	// $4000-$43FF
 assign 			IO_CS    = ( MCPU_ADRS[15:11] == 5'b01001  ) & MCPU_VMA;	// $4800-$4FFF
 wire				mrom_cs  =                 ( MCPU_ADRS[15] ) & MCPU_VMA;	// $8000-$FFFF
