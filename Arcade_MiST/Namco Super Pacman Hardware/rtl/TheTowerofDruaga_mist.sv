@@ -28,7 +28,7 @@ module TheTowerofDruaga_mist (
 
 );
 
-`include "rtl\build_id.v" 
+`include "rtl\build_id.v"
 
 `define CORE_NAME "DRUAGA"
 wire  [6:0] core_mod;
@@ -115,8 +115,9 @@ always @(*) begin
 		DSW1 = {dcService,dcCabinet,6'd0};
 		DSW2 = {8'd0};
 	end
-	7'h5: ;// GROBDA
-	7'h6: ;// PHOZON
+	7'h5: ;// Super Pacman
+	7'h6: ;// GROBDA
+	7'h7: ;// PHOZON
 	default: ;
 	endcase
 end
@@ -129,7 +130,7 @@ assign    SDRAM_CKE = 1;
 wire clock_48, clock_6, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_48),//49.147727 
+	.c0(clock_48),//49.147727
 	.c1(clock_6),
 	.locked(pll_locked)
 	);
@@ -289,7 +290,8 @@ fpga_druaga fpga_druaga(
 
 	.ROMAD(ioctl_addr[16:0]),
 	.ROMDT(ioctl_dout),
-	.ROMEN(ioctl_wr)
+	.ROMEN(ioctl_wr),
+	.MODEL(core_mod[2:0])
 	);
 
 hvgen hvgen(
