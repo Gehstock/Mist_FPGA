@@ -96,7 +96,8 @@ wire MCPU_IRQ, MCPU_IRQEN;
 wire SCPU_IRQ, SCPU_IRQEN;
 wire SCPU_RESET, IO_RESET;
 wire PSG_ENABLE;
-REGS regs
+
+REGS #(.SUPERPAC(SUPERPAC)) regs
 (
     CLKCPUx2, RESET, oVB,
     MCPU_ADRS, MCPU_VMA, MCPU_WE,
@@ -105,7 +106,8 @@ REGS regs
     MCPU_IRQ, MCPU_IRQEN,
     SCPU_IRQ, SCPU_IRQEN,
     SCPU_RESET, IO_RESET,
-    PSG_ENABLE
+    PSG_ENABLE,
+    MODEL
 );
 
 
@@ -133,7 +135,8 @@ DRUAGA_VIDEO video
     .VRAM_A(vram_a), .VRAM_D(vram_d),
     .SPRA_A(spra_a), .SPRA_D(spra_d),
     .SCROLL({1'b0,SCROLL}),
-    .ROMAD(ROMAD),.ROMDT(ROMDT),.ROMEN(ROMEN)
+    .ROMAD(ROMAD),.ROMDT(ROMDT),.ROMEN(ROMEN),
+    .MODEL(MODEL)
 );
 assign POUT = (IsMOTOS & (PV==0)) ? 8'h0 : oPOUT;
 
@@ -246,16 +249,21 @@ reg  mram_cs0, mram_cs1,
      mram_cs2, mram_cs3,
      mram_cs4, mram_cs5;
 
+reg    [10:0] cram_ad;
+wire   [10:0] mram_ad = MCPU_ADRS[10:0];
+
 assign IO_CS  = ( MCPU_ADRS[15:11] == 5'b01001  ) & MCPU_VMA;    // $4800-$4FFF
 wire mrom_cs  = ( MCPU_ADRS[15] ) & MCPU_VMA;    // $8000-$FFFF
 
 always @(*) begin
+    cram_ad = mram_ad;
     if( MODEL == SUPERPAC ) begin
         mram_cs0 = ( MCPU_ADRS[15:10] == 6'b000000 ) && MCPU_VMA;    // $0000-$03FF
         mram_cs1 = ( MCPU_ADRS[15:10] == 6'b000001 ) && MCPU_VMA;    // $0400-$07FF
         mram_cs2 = ( MCPU_ADRS[15:11] == 5'b00001  ) && MCPU_VMA;    // $1000-$17FF
         mram_cs3 = ( MCPU_ADRS[15:11] == 5'b00010  ) && MCPU_VMA;    // $1800-$1FFF
         mram_cs4 = ( MCPU_ADRS[15:11] == 5'b00011  ) && MCPU_VMA;    // $2000-$27FF
+        if( mram_cs0 | mram_cs1 ) cram_ad[10]=0;
     end else begin
         mram_cs0 = ( MCPU_ADRS[15:11] == 5'b00000  ) && MCPU_VMA;    // $0000-$07FF
         mram_cs1 = ( MCPU_ADRS[15:11] == 5'b00001  ) && MCPU_VMA;    // $0800-$0FFF
@@ -285,10 +293,8 @@ assign          MCPU_DI  = mram_cs0 ? mram_o0 :
                            IO_CS    ? IO_O    :
                            8'h0;
 
-wire    [10:0]  mram_ad = MCPU_ADRS[10:0];
-
-dpram #(8,11) main_ram0( .clk_a(CPUCLKx2), .addr_a(mram_ad), .d_a(MCPU_DO), .q_a(mram_o0), .we_a(mram_w0), .clk_b(MCLK), .addr_b(vram_a), .q_b(vram_d[ 7:0]));
-dpram #(8,11) main_ram1( .clk_a(CPUCLKx2), .addr_a(mram_ad), .d_a(MCPU_DO), .q_a(mram_o1), .we_a(mram_w1), .clk_b(MCLK), .addr_b(vram_a), .q_b(vram_d[15:8]));
+dpram #(8,11) main_ram0( .clk_a(CPUCLKx2), .addr_a(cram_ad), .d_a(MCPU_DO), .q_a(mram_o0), .we_a(mram_w0), .clk_b(MCLK), .addr_b(vram_a), .q_b(vram_d[ 7:0]));
+dpram #(8,11) main_ram1( .clk_a(CPUCLKx2), .addr_a(cram_ad), .d_a(MCPU_DO), .q_a(mram_o1), .we_a(mram_w1), .clk_b(MCLK), .addr_b(vram_a), .q_b(vram_d[15:8]));
 
 dpram #(8,11) main_ram2( .clk_a(CPUCLKx2), .addr_a(mram_ad), .d_a(MCPU_DO), .q_a(mram_o2), .we_a(mram_w2), .clk_b(MCLK), .addr_b({ 4'b1111, spra_a }), .q_b(spra_d[ 7: 0]));
 dpram #(8,11) main_ram3( .clk_a(CPUCLKx2), .addr_a(mram_ad), .d_a(MCPU_DO), .q_a(mram_o3), .we_a(mram_w3), .clk_b(MCLK), .addr_b({ 4'b1111, spra_a }), .q_b(spra_d[15: 8]));
@@ -314,17 +320,17 @@ endmodule
 
 module REGS
 (
-    input                   MCPU_CLK,
-    input                   RESET,
-    input                   VBLANK,
+    input               MCPU_CLK,
+    input               RESET,
+    input               VBLANK,
 
     input    [15:0]     MCPU_ADRS,
-    input                   MCPU_VMA,
-    input                   MCPU_WE,
+    input               MCPU_VMA,
+    input               MCPU_WE,
 
     input    [15:0]     SCPU_ADRS,
-    input                   SCPU_VMA,
-    input                   SCPU_WE,
+    input               SCPU_VMA,
+    input               SCPU_WE,
 
     output reg [7:0]    SCROLL,
     output              MCPU_IRQ,
@@ -333,14 +339,23 @@ module REGS
     output reg          SCPU_IRQEN,
     output              SCPU_RESET,
     output              IO_RESET,
-    output reg          PSG_ENABLE
+    output reg          PSG_ENABLE,
+    input  [2:0]        MODEL
 );
+
+parameter [2:0] SUPERPAC=3'd5;
 
 // BG Scroll Register
 wire    MCPU_SCRWE = ( ( MCPU_ADRS[15:11] == 5'b00111 ) & MCPU_VMA & MCPU_WE );
+
 always @ ( negedge MCPU_CLK or posedge RESET ) begin
     if ( RESET ) SCROLL <= 8'h0;
-    else if ( MCPU_SCRWE ) SCROLL <= MCPU_ADRS[10:3];
+    else begin
+        if( MODEL==SUPERPAC )
+            SCROLL <= 8'd0;
+        else if ( MCPU_SCRWE )
+            SCROLL <= MCPU_ADRS[10:3];
+    end
 end
 
 // MainCPU IRQ Generator
