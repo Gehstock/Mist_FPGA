@@ -5,15 +5,15 @@
 ************************************/
 module DRUAGA_VIDEO
 (
-    input               VCLKx8,
-    input               VCLK,
-    input               VCLK_EN,
+    input           VCLKx8,
+    input           VCLK,
+    input           VCLK_EN,
 
     input  [8:0]    PH,
     input  [8:0]    PV,
     output          PCLK,
     output          PCLK_EN,
-    output [7:0]    POUT,
+    output [7:0]    POUT,       // pixel colour output
     output          VB,
 
     output [10:0]   VRAM_A,
@@ -62,19 +62,18 @@ always @(posedge VCLKx8) if (PH == 290) BGVSCR <= SCROLL;
 //  BG scanline generator
 //----------------------------------------
 reg  [7:0] BGPN;
-reg          BGH;
+reg        BGH;
 
-wire     [5:0] COL  = HPOS[8:3];
-wire     [5:0] ROW  = VPOS[8:3];
-wire     [5:0] ROW2 = ROW + 6'h02;
+reg      [5:0] COL, ROW, ROW2;
 
 wire     [7:0] CHRC = VRAM_D[7:0];
 wire     [5:0] BGPL = VRAM_D[13:8];
 
-wire     [8:0] HP    = HPOS;
-wire     [8:0] VP    = COL[5] ? VPOS : BGVPOS;
-wire    [11:0] CHRA  = { CHRC, ~HP[2], VP[2:0] };
-wire     [7:0] CHRO  = BGCH_D;
+wire     [8:0] HP   = HPOS;
+wire     [8:0] VP   = COL[5] ? VPOS : BGVPOS;
+wire    [11:0] CHRA = { CHRC, ~HP[2], VP[2:0] };
+wire     [7:0] CHRO = BGCH_D;
+reg     [10:0] VRAMADRS;
 
 always @ ( posedge VCLKx8 ) begin
     if (VCLK_EN)
@@ -86,7 +85,6 @@ always @ ( posedge VCLKx8 ) begin
     endcase
 end
 
-wire    [10:0] VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW[4], ROW2[3:0] } : { VP[8:3], HP[7:3] };
 
 assign CLT0_A = BGPN;
 assign BGCH_A = CHRA;
@@ -95,6 +93,22 @@ assign VRAM_A = VRAMADRS & ( MODEL==SUPERPAC ? 11'h3FF : 11'h7FF );
 wire            BGHI  = BGH & (CLT0_D!=4'd15);
 wire    [4:0]   BGCOL = { 1'b1, CLT0_D };
 
+always @(*) begin
+    COL  = HPOS[8:3];
+    ROW  = VPOS[8:3];
+    ROW2 = ROW + 6'h02;
+
+    if( MODEL==SUPERPAC ) begin
+        ROW = ROW + 6'h2;
+        COL = COL - 6'h2;
+        VRAMADRS = { 1'b0,
+                      COL[5] ? {COL[4:0], ROW[4:0]} :
+                               {ROW[4:0], COL[4:0]}
+                   };
+    end else
+        VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW[4], ROW2[3:0] } :
+                                           { VP[8:3], HP[7:3] };
+end
 
 //----------------------------------------
 //  Sprite scanline generator
@@ -129,6 +143,9 @@ dpram #(8,12) bgchr(.clk_a(VCLKx8), .addr_a(BGCH_A), .q_a(BGCH_D),
                 );
 dpram #(4,8) clut0(.clk_a(VCLKx8), .addr_a(CLT0_A^8'h03), .q_a(CLT0_D),
                    .clk_b(VCLKx8), .addr_b(ROMAD[7:0]), .we_b(ROMEN & (ROMAD[16:8]=={1'b1,8'h34})), .d_b(ROMDT[3:0]));
+
+// Colour PROM
 dpram #(8,5) pelet(.clk_a(VCLKx8), .addr_a(PALT_A), .q_a(PALT_D),
-                   .clk_b(VCLKx8), .addr_b(ROMAD[4:0]), .we_b(ROMEN & (ROMAD[16:5]=={1'b1,8'h36,3'b000})), .d_b(ROMDT));
+                   .clk_b(VCLKx8), .addr_b(ROMAD[4:0]),
+                   .we_b(ROMEN & (ROMAD[16:5]=={1'b1,8'h36,3'b000})), .d_b(ROMDT));
 endmodule
