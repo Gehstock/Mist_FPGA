@@ -25,7 +25,7 @@ module DRUAGA_SPRITE
 
 parameter [2:0] SUPERPAC=3'd5;
 
-wire [9:0]  CLT1_A;
+reg  [9:0]  CLT1_A;
 wire [3:0]  CLT1_D;
 
 // Colour Look-up Table
@@ -80,10 +80,16 @@ wire    [4:0]   ox = { lpcn ^ xf };
 assign SPCH_A = { cno[7:2], (cno[1]|sy[4]), (cno[0]|ox[4]), sy[3], ox[3:2], sy[2:0] };
 
 wire    [15:0] SPCO = SPCH_D;
-assign CLT1_A = (ox[1:0]==2'b00) ? { pn, SPCO[15], SPCO[11], SPCO[7], SPCO[3] } :
-                (ox[1:0]==2'b01) ? { pn, SPCO[14], SPCO[10], SPCO[6], SPCO[2] } :
-                (ox[1:0]==2'b10) ? { pn, SPCO[13], SPCO[ 9], SPCO[5], SPCO[1] } :
-                                   { pn, SPCO[12], SPCO[ 8], SPCO[4], SPCO[0] } ;
+
+always @(*) begin
+    CLT1_A = (ox[1:0]==2'b00) ? { pn, SPCO[15], SPCO[11], SPCO[7], SPCO[3] } :
+             (ox[1:0]==2'b01) ? { pn, SPCO[14], SPCO[10], SPCO[6], SPCO[2] } :
+             (ox[1:0]==2'b10) ? { pn, SPCO[13], SPCO[ 9], SPCO[5], SPCO[1] } :
+                                { pn, SPCO[12], SPCO[ 8], SPCO[4], SPCO[0] } ;
+    if( MODEL == SUPERPAC ) begin  // 2bpp
+        CLT1_A[9:2]= { 2'd0, CLT1_A[9:4] };
+    end
+end
 
 wire [3:0] SPCL;
 assign SPCOL = {1'b0,SPCL};
