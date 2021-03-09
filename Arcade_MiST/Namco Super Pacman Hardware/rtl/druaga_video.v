@@ -2,6 +2,10 @@
     FPGA Druaga ( Video Part )
 
       Copyright (c) 2007 MiSTer-X
+
+      Super Pacman Support
+                (c) 2021 Jose Tejada, jotego
+
 ************************************/
 module DRUAGA_VIDEO
 (
@@ -37,7 +41,7 @@ wire [8:0] VPOS = PV;
 
 wire  oHB = (PH>=290) & (PH<492);
 
-assign VB = (PV==224);
+assign VB = (PV==227);
 
 reg  [4:0]  PALT_A;
 wire [7:0]  PALT_D;
@@ -95,6 +99,8 @@ always @(*) begin
     ROW  = VPOS[8:3];
 
     if( MODEL==SUPERPAC ) begin
+        // This +2 adjustment is due to using a linear video timing generator
+        // rather than the original circuit count.
         ROW = ROW + 6'h2;
         VRAMADRS = { 1'b0,
                       COL[5] ? {COL[4:0], ROW[4:0]} :

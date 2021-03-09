@@ -2,6 +2,10 @@
     FPGA Druaga ( Sprite Part )
 
       Copyright (c) 2007 MiSTer-X
+
+      Super Pacman Support
+                (c) 2021 Jose Tejada, jotego
+
 ************************************/
 module DRUAGA_SPRITE
 (

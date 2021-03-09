@@ -4,7 +4,7 @@
 //         Copyright (c) 2007,19 MiSTer-X
 //------------------------------------------
 
-		case ( mema[4'h8] )
+	case ( mema[4'h8] )
 
 		4'h1: begin
 			mema[4'h0] <= { 3'd0, CSTART12[2] };
@@ -17,22 +17,23 @@
 			mema[4'h7] <= STKTRG12[9:6];
 			mema[4'h9] <= 0;
 		end
-	
-		4'h8: begin
+
+		4'h8: begin	// Boot up check, expected values by
+			// the software (Super Pacman, Motos $69,  Phozon $1C)
 			mema[4'h0] <= 4'h6;
-			mema[4'h1] <= 4'h9; 
+			mema[4'h1] <= 4'h9;
 		end
 
 		default:;
-			
-		endcase
+
+	endcase
 
 
-		case ( memb[4'h8] )
-	
+	case ( memb[4'h8] )
+
 		4'h8: begin
 			memb[4'h0] <= 4'h6;
-			memb[4'h1] <= 4'h9; 
+			memb[4'h1] <= 4'h9;
 		end
 
 		4'h9: begin
@@ -49,5 +50,5 @@
 
 		default:;
 
-		endcase
+	endcase
 

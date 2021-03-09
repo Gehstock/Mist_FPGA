@@ -11,6 +11,11 @@ module hvgen
 	output reg			VSYN = 1
 );
 
+localparam [8:0] VS_START = 9'd228,
+                 VS_END   = VS_START+9'd3,
+                 VB_START = 9'd223,
+                 VB_END   = 9'd511;
+
 reg [8:0] hcnt = 0;
 reg [8:0] vcnt = 0;
 
@@ -26,10 +31,10 @@ always @(posedge MCLK) begin
 		342: begin HSYN <= 1; hcnt <= 9'd470;    end
 		511: begin hcnt <= 0;
 			case (vcnt)
-				223: begin VBLK <= 1; vcnt <= vcnt+1'd1; end
-				226: begin VSYN <= 0; vcnt <= vcnt+1'd1; end
-				233: begin VSYN <= 1; vcnt <= 9'd483;	  end
-				511: begin VBLK <= 0; vcnt <= 0;		  end
+				VB_START: begin VBLK <= 1; vcnt <= vcnt+1'd1; end
+				VS_START: begin VSYN <= 0; vcnt <= vcnt+1'd1; end
+				VS_END:   begin VSYN <= 1; vcnt <= 9'd483;	 end
+				VB_END:   begin VBLK <= 0; vcnt <= 0;		  end
 				default: vcnt <= vcnt+1'd1;
 			endcase
 		end
@@ -37,4 +42,4 @@ always @(posedge MCLK) begin
 	endcase
 end
 
-endmodule 
+endmodule

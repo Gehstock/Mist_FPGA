@@ -1,10 +1,18 @@
 /****************************************************
     FPGA Druaga ( Custom I/O chip emulation part )
 
-        Copyright (c) 2007 MiSTer-X
+      Copyright (c) 2007 MiSTer-X
+
+      Super Pacman Support
+                (c) 2021 Jose Tejada, jotego
+
 *****************************************************/
-module IOCTRL( CLK, UPDATE, RESET, ENABLE, WR, ADRS, IN, OUT, STKTRG12, CSTART12,
-    DIPSW, IsMOTOS, MODEL );
+module IOCTRL( CLK, UPDATE, RESET, ENABLE, WR, ADRS, IN, OUT,
+    STKTRG12,   // Joystick controls
+    CSTART12,   // Start buttons
+    DIPSW,
+    IsMOTOS,
+    MODEL );
  input          CLK;
  input          UPDATE;
  input          RESET;
@@ -34,13 +42,14 @@ reg     [9:0]   pSTKTRG12;
 reg     [2:0]   pCSTART12;
 
 reg             bUpdate;
-reg             bIOMode = 0;
+reg             bIOMode;
 
 parameter [2:0] SUPERPAC=3'd5;
 
 assign  OUT = { 4'b1111, outr };
 assign  IsMOTOS = bIOMode;
 
+// Detect falling edges:
 wire      [11:0]   iSTKTRG12 = ( STKTRG12 ^ pSTKTRG12 ) & STKTRG12;
 wire      [ 2:0]   iCSTART12 = ( CSTART12 ^ pCSTART12 ) & CSTART12;
 
@@ -48,7 +57,6 @@ wire      [ 3:0]   CREDIT_ONES, CREDIT_TENS;
 BCDCONV creditsBCD( credits, CREDIT_ONES, CREDIT_TENS );
 
 always @ ( posedge CLK ) begin
-
     if ( ENABLE ) begin
         if ( ADRS[5] )  begin
             if ( WR ) memc[ADRS[4:0]] <= IN;
@@ -61,19 +69,18 @@ always @ ( posedge CLK ) begin
             outr <= mema[ADRS[3:0]];
         end
     end
-
     if ( RESET ) begin
         pCSTART12  <= 0;
         pSTKTRG12  <= 0;
         bUpdate    <= 0;
-        bIOMode     = 0;
-        credits     = 0;
-    end
-    else begin
+        bIOMode    <= 0;
+        credits    <= 0;
+    end else begin
         if ( UPDATE & (~bUpdate) ) begin
-            if ( mema[4'h8] == 4'h8 ) bIOMode = 1'b1;       // Is running "Motos" ?
+            if ( mema[4'h8] == 4'h8 || MODEL==SUPERPAC )
+                bIOMode <= 1'b1;       // Is running "Motos" ?
 
-            if ( bIOMode || MODEL==SUPERPAC) begin
+            if ( bIOMode ) begin
                 `include "ioctrl_1.v"
             end
             else begin
@@ -85,7 +92,6 @@ always @ ( posedge CLK ) begin
         end
         bUpdate <= UPDATE;
     end
-
 end
 
 endmodule

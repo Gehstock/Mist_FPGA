@@ -3,8 +3,11 @@
 
       Copyright (c) 2007 MiSTer-X
 
-    Conversion to clock-enable:
-      (c) 2019 Slingshot
+      Conversion to clock-enable:
+        (c) 2019 Slingshot
+
+      Super Pacman Support
+        (c) 2021 Jose Tejada, jotego
 ************************************/
 module fpga_druaga
 (
@@ -14,9 +17,9 @@ module fpga_druaga
 
     input     [8:0] PH,     // Screen H
     input     [8:0] PV,     // Screen V
-    output          PCLK,       // Pixel Clock
+    output          PCLK,     // Pixel Clock
     output          PCLK_EN,
-    output    [7:0] POUT,       // Pixel Color
+    output    [7:0] POUT,     // Pixel Color
 
     output    [7:0] SOUT,     // Sound Out
     output   [14:0] rom_addr,
@@ -138,7 +141,10 @@ DRUAGA_VIDEO video
     .ROMAD(ROMAD),.ROMDT(ROMDT),.ROMEN(ROMEN),
     .MODEL(MODEL)
 );
-assign POUT = (IsMOTOS & (PV==0)) ? 8'h0 : oPOUT;
+
+// This prevents a glitch in the sprites for the first line
+// but it hides the top line of the CRT test screen
+assign POUT = (IsMOTOS && (PV==0)) ? 8'h0 : oPOUT;
 
 
 // MainCPU
