@@ -39,14 +39,12 @@ wire  oHB = (PH>=290) & (PH<492);
 
 assign VB = (PV==224);
 
-
 reg  [4:0]  PALT_A;
 wire [7:0]  PALT_D;
 
 wire [7:0]  CLT0_A;
 wire [3:0]  CLT0_D;
 
-wire [11:0] BGCH_A;
 wire [7:0]  BGCH_D;
 
 
@@ -64,7 +62,7 @@ always @(posedge VCLKx8) if (PH == 290) BGVSCR <= SCROLL;
 reg  [7:0] BGPN;
 reg        BGH;
 
-reg      [5:0] COL, ROW, ROW2;
+reg      [5:0] COL, ROW;
 
 wire     [7:0] CHRC = VRAM_D[7:0];
 wire     [5:0] BGPL = VRAM_D[13:8];
@@ -72,7 +70,7 @@ wire     [5:0] BGPL = VRAM_D[13:8];
 wire     [8:0] HP   = HPOS;
 wire     [8:0] VP   = COL[5] ? VPOS : BGVPOS;
 wire    [11:0] CHRA = { CHRC, ~HP[2], VP[2:0] };
-wire     [7:0] CHRO = BGCH_D;
+wire     [7:0] CHRO = BGCH_D;   // Char pixel data
 reg     [10:0] VRAMADRS;
 
 always @ ( posedge VCLKx8 ) begin
@@ -86,17 +84,15 @@ always @ ( posedge VCLKx8 ) begin
 end
 
 
-assign CLT0_A = BGPN;
-assign BGCH_A = CHRA;
+assign CLT0_A = BGPN ^ ( MODEL==SUPERPAC ? 8'h0 : 8'h03 );
 assign VRAM_A = VRAMADRS & ( MODEL==SUPERPAC ? 11'h3FF : 11'h7FF );
 
 wire            BGHI  = BGH & (CLT0_D!=4'd15);
-wire    [4:0]   BGCOL = { 1'b1, CLT0_D };
+wire    [4:0]   BGCOL = { 1'b1, (MODEL==SUPERPAC ? ~CLT0_D :CLT0_D) };
 
 always @(*) begin
     COL  = HPOS[8:3];
     ROW  = VPOS[8:3];
-    ROW2 = ROW + 6'h02;
 
     if( MODEL==SUPERPAC ) begin
         ROW = ROW + 6'h2;
@@ -104,9 +100,10 @@ always @(*) begin
                       COL[5] ? {COL[4:0], ROW[4:0]} :
                                {ROW[4:0], COL[4:0]}
                    };
-    end else
-        VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW[4], ROW2[3:0] } :
+    end else begin
+        VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW[4], ROW[3:0]+4'h2 } :
                                            { VP[8:3], HP[7:3] };
+    end
 end
 
 //----------------------------------------
@@ -126,25 +123,48 @@ DRUAGA_SPRITE spr
 //----------------------------------------
 //  Color mixer & Final output
 //----------------------------------------
-always @(posedge VCLKx8) if (VCLK_EN) PALT_A <= BGHI ? BGCOL : ((SPCOL[3:0]==4'd15) ? BGCOL : SPCOL );
-assign POUT = oHB ? 8'd0 : PALT_D;
-assign PCLK = VCLK;
+always @(posedge VCLKx8) if (VCLK_EN) begin
+    PALT_A <= BGHI ? BGCOL : ((SPCOL[3:0]==4'd15) ? BGCOL : SPCOL );
+end
+
+assign POUT    = oHB ? 8'd0 : PALT_D;
+assign PCLK    = VCLK;
 assign PCLK_EN = VCLK_EN;
 
 //----------------------------------------
 //  ROMs
 //----------------------------------------
-wire [7:0] chr_data = MODEL==SUPERPAC ? ~ROMDT : ROMDT;
-dpram #(8,12) bgchr(.clk_a(VCLKx8), .addr_a(BGCH_A), .q_a(BGCH_D),
-                    .clk_b(VCLKx8), .addr_b(ROMAD[11:0]),
-                    .we_b(ROMEN & (ROMAD[16:12]=={1'b1,4'h2})),
-                    .d_b(chr_data)
+
+// Char Tiles
+dpram #(8,12) bgchr(.clk_a ( VCLKx8                              ),
+                    .addr_a( CHRA                                ),
+                    .q_a   ( BGCH_D                              ),
+                    // ROM download
+                    .clk_b ( VCLKx8                              ),
+                    .addr_b( ROMAD[11:0]                         ),
+                    .we_b  ( ROMEN & (ROMAD[16:12]=={1'b1,4'h2}) ),
+                    .d_b   ( ROMDT                               )
                 );
-dpram #(4,8) clut0(.clk_a(VCLKx8), .addr_a(CLT0_A^8'h03), .q_a(CLT0_D),
-                   .clk_b(VCLKx8), .addr_b(ROMAD[7:0]), .we_b(ROMEN & (ROMAD[16:8]=={1'b1,8'h34})), .d_b(ROMDT[3:0]));
+
+// Char palette LUT
+dpram #(4,8) clut0( .clk_a ( VCLKx8                              ),
+                    .addr_a( CLT0_A                              ),
+                    .q_a   ( CLT0_D                              ),
+                    // ROM download
+                    .clk_b ( VCLKx8                              ),
+                    .addr_b( ROMAD[7:0]                          ),
+                    .we_b  ( ROMEN & (ROMAD[16:8]=={1'b1,8'h34}) ),
+                    .d_b   ( ROMDT[3:0]                          )
+                );
 
 // Colour PROM
-dpram #(8,5) pelet(.clk_a(VCLKx8), .addr_a(PALT_A), .q_a(PALT_D),
-                   .clk_b(VCLKx8), .addr_b(ROMAD[4:0]),
-                   .we_b(ROMEN & (ROMAD[16:5]=={1'b1,8'h36,3'b000})), .d_b(ROMDT));
+dpram #(8,5) pelet(.clk_a ( VCLKx8                                     ),
+                   .addr_a( PALT_A                                     ),
+                   .q_a   ( PALT_D                                     ),
+                    // ROM download
+                   .clk_b ( VCLKx8                                     ),
+                   .addr_b( ROMAD[4:0]                                 ),
+                   .we_b  ( ROMEN & (ROMAD[16:5]=={1'b1,8'h36,3'b000}) ),
+                   .d_b   ( ROMDT                                      )
+                );
 endmodule
