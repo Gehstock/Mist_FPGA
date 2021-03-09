@@ -100,7 +100,6 @@ always @(*) begin
 
     if( MODEL==SUPERPAC ) begin
         ROW = ROW + 6'h2;
-        COL = COL - 6'h2;
         VRAMADRS = { 1'b0,
                       COL[5] ? {COL[4:0], ROW[4:0]} :
                                {ROW[4:0], COL[4:0]}
