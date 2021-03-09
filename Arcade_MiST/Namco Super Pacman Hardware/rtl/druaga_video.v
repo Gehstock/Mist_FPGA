@@ -111,13 +111,14 @@ end
 //----------------------------------------
 wire    [4:0] SPCOL;
 
-DRUAGA_SPRITE spr
+DRUAGA_SPRITE #(.SUPERPAC(SUPERPAC)) spr
 (
     VCLKx8, VCLK_EN,
     HPOS, VPOS, oHB,
     SPRA_A, SPRA_D,
     SPCOL,
-    ROMAD,ROMDT,ROMEN
+    ROMAD,ROMDT,ROMEN,
+    MODEL
 );
 
 //----------------------------------------
