@@ -29,10 +29,10 @@
 			end
 
 			if ( mema[4'h9] == 0 ) begin
-				if ( ( credits >= 2 ) & iCSTART12[1] ) begin
+				if ( ( credits >= 2 ) && iCSTART12[1] ) begin
 					credit_sub = 8'h02;
 					credits = credits - 2;
-				end else if ( ( credits >= 1 ) & iCSTART12[0] ) begin
+				end else if ( ( credits >= 1 ) && iCSTART12[0] ) begin
 					credit_sub = 8'h01;
 					credits = credits - 1;
 				end

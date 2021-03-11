@@ -11,10 +11,12 @@ The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
 --
 --
 ---------------------------------------------------------------------------------
--- 
+--
 -- Arcade: The Tower of Druaga  port to MiSTer by MiSTer-X
 -- 25 September 2019
--- 
+--
+-- Super Pacman support added by Jose Tejada (jotego), 11th March 2021
+--
 ---------------------------------------------------------------------------------
 -- FPGA Druaga for XILINX Spartan-3
 --------------------------------------
@@ -25,8 +27,8 @@ The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
 ---------------------------------------------------
 -- Copyright (c) 2016, Greg Miller
 ---------------------------------------------------------------------------------
--- 
--- 
+--
+--
 -- Keyboard inputs :
 --
 --   F2          : Coin + Start 2 players
@@ -45,8 +47,8 @@ The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
 --   S           : Player 2 Trig2
 --
 -- Joystick support.
--- 
--- 
+--
+--
 -- FIXED: Video timing.
 --
 ---------------------------------------------------------------------------------

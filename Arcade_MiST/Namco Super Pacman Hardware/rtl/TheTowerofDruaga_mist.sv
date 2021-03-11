@@ -147,7 +147,7 @@ wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
 
-assign core_mod=7'd5;
+// assign core_mod=7'd5;
 
 user_io #(.STRLEN($size(CONF_STR)>>3))user_io(
 	.clk_sys        (clock_48       ),
@@ -161,7 +161,7 @@ user_io #(.STRLEN($size(CONF_STR)>>3))user_io(
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
 	.no_csync       (no_csync       ),
-	//.core_mod       (core_mod       ),
+	.core_mod       (core_mod       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
