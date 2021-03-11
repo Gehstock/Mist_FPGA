@@ -1,4 +1,4 @@
-The Tower of Druaga/Mappy/Motos/DigDug II to Mist FPGA by Slingshot
+The Tower of Druaga/Mappy/Motos/DigDug II and Super Pacman to Mist FPGA by Slingshot and Jotego
 
 -- Usage:
 -- - Create ROM and ARC files from the MRA files in the meta directory
