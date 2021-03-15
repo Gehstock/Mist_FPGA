@@ -1,0 +1,39 @@
+<misterromdescription>
+	<name>Pac & Pal</name>
+	<mameversion>0220</mameversion>
+	<setname>pacnpal</setname>
+	<mratimestamp>20210307</mratimestamp>
+	<rbf>druaga</rbf>
+	<rom index="1">
+		<part>05</part>
+	</rom>
+	<rom index="0" zip="pacnpal.zip" md5="None">
+		<!-- main CPU -->
+		<part repeat="0x2000"> FF </part>
+		<part name="pap1-3b.1d"/>
+		<part name="pap1-2b.1c"/>
+		<part name="pap3-1.1b"/>
+
+		<!-- GFX2 -->
+		<part name="pap1-5.3f"/>
+		<part name="pap1-5.3f"/>
+		<part name="pap1-5.3f"/>
+		<part name="pap1-5.3f"/>
+
+		<!-- sound CPU -->
+		<part repeat="0x1000"> FF </part>
+		<part name="pap1-4.1k"/>
+
+		<!-- GFX1 -->
+		<part name="pap1-6.3c"/>
+
+		<part name="pap1-4.3l"/>
+		<part name="pap1-4.3l"/>
+		<part name="pap1-4.3l"/>
+		<part name="pap1-4.3l"/>
+
+		<part name="pap1-5.4e"/>
+		<part name="pap1-3.3m"/>
+		<part name="pap1-6.4c"/>
+	</rom>
+</misterromdescription>

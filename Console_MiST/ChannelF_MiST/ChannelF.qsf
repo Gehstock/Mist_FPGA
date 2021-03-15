@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 20:10:17  February 28, 2021
+# Date created = 00:42:55  March 05, 2021
 #
 # -------------------------------------------------------------------------- #
 #
@@ -46,7 +46,7 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/CannelF_MiST.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ChannelF_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/channel_f.vhd
 set_global_assignment -name VHDL_FILE rtl/f8_cpu.vhd
 set_global_assignment -name VHDL_FILE rtl/f8_psu.vhd
@@ -99,10 +99,10 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY CannelF_MiST
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
 set_global_assignment -name SAVE_DISK_SPACE OFF
+set_global_assignment -name TOP_LEVEL_ENTITY ChannelF_MiST
 
 # Fitter Assignments
 # ==================
@@ -142,8 +142,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# --------------------------
-# start ENTITY(CannelF_MiST)
+# ---------------------------
+# start ENTITY(ChannelF_MiST)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -157,6 +157,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(CannelF_MiST)
-# ------------------------
+# end ENTITY(ChannelF_MiST)
+# -------------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

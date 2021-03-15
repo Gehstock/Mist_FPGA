@@ -1,0 +1,38 @@
+<misterromdescription>
+	<name>Grobda</name>
+	<mameversion>0220</mameversion>
+	<setname>grobda</setname>
+	<mratimestamp>20210307</mratimestamp>
+	<rbf>druaga</rbf>
+	<rom index="1">
+		<part>05</part>
+	</rom>
+	<rom index="0" zip="grobda.zip" md5="None">
+		<!-- main CPU -->
+		<part repeat="0x2000"> FF </part>
+		<part name="gr2-3.1d"/>
+		<part name="gr2-2.1c"/>
+		<part name="gr2-1.1b"/>
+
+		<!-- GFX2 -->
+		<part name="gr1-5.3f"/>
+		<part name="gr1-6.3e"/>
+		<part name="gr1-5.3f"/>
+		<part name="gr1-6.3e"/>
+
+		<!-- sound CPU -->
+		<part name="gr1-4.1k"/>
+
+		<!-- GFX1 -->
+		<part name="gr1-7.3c"/>
+
+		<part name="gr1-4.3l"/>
+		<part name="gr1-4.3l"/>
+		<part name="gr1-4.3l"/>
+		<part name="gr1-4.3l"/>
+
+		<part name="gr1-5.4e"/>
+		<part name="gr1-3.3m"/>
+		<part name="gr1-6.4c"/>
+	</rom>
+</misterromdescription>
