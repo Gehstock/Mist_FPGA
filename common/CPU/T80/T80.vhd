@@ -118,6 +118,7 @@ entity T80 is
 		TS         : out std_logic_vector(2 downto 0);
 		IntCycle_n : out std_logic;
 		IntE       : out std_logic;
+		RETI_n     : out std_logic;
 		Stop       : out std_logic;
 		R800_mode  : in  std_logic := '0';
 		out0       : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
@@ -424,8 +425,11 @@ begin
 			PreserveC_r <= '0';
 			XY_Ind <= '0';
 			I_RXDD <= '0';
+			RETI_n <= '1';
 
 		elsif rising_edge(CLK_n) then
+		
+			RETI_n <= not I_RETN;
 
 			if DIRSet = '1' then
 				ACC <= DIR( 7 downto  0);
