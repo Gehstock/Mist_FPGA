@@ -171,7 +171,9 @@ port(
 
  dl_addr        : in std_logic_vector(16 downto 0);
  dl_data        : in std_logic_vector( 7 downto 0);
- dl_wr          : in std_logic
+ dl_wr          : in std_logic;
+ up_data        : out std_logic_vector(7 downto 0);
+ cmos_wr        : in std_logic
  );
 end journey;
 
@@ -366,7 +368,7 @@ begin
 																				  -- back porch  48/25*20 = 38
 				video_blankn <= '0';
 				if hcnt >= 2+16 and  hcnt < 514+16 and
-					vcnt >= 2 and  vcnt < 481 then video_blankn <= '1';end if;
+					vcnt >= 1 and  vcnt < 481 then video_blankn <= '1';end if;
 
 			else    -- interlaced mode
 
@@ -711,14 +713,19 @@ cpu_rom_addr <= cpu_addr(15 downto 0);
 cpu_rom_rd <= '1' when cpu_mreq_n = '0' and cpu_rd_n = '0' and cpu_addr(15 downto 12) < X"C" else '0';
 
 -- working RAM   0xC000-0xC7FF + mirroring adresses
-wram : entity work.cmos_ram
+wram : entity work.dpram
 generic map( dWidth => 8, aWidth => 11)
 port map(
- clk  => clock_vidn,
- we   => wram_we,
- addr => cpu_addr(10 downto 0),
- d    => cpu_do,
- q    => wram_do
+ clk_a  => clock_vidn,
+ addr_a => cpu_addr(10 downto 0),
+ d_a    => cpu_do,
+ we_a   => wram_we,
+ q_a    => wram_do,
+ clk_b  => clock_vid,
+ we_b   => cmos_wr,
+ addr_b => dl_addr(10 downto 0),
+ d_b    => dl_data,
+ q_b    => up_data
 );
 
 -- video RAM   0xE800-0xEFFF + mirroring adresses
