@@ -96,9 +96,7 @@ entity T80se is
 		BUSAK_n         : out std_logic;
 		A               : out std_logic_vector(15 downto 0);
 		DI              : in  std_logic_vector(7 downto 0);
-		DO              : out std_logic_vector(7 downto 0);
-		IntE            : out std_logic;
-      RETI_n          : out std_logic
+		DO              : out std_logic_vector(7 downto 0)
 	);
 end T80se;
 
@@ -139,9 +137,7 @@ begin
 			DO         => DO,
 			MC         => MCycle,
 			TS         => TState,
-			IntCycle_n => IntCycle_n,
-			IntE       => IntE,
-			RETI_n     => RETI_n);
+			IntCycle_n => IntCycle_n);
 
 	process (RESET_n, CLK_n)
 	begin
