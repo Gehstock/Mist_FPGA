@@ -104,7 +104,6 @@ package T80_Pack is
 		TS              : out std_logic_vector(2 downto 0);
 		IntCycle_n      : out std_logic;
 		IntE            : out std_logic;
-		RETI_n          : out std_logic;
 		Stop            : out std_logic;
 		R800_mode       : in  std_logic := '0';
 		out0            : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
@@ -210,8 +209,9 @@ package T80_Pack is
 		Halt                    : out std_logic;
 		NoRead                  : out std_logic;
 		Write                   : out std_logic;
-		XYbit_undoc             : out std_logic;
-		R800_mode               : in  std_logic
+		R800_mode               : in  std_logic;
+		No_PC                   : out std_logic;
+		XYbit_undoc             : out std_logic
 	);
 	end component;
 
