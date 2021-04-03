@@ -27,3 +27,17 @@ If you hear a periodic noise when there should be no output, check whether your 
 
 * [Double Dragon](https://github.com/jotego/jtdd), by the same author
 * [Tora e no michi](https://github.com/jotego/jt_gng), by the same author
+
+## Related Projects
+
+Other sound chips from the same author
+
+Chip                   | Repository
+-----------------------|------------
+YM2203, YM2612, YM2610 | [JT12](https://github.com/jotego/jt12)
+YM2151                 | [JT51](https://github.com/jotego/jt51)
+YM3526                 | [JTOPL](https://github.com/jotego/jtopl)
+YM2149                 | [JT49](https://github.com/jotego/jt49)
+sn76489an              | [JT89](https://github.com/jotego/jt89)
+OKI 6295               | [JT6295](https://github.com/jotego/jt6295)
+OKI MSM5205            | [JT5205](https://github.com/jotego/jt5205)

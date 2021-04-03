@@ -28,12 +28,19 @@ module jt5205_adpcm(
 reg [ 5:0] delta_idx, idx_inc;
 reg [10:0] delta[0:48];
 
-reg [11:0] dn, qn;
+reg [11:0] dn;
+reg [12:0] qn;
 reg        up;
 reg [ 2:0] factor;
 reg [ 3:0] din_copy;
 reg [ 5:0] next_idx;
-reg signed [12:0] unlim;
+reg signed [13:0] unlim;
+
+`ifdef SIMULATION
+initial begin
+    sound = -12'd2;
+end
+`endif
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
@@ -41,17 +48,17 @@ always @(posedge clk, posedge rst) begin
         up        <= 1'b0;
         next_idx  <= 6'd0;
         dn        <= 12'd0;
-        qn        <= 12'd0;
+        qn        <= 13'd0;
     end else if(cen_hf) begin
         up <= cen_lo;
         if( up ) begin
             factor   <= din_copy[2:0];
             dn       <= { 1'b0, delta[delta_idx] };
-            qn       <= { 1'd0, delta[delta_idx]>>3};
+            qn       <= { 2'd0, delta[delta_idx]>>3};
             next_idx <= din_copy[2] ? (delta_idx+idx_inc) : (delta_idx-6'd1);
         end else begin
             if(factor[2]) begin
-                qn <= qn + dn;
+                qn <= qn + {1'b0, dn };
             end
             dn     <= dn>>1;
             factor <= factor<<1;
@@ -61,26 +68,32 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-function signed [12:0] extend;
+always @(posedge clk ) if(cen_lo) begin
+    if( rst ) begin
+        // sound fades away after a rst but the rest level must be -2
+        // otherwise noises can be heard (e.g. intro scene of Double Dragon)
+        if( sound>12'd0 || sound < -12'd2 )
+            sound <= sound >>> 1;
+        else
+            sound <= -12'd2;
+    end else begin
+        sound <= unlim[13:12]!={2{unlim[11]}} ? { unlim[13], {11{~unlim[13]}}} : unlim[11:0];
+    end
+end
+
+function signed [13:0] extend;
     input signed [11:0] a;
-    extend = { a[11], a };
+    extend = { {2{a[11]}}, a };
 endfunction
 
 always @(*) begin
-    unlim = din_copy[3] ? extend(sound) - {1'b0,qn} :
-                          extend(sound) + {1'b0,qn};
+    unlim = din_copy[3] ? extend(sound) - {1'b0, qn} :
+                          extend(sound) + {1'b0, qn};
 end
-
-wire signed [12:0] lim_pos =  13'd2047;
-wire signed [12:0] lim_neg = -13'd2048;
-
-wire ovp = unlim>lim_pos;
-wire ovn = unlim<lim_neg;
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         delta_idx <= 6'd0;
-        sound     <= -12'd2;
         din_copy  <= 4'd0;
     end else if(cen_lo) begin
         case( din[1:0] )
@@ -91,18 +104,17 @@ always @(posedge clk, posedge rst) begin
         endcase
         din_copy  <= din;
         delta_idx <= next_idx;
-        sound     <= ovp ? 12'd2047 : ovn ? -12'd2048 : unlim[11:0];
     end
 end
 
 initial begin
-delta[ 0] = 11'd0016; delta[ 1] = 11'd0017; delta[ 2] = 11'd0019; delta[ 3] = 11'd0021; delta[ 4] = 11'd0023; delta[ 5] = 11'd0025; delta[ 6] = 11'd0028; 
-delta[ 7] = 11'd0031; delta[ 8] = 11'd0034; delta[ 9] = 11'd0037; delta[10] = 11'd0041; delta[11] = 11'd0045; delta[12] = 11'd0050; delta[13] = 11'd0055; 
-delta[14] = 11'd0060; delta[15] = 11'd0066; delta[16] = 11'd0073; delta[17] = 11'd0080; delta[18] = 11'd0088; delta[19] = 11'd0097; delta[20] = 11'd0107; 
-delta[21] = 11'd0118; delta[22] = 11'd0130; delta[23] = 11'd0143; delta[24] = 11'd0157; delta[25] = 11'd0173; delta[26] = 11'd0190; delta[27] = 11'd0209; 
-delta[28] = 11'd0230; delta[29] = 11'd0253; delta[30] = 11'd0279; delta[31] = 11'd0307; delta[32] = 11'd0337; delta[33] = 11'd0371; delta[34] = 11'd0408; 
-delta[35] = 11'd0449; delta[36] = 11'd0494; delta[37] = 11'd0544; delta[38] = 11'd0598; delta[39] = 11'd0658; delta[40] = 11'd0724; delta[41] = 11'd0796; 
-delta[42] = 11'd0876; delta[43] = 11'd0963; delta[44] = 11'd1060; delta[45] = 11'd1166; delta[46] = 11'd1282; delta[47] = 11'd1411; delta[48] = 11'd1552; 
+delta[ 0] = 11'd0016; delta[ 1] = 11'd0017; delta[ 2] = 11'd0019; delta[ 3] = 11'd0021; delta[ 4] = 11'd0023; delta[ 5] = 11'd0025; delta[ 6] = 11'd0028;
+delta[ 7] = 11'd0031; delta[ 8] = 11'd0034; delta[ 9] = 11'd0037; delta[10] = 11'd0041; delta[11] = 11'd0045; delta[12] = 11'd0050; delta[13] = 11'd0055;
+delta[14] = 11'd0060; delta[15] = 11'd0066; delta[16] = 11'd0073; delta[17] = 11'd0080; delta[18] = 11'd0088; delta[19] = 11'd0097; delta[20] = 11'd0107;
+delta[21] = 11'd0118; delta[22] = 11'd0130; delta[23] = 11'd0143; delta[24] = 11'd0157; delta[25] = 11'd0173; delta[26] = 11'd0190; delta[27] = 11'd0209;
+delta[28] = 11'd0230; delta[29] = 11'd0253; delta[30] = 11'd0279; delta[31] = 11'd0307; delta[32] = 11'd0337; delta[33] = 11'd0371; delta[34] = 11'd0408;
+delta[35] = 11'd0449; delta[36] = 11'd0494; delta[37] = 11'd0544; delta[38] = 11'd0598; delta[39] = 11'd0658; delta[40] = 11'd0724; delta[41] = 11'd0796;
+delta[42] = 11'd0876; delta[43] = 11'd0963; delta[44] = 11'd1060; delta[45] = 11'd1166; delta[46] = 11'd1282; delta[47] = 11'd1411; delta[48] = 11'd1552;
 end
 
 endmodule

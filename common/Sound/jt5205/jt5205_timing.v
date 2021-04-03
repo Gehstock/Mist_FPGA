@@ -20,9 +20,9 @@ module jt5205_timing(
     input             clk,
     (* direct_enable *) input cen,
     input      [ 1:0] sel,        // s pin
-    output            cen_lo,
-    output            cenb_lo,
-    output            cen_mid,
+    output            cen_lo,     // sample rate
+    output            cenb_lo,    // sample rate (opposite phase)
+    output            cen_mid,    // 2x sample rate
     output reg        vclk_o
 );
 
