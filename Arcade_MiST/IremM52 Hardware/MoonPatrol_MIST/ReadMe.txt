@@ -12,6 +12,8 @@
 -- cpu68 - Version 9th Jan 2004 0.8
 -- 6800/01 compatible CPU core 
 -- GNU public license - December 2002 : John E. Kent
+
+-- jt5205 by Jotego
 ---------------------------------------------------------------------------------
 -- 
 -- 
