@@ -86,47 +86,30 @@ architecture struct of moon_patrol_sound_board is
  signal port2_ddr   : std_logic_vector(7 downto 0);
  signal port2_in    : std_logic_vector(7 downto 0);
  
+ signal adpcm_ce    : std_logic;
  signal adpcm_cs    : std_logic;
- signal adpcm_we    : std_logic;
- signal adpcm_0_di  : std_logic_vector(3 downto 0);
-
- signal select_sound_r  : std_logic_vector(7 downto 0);
+ signal adpcm_we  : std_logic;
+ signal adpcm_di  : std_logic_vector(3 downto 0);
+ signal select_sound_r : std_logic_vector(7 downto 0);
+ signal adpcm_out : signed(11 downto 0);
+ signal adpcm_vclk  : std_logic;
 
  signal audio : std_logic_vector(12 downto 0);
  
- type t_step_size is array(0 to 48) of integer range 0 to 1552;
- constant step_size : t_step_size := (
-    16,   17,   19,   21,   23,   25,   28,   31,
-    34,   37,   41,   45,   50,   55,   60,   66,
-    73,   80,   88,   97,  107,  118,  130,  143,
-	157,  173,  190,  209,  230,  253,  279,  307,
-	337,  371,  408,  449,  494,  544,  598,  658,
-	724,  796,  876,  963, 1060, 1166, 1282, 1411, 1552);
-	
- type t_delta_step is array(0 to 7) of integer range -1 to 8;	
- constant delta_step : t_delta_step := (-1,-1,-1,-1,2,4,6,8);
-
- signal adpcm_vclk  : std_logic := '0';
- signal adpcm_signal : integer range -16384 to 16383 := 0; 
-
--- adpcm algorithm (4bits) [no pcm here]
---
---   val    : input value 3bits (0 - 7 : b2b1b0)
---   sign   : input value sign  (4th bit : 0=>sign=1 ,1=>sign=-1)
---
---   step   : internal data, init = 0
---   signal : output value, init = 0;
---
---   for each new val (and sign) :
---   |
---   | step_size = 16*1.1^(step)
---   | delta     = sign * (step_size/8 + step_size/4*b0 + step_size/2*b1 + step_size*b2)
---   | signal    = signal + delta
---   | step      = step + delta_step(val)
---   |
---   | signal is then limited between -2048..2047
---   | step   is then limited between     0..48
- 
+ COMPONENT jt5205
+	PORT
+	(
+		rst		:	 IN STD_LOGIC;
+		clk		:	 IN STD_LOGIC;
+		cen		:	 IN STD_LOGIC;
+		sel		:	 IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+		din		:	 IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		sound		:	 out signed(11 downto 0);
+		sample		:	 OUT STD_LOGIC;
+		irq		:	 OUT STD_LOGIC;
+		vclk_o		:	 OUT STD_LOGIC
+	);
+END COMPONENT;
 begin
 
 dbg_cpu_addr <= cpu_addr;
@@ -216,91 +199,38 @@ port1_bus <= ay1_do when port2_data(4) = '0' else
 -- port2 bus
 port2_bus <= X"FF";
 
-
 -- latch adpcm (msm5205) data in
 process (reset, clock_E)
 begin
 	if reset='1' then
-		adpcm_0_di <= (others=>'0');
+		adpcm_di <= (others=>'0');
 	elsif rising_edge(clock_E) then
 			if adpcm_cs = '1' and adpcm_we = '1' then
-				if cpu_addr(1) = '0' then adpcm_0_di  <= cpu_do(3 downto 0); end if;
+				adpcm_di  <= cpu_do(3 downto 0);
 			end if;
-	end if;
-end process;
-
--- adcpm clocks and computation -- make 24kHz and vclk 8/6/4kHz
-adpcm_clocks : process(clock_E, ay1_port_b_do)
-	variable clock_div_a : integer range 0 to 148 := 0;
-	variable clock_div_b : integer range 0 to 5 := 0;
-	variable step   : integer range  0 to 48;
-	variable step_n : integer range -1 to 48+8;
-   variable sz : integer range 0 to 1552;
-	variable dn : integer range -32768 to 32767;
-	variable adpcm_signal_n : integer range -32768 to 32767;
-begin
-	if rising_edge(clock_E) then
-		if clock_div_a = 37 then   -- 24kHz
-			clock_div_a := 0;
-			
-			case ay1_port_b_do(3 downto 2) is				
-			when "00" => if clock_div_b = 5 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 4kHz
-			when "01" => if clock_div_b = 2 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 8kHz
-			when "10" => if clock_div_b = 3 then clock_div_b := 0; else clock_div_b := clock_div_b +1; end if;  -- 6kHz
-			when others => null;
-			end case;
-							
-			if clock_div_b = 0 then adpcm_vclk <= '1'; else adpcm_vclk <= '0'; end if;
-		else
-			clock_div_a := clock_div_a + 1;			
-		end if;
-			
-		if ay1_port_b_do(0) = '1' then
-			step := 0;
-			adpcm_signal <= 0;
-		else
-		
-			if clock_div_b = 0 then
-			case clock_div_a is
-			
-			when 0 => -- it's time to get new nibble (adpcm_0_di)
-							
-				sz := step_size(step);
-				dn := sz/8;
-				if adpcm_0_di(0) = '1' then dn := dn + sz/4; end if;
-				if adpcm_0_di(1) = '1' then dn := dn + sz/2; end if;
-				if adpcm_0_di(2) = '1' then dn := dn + sz  ; end if;
-				
-				if adpcm_0_di(3) = '1' then
-					dn := -dn;	
-				end if;
-								
-				step_n := step + delta_step(to_integer(unsigned(adpcm_0_di(2 downto 0))));
-			
-			when 4 => 
-			
-				adpcm_signal_n := adpcm_signal + dn;
-			
-				if step_n > 48 then step := 48; else step := step_n; end if;
-				if step_n < 0  then step := 0;  else step := step_n; end if;
-				
-			when 8 =>
-			
-				if adpcm_signal_n >  2040 then adpcm_signal <=  2040; else adpcm_signal <= adpcm_signal_n; end if;
-				if adpcm_signal_n < -2040 then adpcm_signal <= -2040; else adpcm_signal <= adpcm_signal_n; end if;
-			
-			when others => null;
-			
-			end case;
-			end if;
-			
-		end if;
 	end if;
 end process;
 
 -- audio mux
-audio <= ("000"&ay1_audio) + ("000"&ay2_audio) + ('0'&std_logic_vector(to_unsigned((adpcm_signal)+2048,12)));
+audio <= ("00"&ay1_audio&'0') + ("00"&ay2_audio&'0') + std_logic_vector(not adpcm_out(11)&adpcm_out(10 downto 0));
 audio_out <= audio(12 downto 1);
+
+-- 384 kHz clock enable
+process( reset, clock_E )
+  variable CLK_SUM : integer;
+begin
+  if reset = '1' then
+    CLK_SUM := 0;
+    adpcm_ce <= '0';
+  elsif rising_edge(clock_E) then
+    adpcm_ce <= '0';
+    CLK_SUM := CLK_SUM + 384;
+    if CLK_SUM >= 895 then
+      CLK_SUM := CLK_SUM - 895;
+      adpcm_ce <= '1';
+    end if;
+  end if;
+end process;
 				 
 -- microprocessor 6800/01/03
 main_cpu : entity work.cpu68
@@ -394,5 +324,18 @@ port map(
   RESET_L    => reset_n,         -- in  std_logic;
   CLK        => clock_E          -- in  std_logic
 );
+
+adpcm : jt5205
+	port map(
+		rst		=>	 ay1_port_b_do(0),
+		clk		=>	 clock_E,
+		cen		=>	 adpcm_ce,
+		sel		=>	 ay1_port_b_do(3 downto 2),
+		din		=>	 adpcm_di,
+		sound		=>	 adpcm_out,
+		sample	=>	 open,
+		irq		=>	 open,
+		vclk_o	=>	 adpcm_vclk
+	);
 
 end struct;
