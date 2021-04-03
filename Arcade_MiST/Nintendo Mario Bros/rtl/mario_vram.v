@@ -37,9 +37,7 @@ module mario_vram(
    output     [7:0]O_DB,
    output reg [3:0]O_COL,
    output     [1:0]O_VID,
-   output          O_VRAMBUSYn,
-	output [15:0]bg_rom_addr,
-   input  [15:0]bg_rom_do
+   output          O_VRAMBUSYn
 );
 
 //---------------------------------------------------
@@ -141,9 +139,6 @@ gfx_3j gfx_3j(
 	.addr(W_VROM_AB),
 	.data(W_3FJ_DO[7:0])
 );
-
-//assign bg_rom_addr = W_VROM_AB;
-//assign W_3FJ_DO = bg_rom_do;
 
 //-------------------
 // Shift register 2H

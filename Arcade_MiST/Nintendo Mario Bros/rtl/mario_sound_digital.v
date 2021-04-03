@@ -21,6 +21,7 @@ module mario_sound_digital
 
    output   signed [15:0]O_SND_DAC,
    output   signed [15:0]O_SND_OUT
+
 );
 
 //----------------
@@ -100,12 +101,12 @@ wire    [7:0]S_PROG_D ;
 
 //SUB_EXT_ROM srom5k(I_CLK_48M, S_ROM_A, 1'b0, S_ROM_OE, S_PROG_D,
 //                   I_CLK_48M, I_DLADDR, I_DLDATA, I_DLWR);
+
 snd_rom snd_rom(
 	.clk(I_CLK_48M),
 	.addr(S_ROM_A),
 	.data(S_PROG_D)
 );
-
 
 
 // M58715 Data Bus

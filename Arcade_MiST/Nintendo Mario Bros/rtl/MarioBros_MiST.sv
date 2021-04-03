@@ -78,8 +78,8 @@ reg         port1_req, port2_req;
 reg  [23:0] port1_a, port2_a;
 wire [15:0] cpu_rom_addr;
 wire [15:0] cpu_rom_do;
-wire [11:0] bg_rom_addr;
-wire [15:0] bg_rom_do;
+wire [12:0] snd_rom_addr;
+wire [15:0] snd_rom_do;
 
 data_io #(.ROM_DIRECT_UPLOAD(0)) data_io(
 	.clk_sys       ( clk_sys      ),
@@ -115,14 +115,14 @@ sdram sdram(
 	// port2 for sound board
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( ioctl_addr[23:1] - 17'h10000 ),
+	.port2_a       ( ioctl_addr[23:1] - 15'h4800 ),
 	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.snd_addr      ( ioctl_downl ? 15'h7fff : bg_rom_addr[11:1] ),
-	.snd_q         ( bg_rom_do )
+	.snd_addr      ( ioctl_downl ? 15'h7fff : snd_rom_addr[12:1] ),
+	.snd_q         ( snd_rom_do )
 );
 
 
@@ -158,7 +158,6 @@ end
 mario_top mario_top(
    .I_CLK_48M(clk_sys),
 	.I_RESETn(~reset),
-
    .I_ANLG_VOL(status[11:8]),
    .I_SW1(m_sw1),
    .I_SW2(m_sw2),
@@ -173,9 +172,8 @@ mario_top mario_top(
 	.O_SOUND_DAT(audio),
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_addr[0] ? cpu_rom_do[15:8] : cpu_rom_do[7:0]),
-	.bg_rom_addr(bg_rom_addr),
-	.bg_rom_do(bg_rom_do)
-
+	.snd_rom_addr(snd_rom_addr),
+	.snd_rom_do(snd_rom_do)
 );
 
 mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(11)) mist_video(

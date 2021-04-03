@@ -31,7 +31,7 @@ module MrDo_mist (
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"MRDO;;",
+	"MRDO;rom;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O5,Blend,Off,On;",
@@ -59,17 +59,19 @@ wire	[1:0] Lives = status[13:12];
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = ~clock_49;
+assign 		SDRAM_CLK = sys_clk;
 assign      SDRAM_CKE = 1;
 
-wire clock_98, clock_49, pll_locked;
-pll pll(
+wire sys_clk, clk_10M, clk_8M, pll_locked;
+
+	pll pll(
 	.inclk0(CLOCK_27),
-	.c0(clock_98),
-	.c1(clock_49),
+	.c0(sys_clk),
+	.c1(clk_10M),
+	.c2(clk_8M),
 	.locked(pll_locked)
 	);
-
+	
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -94,7 +96,7 @@ wire        key_pressed;
 wire  [7:0] key_code;
 
 data_io data_io(
-	.clk_sys       ( clock_49     ),
+	.clk_sys       ( sys_clk     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -110,7 +112,7 @@ reg port1_req;
 sdram #(.MHZ(49)) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clock_49     ),
+	.clk           ( sys_clk     ),
 
 	// ROM upload
 	.port1_req     ( port1_req    ),
@@ -126,7 +128,7 @@ sdram #(.MHZ(49)) sdram(
 	.cpu1_q        ( rom_do )
 );
 
-always @(posedge clock_49) begin
+always @(posedge sys_clk) begin
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
@@ -137,7 +139,7 @@ end
 
 reg reset = 1;
 reg rom_loaded = 0;
-always @(posedge clock_49) begin
+always @(posedge sys_clk) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
 
@@ -146,9 +148,8 @@ always @(posedge clock_49) begin
 end
 
 MrDo_top MrDo_top(
-	.clk_98M(clock_98),
-	.clk_20M(),
-	.clk_8M(),
+	.clk_10M(clk_10M),
+	.clk_8M(clk_8M),
 	.reset(reset),
 	.red(r),
 	.green(g),
@@ -169,7 +170,7 @@ MrDo_top MrDo_top(
 
 
 mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
-	.clk_sys        ( clock_49         ),
+	.clk_sys        ( sys_clk         ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
@@ -192,7 +193,7 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	);
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
-	.clk_sys        (clock_49       ),
+	.clk_sys        (sys_clk       ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -211,7 +212,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	);
 
 dac #(.C_bits(16))dac(
-	.clk_i(clock_49),
+	.clk_i(sys_clk),
 	.res_n_i(1),
 	.dac_i({audio1, audio2}),
 	.dac_o(AUDIO_L)
@@ -222,7 +223,7 @@ wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, 
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
-	.clk         ( clock_49    ),
+	.clk         ( sys_clk    ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),
 	.key_code    ( key_code    ),

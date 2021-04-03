@@ -34,9 +34,7 @@ module mario_video
    output  [7:0]O_OBJ_DB,
    output  [2:0]O_VGA_RED,
    output  [2:0]O_VGA_GRN,
-   output  [1:0]O_VGA_BLU,
-	output [15:0]bg_rom_addr,
-   input  [15:0]bg_rom_do
+   output  [1:0]O_VGA_BLU
 );
 
 //------------------
@@ -69,9 +67,7 @@ mario_vram vram
    .O_DB(W_VRAM_DB),
    .O_COL(W_VRAM_COL),
    .O_VID(W_VRAM_VID),
-   .O_VRAMBUSYn(W_VRAMBUSYn),
-	.bg_rom_addr(bg_rom_addr),
-   .bg_rom_do(bg_rom_do)
+   .O_VRAMBUSYn(W_VRAMBUSYn)
 );
 
 wire   [6:0]W_VRAM_DAT = {W_VRAM_COL[3:0],1'b0,W_VRAM_VID[1:0]};

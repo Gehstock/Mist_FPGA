@@ -1,9 +1,6 @@
 module MrDo_top(
-input 		clk_98M,
-
-//input 		clk_20M,
-//input 		clk_8M,
-
+input 		clk_10M,
+input 		clk_8M,
 input 		reset,
 output		[3:0] red,
 output		[3:0] green,
@@ -22,69 +19,35 @@ output		[14:0] rom_addr,
 input 		[7:0] rom_do
 );
 
-//divider_by2 gen10( 
-//	.out_clk(clk_10M),
-//	.clk(clk_20M),
-//	.rst(reset)
-//);
-//
 //divider_by2 gen5( 
 //	.out_clk(clk_5M),
 //	.clk(clk_10M),
 //	.rst(reset)
 //);
-//
+
+always @(posedge clk_10M)
+begin
+if (reset)
+     clk_5M <= 1'b0;
+else
+     clk_5M <= ~clk_5M;	
+end
+
 //divider_by2 gen4( 
 //	.out_clk(clk_4M),
 //	.clk(clk_8M),
 //	.rst(reset)
 //);
 
-//fg_ram0 is driven by 5mhz instead of 4mhz??? check schematics!!!
-
-wire clk_4M, clk_5M, clk_8M, clk_10M;
-reg [5:0] clk10_count;
-reg [5:0] clk5_count;
-reg [5:0] clk8_count;
-reg [5:0] clk4_count;
-
-always @ (posedge clk_98M) begin
-    if ( reset == 1 ) begin
-        clk10_count <= 0;
-		  clk8_count <= 0;
-        clk5_count <= 0;
-        clk4_count <= 0;
-        
-    end else begin
-        if ( clk10_count == 4 ) begin
-            clk10_count <= 0;
-            clk_10M <= ~ clk_10M ;
-        end else begin
-            clk10_count <= clk10_count + 1;
-        end
-
-        if ( clk8_count == 5 ) begin
-            clk8_count <= 0;
-            clk_8M <= ~ clk_8M ;
-        end else begin
-            clk8_count <= clk8_count + 1;
-        end
-
-        if ( clk5_count == 9 ) begin
-            clk5_count <= 0;
-            clk_5M <= ~ clk_5M ;
-        end else begin
-            clk5_count <= clk5_count + 1;
-        end
-
-        if ( clk4_count == 11 ) begin
-            clk4_count <= 0;
-            clk_4M <= ~ clk_4M ;
-        end else begin
-            clk4_count <= clk4_count + 1;
-        end
-    end
+always @(posedge clk_8M)
+begin
+if (reset)
+     clk_4M <= 1'b0;
+else
+     clk_4M <= ~clk_4M;	
 end
+
+reg clk_4M, clk_5M;
 
 wire hff;
 reg [7:0]v;
@@ -702,7 +665,7 @@ always @ (posedge clk_4M ) begin
             // cpu tries to read val from 0x9803 which is state machine pal
             // written to on all tile ram access. should try converting pal logic to verilog.
 				 cpu_din <= 0;
-        else*/ if ( cpu_addr >= 16'h0000 && cpu_addr < 16'h8000 )
+        else */if ( cpu_addr >= 16'h0000 && cpu_addr < 16'h8000 )
              cpu_din <= rom_do;
         else if ( cpu_addr >= 16'h8000 && cpu_addr < 16'h8400 )  
             cpu_din <= bg_ram0_data;
@@ -846,7 +809,7 @@ cpu_ram    cpu_ram_inst (
 
 // foreground tile attributes
 ram_dp_1k gfx_fg_ram0_inst (
-	.clock_a ( ~clk_5M ),
+	.clock_a ( ~clk_4M ),
 	.address_a ( cpu_addr[9:0] ),
 	.data_a ( cpu_dout ),
 	.wren_a ( gfx_fg_ram0_wr ),
@@ -929,13 +892,13 @@ ram_dp_1k spr_ram (
 
 // FG Roms
 fg1_rom fg1_rom(
-	.clk(~clk_10M),
+	.clk(clk_10M),
 	.addr(fg_bitmap_addr),
 	.data(s8_data)
 );
 
 fg2_rom fg2_rom(
-	.clk(~clk_10M),
+	.clk(clk_10M),
 	.addr(fg_bitmap_addr),
 	.data(u8_data)
 );

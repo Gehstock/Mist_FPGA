@@ -16,7 +16,9 @@ module mario_sound
    input    [9:0]I_SND_CTRL,
    input    [3:0]I_ANLG_VOL,
    input    [3:0]I_H_CNT,
-   output signed  [15:0]O_SND_DAT
+   output signed  [15:0]O_SND_DAT,
+	output  	[12:0]	snd_rom_addr,
+	input   	[15:0]	snd_rom_do
 );
 
 //------------------------------------------------
@@ -34,7 +36,6 @@ mario_sound_digital digital_sound
    .I_RST(I_RESETn),
    .I_SND_DATA(I_SND_DATA),
    .I_SND_CTRL(I_SND_CTRL[6:0]),
-
    .O_SND_OUT(W_D_S_DATA)
 );
 
@@ -45,23 +46,20 @@ mario_sound_digital digital_sound
 
 wire signed [15:0]W_WAVROM_DS[0:2];
 
-//mario_sound_analog analog_sound
-//(
-//   .I_CLK_48M(I_CLK_48M),
-//   .I_RESETn(I_RESETn),
-//
-//   .I_SND_CTRL(I_SND_CTRL[9:7]),
-//   .I_ANLG_VOL(I_ANLG_VOL),
-//   .I_H_CNT(I_H_CNT),
-//
-//   .I_DLADDR(I_DLADDR),
-//   .I_DLDATA(I_DLDATA),
-//   .I_DLWR(I_DLWR),
-//
-//   .O_WAVROM_DS0(W_WAVROM_DS[0]),
-//   .O_WAVROM_DS1(W_WAVROM_DS[1]),
-//   .O_WAVROM_DS2(W_WAVROM_DS[2])
-//);
+mario_sound_analog analog_sound
+(
+   .I_CLK_48M(I_CLK_48M),
+   .I_RESETn(I_RESETn),
+
+   .I_SND_CTRL(I_SND_CTRL[9:7]),
+   .I_ANLG_VOL(I_ANLG_VOL),
+   .I_H_CNT(I_H_CNT),
+   .O_WAVROM_DS0(W_WAVROM_DS[0]),
+   .O_WAVROM_DS1(W_WAVROM_DS[1]),
+   .O_WAVROM_DS2(W_WAVROM_DS[2]),
+	.snd_rom_addr(snd_rom_addr),
+	.snd_rom_do(snd_rom_do)
+);
 
 //----------------------------------
 // Sound Mixer (Analogue & Digital)

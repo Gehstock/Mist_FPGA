@@ -18,8 +18,8 @@ module mario_top
 
    output	[15:0]	cpu_rom_addr,
    input    [7:0]		cpu_rom_do,
-	output  	[11:0]	bg_rom_addr,
-	input   	[15:0]	bg_rom_do,
+	output  	[12:0]	snd_rom_addr,
+	input   	[15:0]	snd_rom_do,
 
    output   [2:0]		O_VGA_R,
    output   [2:0]		O_VGA_G,
@@ -29,7 +29,6 @@ module mario_top
    output        		O_VGA_HSYNCn,
    output        		O_VGA_VSYNCn,
    output        		O_PIX,
-
    output signed [15:0] O_SOUND_DAT
 );
 
@@ -216,8 +215,6 @@ mario_video vid
    .I_OBJDMA_A(W_DMAD_A),
    .I_OBJDMA_D(W_DMAD_D),
    .I_OBJDMA_CE(W_DMAD_CE),
-	.bg_rom_addr(bg_rom_addr),
-   .bg_rom_do(bg_rom_do),
    .O_VRAM_DB(W_VRAM_DB),
    .O_VRAMBUSYn(W_VRAMBUSYn),
    .O_FLIP_HV(W_FLIP_HV),
@@ -242,7 +239,9 @@ mario_sound sound
    .I_SND_CTRL({W_4C_Q[1:0],W_7M_Q}),
    .I_ANLG_VOL(I_ANLG_VOL),
    .I_H_CNT(W_H_CNT[3:0]),
-   .O_SND_DAT(O_SOUND_DAT)
+   .O_SND_DAT(O_SOUND_DAT),
+	.snd_rom_addr(snd_rom_addr),
+	.snd_rom_do(snd_rom_do)
 );
 
 
