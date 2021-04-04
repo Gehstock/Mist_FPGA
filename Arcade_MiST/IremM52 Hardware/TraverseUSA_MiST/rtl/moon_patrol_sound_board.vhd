@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Moon patrol sound board by Dar (darfpga@aol.fr)
+-- IREM M52 SOUNDC Board by Dar (darfpga@aol.fr)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd  

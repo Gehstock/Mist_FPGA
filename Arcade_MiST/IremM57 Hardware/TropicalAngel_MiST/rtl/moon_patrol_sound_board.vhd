@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
--- Moon patrol sound board by Dar (darfpga@aol.fr)
+-- IREM M52 SOUNDC Board by Dar (darfpga@aol.fr)
 -- http://darfpga.blogspot.fr
 ---------------------------------------------------------------------------------
 -- gen_ram.vhd  
@@ -326,16 +326,16 @@ port map(
 );
 
 adpcm : jt5205
-	port map(
-		rst		=>	 ay1_port_b_do(0),
-		clk		=>	 clock_E,
-		cen		=>	 adpcm_ce,
-		sel		=>	 ay1_port_b_do(3 downto 2),
-		din		=>	 adpcm_di,
-		sound		=>	 adpcm_out,
-		sample	=>	 open,
-		irq		=>	 open,
-		vclk_o	=>	 adpcm_vclk
-	);
+port map(
+  rst		=>	 ay1_port_b_do(0),
+  clk		=>	 clock_E,
+  cen		=>	 adpcm_ce,
+  sel		=>	 ay1_port_b_do(3 downto 2),
+  din		=>	 adpcm_di,
+  sound		=>	 adpcm_out,
+  sample	=>	 open,
+  irq		=>	 open,
+  vclk_o	=>	 adpcm_vclk
+);
 
 end struct;

@@ -2,4 +2,3 @@
 
 10 Yard Fight / Vs 10 Yard Fight
 Alpha One
-Tropical Angel 
