@@ -24,7 +24,13 @@ module FPGA_ATetris
 	input   [7:0]  PRDT,
 
 	output [15:0]  CRAD,
-	input  [15:0]  CRDT
+	input  [15:0]  CRDT,
+
+	input        NVRAM_CLK,
+	input  [8:0] NVRAM_A,
+	input  [7:0] NVRAM_D,
+	input        NVRAM_WE,
+	output [7:0] NVRAM_Q
 );
 
 // INP = {`SELFT,`COIN2,`COIN1,`P2LF,`P2RG,`P2DW,`P2RO,`P1LF,`P1RG,`P1DW,`P1RO};
@@ -66,7 +72,7 @@ ATETRIS_ROMAXS romaxs(RST,MCLK,CPUCE,CPUAD,PRAD,PRDV);
 // RAMs
 wire [7:0]  RMDT;
 wire		   RMDV;
-ATETRIS_RAMS rams(MCLK,CPUAD,CPUWR,CPUDO,RMDT,RMDV);
+ATETRIS_RAMS rams(MCLK,CPUAD,CPUWR,CPUDO,RMDT,RMDV,NVRAM_CLK,NVRAM_A,NVRAM_D,NVRAM_WE,NVRAM_Q);
 
 
 // Video
@@ -164,7 +170,13 @@ module ATETRIS_RAMS
 	input				CPUWR,
 	input   [7:0]	CPUDO,
 	output  [7:0]	RMDT,
-	output			RMDV
+	output			RMDV,
+
+	input        NVRAM_CLK,
+	input  [8:0] NVRAM_A,
+	input  [7:0] NVRAM_D,
+	input        NVRAM_WE,
+	output [7:0] NVRAM_Q
 );
 
 // WorkRAM
@@ -188,16 +200,24 @@ wire			NVDV = (CPUAD[15:10]==6'b0010_01);			// $24xx-$27xx
 wire  [7:0] NVDT;
 //RAM_B #(9,255)	nvram(DEVCL,CPUAD,NVDV,CPUWR,CPUDO,NVDT);
 
-spram#(
-	.init_file("nvinit.hex"),				
-	.widthad_a(9),
-	.width_a(8))
+dpram#(
+	.init_file("rtl/nvinit.mif"),
+	.data_width_g(8),
+	.addr_width_g(9))
 nvram(
-	.address(CPUAD),
-	.clock(MCLK),
-	.data(CPUDO),
-	.wren(CPUWR & NVDV),
-	.q(NVDT)
+	// CPU side
+	.clk_a_i(MCLK),
+	.en_a_i(1'b1),
+	.addr_a_i(CPUAD),
+	.data_a_i(CPUDO),
+	.we_i(CPUWR & NVDV),
+	.data_a_o(NVDT),
+	// IO Controller side
+	.clk_b_i(NVRAM_CLK),
+	.addr_b_i(NVRAM_A),
+	.data_b_o(NVRAM_Q),
+	.data_b_i(NVRAM_D),
+	.we_b_i(NVRAM_WE)
 	);
 
 DSEL4x8 dsel(RMDV,RMDT,
@@ -253,7 +273,7 @@ reg [8:0] pVPT;
 always @(posedge MCLK) begin
 	if (tWDTR) WDT <= 0;
 	else if (pVPT!=VP) begin
-		if (VP==0) WDT <= (WDT==8) ? 14 : (WDT+1);
+		if (VP==0) WDT <= (WDT==8) ? 4'd14 : (WDT+1);
 		pVPT <= VP;
 	end
 end

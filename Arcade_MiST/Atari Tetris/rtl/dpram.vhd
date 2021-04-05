@@ -8,8 +8,9 @@ use ieee.std_logic_1164.all;
 entity dpram is
 
 generic (
-	 addr_width_g : integer := 8;
-	 data_width_g : integer := 8
+	addr_width_g : integer := 8;
+	data_width_g : integer := 8;
+	init_file : string := ""
 );
 port (
 	clk_a_i  : in  std_logic;
@@ -20,7 +21,9 @@ port (
 	data_a_o : out std_logic_vector(data_width_g-1 downto 0);
 	clk_b_i  : in  std_logic;
 	addr_b_i : in  std_logic_vector(addr_width_g-1 downto 0);
-	data_b_o : out std_logic_vector(data_width_g-1 downto 0)
+	data_b_o : out std_logic_vector(data_width_g-1 downto 0);
+	we_b_i   : in  std_logic := '0';
+	data_b_i : in  std_logic_vector(data_width_g-1 downto 0) := (others => '0')
 );
 
 end dpram;
@@ -33,6 +36,8 @@ architecture rtl of dpram is
 
   type   ram_t is array (natural range 2**addr_width_g-1 downto 0) of std_logic_vector(data_width_g-1 downto 0);
   signal ram_q : ram_t;
+  attribute ram_init_file : string;
+  attribute ram_init_file of ram_q : signal is init_file;
 
 begin
 
@@ -51,7 +56,10 @@ begin
   mem_b: process (clk_b_i)
   begin
     if rising_edge(clk_b_i) then
-		data_b_o <= ram_q(to_integer(unsigned(addr_b_i)));
+      if we_b_i = '1' then
+        ram_q(to_integer(unsigned(addr_b_i))) <= data_b_i;
+      end if;
+      data_b_o <= ram_q(to_integer(unsigned(addr_b_i)));
     end if;
   end process mem_b;
 
