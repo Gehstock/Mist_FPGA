@@ -367,6 +367,7 @@ ARCHITECTURE vhdl OF pokey IS
 	signal serout_enable : std_logic;
 	signal serout_enable_delayed : std_logic;
 	signal serin_enable : std_logic;
+	signal serin_enable_delayed : std_logic;
 	
 	signal async_serial_reset : std_logic;
 	signal waiting_for_start_bit : std_logic;
@@ -1000,6 +1001,10 @@ BEGIN
 	serout_clock_delay : delay_line
 		generic map (count=>2)
 		port map (clk=>clk, sync_reset=>serout_sync_reset,data_in=>serout_enable, enable=>enable_179, reset_n=>reset_n, data_out=>serout_enable_delayed);
+
+	serin_clock_delay : delay_line
+		generic map (count=>5)
+		port map (clk=>clk, sync_reset=>serout_sync_reset,data_in=>serin_enable, enable=>enable_179, reset_n=>reset_n, data_out=>serin_enable_delayed);
 		
 	
 	process(serout_enable_delayed, skctl_reg, serout_active_reg, serout_clock_last_reg,serout_clock_reg, serout_holding_load, serout_holding_reg, serout_holding_full_reg, serout_shift_reg, serout_bitcount_reg, serial_out_reg, twotone_reg, audf0_pulse, audf1_pulse, serial_reset)
@@ -1089,7 +1094,7 @@ BEGIN
 	sio_in_next <= sio_in1_reg and sio_in2_reg and sio_in3_reg;
 		
 	waiting_for_start_bit <= '1' when serin_bitcount_reg = X"9" else '0';
-	process(serin_enable,serin_clock_last_reg,serin_clock_reg, sio_in_reg, serin_reg,serin_shift_reg, serin_bitcount_reg, serial_ip_overrun_reg, serial_ip_framing_reg, skrest_write, irqst_reg, skctl_reg, waiting_for_start_bit, serial_reset)
+	process(serin_enable_delayed,serin_clock_last_reg,serin_clock_reg, sio_in_reg, serin_reg,serin_shift_reg, serin_bitcount_reg, serial_ip_overrun_reg, serial_ip_framing_reg, skrest_write, irqst_reg, skctl_reg, waiting_for_start_bit, serial_reset)
 	begin
 		serin_clock_next <= serin_clock_reg;
 		serin_clock_last_next <= serin_clock_reg;
@@ -1105,7 +1110,7 @@ BEGIN
 		async_serial_reset <= '0';
 		
 		-- generate clock from enable signals
-		if (serin_enable = '1') then
+		if (serin_enable_delayed = '1') then
 			serin_clock_next <= not(serin_clock_reg);
 		end if;
 		

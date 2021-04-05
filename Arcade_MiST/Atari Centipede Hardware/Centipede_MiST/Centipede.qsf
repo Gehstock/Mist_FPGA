@@ -156,8 +156,8 @@ set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name SYSTEMVERILOG_FILE ../../../common/Sound/Pokey/POKEY.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../../common/Sound/Pokey/matoro.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/POKEY.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/matoro.sv
 set_global_assignment -name QIP_FILE ../../../common/CPU/T65/T65.qip
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/cent.stp
