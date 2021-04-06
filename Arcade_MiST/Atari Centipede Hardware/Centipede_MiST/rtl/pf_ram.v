@@ -27,12 +27,12 @@ dpram #(
 	.addr_width_g(8),
 	.data_width_g(8))
 ram0(
-	.clk_a_i(clk_a & ~ce_a[0]),
+	.clk_a_i(clk_a),
 	.we_i(~we_a[0]),
 	.addr_a_i(addr_a),	
 	.data_a_i(din_a),
 	.data_a_o(d_a0),
-	.clk_b_i(clk_b & ~ce_b[0]),
+	.clk_b_i(clk_b),
 	.addr_b_i(addr_b),
 	.data_b_o(d_b0)
 	);
@@ -41,12 +41,12 @@ dpram #(
 	.addr_width_g(8),
 	.data_width_g(8))
 ram1(
-	.clk_a_i(clk_a & ~ce_a[1]),
+	.clk_a_i(clk_a),
 	.we_i(~we_a[1]),
 	.addr_a_i(addr_a),	
 	.data_a_i(din_a),
 	.data_a_o(d_a1),
-	.clk_b_i(clk_b & ~ce_b[1]),
+	.clk_b_i(clk_b),
 	.addr_b_i(addr_b),
 	.data_b_o(d_b1)
 	);
@@ -55,12 +55,12 @@ dpram #(
 	.addr_width_g(8),
 	.data_width_g(8))
 ram2(
-	.clk_a_i(clk_a & ~ce_a[2]),
+	.clk_a_i(clk_a),
 	.we_i(~we_a[2]),
 	.addr_a_i(addr_a),	
 	.data_a_i(din_a),
 	.data_a_o(d_a2),
-	.clk_b_i(clk_b & ~ce_b[2]),
+	.clk_b_i(clk_b),
 	.addr_b_i(addr_b),
 	.data_b_o(d_b2)
 	);
@@ -69,12 +69,12 @@ dpram #(
 	.addr_width_g(8),
 	.data_width_g(8))
 ram3(
-	.clk_a_i(clk_a & ~ce_a[3]),
+	.clk_a_i(clk_a),
 	.we_i(~we_a[3]),
 	.addr_a_i(addr_a),	
 	.data_a_i(din_a),
 	.data_a_o(d_a3),
-	.clk_b_i(clk_b & ~ce_b[3]),
+	.clk_b_i(clk_b),
 	.addr_b_i(addr_b),
 	.data_b_o(d_b3)
 	);	

@@ -1,15 +1,28 @@
 Arcade: Centipede port to MiST by Gehstock
 
 24 November 2018
--- 
--- 
 
-	Only controls and OSD are rotated on Video output. 
+Millipede added by Gyorgy Szombathelyi
 
-	Keyboard inputs :
+April 2021
 
-		ESC        : Coin/Start Player
---   
-		SPACE 	: Fire or Fire Button
---   
-		ARROW KEYS : Movements
+--
+--
+-- Usage:
+-- - Create ROM and ARC files from the MRA files using the MRA utility.
+--   Example: mra -A -z /path/to/mame/roms Centipede.mra
+-- - Copy the ROM files to the root of the SD Card
+-- - Copy the RBF and ARC files to the same folder on the SD Card
+--
+-- MRA utility: https://github.com/sebdel/mra-tools-c/
+--
+
+-- Only controls and OSD are rotated on Video output. 
+
+-- Keyboard inputs :
+
+--   ESC        : Coin/Start Player
+--
+--   CTRL       : Fire or Fire Button
+--
+--   ARROW KEYS : Movements
