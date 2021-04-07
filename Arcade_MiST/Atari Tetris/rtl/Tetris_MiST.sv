@@ -32,11 +32,12 @@ module Tetris_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"TETRIS;ROM;",
+	"TETRIS;;",
 	"O2,Service,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Joystick Swap,Off,On;",
+	"R512,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -46,7 +47,7 @@ wire       joyswap   = status[6];
 wire       rotate    = 0;
 wire       blend     = status[5];
 
-assign LED = ~ioctl_downl;
+assign LED = ~(ioctl_downl | ioctl_upl);
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1;
 assign AUDIO_R = AUDIO_L;
@@ -100,21 +101,26 @@ wire [15:0] rom_do;
 wire [15:0] gfx_addr;
 wire [15:0] gfx_do;
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
 data_io data_io(
-	.clk_sys       ( clk_sd      ),
+	.clk_sys       ( clk_sd       ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 		
 reg port1_req, port2_req;
@@ -154,7 +160,7 @@ always @(posedge clk_sd) begin
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		if (~ioctl_wr_last && ioctl_wr) begin
+		if (~ioctl_wr_last && ioctl_wr && ioctl_index == 0) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
@@ -196,7 +202,13 @@ FPGA_ATetris FPGA_ATetris(
 	.PRDT(rom_addr[0] ? rom_do[15:8] : rom_do[7:0]),
 
 	.CRAD(gfx_addr),
-	.CRDT(gfx_do)
+	.CRDT(gfx_do),
+
+	.NVRAM_CLK(clk_sd),
+	.NVRAM_A(ioctl_addr[8:0]),
+	.NVRAM_D(ioctl_dout),
+	.NVRAM_Q(ioctl_din),
+	.NVRAM_WE(ioctl_wr && ioctl_index == 8'hff)
 );
 
 wire			PCLK;

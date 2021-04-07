@@ -72,12 +72,12 @@ create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_port
 # Set Input Delay
 #**************************************************************
 
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {CLOCK_27}]  1.000 [get_ports {CLOCK_27}]
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {CONF_DATA0}]
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_DI}]
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SCK}]
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SS2}]
-set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SS3}]
+set_input_delay -add_delay  -clock [get_clocks {CLOCK_27}]  1.000 [get_ports {CLOCK_27}]
+set_input_delay -add_delay  -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {CONF_DATA0}]
+set_input_delay -add_delay  -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_DI}]
+set_input_delay -add_delay  -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SCK}]
+set_input_delay -add_delay  -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SS2}]
+set_input_delay -add_delay  -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_SS3}]
 
 #**************************************************************
 # Set Output Delay

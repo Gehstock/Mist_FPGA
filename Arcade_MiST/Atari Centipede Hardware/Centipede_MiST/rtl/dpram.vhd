@@ -18,7 +18,9 @@ entity dpram is
     data_a_i : in  std_logic_vector(data_width_g-1 downto 0);
     data_a_o : out std_logic_vector(data_width_g-1 downto 0);
     clk_b_i  : in  std_logic;
+    we_b_i   : in  std_logic := '0';
     addr_b_i : in  std_logic_vector(addr_width_g-1 downto 0);
+    data_b_i : in  std_logic_vector(data_width_g-1 downto 0);
     data_b_o : out std_logic_vector(data_width_g-1 downto 0)
   );
 end entity;
@@ -52,6 +54,9 @@ begin
 	begin
 		if rising_edge(clk_b_i) then
 			read_addr_v := unsigned(addr_b_i);
+			if we_b_i = '1' then
+				ram_q(to_integer(read_addr_v)) <= data_b_i;
+			end if;
 			data_b_o <= ram_q(to_integer(read_addr_v));
 		end if;
 	end process mem_b;
