@@ -13,7 +13,7 @@ parameter STEREO = 0;
 parameter SIGNED = 0;
 
 wire [BITS-1:0] aud_left = ~SIGNED ? audio_inL : {~audio_inL[BITS-1],audio_inL[BITS-2:0]};
-wire [BITS-1:0] aud_right = ~STEREO ? ~SIGNED ? audio_inR : {~audio_inR[BITS-1],audio_inR[BITS-2:0]} : aud_left;
+wire [BITS-1:0] aud_right = STEREO ? ~SIGNED ? audio_inR : {~audio_inR[BITS-1],audio_inR[BITS-2:0]} : aud_left;
 
 dac #(
 	.C_bits(BITS))
