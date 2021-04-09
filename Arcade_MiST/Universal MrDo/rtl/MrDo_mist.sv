@@ -31,17 +31,12 @@ module MrDo_mist (
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"MRDO;rom;",
+	"MRDO;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O5,Blend,Off,On;",
-	
-	"O67,Difficulty,Easy,Medium,Hard,Hardest;",
-	"O8,Rack Test ,Off,On;",
-	"O9,Special ,Easy,Hard;",
-	"OA,Extra ,Easy,Hard;",
-	"OB,Cabinet ,Cocktail,Upright;",
-	"OCD,Lives,3,4,5,2;",
+	"O6,Flip,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -49,28 +44,23 @@ localparam CONF_STR = {
 wire        rotate = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend     = status[5];
+wire        user_flip = status[6];
 
-wire	[1:0] Difficulty = status[7:6];
-wire			RackTest = status[8];//Cheat
-wire			Special = status[9];
-wire			Extra = status[10];
-wire			Cabinet = status[11];
-wire	[1:0] Lives = status[13:12];
+wire  [7:0] dsw1 = status[15:8];
+wire  [7:0] dsw2 = status[23:16];
 
 assign 		LED = ~ioctl_downl;
-assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = sys_clk;
+assign 		SDRAM_CLK = mem_clk;
 assign      SDRAM_CKE = 1;
 
-wire sys_clk, clk_10M, clk_8M, pll_locked;
+wire mem_clk, sys_clk, pll_locked;
 
-	pll pll(
+pll pll(
 	.inclk0(CLOCK_27),
-	.c0(sys_clk),
-	.c1(clk_10M),
-	.c2(clk_8M),
+	.c0(mem_clk),
+	.c1(sys_clk),
 	.locked(pll_locked)
-	);
+);
 	
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -79,6 +69,7 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire [7:0]  audio1, audio2;
 wire        hs, vs;
 wire        hb, vb;
@@ -109,10 +100,10 @@ data_io data_io(
 
 reg port1_req;
 
-sdram #(.MHZ(49)) sdram(
+sdram #(.MHZ(40)) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( sys_clk     ),
+	.clk           ( mem_clk      ),
 
 	// ROM upload
 	.port1_req     ( port1_req    ),
@@ -148,9 +139,9 @@ always @(posedge sys_clk) begin
 end
 
 MrDo_top MrDo_top(
-	.clk_10M(clk_10M),
-	.clk_8M(clk_8M),
+	.clk_20M(sys_clk),
 	.reset(reset),
+	.user_flip(user_flip),
 	.red(r),
 	.green(g),
 	.blue(b),
@@ -160,12 +151,15 @@ MrDo_top MrDo_top(
 	.vblank(vb),
 	.sound1_out(audio1),
 	.sound2_out(audio2),
-	.p1(~{ 1'b0, m_two_players, m_one_player, m_fireC, m_up, m_right, m_down, m_left }),
-	.p2(~{ m_coin1, 1'b0, 1'b0, m_fire2C, m_up2, m_right2, m_down2, m_left2 }),
-	.dsw1(~{Lives, Cabinet, Extra, Special, RackTest, Difficulty}),
-	.dsw2(8'b11111111),
+	.p1(~{ 1'b0, m_two_players, m_one_player, m_fireA, m_up, m_right, m_down, m_left }),
+	.p2(~{ m_coin1, 1'b0, 1'b0, m_fire2A, m_up2, m_right2, m_down2, m_left2 }),
+	.dsw1(dsw1),
+	.dsw2(dsw2),
 	.rom_addr ( rom_addr ),
-	.rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] )
+	.rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
+    .dl_addr(ioctl_addr[15:0]),
+    .dl_data(ioctl_dout),
+    .dl_we(ioctl_wr)
 );
 
 
@@ -184,13 +178,14 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.ce_divider		 (	1					  ),
-	.rotate         ( { 1'b0, rotate } ),
+	.ce_divider     ( 1'b1             ),
+	.rotate         ( { user_flip, rotate } ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
-	.ypbpr          ( ypbpr            )
-	);
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
+);
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.clk_sys        (sys_clk       ),
@@ -203,6 +198,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -211,26 +207,33 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.status         (status         )
 	);
 
-dac #(.C_bits(16))dac(
+dac #(.C_bits(16))dacl(
 	.clk_i(sys_clk),
 	.res_n_i(1),
-	.dac_i({audio1, audio2}),
+	.dac_i({audio1, audio1}),
 	.dac_o(AUDIO_L)
 	);
-	
+
+dac #(.C_bits(16))dacr(
+	.clk_i(sys_clk),
+	.res_n_i(1),
+	.dac_i({audio2, audio2}),
+	.dac_o(AUDIO_R)
+	);
+
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
-	.clk         ( sys_clk    ),
+	.clk         ( sys_clk     ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b10       ),
+	.orientation ( {user_flip, 1'b1} ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
