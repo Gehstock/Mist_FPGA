@@ -54,26 +54,24 @@ localparam CONF_STR = {
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
-wire       joyswap   = status[6];
 wire       service   = status[7];
 
 wire       milliped  = core_mod[0];
 
-wire [15:0] dipsw;
+wire [23:0] dipsw;
 assign dipsw[ 7:0] = status[15:8];
-assign dipsw[15:8] = 8'h01;
+assign dipsw[23:8] = status[31:16];
 
 assign LED = ~(ioctl_downl | ioctl_upl);
 assign AUDIO_R = AUDIO_L;
 
-wire clk_24, clk_12, clk_100mhz;
+wire clk_24, clk_12;
 wire pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_24),
-	.c2(clk_12),
-	.c4(clk_100mhz)
+	.c2(clk_12)
 	);
 
 wire [31:0] status;
@@ -91,7 +89,7 @@ wire        key_strobe;
 wire  [7:0] RGB;
 wire        hs, vs, vb, hb;
 wire        blankn = ~(hb | vb);
-wire  [3:0] audio;
+wire  [5:0] audio;
 
 wire        ioctl_downl;
 wire        ioctl_upl;
@@ -120,7 +118,6 @@ reg reset;
 always @(posedge clk_12) reset <= status[0] | buttons[1] | ioctl_downl;
 
 centipede centipede(
-	.clk_100mhz(clk_100mhz),
 	.clk_12mhz(clk_12),
 	.reset(reset),
 	.milli(milliped),
@@ -128,7 +125,7 @@ centipede centipede(
 	.trakball_i(),
 	.joystick_i(~{m_right , m_left, m_down, m_up, m_right , m_left, m_down, m_up}),
 	.sw1_i(dipsw[7:0]),
-	.sw2_i(dipsw[15:8]),
+	.sw2_i(dipsw[23:8]),
 	.rgb_o(RGB),
 	.hsync_o(hs),
 	.vsync_o(vs),
@@ -194,11 +191,11 @@ user_io(
 	);
 
 dac #(
-	.C_bits(15))
+	.C_bits(12))
 dac (
-	.clk_i(clk_100mhz),
+	.clk_i(clk_12),
 	.res_n_i(1),
-	.dac_i({2{audio,audio}}),
+	.dac_i({audio,audio}),
 	.dac_o(AUDIO_L)
 	);
 
@@ -215,7 +212,7 @@ arcade_inputs inputs (
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
 	.orientation ( 2'b01       ),
-	.joyswap     ( joyswap     ),
+	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),

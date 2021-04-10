@@ -21,23 +21,22 @@
 // - Added Millipede
 
 module centipede(
-		 input 	   	clk_100mhz,
 		 input 	      clk_12mhz,
  		 input 	      reset,
  		 input         milli,
-		 input  [9:0]  playerinput_i,
-		 input  [7:0]  trakball_i,
-		 input  [7:0]  joystick_i,
-		 input  [7:0]  sw1_i,
-		 input  [7:0]  sw2_i,
-		 output [4:1]  led_o,
-		 output [8:0]  rgb_o,
+		 input   [9:0] playerinput_i,
+		 input   [7:0] trakball_i,
+		 input   [7:0] joystick_i,
+		 input   [7:0] sw1_i,
+		 input  [15:0] sw2_i,
+		 output  [4:1] led_o,
+		 output  [8:0] rgb_o,
 		 output        sync_o,
 		 output        hsync_o,
 		 output        vsync_o,
 		 output        hblank_o,
 		 output        vblank_o,
-		 output [3:0]  audio_o,
+		 output  [5:0] audio_o,
 
 		 input  [14:0] dl_addr,
 		 input   [7:0] dl_data,
@@ -183,7 +182,7 @@ module centipede(
    wire        coloram_w_n;
    reg 	       coloren;
 
-   wire [3:0]  audio;
+   wire [5:0]  audio;
    //
    wire        mob_n;
    wire        blank_clk;
@@ -197,6 +196,7 @@ module centipede(
    wire        flip;
 
    wire        cntrlsel;
+   wire        tben;
    wire        coin_ctr_r_drive, coin_ctr_c_drive, coin_ctr_l_drive;
    wire [7:0]  playerin_out;
 
@@ -584,10 +584,10 @@ module centipede(
    hs_ram(
       .clk_a_i(s_12mhz),
       .clk_b_i(s_12mhz),
-      .we_i(hs_ctrl[1] & ~hs_ctrl[2]),
+      .we_i(hs_ctrl[1]),
       .addr_a_i(hs_addr),
       .data_a_o(hs_out),
-      .data_a_i(hs_data),
+      .data_a_i(hs_ctrl[2] ? 8'd0 : hs_data),
       .addr_b_i(hsram_addr),
       .data_b_o(hsram_dout),
       .data_b_i(hsram_din),
@@ -620,7 +620,7 @@ module centipede(
    // Option Input Circuitry
 
    assign switch_out = ab[0] ?
-		       sw2_i :
+		       sw2_i[7:0] :
 		       sw1_i;
 
    // Player Input Circuitry
@@ -642,11 +642,11 @@ module centipede(
    wire [7:0] playerin_out1;
 
    assign playerin_out1 = milli ? 
-      { dir2, 1'b0, start2, fire2, sw1_i[7:4] } :
+      { dir2, 1'b0, start2, fire2, tben ? 4'd0 : sw1_i[7:4] } :
       { coin_r, coin_c, coin_l, slam, fire2, fire1, start2, start1 };
 
    assign playerin_out0 = milli ?
-      { dir1, vblank, start1, fire1, sw1_i[3:0] } :
+      { dir1, vblank, start1, fire1, tben ? 4'd0 : sw1_i[3:0] } :
       { dir1, vblank, self_test, cocktail, tra };
 
    assign playerin_out = ab[0] ? playerin_out1 : playerin_out0;
@@ -657,12 +657,13 @@ module centipede(
    always @(posedge s_12mhz)
      if (reset)
        cc_latch <= 0;
-     else if (s_6mhz_en)
+     else /*if (s_6mhz_en)*/
        if (~out0_n)
 	      cc_latch[ ab[2:0] ] <= db_out[7];
 
    assign flip     = milli ? cc_latch[6] : cc_latch[7];
-   assign cntrlsel = milli ? cc_latch[6] : 1'b0;
+   assign cntrlsel = milli ? cc_latch[7] : 1'b0;
+   assign tben     = milli ? cc_latch[5] : 1'b0;
    assign led_o[4] = milli ? 1'b0 : cc_latch[6];
    assign led_o[3] = milli ? 1'b0 : cc_latch[5];
    assign led_o[2] = cc_latch[4];
@@ -1120,35 +1121,42 @@ module centipede(
    assign vblank_o = vblankd;
    
    // Audio output circuitry
-
-   wire [3:0] pokey_audio;
+   wire [3:0] pokey_ch0, pokey_ch1, pokey_ch2, pokey_ch3;
    POKEY POKEY(
-      .Din(db_out[7:0]),
-      .Dout(pokey_out),
-      .A(ab[3:0]),
-      .P(8'b0),
-      .phi2(phi2),
-      .readHighWriteLow(rw_n),
-      .cs0Bar(pokey_n),
-      .audio(pokey_audio),
-      .clk(clk_100mhz)
+      .RESET_N(~reset),
+      .CLK(s_12mhz),
+      .ENABLE_179(phi0_en),
+      .DATA_IN(db_out[7:0]),
+      .DATA_OUT(pokey_out),
+      .ADDR(ab[3:0]),
+      .WR_EN(~(pokey_n | rw_n)),
+      .POT_IN(milli ? ~sw2_i[7:0] : 8'd0),
+      .CHANNEL_0_OUT(pokey_ch0),
+      .CHANNEL_1_OUT(pokey_ch1),
+      .CHANNEL_2_OUT(pokey_ch2),
+      .CHANNEL_3_OUT(pokey_ch3)
    );
+   wire [5:0] pokey_audio = pokey_ch0 + pokey_ch1 + pokey_ch2 + pokey_ch3;
 
+   wire [3:0] pokey2_ch0, pokey2_ch1, pokey2_ch2, pokey2_ch3;
    POKEY POKEY2(
-      .Din(db_out[7:0]),
-      .Dout(pokey2_out),
-      .A(ab[3:0]),
-      .P(8'b0),
-      .phi2(phi2),
-      .readHighWriteLow(rw_n),
-      .cs0Bar(pokey2_n),
-      .audio(pokey2_audio),
-      .clk(clk_100mhz)
+      .RESET_N(~reset),
+      .CLK(s_12mhz),
+      .ENABLE_179(phi0_en),
+      .DATA_IN(db_out[7:0]),
+      .DATA_OUT(pokey2_out),
+      .ADDR(ab[3:0]),
+      .WR_EN(~(pokey2_n | rw_n)),
+      .POT_IN(milli ? ~sw2_i[15:8] : 8'd0),
+      .CHANNEL_0_OUT(pokey2_ch0),
+      .CHANNEL_1_OUT(pokey2_ch1),
+      .CHANNEL_2_OUT(pokey2_ch2),
+      .CHANNEL_3_OUT(pokey2_ch3)
    );
-   wire [3:0] pokey2_audio;
-   wire [4:0] pokey_mux = pokey_audio + pokey2_audio;
+   wire [5:0] pokey2_audio = pokey2_ch0 + pokey2_ch1 + pokey2_ch2 + pokey2_ch3;
+   wire [6:0] pokey_mux = pokey_audio + pokey2_audio;
 
-   assign audio = milli ? (pokey_mux[4] ? 4'hf : pokey_mux[3:0]) : pokey_audio;
+   assign audio = milli ? (pokey_mux[6] ? 6'h3f : pokey_mux[5:0]) : pokey_audio;
 
 
 endmodule
