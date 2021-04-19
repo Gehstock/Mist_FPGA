@@ -98,8 +98,9 @@ port(
 
  cpu_rom_addr   : out std_logic_vector(14 downto 0);
  cpu_rom_do     : in  std_logic_vector( 7 downto 0);
- snd_rom_addr: out std_logic_vector(12 downto 0);
- snd_rom_do  : in  std_logic_vector(7 downto 0);
+ snd_rom_addr   : out std_logic_vector(12 downto 0);
+ snd_rom_do     : in  std_logic_vector(7 downto 0);
+ snd_rom_vma    : out std_logic;
  sp_addr        : out std_logic_vector(14 downto 0);
  sp_graphx32_do : in std_logic_vector(31 downto 0);
 
@@ -634,6 +635,7 @@ port map(
  select_sound 	=> sound_cmd,
  snd_rom_addr 	=> snd_rom_addr,
  snd_rom_do 	=> snd_rom_do,
+ snd_rom_vma    => snd_rom_vma,
  audio_out    	=> audio
 );
 
