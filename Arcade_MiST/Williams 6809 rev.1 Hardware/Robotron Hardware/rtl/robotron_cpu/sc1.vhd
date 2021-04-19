@@ -35,6 +35,7 @@ entity sc1 is
 port(
 	clk             : in    std_logic;
 	sc2             : in    std_logic;
+	E_en            : in    std_logic;
 
 	reg_cs          : in    std_logic;
 	reg_data_in     : in    std_logic_vector( 7 downto 0);
@@ -99,6 +100,7 @@ architecture RTL of sc1 is
 	signal y_count_next     : std_logic_vector( 7 downto 0) := (others => '0');
 
 	signal xorval           : std_logic_vector( 7 downto 0) := (others => '0');
+	signal wait_slow        : std_logic;
 
 begin
 	-- SC1 had a bug so values had to be xored with 0X04, SC2 fixed the bug so no xor required
@@ -124,7 +126,7 @@ begin
 	ctrl_shift      <= reg_ctrl(5);
 	ctrl_solid      <= reg_ctrl(4);
 	ctrl_foreground <= reg_ctrl(3);
-	--ctrl_slow       <= reg_ctrl(2);
+	ctrl_slow       <= reg_ctrl(2);
 	ctrl_span_dst   <= reg_ctrl(1);
 	ctrl_span_src   <= reg_ctrl(0);
 
@@ -161,6 +163,10 @@ begin
 	process(clk)
 	begin
 		if rising_edge(clk) then
+			if E_en = '1' or ctrl_slow = '0' then
+				wait_slow <= '0';
+			end if;
+
 			case state is
 				when state_idle =>
 					if reg_cs = '1' and  rs = "000" then
@@ -180,7 +186,8 @@ begin
 					end if;
 
 				when state_src =>
-					if blt_ack = '1' then
+					if blt_ack = '1' and wait_slow = '0' then
+						wait_slow <= '1';
 						if ctrl_shift = '0' then
 							-- unshifted
 							blt_src_data <= blt_data_in;
@@ -193,7 +200,8 @@ begin
 					end if;
 
 				when state_dst =>
-					if blt_ack = '1' then
+					if blt_ack = '1' and wait_slow = '0' then
+						wait_slow <= '1';
 						state <= state_src;
 
 						if x_count_next < reg_width then

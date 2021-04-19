@@ -808,6 +808,7 @@ begin
         port map(
             clk => clock,
             sc2 => blitter_sc2,
+            E_en => to_std_logic(clock_e_clear),
 
             reg_cs => blt_reg_cs,
             reg_data_in => blt_reg_data_in,
