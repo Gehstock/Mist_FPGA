@@ -262,8 +262,9 @@ set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/Sound_Board.vhd
+set_global_assignment -name QIP_FILE rtl/pll_aud.qip
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
 set_global_assignment -name QIP_FILE ../../common/Sound/jt5205/jt5205.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip

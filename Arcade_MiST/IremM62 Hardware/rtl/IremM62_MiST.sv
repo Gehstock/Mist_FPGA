@@ -73,7 +73,7 @@ assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1; 
 
-wire clk_sys, clk_vid, clk_aud, clk_sd;
+wire clk_sys, clk_vid, clk_sd, clk_aud, clk_dac;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
@@ -81,9 +81,14 @@ pll_mist pll(
 	.c0(clk_sd),
 	.c1(clk_sys),
 	.c2(clk_vid),
-	.c3(clk_aud),
 	.locked(pll_locked)
 	);
+
+pll_aud pll_aud(
+	.inclk0(CLOCK_27),
+	.c0(clk_aud),
+	.c1(clk_dac)
+);
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -329,7 +334,7 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(12))
 dac(
-	.clk_i(clk_aud),
+	.clk_i(clk_dac),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(dac_o)
