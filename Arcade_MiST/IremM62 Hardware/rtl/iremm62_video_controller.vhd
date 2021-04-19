@@ -17,6 +17,7 @@ entity iremm62_video_controller is
 
     -- video input data
     rgb_i         : in RGB_t;
+    topbottom_mask: in std_logic;
 
     -- control signals (out)
     video_ctl_o   : out from_VIDEO_CTL_t;
@@ -82,7 +83,10 @@ begin
       -- display blank
       if hcnt = "00"&x"FF" then
         hblank1 <= '0';
-        if vcnt = '1'&x"00" then
+        if vcnt = '1'&x"00" and topbottom_mask = '0' then
+          vblank <= '0';
+        end if;
+        if vcnt = '1'&x"08" then
           vblank <= '0';
         end if;
       end if;
@@ -95,6 +99,9 @@ begin
       end if;
       if hcnt = "00"&x"87" then
         hblank2 <= '1';
+        if vcnt = '1'&x"F7" and topbottom_mask = '1' then
+          vblank <= '1';
+        end if;
         if vcnt = '1'&x"FF" then
           vblank <= '1';
         end if;

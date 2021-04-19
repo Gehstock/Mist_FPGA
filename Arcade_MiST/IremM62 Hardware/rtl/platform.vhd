@@ -552,6 +552,7 @@ begin
     graphics_o.bit16(0) <= scrollram_d_o when hwsel = HW_HORIZON else m62_hscroll;
     graphics_o.bit16(1) <= m62_vscroll;
     graphics_o.bit16(2) <= m62_vscroll2;
+    graphics_o.bit16(3)(0) <= m62_topbottom_mask;
   end block BLK_SCROLL;
 
 
