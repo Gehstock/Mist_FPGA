@@ -43,7 +43,7 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:22:13  JUNE 04, 2019"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name SMART_RECOMPILE ON
 
 # Pin & Location Assignments
@@ -212,6 +212,8 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/RobotronFPGA_MiST.sv
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
+set_global_assignment -name QIP_FILE rtl/pll_aud.qip
 set_global_assignment -name VHDL_FILE rtl/robotron_soc.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_cpu/robotron_cpu.vhd
 set_global_assignment -name VHDL_FILE rtl/defender_sound_board.vhd
@@ -219,7 +221,6 @@ set_global_assignment -name VHDL_FILE rtl/robotron_cpu/decoder_6.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_cpu/decoder_4.vhd
 set_global_assignment -name VHDL_FILE rtl/robotron_cpu/sc1.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/hc55564.vhd

@@ -4,7 +4,7 @@
 -- MODULE: altpll 
 
 -- ============================================================
--- File Name: pll_mist.vhd
+-- File Name: pll_aud.vhd
 -- Megafunction Name(s):
 -- 			altpll
 --
@@ -39,7 +39,7 @@ USE ieee.std_logic_1164.all;
 LIBRARY altera_mf;
 USE altera_mf.all;
 
-ENTITY pll_mist IS
+ENTITY pll_aud IS
 	PORT
 	(
 		areset		: IN STD_LOGIC  := '0';
@@ -48,10 +48,10 @@ ENTITY pll_mist IS
 		c1		: OUT STD_LOGIC ;
 		locked		: OUT STD_LOGIC 
 	);
-END pll_mist;
+END pll_aud;
 
 
-ARCHITECTURE SYN OF pll_mist IS
+ARCHITECTURE SYN OF pll_aud IS
 
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (4 DOWNTO 0);
 	SIGNAL sub_wire1	: STD_LOGIC ;
@@ -148,18 +148,18 @@ BEGIN
 	altpll_component : altpll
 	GENERIC MAP (
 		bandwidth_type => "AUTO",
-		clk0_divide_by => 3,
+		clk0_divide_by => 5400,
 		clk0_duty_cycle => 50,
-		clk0_multiply_by => 8,
+		clk0_multiply_by => 179,
 		clk0_phase_shift => "0",
-		clk1_divide_by => 9,
+		clk1_divide_by => 54,
 		clk1_duty_cycle => 50,
-		clk1_multiply_by => 2,
+		clk1_multiply_by => 179,
 		clk1_phase_shift => "0",
 		compensate_clock => "CLK0",
 		inclk0_input_frequency => 37037,
 		intended_device_family => "Cyclone III",
-		lpm_hint => "CBX_MODULE_PREFIX=pll_mist",
+		lpm_hint => "CBX_MODULE_PREFIX=pll_aud",
 		lpm_type => "altpll",
 		operation_mode => "NORMAL",
 		pll_type => "AUTO",
@@ -237,12 +237,12 @@ END SYN;
 -- Retrieval info: PRIVATE: CUR_DEDICATED_CLK STRING "c0"
 -- Retrieval info: PRIVATE: CUR_FBIN_CLK STRING "c0"
 -- Retrieval info: PRIVATE: DEVICE_SPEED_GRADE STRING "8"
--- Retrieval info: PRIVATE: DIV_FACTOR0 NUMERIC "3"
--- Retrieval info: PRIVATE: DIV_FACTOR1 NUMERIC "9"
+-- Retrieval info: PRIVATE: DIV_FACTOR0 NUMERIC "1"
+-- Retrieval info: PRIVATE: DIV_FACTOR1 NUMERIC "1"
 -- Retrieval info: PRIVATE: DUTY_CYCLE0 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "72.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "6.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "0.895000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "89.500000"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 -- Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
 -- Retrieval info: PRIVATE: GLOCKED_COUNTER_EDIT_CHANGED STRING "1"
@@ -267,13 +267,13 @@ END SYN;
 -- Retrieval info: PRIVATE: MIG_DEVICE_SPEED_GRADE STRING "Any"
 -- Retrieval info: PRIVATE: MIRROR_CLK0 STRING "0"
 -- Retrieval info: PRIVATE: MIRROR_CLK1 STRING "0"
--- Retrieval info: PRIVATE: MULT_FACTOR0 NUMERIC "4"
--- Retrieval info: PRIVATE: MULT_FACTOR1 NUMERIC "2"
+-- Retrieval info: PRIVATE: MULT_FACTOR0 NUMERIC "1"
+-- Retrieval info: PRIVATE: MULT_FACTOR1 NUMERIC "1"
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
--- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "72.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "6.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "0.89500000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "89.50000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
--- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "0"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT0 STRING "MHz"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT1 STRING "MHz"
 -- Retrieval info: PRIVATE: PHASE_RECONFIG_FEATURE_ENABLED STRING "1"
@@ -293,7 +293,7 @@ END SYN;
 -- Retrieval info: PRIVATE: PLL_PFDENA_CHECK STRING "0"
 -- Retrieval info: PRIVATE: PLL_TARGET_HARCOPY_CHECK NUMERIC "0"
 -- Retrieval info: PRIVATE: PRIMARY_CLK_COMBO STRING "inclk0"
--- Retrieval info: PRIVATE: RECONFIG_FILE STRING "pll_mist.mif"
+-- Retrieval info: PRIVATE: RECONFIG_FILE STRING "pll_aud.mif"
 -- Retrieval info: PRIVATE: SACN_INPUTS_CHECK STRING "0"
 -- Retrieval info: PRIVATE: SCAN_FEATURE_ENABLED STRING "1"
 -- Retrieval info: PRIVATE: SELF_RESET_LOCK_LOSS STRING "0"
@@ -317,13 +317,13 @@ END SYN;
 -- Retrieval info: PRIVATE: ZERO_DELAY_RADIO STRING "0"
 -- Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 -- Retrieval info: CONSTANT: BANDWIDTH_TYPE STRING "AUTO"
--- Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "3"
+-- Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "5400"
 -- Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "8"
+-- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "179"
 -- Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
--- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "9"
+-- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "54"
 -- Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "2"
+-- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "179"
 -- Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
 -- Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "37037"
@@ -387,11 +387,11 @@ END SYN;
 -- Retrieval info: CONNECT: c0 0 0 0 0 @clk 0 0 1 0
 -- Retrieval info: CONNECT: c1 0 0 0 0 @clk 0 0 1 1
 -- Retrieval info: CONNECT: locked 0 0 0 0 @locked 0 0 0 0
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist.vhd TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist.ppf TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist.inc FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist.cmp FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist.bsf FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll_mist_inst.vhd FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud.vhd TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud.ppf TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud.inc FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud.cmp FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud.bsf FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_aud_inst.vhd FALSE
 -- Retrieval info: LIB_FILE: altera_mf
 -- Retrieval info: CBX_MODULE_PREFIX: ON

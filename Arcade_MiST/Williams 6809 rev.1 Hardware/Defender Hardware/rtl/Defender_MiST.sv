@@ -139,16 +139,21 @@ assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_mem;
 assign SDRAM_CKE = 1;
 
-wire clk_sys, clk_vid, clk_mem = clk_vid, clk_0p89;
+wire clk_sys, clk_vid, clk_mem = clk_vid, clk_aud, clk_dac;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_vid),//72
 	.c1(clk_sys),//6
-	.c2(clk_0p89),//0.89
 	.locked(pll_locked)
 	);
+
+pll_aud pll_aud(
+	.inclk0(CLOCK_27),
+	.c0(clk_aud),
+	.c1(clk_dac)
+);
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -286,15 +291,15 @@ wire  [1:0] b;
 
 defender defender (
 	.clock_6          ( clk_sys         ),
-	.clk_0p89         ( clk_0p89        ),
+	.clk_0p89         ( clk_aud         ),
 	.reset            ( reset           ),
-	.video_r      		( r               ),
-	.video_g      		( g               ),
-	.video_b      		( b               ),
-	.video_hs     		( hs              ),
-	.video_vs     		( vs              ),
-	.video_blankn 		( blankn          ),
-	.audio_out    		( audio           ),
+	.video_r          ( r               ),
+	.video_g      	  ( g               ),
+	.video_b      	  ( b               ),
+	.video_hs     	  ( hs              ),
+	.video_vs     	  ( vs              ),
+	.video_blankn 	  ( blankn          ),
+	.audio_out    	  ( audio           ),
 
 	.mayday           ( mayday          ),
 
@@ -347,7 +352,7 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(11))
 dac(
-	.clk_i(clk_sys),
+	.clk_i(clk_dac),
 	.res_n_i(1),
 	.dac_i({3'b000, audio}), 
 	.dac_o(dac_o)

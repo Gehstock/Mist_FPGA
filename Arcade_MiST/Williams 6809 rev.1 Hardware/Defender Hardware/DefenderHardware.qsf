@@ -43,7 +43,7 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:22:13  JUNE 04, 2019"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
 set_global_assignment -name SMART_RECOMPILE ON
 
 # Pin & Location Assignments
@@ -212,11 +212,12 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # end ENTITY(Defender_MiST)
 # -------------------------
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Defender_MiST.sv
+set_global_assignment -name QIP_FILE rtl/pll_aud.qip
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
 set_global_assignment -name VHDL_FILE rtl/defender.vhd
 set_global_assignment -name VHDL_FILE rtl/defender_sound_board.vhd
 set_global_assignment -name VHDL_FILE rtl/defender_cmos_ram.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
