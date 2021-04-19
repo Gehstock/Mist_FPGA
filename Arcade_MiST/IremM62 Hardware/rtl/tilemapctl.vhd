@@ -61,6 +61,7 @@ begin
   ctl_o.tile_a(ctl_o.tile_a'left downto 15) <= (others => '0');
 
   -- tilemap scroll
+
   x <= std_logic_vector(unsigned(video_ctl.x) - 256 + 128 + 8) when unsigned(y) < 6*8 and hwsel = HW_KUNGFUM else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64 + 10) when hwsel = HW_LDRUN4 else
        std_logic_vector(unsigned(video_ctl.x) - 256 + unsigned(hscroll(8 downto 0)) + 64 + 8) when hires = '1' else
@@ -75,6 +76,7 @@ begin
     variable attr_d_r   : std_logic_vector(7 downto 0);
     variable flipx      : std_logic;
     variable pel        : std_logic_vector(2 downto 0);
+    variable prio       : std_logic;
 
   begin
   
@@ -177,7 +179,28 @@ begin
           pel := tile_d_r(tile_d_r'right) & tile_d_r(tile_d_r'right+8) & tile_d_r(tile_d_r'right+16);
         end if;
 
+        -- sprite priority
+        -- B Board:
+        -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+        -- J2: selects whether bit 4 of obj color code goes to A7 of obj color PROMS
+        -- G Board
+        -- JP1-4 - Tiles with color code >= the value set here have priority over sprites
+        -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
+        prio := '0';
+        if ((hwsel = HW_YOUJYUDN or hwsel = HW_HORIZON) and attr_d_r(4 downto 1) >= x"8") or
+           (hwsel = HW_LDRUN and attr_d_r(4 downto 1) >= x"c") or
+           ((hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and attr_d_r(4 downto 1) >= x"4") or
+           (hwsel = HW_KIDNIKI and attr_d_r(7 downto 5) = "111")
+            then
+          prio := '1';
+        end if;
+
+        if (pel = "000") then
+          prio := '0';
+        end if;
+
         ctl_o.pal_a <= attr_d_r(4 downto 0) & pel;
+        ctl_o.prio <= prio;
         ctl_o.set <= '0'; -- default
 --        if pel /= "000" then
 --            pal_rgb(0)(7 downto 5) /= "000" or
@@ -245,6 +268,7 @@ begin
       if clk_ena = '1' then
 
         ctl_o.tile_a(14) <= '0';
+        ctl_o.prio <= '0';
 
         if hwsel = HW_BATTROAD then
           -- 8x8 tiles, 32x32 tilemap

@@ -227,7 +227,7 @@ begin
                           STD_MATCH(cpu_a, X"A"&"-----------0") else
                 '1' when (hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2) and
                           STD_MATCH(cpu_a,  "101------------0") else
-                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and
+                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and hwsel /= HW_SPELUNKR and hwsel /= HW_SPELUNK2 and
                           STD_MATCH(cpu_a, X"D"&"-----------0") else
                 '0';
   cram_cs <=    '1' when hwsel = HW_KUNGFUM and
@@ -236,7 +236,7 @@ begin
                           STD_MATCH(cpu_a, X"A"&"-----------1") else
                 '1' when (hwsel = HW_SPELUNKR or hwsel = HW_SPELUNK2) and
                           STD_MATCH(cpu_a,  "101------------1") else
-                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and
+                '1' when hwsel /= HW_KUNGFUM and hwsel /= HW_KIDNIKI and hwsel /= HW_SPELUNKR and hwsel /= HW_SPELUNK2 and
                           STD_MATCH(cpu_a, X"D"&"-----------1") else
                 '0';
 
@@ -936,26 +936,15 @@ begin
   -- JP1-4 - Tiles with color code >= the value set here have priority over sprites
   -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
 
-  process(hwsel, tilemap_i(1).pal_a, sprite_i.pal_a)
-    variable bg_trans: std_logic;
+  process(hwsel, tilemap_i(1).prio, sprite_i.pal_a)
   begin
-    sprite_pri <= '1';
-    bg_trans := '0';
-    if tilemap_i(1).pal_a(2 downto 0) = "000" then
-      bg_trans := '1';
+
+    sprite_pri <= not tilemap_i(1).prio;
+
+    if (hwsel = HW_LDRUN or hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) then
+      sprite_pri <= sprite_i.pal_a(7) or not tilemap_i(1).prio;
     end if;
-    if (hwsel = HW_YOUJYUDN or hwsel = HW_HORIZON) and tilemap_i(1).pal_a(7 downto 4) >= x"8" then
-      sprite_pri <= bg_trans;
-    end if;
-    if hwsel = HW_LDRUN and tilemap_i(1).pal_a(7 downto 4) >= x"c" then
-      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
-    end if;
-    if (hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and tilemap_i(1).pal_a(7 downto 4) >= x"4" then
-      sprite_pri <= sprite_i.pal_a(7) or bg_trans;
-    end if;
-    if hwsel = HW_KIDNIKI and tilemap_i(1).tile_a(13 downto 11) = "111" then
-      sprite_pri <= bg_trans;
-    end if;
+
   end process;
 
   -- unused outputs
