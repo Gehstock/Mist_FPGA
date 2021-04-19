@@ -188,7 +188,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/TraverseUSA_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/traverse_usa.vhd
 set_global_assignment -name VHDL_FILE rtl/moon_patrol_sound_board.vhd
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
+set_global_assignment -name QIP_FILE rtl/pll_aud.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip

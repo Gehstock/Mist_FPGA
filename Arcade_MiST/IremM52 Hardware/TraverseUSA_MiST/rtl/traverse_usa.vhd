@@ -148,6 +148,7 @@ port(
  cpu_rom_rd     : out std_logic;
  snd_rom_addr   : out std_logic_vector(12 downto 0);
  snd_rom_do     : in  std_logic_vector( 7 downto 0);
+ snd_rom_vma    : out std_logic;
  
  dl_addr        : in  std_logic_vector(16 downto 0);
  dl_data        : in  std_logic_vector( 7 downto 0);
@@ -675,6 +676,7 @@ port map(
 
  rom_addr     => snd_rom_addr,
  rom_do       => snd_rom_do,
+ rom_vma      => snd_rom_vma,
 
  dbg_cpu_addr => open --dbg_cpu_addr
 );

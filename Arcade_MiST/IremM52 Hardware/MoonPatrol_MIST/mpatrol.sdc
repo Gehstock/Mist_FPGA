@@ -53,6 +53,11 @@ set_time_format -unit ns -decimal_places 3
 
 create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
 
+set vid_clk   "Clock_inst|altpll_component|auto_generated|pll1|clk[1]"
+set game_clk  "Clock_inst|altpll_component|auto_generated|pll1|clk[0]"
+set aud_clk   "pll_aud_inst|altpll_component|auto_generated|pll1|clk[0]"
+set dac_clk   "pll_aud_inst|altpll_component|auto_generated|pll1|clk[1]"
+
 #**************************************************************
 # Create Generated Clock
 #**************************************************************
@@ -83,17 +88,20 @@ set_input_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [ge
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}]  1.000 [get_ports {SPI_DO}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {Clock_inst|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {AUDIO_L}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {Clock_inst|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {AUDIO_R}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {Clock_inst|altpll_component|auto_generated|pll1|clk[1]}]  1.000 [get_ports {LED}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks {Clock_inst|altpll_component|auto_generated|pll1|clk[2]}]  1.000 [get_ports {VGA_*}]
+set_output_delay -add_delay  -clock [get_clocks {SPI_SCK}] 1.000 [get_ports {SPI_DO}]
+set_output_delay -add_delay  -clock [get_clocks $dac_clk]  1.000 [get_ports {AUDIO_L}]
+set_output_delay -add_delay  -clock [get_clocks $dac_clk]  1.000 [get_ports {AUDIO_R}]
+set_output_delay -add_delay  -clock [get_clocks $game_clk] 1.000 [get_ports {LED}]
+set_output_delay -add_delay  -clock [get_clocks $vid_clk]  1.000 [get_ports {VGA_*}]
+
 
 #**************************************************************
 # Set Clock Groups
 #**************************************************************
 
+set_clock_groups -asynchronous -group [get_clocks $game_clk] -group [get_clocks $aud_clk]
 set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {Clock_inst|altpll_component|auto_generated|pll1|clk[*]}]
+set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {pll_aud_inst|altpll_component|auto_generated|pll1|clk[*]}]
 
 #**************************************************************
 # Set False Path
