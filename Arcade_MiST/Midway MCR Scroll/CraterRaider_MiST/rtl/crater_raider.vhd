@@ -172,10 +172,11 @@ port(
  sp_addr        	: out std_logic_vector(14 downto 0);
  sp_graphx32_do 	: in std_logic_vector(31 downto 0);
 
- dl_addr          : in std_logic_vector(15 downto 0);
- dl_data          : in std_logic_vector( 7 downto 0);
- dl_wr            : in std_logic;
-
+ dl_addr            : in std_logic_vector(15 downto 0);
+ dl_data            : in std_logic_vector( 7 downto 0);
+ dl_wr              : in std_logic;
+ up_data            : out std_logic_vector(7 downto 0);
+ cmos_wr            : in std_logic;
  dbg_cpu_addr 		: out std_logic_vector(15 downto 0)
  );
 end crater_raider;
@@ -846,14 +847,19 @@ port map (
 cpu_rom_addr <= cpu_addr(15 downto 0);
 
 -- working RAM   F000-F7FF  2Ko
-wram : entity work.cmos_ram
+wram : entity work.dpram
 generic map( dWidth => 8, aWidth => 11)
 port map(
- clk  => clock_vidn,
- we   => wram_we,
- addr => cpu_addr(10 downto 0),
- d    => cpu_do,
- q    => wram_do
+ clk_a  => clock_vidn,
+ addr_a => cpu_addr(10 downto 0),
+ d_a    => cpu_do,
+ we_a   => wram_we,
+ q_a    => wram_do,
+ clk_b  => clock_vid,
+ we_b   => cmos_wr,
+ addr_b => dl_addr(10 downto 0),
+ d_b    => dl_data,
+ q_b    => up_data
 );
 
 -- char RAM   E800-EBFF  1Ko + mirroring 0400
