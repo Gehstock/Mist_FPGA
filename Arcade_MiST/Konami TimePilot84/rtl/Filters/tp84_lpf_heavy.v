@@ -27,13 +27,13 @@ module tp84_lpf_heavy(
 	input signed [15:0] in,
 	output signed [15:0] out);
 	
-	reg [9:0] div = 64; //Sample at 12.228/64 = 192000Hz
+	reg [9:0] div = 73; //Sample at 14/73 ~ 192000Hz
 	
 	//Coefficients computed with Octave/Matlab/Online filter calculators.
 	//or with scipy.signal.bessel or similar tools
 	
-	//0.0083012547, 0.0083012547
-	//1.0000000, -0.98339749
+	//0.0050118701, 0.0050118701
+	//1.0000000, -0.98997626
 	reg signed [17:0] A2;
 	reg signed [17:0] B2;
 	reg signed [17:0] B1;
@@ -41,9 +41,9 @@ module tp84_lpf_heavy(
 	wire signed [15:0] audio_post_lpf1;
 		
 	always @ (*) begin
-		A2 = -18'd32223;
-		B1 = 18'd272;
-		B2 = 18'd272;
+		A2 = -18'd32440;
+		B1 = 18'd164;
+		B2 = 18'd164;
 	end
 	
 	iir_1st_order lpf6db(.clk(clk),
