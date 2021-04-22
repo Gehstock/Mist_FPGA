@@ -81,10 +81,11 @@ use ieee.numeric_std.all;
 
 entity time_pilot is
 port(
-	clock_6      : in std_logic;
-	clock_12     : in std_logic;
-	clock_14     : in std_logic;
-	reset        : in std_logic;
+	clock_6        : in std_logic;
+	clock_12       : in std_logic;
+	clock_14       : in std_logic;
+	reset          : in std_logic;
+	psurge         : in std_logic;
 	video_r        : out std_logic_vector(4 downto 0);
 	video_g        : out std_logic_vector(4 downto 0);
 	video_b        : out std_logic_vector(4 downto 0);
@@ -95,8 +96,8 @@ port(
 	video_vs       : out std_logic;
 	audio_out      : out std_logic_vector(10 downto 0);
 	roms_addr      : out std_logic_vector(14 downto 0);
-	roms_do   		: in std_logic_vector(7 downto 0);
-	roms_rd       	: out std_logic;
+	roms_do   	   : in std_logic_vector(7 downto 0);
+	roms_rd        : out std_logic;
 	dip_switch_1   : in std_logic_vector(7 downto 0); -- Coinage_B / Coinage_A
 	dip_switch_2   : in std_logic_vector(7 downto 0); -- Sound(8)/Difficulty(7-5)/Bonus(4)/Cocktail(3)/lives(2-1)
 
@@ -115,6 +116,11 @@ port(
 	left2          : in std_logic; 
 	down2          : in std_logic;
 	up2            : in std_logic;
+
+	dl_clk         : in std_logic;
+	dl_addr        : in std_logic_vector(15 downto 0);
+	dl_wr          : in std_logic;
+	dl_data        : in std_logic_vector(7 downto 0);
 
 	dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
@@ -214,6 +220,14 @@ architecture struct of time_pilot is
  signal input_1       : std_logic_vector(7 downto 0);
  signal input_2       : std_logic_vector(7 downto 0);
 
+ signal char_graphics_we : std_logic;
+ signal ch_palette_we    : std_logic;
+ signal sp_graphics_we   : std_logic;
+ signal sp_palette_we    : std_logic;
+ signal rgb_palette_gb_we: std_logic;
+ signal rgb_palette_br_we: std_logic;
+ signal sound_rom_we     : std_logic;
+
 begin
 
 video_clk <= clock_6n;
@@ -287,7 +301,8 @@ input_1       <= "111" & not fire1  & not down1  & not up1 & not right1 & not le
 input_2       <= "111" & not fire2  & not down2  & not up2 & not right2 & not left2; --   ?/2FL/2SR/2SL/2DW/2UP/2RI/2LE
 
 -- cpu input address decoding (mirror mostly from Mame)
-cpu_di <= cpu_rom_do   when cpu_addr(15 downto 12) < X"6" else      -- 0000-5FFF
+cpu_di <= cpu_rom_do when cpu_addr(15 downto 12) < X"6" else      -- 0000-5FFF
+          X"80"      when cpu_addr(15 downto 0) = X"6004" and psurge = '1'  else -- 6004 Protection
           X"FF"        when cpu_addr(15 downto 12) < X"A" else      -- 6000-9FFF
 			 wram_do      when cpu_addr(15 downto 12) = X"A" else      -- A000-AFFF
 			 
@@ -347,17 +362,21 @@ begin
 			sound_cmd <= cpu_do;
 		end if;
 
-   	if C3xx_we = '1' then
+		if C3xx_we = '1' then
 			if cpu_addr(3 downto 1) = "000" then itt_n <= cpu_do(0); end if;
 			if cpu_addr(3 downto 1) = "001" then flip  <= not cpu_do(0); end if;
 			if cpu_addr(3 downto 1) = "010" then sound_trig <= cpu_do(0); end if;
 		end if;
-		
-		if itt_n = '0' then
-			cpu_nmi_n <= '1';
-		else	-- lauch nmi and end of frame
-			if (vcnt = 493) and (hcnt = "000000") and (pxcnt = "000") then
-				cpu_nmi_n <= '0';
+
+		if psurge = '1' then
+			cpu_nmi_n <= vblank;
+		else
+			if itt_n = '0' then
+				cpu_nmi_n <= '1';
+			else	-- lauch nmi and end of frame
+				if (vcnt = 493) and (hcnt = "000000") and (pxcnt = "000") then
+					cpu_nmi_n <= '0';
+				end if;
 			end if;
 		end if;
 	end if;	
@@ -499,7 +518,7 @@ sp_buffer_ram2_we <= not clock_6 when sp_buffer_sel = '1' else sp_buffer_write_w
 
 -- latch current char data with respect to vcnt and hcnt in relation
 -- with wram ram addressing  
-process (clock_6)
+process (clock_6, pxcnt)
 begin
 	if rising_edge(clock_6) and pxcnt = "001" then
 		ch_data1 <= wram_do ;
@@ -585,7 +604,7 @@ video_vblank <= vblank;
 -- video syncs and blanks --
 ----------------------------
 
-process(clock_6)
+process(clock_6, pxcnt)
 	constant hcnt_base : integer := 36;
 	variable vsync_cnt : std_logic_vector(3 downto 0);
 begin
@@ -605,9 +624,9 @@ begin
 
 		if hcnt = hcnt_base-4 then
 			hblank <= '1';
-			if vcnt = 496 then
+			if vcnt = 495 then
 				vblank <= '1';   -- 492 ok
-			elsif vcnt = 262 then
+			elsif vcnt = 263 then
 				vblank <= '0';   -- 262 ok 
 			end if;
 		elsif hcnt = 0 then
@@ -635,7 +654,7 @@ port map(
   CLK_n   => clock_6,
   CLKEN   => cpu_ena,
   WAIT_n  => '1',
-  INT_n   => '1', --cpu_irq_n,
+  INT_n   => '1',
   NMI_n   => cpu_nmi_n,
   BUSRQ_n => '1',
   M1_n    => open,
@@ -720,54 +739,127 @@ port map(
 );
 
 -- char graphics ROM
-char_graphics : entity work.time_pilot_char_grphx
+char_graphics_we <= '1' when dl_wr = '1' and dl_addr(15 downto 13) = "011" else '0';
+
+char_graphics : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 13
+)
 port map(
- clk  => clock_6,
- addr => ch_graphx_addr,
- data => ch_graphx_do
+ clk_a  => clock_6,
+ addr_a => ch_graphx_addr,
+ d_a    => (others => '0'),
+ q_a    => ch_graphx_do,
+ clk_b  => dl_clk,
+ we_b   => char_graphics_we,
+ addr_b => dl_addr(12 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- char palette ROM
-ch_palette : entity work.time_pilot_char_color_lut
+ch_palette_we <= '1' when dl_wr = '1' and dl_addr(15 downto 8) = x"E1" else '0';
+ch_palette : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 8
+)
 port map(
- clk  => clock_6,
- addr => ch_palette_addr,
- data => ch_palette_do
+ clk_a  => clock_6,
+ addr_a => ch_palette_addr,
+ d_a    => (others => '0'),
+ q_a    => ch_palette_do,
+ clk_b  => dl_clk,
+ we_b   => ch_palette_we,
+ addr_b => dl_addr(7 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- sprite graphics ROM
-sp_graphics : entity work.time_pilot_sprite_grphx
+sp_graphics_we <= '1' when dl_wr = '1' and dl_addr(15 downto 14) = "10" else '0';
+
+sp_graphics : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 14
+)
 port map(
- clk  => clock_6,
- addr => sp_graphx_addr,
- data => sp_graphx_do
+ clk_a  => clock_6,
+ addr_a => sp_graphx_addr,
+ d_a    => (others => '0'),
+ q_a    => sp_graphx_do,
+ clk_b  => dl_clk,
+ we_b   => sp_graphics_we,
+ addr_b => dl_addr(13 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- sprite palette ROM
-sp_palette : entity work.time_pilot_sprite_color_lut
+sp_palette_we <= '1' when dl_wr = '1' and dl_addr(15 downto 8) = x"E0" else '0';
+
+sp_palette : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 8
+)
 port map(
- clk  => clock_6,
- addr => sp_palette_addr,
- data => sp_palette_do
+ clk_a  => clock_6,
+ addr_a => sp_palette_addr,
+ d_a    => (others => '0'),
+ q_a    => sp_palette_do,
+ clk_b  => dl_clk,
+ we_b   => sp_palette_we,
+ addr_b => dl_addr(7 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- rgb palette ROM 1 
-rgb_palette_gb : entity work.time_pilot_palette_blue_green
+rgb_palette_gb_we <= '1' when dl_wr = '1' and dl_addr(15 downto 5) = x"E2"&"000" else '0';
+
+rgb_palette_gb : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 5
+)
 port map(
- clk  => clock_6,
- addr => rgb_palette_addr,
- data => rgb_palette_bg_do
+ clk_a  => clock_6,
+ addr_a => rgb_palette_addr,
+ d_a    => (others => '0'),
+ q_a    => rgb_palette_bg_do,
+ clk_b  => dl_clk,
+ we_b   => rgb_palette_gb_we,
+ addr_b => dl_addr(4 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- rgb palette ROM 2
-rgb_palette_br : entity work.time_pilot_palette_green_red
+rgb_palette_br_we <= '1' when dl_wr = '1' and dl_addr(15 downto 5) = x"E2"&"001" else '0';
+
+rgb_palette_br : entity work.dpram
+generic map(
+ dWidth => 8,
+ aWidth => 5
+)
 port map(
- clk  => clock_6,
- addr => rgb_palette_addr,
- data => rgb_palette_gr_do
+ clk_a  => clock_6,
+ addr_a => rgb_palette_addr,
+ d_a    => (others => '0'),
+ q_a    => rgb_palette_gr_do,
+ clk_b  => dl_clk,
+ we_b   => rgb_palette_br_we,
+ addr_b => dl_addr(4 downto 0),
+ d_b    => dl_data,
+ q_b    => open
 );
 
 -- sound board
+sound_rom_we <= '1' when dl_wr = '1' and dl_addr(15 downto 13) = "110" else '0';
+
 time_pilot_sound_board : entity work.time_pilot_sound_board
 port map(
  clock_14     => clock_14,
@@ -777,7 +869,12 @@ port map(
  sound_cmd    => sound_cmd,
  
  audio_out    => audio_out,
- 
+
+ ROMCL        => dl_clk,
+ ROMAD        => dl_addr(12 downto 0),
+ ROMDT        => dl_data,
+ ROMEN        => sound_rom_we,
+
  dbg_cpu_addr => open
  );
 

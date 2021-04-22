@@ -1,10 +1,17 @@
-Arcade: Power Surge port to MiST by Gehstock
+Arcade: Time Pilot port to MiST by Gehstock
 
-PSURGE.ROM is required at the root of the SD-Card.
+Working games:
+Time Pilot
+Power Surge
 
-Todo:  Sound
+Not working yet:
+Chance Kun
+Bikkuri Card
 
-
+- Create ARC and ROM file from the MRA file using the MRA utility.
+  Example: mra -A -z /path/to/mame/roms "Time Pilot.mra"
+- Copy the ARC and ROM files to the root of the SD Card
+- Copy the RBF file to the SD Card
 
 ---------------------------------------------------------------------------------
 -- Time pilot by Dar (darfpga@aol.fr) (29/10/2017)

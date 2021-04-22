@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: Power Surge
+//  Arcade: Time Pilot
 //
 //  Port to MiST
 //  Copyright (C) 2017 Gehstock
@@ -22,7 +22,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Power_Surge_MiST(
+module TimePilot_MiST(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -55,23 +55,22 @@ module Power_Surge_MiST(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"PSURGE;;",
+	"TIMEPLT;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"O6,Initial Energy,4,6;",
-	"O78,Lives,3,4,5,6;",
-	"O9,Stop at Junctions,Off,On;",
+	"DIP;",
 	"T0,Reset;",
-	"V,v1.15.",`BUILD_DATE
+	"V,",`BUILD_DATE
 };
 
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
-wire       energy = status[6];
-wire [1:0] lives = ~status[8:7];
-wire       stpatjunct = ~status[9];
+
+wire       psurge = core_mod[0];
+wire [7:0] sw1 = status[15:8];
+wire [7:0] sw2 = status[23:16];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -85,7 +84,7 @@ pll pll(
 	.c2(clock_14),//14.31800000
 	.c3(clock_6),
 	.locked(pll_locked)
-);
+	);
 
 wire [31:0] status;
 wire  [1:0] buttons;
@@ -98,6 +97,7 @@ wire        no_csync;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
+wire  [6:0] core_mod;
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.clk_sys        (clock_12       ),
@@ -116,7 +116,8 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.key_code       (key_code       ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
-	.status         (status         )
+	.status         (status         ),
+	.core_mod       (core_mod       )
 	);
 
 wire [14:0] rom_addr;
@@ -129,7 +130,7 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 data_io data_io(
-	.clk_sys       ( clock_48     ),
+	.clk_sys       ( clock_48      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -139,7 +140,7 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-		
+
 sdram rom(
 	.*,
 	.init          ( ~pll_locked  ),
@@ -158,39 +159,35 @@ reg rom_loaded = 0;
 always @(posedge clock_12) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
+
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
 reg	 [10:0] audio;
-wire        hb, vb;
-wire        blankn = ~(hb | vb);
-wire        ce_vid;
 wire        hs, vs;
 wire  [4:0] r,g,b;
 
-power_surge power_surge(
+time_pilot time_pilot(
 	.clock_6(clock_6),
 	.clock_12(clock_12),
 	.clock_14(clock_14),
 	.reset(reset),
+	.psurge(psurge),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
-	.video_hblank(hb),
-	.video_vblank(vb),
 	.video_hs(hs),
 	.video_vs(vs),
-	.audio_out(audio),
+	.audio_out(audio), 
 	.roms_addr(rom_addr),
 	.roms_do(rom_do[7:0]),
 	.roms_rd(rom_rd),
-	.dip_switch_1({2'b11,lives,energy,3'b000}), // Cabinet Unknown Lives Lives Initial_Energy Unknown Unknown Unknown
-	.dip_switch_2({stpatjunct,7'b110_1111}), // Stop_at_Junctions, Unknown, Unknown, Cheat, Coin_B Coin_B Coin_A Coin_A
+	.dip_switch_1(sw1),
+	.dip_switch_2(sw2),
 	.start2(m_two_players),
 	.start1(m_one_player),
 	.coin1(m_coin1),
-
 	.fire1(m_fireA),
 	.right1(m_right),
 	.left1(m_left),
@@ -200,9 +197,13 @@ power_surge power_surge(
 	.right2(m_right2),
 	.left2(m_left2),
 	.down2(m_down2),
-	.up2(m_up2)
-	);
-	
+	.up2(m_up2),
+	.dl_clk(clock_48),
+	.dl_addr(ioctl_addr[15:0]),
+	.dl_wr(ioctl_wr),
+	.dl_data(ioctl_dout)
+);
+
 mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clock_48         ),
 	.SPI_SCK        ( SPI_SCK          ),
@@ -218,7 +219,8 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( { 1'b0, rotate } ),
+	.ce_divider     ( 1'b0             ),
+	.rotate         ( { ~psurge, rotate } ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
@@ -246,7 +248,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b01       ),
+	.orientation ( {~psurge, 1'b1} ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),

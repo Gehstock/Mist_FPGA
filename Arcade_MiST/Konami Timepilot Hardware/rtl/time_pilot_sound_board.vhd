@@ -35,6 +35,11 @@ port(
  sound_trig   : in std_logic;
  
  audio_out    : out std_logic_vector(10 downto 0);
+
+ ROMCL        : in std_logic;
+ ROMAD        : in std_logic_vector(12 downto 0);
+ ROMDT        : in std_logic_vector(7 downto 0);
+ ROMEN        : in std_logic;
  
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
  );
@@ -218,7 +223,7 @@ end process;
 			
 -- divide clocks 
 -- random generator ?
-process (clock_14)
+process (clock_14, reset)
 begin
 	if reset='1' then
 		clock_div1 <= (others =>'0');
@@ -245,7 +250,7 @@ cpu_clock_en <= '1' when clock_div1(2 downto 0) = "011" else '0';
 ayx_clock_en <= '1' when clock_div1(2 downto 0) = "111" else '0';
 
 -- mux rom/ram/devices data ouput to cpu data input w.r.t cpu address
-cpu_di <= cpu_rom_do   when cpu_addr(15 downto 12) = "0000" else -- 0000-0FFF
+cpu_di <= cpu_rom_do   when cpu_addr(15 downto 13) = "00000" else -- 0000-1FFF
 			 wram_do      when cpu_addr(15 downto 12) = "0011" else -- 3000-3FFF
 			 ay1_do       when cpu_addr(15 downto 13) = "010"  else -- 4000-5FFF
 			 ay2_do       when cpu_addr(15 downto 13) = "011"  else -- 6000-7FFF
@@ -340,11 +345,23 @@ port map(
 );
 
 -- cpu1 program ROM
-rom_cpu1 : entity work.time_pilot_sound_prog
+--rom_cpu1 : entity work.time_pilot_sound_prog
+--port map(
+-- clk  => clock_14n,
+-- addr => cpu_addr(11 downto 0),
+-- data => cpu_rom_do
+--);
+rom_cpu1 : entity work.dpram
+generic map( dWidth => 8, aWidth => 13)
 port map(
- clk  => clock_14n,
- addr => cpu_addr(11 downto 0),
- data => cpu_rom_do
+ clk_a  => clock_14n,
+ addr_a => cpu_addr(12 downto 0),
+ we_a => '0',
+ q_a => cpu_rom_do,
+ clk_b => ROMCL,
+ addr_b => ROMAD,
+ we_b => ROMEN,
+ d_b => ROMDT
 );
 
 -- working RAM
