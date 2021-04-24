@@ -37,7 +37,8 @@ module fpga_druaga
     input  [16:0]   ROMAD,
     input  [ 7:0]   ROMDT,
     input           ROMEN,
-    input  [ 2:0]   MODEL
+    input  [ 2:0]   MODEL,
+    input           FLIP_SCREEN
 );
 
 parameter [2:0] SUPERPAC=3'd5;
@@ -139,7 +140,8 @@ DRUAGA_VIDEO video
     .SPRA_A(spra_a), .SPRA_D(spra_d),
     .SCROLL({1'b0,SCROLL}),
     .ROMAD(ROMAD),.ROMDT(ROMDT),.ROMEN(ROMEN),
-    .MODEL(MODEL)
+    .MODEL(MODEL),
+    .FLIP_SCREEN(FLIP_SCREEN)
 );
 
 // This prevents a glitch in the sprites for the first line

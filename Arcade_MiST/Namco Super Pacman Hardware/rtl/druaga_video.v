@@ -31,7 +31,8 @@ module DRUAGA_VIDEO
     input  [16:0]   ROMAD,
     input  [ 7:0]   ROMDT,
     input           ROMEN,
-    input  [ 2:0]   MODEL
+    input  [ 2:0]   MODEL,
+    input           FLIP_SCREEN
 );
 
 parameter [2:0] SUPERPAC=3'd5;
@@ -56,7 +57,7 @@ wire [7:0]  BGCH_D;
 // BG scroll registers
 //
 reg  [8:0] BGVSCR;
-wire [8:0] BGVPOS = BGVSCR + VPOS;
+wire [8:0] BGVPOS = ({8{FLIP_SCREEN}} ^ BGVSCR) + VPOS + (9'h121 & {9{FLIP_SCREEN}});
 always @(posedge VCLKx8) if (PH == 290) BGVSCR <= SCROLL;
 
 
@@ -67,12 +68,13 @@ reg  [7:0] BGPN;
 reg        BGH;
 
 reg      [5:0] COL, ROW;
+wire           ROW4 = {(VPOS[7:5] + FLIP_SCREEN) >> 2} ^ FLIP_SCREEN;
 
 wire     [7:0] CHRC = VRAM_D[7:0];
 wire     [5:0] BGPL = VRAM_D[13:8];
 
-wire     [8:0] HP   = HPOS;
-wire     [8:0] VP   = COL[5] ? VPOS : BGVPOS;
+wire     [8:0] HP   = HPOS ^ {8{FLIP_SCREEN}};
+wire     [8:0] VP   = {COL[5] ? VPOS : BGVPOS} ^ {8{FLIP_SCREEN}};
 wire    [11:0] CHRA = { CHRC, ~HP[2], VP[2:0] };
 wire     [7:0] CHRO = BGCH_D;   // Char pixel data
 reg     [10:0] VRAMADRS;
@@ -95,19 +97,18 @@ wire            BGHI  = BGH & (CLT0_D!=4'd15);
 wire    [4:0]   BGCOL = { 1'b1, (MODEL==SUPERPAC ? ~CLT0_D :CLT0_D) };
 
 always @(*) begin
-    COL  = HPOS[8:3];
-    ROW  = VPOS[8:3];
+    COL  = HPOS[8:3] ^ {5{FLIP_SCREEN}};
+    // This +2 adjustment is due to using a linear video timing generator
+    // rather than the original circuit count.
+    ROW = (VPOS[8:3] + 6'h2) ^ {5{FLIP_SCREEN}};
 
     if( MODEL==SUPERPAC ) begin
-        // This +2 adjustment is due to using a linear video timing generator
-        // rather than the original circuit count.
-        ROW = ROW + 6'h2;
         VRAMADRS = { 1'b0,
                       COL[5] ? {COL[4:0], ROW[4:0]} :
                                {ROW[4:0], COL[4:0]}
                    };
     end else begin
-        VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW[4], ROW[3:0]+4'h2 } :
+        VRAMADRS = COL[5] ? { 4'b1111, COL[1:0], ROW4, ROW[3:0]+4'h2 } :
                                            { VP[8:3], HP[7:3] };
     end
 end
@@ -124,7 +125,8 @@ DRUAGA_SPRITE #(.SUPERPAC(SUPERPAC)) spr
     SPRA_A, SPRA_D,
     SPCOL,
     ROMAD,ROMDT,ROMEN,
-    MODEL
+    MODEL,
+    FLIP_SCREEN
 );
 
 //----------------------------------------
