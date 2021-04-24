@@ -40,8 +40,6 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O7,Flip Screen,Off,On;",
 	"DIP;",
-	"OU,Service Mode,Off,On;",
-	"OT,Freeze,Off,On;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -93,34 +91,25 @@ always @(*) begin
 	DSW2 = 0;
 
 	case (core_mod)
-	7'h0, 7'h1: // DRUAGA
+	7'h0, 7'h1, 7'h3: // DRUAGA, DIGDUG2
 	begin
-		DSW0 = {2'd0,dtLives,4'd0};
-		DSW1 = {dcCabinet,6'd0,dcFreeze};
-		DSW2 = {DSW1[3:0],dcService,3'd0};
+		DSW0 = status[15:8];
+		DSW1 = status[23:16];
+		DSW2 = { status[19:16], status[27:24] };
 	end
 	7'h2: // MAPPY
 	begin
-		DSW0 = {dcFreeze,dmRoundP,dmDemoSnd,2'd0,dmRank};
-		DSW1 = {dmLives,dmExtend,3'd0};
-		DSW2 = {{2{dcService,dcCabinet,2'd0}}};
+		DSW0 = status[15:8];
+		DSW1 = status[23:16];
+		DSW2 = { {2{status[27:24]}} };
 	end
-	7'h3: // DIGDUG2
+	default:
 	begin
-		DSW0 = {2'd0,ddLives,5'd0};
-		DSW1 = {dcCabinet,3'd0,dcFreeze,ddLevelSel,ddExtend};
-		DSW2 = {DSW1[3:0],dcService,3'd0};
+		DSW0 = status[15:8];
+		DSW1 = status[23:16];
+		DSW2 = status[31:24];
 	end
-	7'h4: // MOTOS
-	begin
-		DSW0 = {doDemoSnd,doExtend,doRank,doLives,3'd0};
-		DSW1 = {dcService,dcCabinet,6'd0};
-		DSW2 = {8'd0};
-	end
-	7'h5: ;// Super Pacman
-	7'h6: ;// GROBDA
-	7'h7: ;// PHOZON
-	default: ;
+
 	endcase
 end
 
