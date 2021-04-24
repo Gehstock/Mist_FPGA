@@ -27,7 +27,7 @@ module tp84_lpf_light(
 	input signed [15:0] in,
 	output signed [15:0] out);
 	
-	reg [9:0] div = 64; //Sample at 12.228/64 = 192000Hz
+	reg [9:0] div = 73; //Sample at 14/73 ~ 192000Hz
 	
 	//Coefficients computed with Octave/Matlab/Online filter calculators.
 	//or with scipy.signal.bessel or similar tools

@@ -24,10 +24,12 @@ module DRUAGA_SPRITE
     input  [16:0]   ROMAD,
     input     [7:0] ROMDT,
     input           ROMEN,
-    input     [2:0] MODEL
+    input     [2:0] MODEL,
+    input           FLIP_SCREEN
 );
 
 parameter [2:0] SUPERPAC=3'd5;
+parameter [2:0] GROBDA=3'd6;
 
 reg  [9:0]  CLT1_A;
 wire [3:0]  CLT1_D;
@@ -80,7 +82,7 @@ reg [4:0] _msky = 5'b01111;
 reg         bKick = 1'b0;
 
 reg [7:0]   cno;
-wire    [4:0]   ox = { lpcn ^ xf };
+wire    [4:0]   ox = lpcn ^ xf ^ {FLIP_SCREEN & _sizx, {4{FLIP_SCREEN}}};
 assign SPCH_A = { cno[7:2], (cno[1]|sy[4]), (cno[0]|ox[4]), sy[3], ox[3:2], sy[2:0] };
 
 wire    [15:0] SPCO = SPCH_D;
@@ -90,7 +92,7 @@ always @(*) begin
              (ox[1:0]==2'b01) ? { pn, SPCO[14], SPCO[10], SPCO[6], SPCO[2] } :
              (ox[1:0]==2'b10) ? { pn, SPCO[13], SPCO[ 9], SPCO[5], SPCO[1] } :
                                 { pn, SPCO[12], SPCO[ 8], SPCO[4], SPCO[0] } ;
-    if( MODEL == SUPERPAC ) begin  // 2bpp
+    if( MODEL == SUPERPAC || MODEL == GROBDA) begin  // 2bpp
         CLT1_A[9:2]= { 2'd0, CLT1_A[9:4] };
     end
 end
@@ -121,17 +123,17 @@ always @( posedge VCLKx8 ) begin
                         bLoad <= 1'b1;
                     end
                     else begin
-                        nProc <= nProc+1;
+                        nProc <= nProc+1'd1;
                         bLoad <= 1'b0;
                     end
                 end
                 else begin
                        pn <= spriteram[5:0];
-                       sx <= { spriteram_3[0], spriteram_2[7:0] } - 9'h38;
+                       sx <= {{spriteram_3[0], spriteram_2[7:0]} ^ {9{FLIP_SCREEN}}} - 9'h38 + {9'h161 & {9{FLIP_SCREEN}}} - {FLIP_SCREEN & _sizx, 4'b0};
                         sy <= ( sy & _msky ) ^ yf;
                      loop <= spriteram_3[1] ? 6'h0 : { _sizx, ~_sizx, 4'h0 };
-                     lpcn <= 6'h0;
-                    nProc <= nProc+1;
+                     lpcn <= 5'h0;
+                    nProc <= nProc+1'd1;
                     bLoad <= 1'b0;
                 end
             end
@@ -140,7 +142,7 @@ always @( posedge VCLKx8 ) begin
     else begin              // Horizontal blanking time
         if (bKick) begin
             lbufr <= ~VPOS[0];
-            vposl <= VPOS+1;
+            vposl <= {VPOS ^ {9{FLIP_SCREEN}}} + 1 + {220 & {9{FLIP_SCREEN}}};
             nProc <= 0;
             bKick <= 1'b0;
         end

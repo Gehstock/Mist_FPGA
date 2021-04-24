@@ -127,17 +127,14 @@ begin
   begin
     if rising_edge(clk) and clk_ena = '1' then
       spr_on_v := '0';
-      spr_pri_v := '0';
+      --spr_pri_v := '0';
       for i in 0 to N_SPRITES-1 loop
-        -- if highest priority = 0 and pixel on
-        if spr_pri_v = '0' and ctl_o(i).set = '1' then
-          -- if no sprite on or this priority = 1
-          if spr_on_v = '0' or reg_o(i).pri = '1' then
-            pal_a <= ctl_o(i).pal_a;
-            spr_on_v := '1';    -- flag as sprite on
-            spr_pri_v := reg_o(i).pri;		-- store priority
+          -- higher sprite number has priority
+          if ctl_o(i).set = '1' then
+              pal_a <= ctl_o(i).pal_a;
+              spr_on_v := '1';    -- flag as sprite on
+              --spr_pri_v := reg_o(i).pri;		-- store priority
           end if;
-        end if;
       end loop;
     end if;
     set <= spr_on_v;

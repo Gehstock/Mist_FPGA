@@ -83,6 +83,7 @@ begin
 
       -- video data signals (in)
       rgb_i           => rgb_data,
+      topbottom_mask  => graphics_i.bit16(3)(0),
 
       -- video control signals (out)
       video_ctl_o     => from_video_ctl,

@@ -56,7 +56,8 @@ create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_port
 set sdram_clk "pll|altpll_component|auto_generated|pll1|clk[0]"
 set vid_clk   "pll|altpll_component|auto_generated|pll1|clk[1]"
 set game_clk  "pll|altpll_component|auto_generated|pll1|clk[1]"
-set aud_clk   "pll|altpll_component|auto_generated|pll1|clk[2]"
+set aud_clk   "pll_aud|altpll_component|auto_generated|pll1|clk[0]"
+set dac_clk   "pll_aud|altpll_component|auto_generated|pll1|clk[1]"
 
 #**************************************************************
 # Create Generated Clock
@@ -92,8 +93,8 @@ set_input_delay -clock [get_clocks $sdram_clk] -reference_pin [get_ports {SDRAM_
 #**************************************************************
 
 set_output_delay -add_delay  -clock_fall -clock [get_clocks {SPI_SCK}] 1.000 [get_ports {SPI_DO}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $aud_clk]  1.000 [get_ports {AUDIO_L}]
-set_output_delay -add_delay  -clock_fall -clock [get_clocks $aud_clk]  1.000 [get_ports {AUDIO_R}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks $dac_clk]  1.000 [get_ports {AUDIO_L}]
+set_output_delay -add_delay  -clock_fall -clock [get_clocks $dac_clk]  1.000 [get_ports {AUDIO_R}]
 set_output_delay -add_delay  -clock_fall -clock [get_clocks $sdram_clk]  1.000 [get_ports {LED}]
 set_output_delay -add_delay  -clock_fall -clock [get_clocks $vid_clk]  1.000 [get_ports {VGA_*}]
 
@@ -106,6 +107,7 @@ set_output_delay -clock [get_clocks $sdram_clk] -reference_pin [get_ports {SDRAM
 
 set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {pll|altpll_component|auto_generated|pll1|clk[*]}]
 set_clock_groups -asynchronous -group [get_clocks $game_clk] -group [get_clocks $aud_clk]
+set_clock_groups -asynchronous -group [get_clocks $game_clk] -group [get_clocks $dac_clk]
 
 #**************************************************************
 # Set False Path

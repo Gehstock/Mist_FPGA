@@ -128,6 +128,7 @@ package video_controller_pkg is
     rgb       : RGB_t;
     set       : std_logic;
     pal_a     : std_logic_vector(7 downto 0);
+    prio      : std_logic;
   end record;
 
   type from_TILEMAP_CTL_a is array (natural range <>) of from_TILEMAP_CTL_t;

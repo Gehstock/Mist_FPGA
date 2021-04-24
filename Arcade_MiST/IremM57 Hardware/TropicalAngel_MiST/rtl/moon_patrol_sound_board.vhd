@@ -31,8 +31,9 @@ port(
 
  select_sound : in std_logic_vector(7 downto 0);
  audio_out    : out std_logic_vector(11 downto 0);
- snd_rom_addr: out std_logic_vector(12 downto 0);
- snd_rom_do  : in  std_logic_vector(7 downto 0);
+ snd_rom_addr : out std_logic_vector(12 downto 0);
+ snd_rom_do   : in  std_logic_vector(7 downto 0);
+ snd_rom_vma  : out std_logic;
  dbg_cpu_addr : out std_logic_vector(15 downto 0)
 );
 end moon_patrol_sound_board;
@@ -49,6 +50,7 @@ architecture struct of moon_patrol_sound_board is
  signal cpu_rw     : std_logic;
  signal cpu_irq    : std_logic;
  signal cpu_nmi    : std_logic;
+ signal cpu_vma    : std_logic;
  
  signal irqraz_cs : std_logic;
  signal irqraz_we : std_logic;
@@ -235,10 +237,10 @@ end process;
 -- microprocessor 6800/01/03
 main_cpu : entity work.cpu68
 port map(	
-	clk      => clock_E,   -- E clock input (falling edge)
+	clk      => clock_E,  -- E clock input (falling edge)
 	rst      => reset,    -- reset input (active high)
 	rw       => cpu_rw,   -- read not write output
-	vma      => open,     -- valid memory address (active high)
+	vma      => cpu_vma,  -- valid memory address (active high)
 	address  => cpu_addr, -- address bus output
 	data_in  => cpu_di,   -- data bus input
 	data_out => cpu_do,   -- data bus output
@@ -251,6 +253,7 @@ port map(
 );
 
 snd_rom_addr <= cpu_addr(12 downto 0);
+snd_rom_vma <= cpu_vma and rom_cs;
 
 -- cpu wram
 cpu_ram : entity work.gen_ram

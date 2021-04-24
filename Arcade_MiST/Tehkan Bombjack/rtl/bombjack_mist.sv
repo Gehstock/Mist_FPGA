@@ -34,9 +34,24 @@ localparam CONF_STR = {
 	"BOMBJACK;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
-	"T6,Reset;",
+	"P1,Switches;",
+	"P1O89,Coin A,1C_1Cr,1C_2Cr,1C_3Cr,1C_6Cr;",
+	"P1OAB,Coin B,1C_1Cr,1C_2Cr,1C_3Cr,1C_6Cr;",
+	"P1OCD,Lives,3,4,5,2;",
+	"P1OE,Demo Sounds,Off,On;",
+	"P1OF,Cabinet,Cocktail,Upright;",
+	"P1OGI,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",
+	"P1OJK,Bird Speed,Easy,Medium,Hard,Insane;",
+	"P1OLM,Enemies,Easy,Medium,Hard,Insane;",
+	"P1ON,Special Coin,Easy,Hard;",
+	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
+
+wire        rotate = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire  [7:0] sw1 = status[15:8];
+wire  [7:0] sw2 = status[23:16];
 
 assign 		LED = ~ioctl_downl;
 assign 		SDRAM_CLK = clock_48;
@@ -55,12 +70,12 @@ pll pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [11:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire  [11:0] audio_l, audio_r;
+wire        no_csync;
+wire [11:0] audio_l, audio_r;
 wire 			hs, vs;
 //wire 			hb, vb;
 //wire 			blankn = ~(hb | vb);
@@ -144,7 +159,7 @@ always @(posedge clock_48) begin
 	reg ioctl_downlD;
 	ioctl_downlD <= ioctl_downl;
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | buttons[1] | status[6] | ~rom_loaded;
+	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
 bombjack_top bombjack_top(
@@ -155,9 +170,11 @@ bombjack_top bombjack_top(
 	.O_VSYNC(vs),
 //	.O_HBLANK(hb),
 //	.O_VBLANK(vb),	
-	.p1_sw({"000",m_fire,m_down,m_up,m_left,m_right}),
-	.p2_sw({"000",m_fire,m_down,m_up,m_left,m_right}),
-	.s_sys({"1111",btn_two_players,btn_one_player,1'b1,btn_coin}),
+	.p1_sw({"000",m_fireA,m_down,m_up,m_left,m_right}),
+	.p2_sw({"000",m_fire2A,m_down2,m_up2,m_left2,m_right2}),
+	.s_sys({"1111",m_two_players,m_one_player,m_coin2,m_coin1}),
+	.s_sw1(sw1),
+	.s_sw2(sw2),
 	.cpu_rom_addr(rom_addr),
 	.cpu_rom_data(rom_addr[0] ? rom_do[15:8] : rom_do[7:0]),
 	.bg_rom_addr(bg_addr),
@@ -187,10 +204,11 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 ///	.ce_divider(1),
-	.rotate         ( {1'b1,status[2]} ),
+	.rotate         ( { 1'b1, rotate } ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
-	.ypbpr          ( ypbpr            )
+	.scanlines      ( scanlines        ),
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
 	);
 	
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
@@ -204,6 +222,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -226,38 +245,24 @@ dac #(.C_bits(12))dac_r(
 	.dac_o(AUDIO_R)
 	);	
 	
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_coin  = 0;
-
-always @(posedge clock_48) begin
-	reg old_state;
-	old_state <= key_strobe;
-	if(old_state != key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      		<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
-
+arcade_inputs inputs (
+	.clk         ( clock_48    ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule

@@ -38,6 +38,7 @@ architecture SYN of mpatrol is
   signal init       		: std_logic := '1';  
   signal clk_sys        : std_logic;
   signal clk_aud        : std_logic;
+  signal clk_dac        : std_logic;
   signal clk_vid        : std_logic;
   signal rst_audD       : std_logic;
   signal rst_aud        : std_logic;
@@ -109,9 +110,15 @@ begin
 Clock_inst : entity work.Clock
 	port map (
 		inclk0  => CLOCK_27,
+		c0      => clk_sys,    -- 6
+		c1      => clk_vid     -- 24
+	);
+
+pll_aud_inst : entity work.pll_aud
+	port map (
+		inclk0  => CLOCK_27,
 		c0      => clk_aud,    -- 3.58/4
-		c1      => clk_sys,    -- 6
-		c2      => clk_vid     -- 24
+		c1      => clk_dac     -- clk_aud * 100
 	);
 
 	clkrst_i.clk(0)	<=	clk_sys;
@@ -240,7 +247,7 @@ dac : entity work.dac
 		C_bits    => 12
 	)
 	port map (
-		clk_i     => clk_aud,
+		clk_i     => clk_dac,
 		res_n_i   => not rst_aud,
 		dac_i     => audio_out,
 		dac_o     => audio

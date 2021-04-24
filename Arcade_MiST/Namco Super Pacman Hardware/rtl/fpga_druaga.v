@@ -37,7 +37,8 @@ module fpga_druaga
     input  [16:0]   ROMAD,
     input  [ 7:0]   ROMDT,
     input           ROMEN,
-    input  [ 2:0]   MODEL
+    input  [ 2:0]   MODEL,
+    input           FLIP_SCREEN
 );
 
 parameter [2:0] SUPERPAC=3'd5;
@@ -139,7 +140,8 @@ DRUAGA_VIDEO video
     .SPRA_A(spra_a), .SPRA_D(spra_d),
     .SCROLL({1'b0,SCROLL}),
     .ROMAD(ROMAD),.ROMDT(ROMDT),.ROMEN(ROMEN),
-    .MODEL(MODEL)
+    .MODEL(MODEL),
+    .FLIP_SCREEN(FLIP_SCREEN)
 );
 
 // This prevents a glitch in the sprites for the first line
@@ -240,6 +242,7 @@ module MEMS
 );
 
 parameter [2:0] SUPERPAC=3'd5;
+parameter [2:0] GROBDA=3'd6;
 
 wire [7:0] mrom_d, srom_d;
 //DLROM #(15,8) mcpui( CPUCLKx2, MCPU_ADRS[14:0], mrom_d, ROMCL,ROMAD[14:0],ROMDT,ROMEN & (ROMAD[16:15]==2'b0_0));
@@ -263,7 +266,7 @@ wire mrom_cs  = ( MCPU_ADRS[15] ) & MCPU_VMA;    // $8000-$FFFF
 
 always @(*) begin
     cram_ad = mram_ad;
-    if( MODEL == SUPERPAC ) begin
+    if( MODEL == SUPERPAC || MODEL == GROBDA) begin
         mram_cs0 = ( MCPU_ADRS[15:10] == 6'b000000 ) && MCPU_VMA;    // $0000-$03FF
         mram_cs1 = ( MCPU_ADRS[15:10] == 6'b000001 ) && MCPU_VMA;    // $0400-$07FF
         mram_cs2 = ( MCPU_ADRS[15:11] == 5'b00001  ) && MCPU_VMA;    // $1000-$17FF
@@ -350,6 +353,7 @@ module REGS
 );
 
 parameter [2:0] SUPERPAC=3'd5;
+parameter [2:0] GROBDA=3'd6;
 
 // BG Scroll Register
 wire    MCPU_SCRWE = ( ( MCPU_ADRS[15:11] == 5'b00111 ) & MCPU_VMA & MCPU_WE );
@@ -357,7 +361,7 @@ wire    MCPU_SCRWE = ( ( MCPU_ADRS[15:11] == 5'b00111 ) & MCPU_VMA & MCPU_WE );
 always @ ( negedge MCPU_CLK or posedge RESET ) begin
     if ( RESET ) SCROLL <= 8'h0;
     else begin
-        if( MODEL==SUPERPAC )
+        if( MODEL==SUPERPAC || MODEL==GROBDA)
             SCROLL <= 8'd0;
         else if ( MCPU_SCRWE )
             SCROLL <= MCPU_ADRS[10:3];

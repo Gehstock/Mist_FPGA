@@ -59,7 +59,20 @@ entity bombjack_top is
 		p1_sw					: in		std_logic_vector(7 downto 0);--"000",jump,down,up,left,right
 		p2_sw					: in		std_logic_vector(7 downto 0);--"000",jump,down,up,left,right
 		s_sys					: in		std_logic_vector(7 downto 0);--"1111",start2,start1,coin2,coin1
-		
+		s_sw1					: in		std_logic_vector(7 downto 0) := "11100000";
+		-- sw1 presets
+		--s_sw1(7)				<= '1';					-- demo sounds 1=on, 0=off
+		--s_sw1(6)				<= '1';					-- orientation 1=upright, 0=cocktail
+		--s_sw1(5 downto 4)	<= "10";					-- lives 00=3, 01=4, 10=5, 11=2
+		--s_sw1(3 downto 2)	<= "00";					-- coin b 00=1Coin/1Credit, 01=2Coins/1Credit, 10=1Coin/2Credits, 11=1Coin/3Credits
+		--s_sw1(1 downto 0)	<= "00";					-- coin a 00=1Coin/1Credit, 01=1Coin/2Credits, 10=1Coin/3Credits, 11=1Coin/6Credits
+		s_sw2					: in		std_logic_vector(7 downto 0) := "00000010";
+		-- sw2 presets
+		--s_sw2(7)				<= '0';					-- special coin 0=easy, 1=hard
+		--s_sw2(6 downto 5)	<= "00";					-- enemies number and speed 00=easy, 01=medium, 10=hard, 11=insane
+		--s_sw2(4 downto 3)	<= "00";					-- bird speed 00=easy, 01=medium, 10=hard, 11=insane
+		--s_sw2(2 downto 0)	<= "010";				-- bonus life 000=none, 001=every 100k, 010=every 30k, 011=50k only, 100=100k only, 101=50k and 100k, 110=100k and 300k, 111=50k and 100k and 300k
+
 		cpu_rom_addr		: out		std_logic_vector(15 downto 0) := (others => '0');
 		cpu_rom_data		: in		std_logic_vector(7 downto 0) := (others => '0');
 		
@@ -132,8 +145,6 @@ architecture RTL of bombjack_top is
 	signal ram_state_ctr		: std_logic_vector( 5 downto 0) := (others => '0');
 
 	-- player controls
-	signal s_sw1				: std_logic_vector( 7 downto 0) := (others => '1');
-	signal s_sw2				: std_logic_vector( 7 downto 0) := (others => '1');
 	signal psg_data_out		: std_logic_vector( 7 downto 0) := (others => '0');
 	signal psg_data_in		: std_logic_vector( 7 downto 0) := (others => '0');
 
@@ -257,18 +268,6 @@ begin
 	O_VSYNC				<= s_vsync_n;
 	O_HBLANK				<= s_hblank;	
 	O_VBLANK			   <= s_vblank;		
-
-	-- SW1 presets
-	s_sw1(7)				<= '1';					-- demo sounds 1=on, 0=off
-	s_sw1(6)				<= '1';					-- orientation 1=upright, 0=cocktail
-	s_sw1(5 downto 4)	<= "10";					-- lives 00=3, 01=4, 10=5, 11=2
-	s_sw1(3 downto 2)	<= "00";					-- coin b 00=1Coin/1Credit, 01=2Coins/1Credit, 10=1Coin/2Credits, 11=1Coin/3Credits
-	s_sw1(1 downto 0)	<= "00";					-- coin a 00=1Coin/1Credit, 01=1Coin/2Credits, 10=1Coin/3Credits, 11=1Coin/6Credits
-	-- sw2 presets
-	s_sw2(7)				<= '0';					-- special coin 0=easy, 1=hard
-	s_sw2(6 downto 5)	<= "00";					-- enemies number and speed 00=easy, 01=medium, 10=hard, 11=insane
-	s_sw2(4 downto 3)	<= "00";					-- bird speed 00=easy, 01=medium, 10=hard, 11=insane
-	s_sw2(2 downto 0)	<= "010";				-- bonus life 000=none, 001=every 100k, 010=every 30k, 011=50k only, 100=100k only, 101=50k and 100k, 110=100k and 300k, 111=50k and 100k and 300k
 
 	----------------------------------------------------------------------------
 	-- concatenate some signals so we can pass them to modules as a logic vector

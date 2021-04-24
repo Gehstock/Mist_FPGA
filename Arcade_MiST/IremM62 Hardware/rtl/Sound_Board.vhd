@@ -85,6 +85,7 @@ architecture struct of Sound_Board is
  signal ay1_do        : std_logic_vector(7 downto 0);
  signal ay1_audio     : std_logic_vector(9 downto 0);
  signal ay1_port_b_do : std_logic_vector(7 downto 0);
+ signal ay1_port_b_oe_l : std_logic;
  
  signal ay2_chan_a    : std_logic_vector(7 downto 0);
  signal ay2_chan_b    : std_logic_vector(7 downto 0);
@@ -246,7 +247,7 @@ end process;
 -- MSM5205 ADPCM decoder chips
 adpcm_0 : jt5205
 port map (
-  rst   => ay1_port_b_do(0),
+  rst   => ay1_port_b_do(0) or ay1_port_b_oe_l,
   clk   => clock_E,
   cen   => adpcm_ce,
   sel   => ay1_port_b_do(3 downto 2),
@@ -258,7 +259,7 @@ port map (
 
 adpcm_1 : jt5205
 port map (
-  rst   => ay1_port_b_do(1),
+  rst   => ay1_port_b_do(1) or ay1_port_b_oe_l,
   clk   => clock_E,
   cen   => adpcm_ce,
   sel   => ay1_port_b_do(3 downto 2),
@@ -328,7 +329,7 @@ port map(
   -- port b
   I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
   O_IOB      => ay1_port_b_do,   -- out std_logic_vector(7 downto 0);
-  O_IOB_OE_L => open,            -- out std_logic;
+  O_IOB_OE_L => ay1_port_b_oe_l, -- out std_logic;
  
   ENA        => '1', --cpu_ena,  -- in  std_logic; -- clock enable for higher speed operation
   RESET_L    => reset_n,         -- in  std_logic;

@@ -94,14 +94,20 @@ assign AUDIO_R = AUDIO_L;
 assign SDRAM_CLK = clk_sys;
 assign SDRAM_CKE = 1;
 
-wire clk_sys, clk_aud;
+wire clk_sys, clk_aud, clk_dac;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),
-	.c1(clk_aud),
 	.locked(pll_locked)
+	);
+
+pll_aud pll_aud(
+	.inclk0(CLOCK_27),
+	.areset(0),
+	.c0(clk_aud),
+	.c1(clk_dac)
 	);
 
 wire [31:0] status;
@@ -142,8 +148,9 @@ user_io(
 wire [14:0] cart_addr;
 wire [15:0] sdram_do;
 wire        cart_rd;
-wire [12:0] snd_addr;
+wire [12:0] snd_addr, snd_rom_addr;
 wire [15:0] snd_do;
+wire        snd_vma, snd_vma_r, snd_vma_r2;
 
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -213,6 +220,11 @@ always @(posedge clk_sys) begin
 			port2_req <= ~port2_req;
 		end
 	end
+
+	// async clock domain crossing here (clk_aud -> clk_sys)
+	snd_vma_r <= snd_vma;
+	snd_vma_r2 <= snd_vma_r;
+	if (snd_vma_r2) snd_addr <= snd_rom_addr;
 end
 
 reg reset = 1;
@@ -235,7 +247,7 @@ wire  [1:0] r;
 traverse_usa traverse_usa (
 	.clock_36     ( clk_sys         ),
 	.clock_0p895  ( clk_aud         ),
-	.reset        ( reset 				  ),
+	.reset        ( reset           ),
 
 	.palmode      ( pal             ),
 	.shtrider     ( shtrider        ),
@@ -269,8 +281,9 @@ traverse_usa traverse_usa (
 	.cpu_rom_addr ( cart_addr       ),
 	.cpu_rom_do   ( cart_addr[0] ? sdram_do[15:8] : sdram_do[7:0] ),
 	.cpu_rom_rd   ( cart_rd         ),
-	.snd_rom_addr ( snd_addr        ),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_addr ( snd_rom_addr    ),
+	.snd_rom_do   ( snd_rom_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_vma  ( snd_vma         ),
 	.dl_addr      ( ioctl_addr[16:0]),
 	.dl_data      ( ioctl_dout      ),
 	.dl_wr        ( ioctl_wr        )
@@ -303,8 +316,8 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 dac #(
 	.C_bits(11))
 dac(
-	.clk_i(clk_aud),
-	.res_n_i(~reset),
+	.clk_i(clk_dac),
+	.res_n_i(1'b1),
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);

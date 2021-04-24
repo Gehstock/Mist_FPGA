@@ -53,6 +53,7 @@ localparam CONF_STR = {
 	"O5,Blend,Off,On;",
 	"O6,Service,Off,On;",
 	"O7,Spinner Speed,Low,High;",
+	"R2048,Save NVRAM;",
 	"T0,Reset;",
 	"V,v1.1.",`BUILD_DATE
 };
@@ -62,7 +63,7 @@ wire   blend  = status[5];
 wire   service = status[6];
 wire   spinspd = status[7];
 
-assign LED = ~ioctl_downl;
+assign LED = ~(ioctl_downl | ioctl_upl);
 assign SDRAM_CLK = clk_mem;
 assign SDRAM_CKE = 1;
 
@@ -117,25 +118,30 @@ wire [15:0] snd_do;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
 wire        ioctl_downl;
+wire        ioctl_upl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
+	.SPI_DO        ( SPI_DO       ),
 	.ioctl_download( ioctl_downl  ),
+	.ioctl_upload  ( ioctl_upl    ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
 	.ioctl_addr    ( ioctl_addr   ),
-	.ioctl_dout    ( ioctl_dout   )
+	.ioctl_dout    ( ioctl_dout   ),
+	.ioctl_din     ( ioctl_din    )
 );
 
 wire [24:0] sp_ioctl_addr = ioctl_addr - 17'he000; // sound cpu prg offset
-wire [24:0] dl_addr = ioctl_addr - 18'h2e000; // background + char grfx offset
+wire [24:0] dl_addr = ioctl_addr - (ioctl_index == 0 ? 18'h2e000 : 18'h0); // background + char grfx offset
 
 reg port1_req, port2_req;
 sdram sdram(
@@ -176,7 +182,7 @@ always @(posedge clk_sys) begin
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl) begin
-		if (~ioctl_wr_last && ioctl_wr) begin
+		if (~ioctl_wr_last && ioctl_wr && ioctl_index == 0) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
 		end
@@ -249,9 +255,11 @@ Crater_Raider Crater_Raider(
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.sp_addr      ( sp_addr         ),
 	.sp_graphx32_do ( sp_do         ),
-	.dl_addr      ( dl_addr    ),
-	.dl_wr        ( ioctl_wr   ),
-	.dl_data      ( ioctl_dout )
+	.dl_addr      ( dl_addr         ),
+	.dl_data      ( ioctl_dout      ),
+	.dl_wr        ( ioctl_wr && ioctl_index == 0 ),
+	.up_data      ( ioctl_din       ),
+	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )
 );
 
 wire vs_out;

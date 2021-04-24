@@ -71,15 +71,20 @@ assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1; 
 
-wire clk_sys, clk_aud, clk_sd;
+wire clk_sys, clk_sd, clk_aud, clk_dac;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
-	.c0(clk_sys),
-	.c1(clk_aud),
-	.c2(clk_sd),
+	.c0(clk_sd),
+	.c1(clk_sys),
 	.locked(pll_locked)
+	);
+
+pll_aud pll_aud(
+	.inclk0(CLOCK_27),
+	.c0(clk_aud),
+	.c1(clk_dac)
 	);
 
 wire [31:0] status;
@@ -100,8 +105,10 @@ wire        key_strobe;
 
 wire [14:0] rom_addr;
 wire [15:0] rom_do;
-wire [12:0] snd_addr;
+wire [12:0] snd_rom_addr;
+wire [16:1] snd_addr;
 wire [15:0] snd_do;
+wire        snd_vma, snd_vma_r, snd_vma_r2;
 wire [14:0] sp_addr;
 wire [31:0] sp_do;
 
@@ -153,7 +160,7 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, rom_addr[14:1]} ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h4000 + snd_addr[12:1]) ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : snd_addr ),
 	.cpu2_q        ( snd_do ),
 
 	// port2 for sprite graphics
@@ -180,6 +187,11 @@ always @(posedge clk_sd) begin
 			port2_req <= ~port2_req;
 		end
 	end
+
+	// async clock domain crossing here (clk_aud -> clk_sys)
+	snd_vma_r <= snd_vma;
+	snd_vma_r2 <= snd_vma_r;
+	if (snd_vma_r2) snd_addr <= 16'h4000 + snd_rom_addr[12:1];
 end
 
 // reset signal generation
@@ -219,8 +231,9 @@ TropicalAngel TropicalAngel(
 
 	.cpu_rom_addr ( rom_addr       	),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.snd_rom_addr ( snd_addr			  ),
-	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_addr ( snd_rom_addr    ),
+	.snd_rom_do   ( snd_rom_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
+	.snd_rom_vma  ( snd_vma         ),
 	.sp_addr      ( sp_addr         ),
 	.sp_graphx32_do( sp_do          ),
 
@@ -286,7 +299,7 @@ assign AUDIO_R = dac_o;
 dac #(
 	.C_bits(11))
 dac(
-	.clk_i(clk_aud),
+	.clk_i(clk_dac),
 	.res_n_i(1),
 	.dac_i(audio),
 	.dac_o(dac_o)
