@@ -5,7 +5,7 @@
 	<mratimestamp>20210307</mratimestamp>
 	<rbf>druaga</rbf>
 	<rom index="1">
-		<part>05</part>
+		<part>06</part>
 	</rom>
 	<rom index="0" zip="grobda.zip" md5="None">
 		<!-- main CPU -->

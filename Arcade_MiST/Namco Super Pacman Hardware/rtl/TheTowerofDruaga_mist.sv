@@ -91,7 +91,7 @@ always @(*) begin
 	DSW2 = 0;
 
 	case (core_mod)
-	7'h0, 7'h1, 7'h3: // DRUAGA, DIGDUG2
+	7'h0, 7'h1, 7'h3, 7'h6: // DRUAGA, DIGDUG2, GROBDA
 	begin
 		DSW0 = status[15:8];
 		DSW1 = status[23:16];

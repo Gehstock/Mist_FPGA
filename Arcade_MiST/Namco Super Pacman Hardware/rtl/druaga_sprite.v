@@ -29,6 +29,7 @@ module DRUAGA_SPRITE
 );
 
 parameter [2:0] SUPERPAC=3'd5;
+parameter [2:0] GROBDA=3'd6;
 
 reg  [9:0]  CLT1_A;
 wire [3:0]  CLT1_D;
@@ -91,7 +92,7 @@ always @(*) begin
              (ox[1:0]==2'b01) ? { pn, SPCO[14], SPCO[10], SPCO[6], SPCO[2] } :
              (ox[1:0]==2'b10) ? { pn, SPCO[13], SPCO[ 9], SPCO[5], SPCO[1] } :
                                 { pn, SPCO[12], SPCO[ 8], SPCO[4], SPCO[0] } ;
-    if( MODEL == SUPERPAC ) begin  // 2bpp
+    if( MODEL == SUPERPAC || MODEL == GROBDA) begin  // 2bpp
         CLT1_A[9:2]= { 2'd0, CLT1_A[9:4] };
     end
 end

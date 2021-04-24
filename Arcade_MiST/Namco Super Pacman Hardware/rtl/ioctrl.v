@@ -46,6 +46,7 @@ reg             bIOMode;
 
 parameter [2:0] SUPERPAC=3'd5;
 
+
 assign  OUT = { 4'b1111, outr };
 assign  IsMOTOS = bIOMode;
 
