@@ -1,4 +1,4 @@
-Arcade: Time Pilot port to MiST by Gehstock
+Arcade: Time Pilot port to MiST
 
 Working games:
 Time Pilot
