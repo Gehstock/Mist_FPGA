@@ -205,7 +205,7 @@ ROM Structure:
 7400-7BFF snd  cpu  2k
 */
 data_io data_io (
-	.clk_sys       ( clk_sys      ),
+	.clk_sys       ( clk_mem      ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -228,7 +228,7 @@ wire [11:0] snd_rom_addr;
 wire        snd_vma;
 wire [15:0] snd_do;
 
-sdram #(.MHZ(54)) sdram(
+sdram #(.MHZ(72)) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
 	.clk           ( clk_mem      ),
@@ -258,9 +258,8 @@ sdram #(.MHZ(54)) sdram(
 	.snd_q         ( snd_do )
 );
 
-always @(posedge clk_sys) begin
+always @(posedge clk_mem) begin
 	reg        ioctl_wr_last = 0;
-	reg        snd_vma_r, snd_vma_r2;
 
 	ioctl_wr_last <= ioctl_wr;
 	if (ioctl_downl && ioctl_index == 0) begin
@@ -269,6 +268,11 @@ always @(posedge clk_sys) begin
 			port2_req <= ~port2_req;
 		end
 	end
+end
+
+always @(posedge clk_sys) begin
+	reg        snd_vma_r, snd_vma_r2;
+
 	snd_vma_r <= snd_vma; snd_vma_r2 <= snd_vma_r;
 	if (snd_vma_r2) snd_addr <= snd_rom_addr;	
 end
@@ -314,7 +318,7 @@ defender defender (
 	.snd_do           ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
 	.snd_vma          ( snd_vma ),
 
-	.dl_clock         ( clk_sys ),
+	.dl_clock         ( clk_mem ),
 	.dl_addr          ( ioctl_addr[15:0] ),
 	.dl_data          ( ioctl_dout ),
 	.dl_wr            ( ioctl_wr && ioctl_index == 0 ),
