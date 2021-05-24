@@ -76,7 +76,7 @@ always @(posedge clk_5) begin
 end
 
 computer_space_top computerspace(
-	.reset(buttons[1] | status[6]),
+	.reset(buttons[1] | status[0]),
 	.clock_50(clk_sys),
 	.game_clk(clk_5),
 	.signal_ccw(m_left),
