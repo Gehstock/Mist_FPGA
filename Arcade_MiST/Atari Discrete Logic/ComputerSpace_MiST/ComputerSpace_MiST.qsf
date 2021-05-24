@@ -174,6 +174,7 @@ set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ComputerSpace_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/computer_space_top.vhd
 set_global_assignment -name VHDL_FILE rtl/computer_space_logic.vhd
+set_global_assignment -name VHDL_FILE rtl/computer_space_sound.vhd
 set_global_assignment -name VHDL_FILE rtl/sync_star_board.vhd
 set_global_assignment -name VHDL_FILE rtl/motion_board.vhd
 set_global_assignment -name VHDL_FILE rtl/scan_counter.vhd
@@ -183,13 +184,7 @@ set_global_assignment -name VHDL_FILE rtl/memory_board.vhd
 set_global_assignment -name VHDL_FILE rtl/saucer_diode_image.vhd
 set_global_assignment -name VHDL_FILE rtl/rocket_diode_images.vhd
 set_global_assignment -name VHDL_FILE rtl/clocks.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VHDL_FILE rtl/computer_space_sound.vhd
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
-set_global_assignment -name SDC_FILE ComputerSpace_MiST.sdc
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/dac.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name VERILOG_FILE rtl/osd.v
 set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
+set_global_assignment -name SDC_FILE ComputerSpace_MiST.sdc
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
