@@ -40,85 +40,75 @@ pll pll(
 	.locked(locked)
 	);
 
-wire [31:0] status;
+wire [63:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [11:0] kbjoy;
-wire  [7:0] joystick_0, joystick_1;
+wire [31:0] joystick_0, joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
+wire        no_csync;
 wire  [6:0] audio1, audio2;
-wire	[7:0] RGB;
+wire	[7:0] vid;
 wire 			vb, hb;
 wire 			blankn = ~(hb | vb);
 wire 			hs, vs;
 
-
 canyon_bomber canyon_bomber(		
 	.clk_12(clk_12),
 	.Reset_I(~(status[0] | buttons[1])),		
-	.RGB(RGB),
+	.RGB(vid),
 	.Vblank_O(vb),
 	.HBlank_O(hb),
 	.HSync_O(hs),
 	.VSync_O(vs),
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
-	.Coin1_I(~btn_coin),
-	.Coin2_I(1'b1),
-	.Start1_I(~btn_one_player),
-	.Start2_I(~btn_two_players),
-	.Fire1_I(~(btn_fire2 | joystick_0[4])),
-	.Fire2_I(~joystick_1[4]),
-	.Slam_I(1'b1),
+	.Coin1_I(~m_coin1),
+	.Coin2_I(~m_coin2),
+	.Start1_I(~m_one_player),
+	.Start2_I(~m_two_players),
+	.Fire1_I(~m_fireA),
+	.Fire2_I(~m_fire2A),
+	.Slam_I(~m_tilt),
 	.Test_I(~status[1]),
 	.Lamp1_O(),
 	.Lamp2_O()
 	);
 
-dac #(7) dacl(
-	.clk_i(clk_12),
-	.res_n_i(1'b1),
-	.dac_i(audio1),
-	.dac_o(AUDIO_L)
-	);
-
-dac #(7) dacr(
-	.clk_i(clk_12),
-	.res_n_i(1'b1),
-	.dac_i(audio2),
-	.dac_o(AUDIO_R)
-	);
-
-mist_video #(.SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(
+	.COLOR_DEPTH(6), 
+	.SD_HCNT_WIDTH(9)) 
+mist_video(
 	.clk_sys        ( clk_24           ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? RGB[7:2] : 0 ),
-	.G              ( blankn ? RGB[7:2] : 0 ),
-	.B              ( blankn ? RGB[7:2] : 0 ),
-	.HSync          ( ~hs              ),
-	.VSync          ( ~vs              ),
+	.R					(blankn ? {vid[7:2]} : 0),
+	.G					(blankn ? {vid[7:2]} : 0),
+	.B					(blankn ? {vid[7:2]} : 0),
+	.HSync          ( hs               ),
+	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.ce_divider     ( 1'b1             ),
-	.blend          ( status[5]        ),
+	.scanlines      (scandoublerD ? 2'b00 : status[4:3]),
+//	.rotate         ( { 1'b1, rotate } ),
+//	.ce_divider     ( 1'b1             ),
+	.blend          ( status[6]        ),
 	.scandoubler_disable(scandoublerD  ),
-	.scanlines      ( status[4:3]      ),
+	.no_csync       ( no_csync         ),
 	.ypbpr          ( ypbpr            )
-);
+	);
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(
-	.clk_sys        (clk_12         ),
+	.clk_sys        (clk_24         ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -126,41 +116,49 @@ user_io(
 	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD        ),
+	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
-);
+	);
 	
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_coin  = 0;
+dac #(7) dacl(
+	.clk_i(clk_24),
+	.res_n_i(1'b1),
+	.dac_i(audio1),
+	.dac_o(AUDIO_L)
+	);
 
-always @(posedge clk_12) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        <= key_pressed; // down
-			'h6B: btn_left        <= key_pressed; // left
-			'h74: btn_right       <= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player  <= key_pressed; // F1
-			'h06: btn_two_players <= key_pressed; // F2
-			'h14: btn_fire1       <= key_pressed; // ctrl
-			'h11: btn_fire1 			<= key_pressed; // alt
-			'h29: btn_fire2       <= key_pressed; // Space
-		endcase
-	end
-end
+dac #(7) dacr(
+	.clk_i(clk_24),
+	.res_n_i(1'b1),
+	.dac_i(audio2),
+	.dac_o(AUDIO_R)
+	);
 
-endmodule
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
+
+arcade_inputs inputs (
+	.clk         ( clk_24      ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+//	.rotate      ( rotate      ),
+//	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b0        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
+
+endmodule 
