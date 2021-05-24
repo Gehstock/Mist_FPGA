@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Gun Fight port to MiST by Gehstock 
--- 17 July 2019
+-- Arcade: Amazing Maze port to MiST by Gehstock 
+-- 24 May 2021
 -- 
 ---------------------------------------------------------------------------------
 -- 
@@ -13,17 +13,9 @@
 -- 
 -- Keyboard inputs :
 --
---   ESC          	: 	Start
---   Joystick 1 / 2  	: 	Movement
---   Q			:	Player 1 Gun Up
---   Y			:	Player 1 Gun Down
---   Arrow Up		: 	Player 2 Gun Up
---   ArrowDown		:	Player 2 Gun Down
---   Joystick only
--- 
--- 
+--   ESC          		: 	Start
+--   Joystick/Keyboard  	: 	Movement
 ---------------------------------------------------------------------------------
 
 ToDo: 	Sound
-	Controls
 
