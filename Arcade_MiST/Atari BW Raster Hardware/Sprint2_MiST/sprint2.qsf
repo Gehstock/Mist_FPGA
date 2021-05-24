@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 11:06:18  April 28, 2019
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 15:25:09  May 24, 2021
 #
 # -------------------------------------------------------------------------- #
 #
@@ -56,19 +56,11 @@ set_global_assignment -name VHDL_FILE rtl/screech.vhd
 set_global_assignment -name VHDL_FILE rtl/EngineSound.vhd
 set_global_assignment -name VHDL_FILE rtl/gearshift.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/joy2quad.sv
-set_global_assignment -name VHDL_FILE rtl/T65/T65_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/T65_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/T65_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/T65/T65.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/dac.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/scandoubler.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/mist_io.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/osd.sv
 set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T65/T65.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
