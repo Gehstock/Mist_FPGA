@@ -29,9 +29,9 @@ localparam CONF_STR = {
 	"O2,Invisible,Off,On;",
 	"O5,Rebound,Off,On;",
 	"O7,Barrier,Off,On;",
-// mn	"O6,Blend,Off,On;",
+// 	"O6,Blend,Off,On;",
 	"OC,Color,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"T0,Reset;",
 	"V,v1.10.",`BUILD_DATE
 };
@@ -166,9 +166,9 @@ mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R					 (blankn ? r : 0	  ),
-	.G					 (blankn ? g : 0	  ),
-	.B					 (blankn ? b : 0	  ),
+	.R			(blankn ? r : 0	   ),
+	.G			(blankn ? g : 0	   ),
+	.B			(blankn ? b : 0	   ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
@@ -181,7 +181,7 @@ mist_video(
 //	.ce_divider     ( 1'b1             ),
 	.blend          ( status[6]        ),
 	.scandoubler_disable(scandoublerD  ),
-	.no_csync       ( 1'b1             ),
+	.no_csync       ( no_csync         ),
 	.ypbpr          ( ypbpr            )
 	);
 

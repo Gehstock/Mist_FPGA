@@ -1,3 +1,4 @@
+//FPGA implementation of Super Breakout arcade game released by Atari in 1978
 module super_breakout_mist(
 	output        LED,
 	output  [5:0] VGA_R,
@@ -24,8 +25,8 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Color,On,Off;",
-	"T6,Reset;",
-	"V,v1.25.",`BUILD_DATE
+	"T0,Reset;",
+	"V,v1.30.",`BUILD_DATE
 	};
     
 assign AUDIO_R = AUDIO_L;
@@ -36,18 +37,20 @@ pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_24),//24.192
 	.c1(clk_12),//12.096
-	.c2(clk_6),//6.048
 	.locked(locked)
 	);
 
 	
-wire [31:0] status;
+wire [63:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0, joystick_1;
+wire [31:0] joystick_0, joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
+wire        key_pressed;
+wire  [7:0] key_code;
+wire        key_strobe;
+wire        no_csync;
 wire  [7:0] audio;
 wire			video;
 wire  [2:0] r,g;
@@ -56,23 +59,23 @@ wire 			hs, vs;
 
 super_breakout super_breakout(
 	.clk_12(clk_12),
-	.Reset_n(~(status[0] | status[6] | buttons[1])),			
+	.Reset_n(~(status[0] | buttons[1])),			
 	.HS(hs),
 	.VS(vs),
 	.Video_O(video),
 	.Video_RGB({r,g,b}),
 	.Audio_O(audio),
-	.Coin1_I(~btn_coin),
-	.Coin2_I(1'b1),
-	.Start1_I(~btn_one_player),
-	.Start2_I(1'b1),
-	.Select1_I(),
-	.Select2_I(),
+	.Coin1_I(~m_coin1),
+	.Coin2_I(~m_coin2),
+	.Start1_I(~m_one_player),
+	.Start2_I(~m_two_players),
+	.Select1_I(~m_fireB),
+	.Select2_I(~m_fire2B),
 	.Enc_A(steer[1]),
 	.Enc_B(steer[0]),
 	.Pot_Comp1_I(),
-	.Slam_I(1'b1),
-	.Serve_I(~(btn_fire2 | joystick_0[4] | joystick_1[4])),
+	.Slam_I(~m_tilt),
+	.Serve_I(~(m_fireA | m_fire2A)),
 	.Test_I(~status[1]),	
 	.Lamp1_O(),
 	.Lamp2_O(),
@@ -81,101 +84,91 @@ super_breakout super_breakout(
 	);
 	
 dac #(
-	.MSBI(7))
-dac(
-	.CLK(clk_24),
-	.RESET(1'b0),
-	.DACin(audio),
-	.DACout(AUDIO_L)
+	.C_bits(8))
+dac_l(
+	.clk_i(clk_24),
+	.res_n_i(1),
+	.dac_i(audio),
+	.dac_o(AUDIO_L)
 	);
 
-video_mixer video_mixer(
-	.clk_sys(clk_24),
-	.ce_pix(clk_6),
-	.ce_pix_actual(clk_6),
-	.SPI_SCK(SPI_SCK),
-	.SPI_SS3(SPI_SS3),
-	.SPI_DI(SPI_DI),
+mist_video #(
+	.COLOR_DEPTH(3), 
+	.SD_HCNT_WIDTH(9)) 
+mist_video(
+	.clk_sys        ( clk_24           ),
+	.SPI_SCK        ( SPI_SCK          ),
+	.SPI_SS3        ( SPI_SS3          ),
+	.SPI_DI         ( SPI_DI           ),
 	.R(~status[5] ? r : {video,video,video}),
 	.G(~status[5] ? g : {video,video,video}),
 	.B(~status[5] ? {b,1'b0} : {video,video,video}),
-	.HSync(hs),
-	.VSync(vs),
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_VS(VGA_VS),
-	.VGA_HS(VGA_HS),
-	.rotate({1'b0,status[2]}),//(left/right,on/off)
-	.scandoublerD(scandoublerD),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-	.ypbpr(ypbpr),
-	.ypbpr_full(1),
-	.line_start(0),
-	.mono(0)
-	);
-
-mist_io #(
-	.STRLEN(($size(CONF_STR)>>3))) 
-mist_io(
-	.clk_sys        (clk_24   	     ),
-	.conf_str       (CONF_STR       ),
-	.SPI_SCK        (SPI_SCK        ),
-	.CONF_DATA0     (CONF_DATA0     ),
-	.SPI_SS2			 (SPI_SS2        ),
-	.SPI_DO         (SPI_DO         ),
-	.SPI_DI         (SPI_DI         ),
-	.buttons        (buttons        ),
-	.switches   	 (switches       ),
-	.scandoublerD	 (scandoublerD	  ),
-	.ypbpr          (ypbpr          ),
-	.ps2_key			 (ps2_key        ),
-	.joystick_0   	 (joystick_0	  ),
-	.joystick_1     (joystick_1	  ),
-	.status         (status         )
+	.HSync          ( hs               ),
+	.VSync          ( vs               ),
+	.VGA_R          ( VGA_R            ),
+	.VGA_G          ( VGA_G            ),
+	.VGA_B          ( VGA_B            ),
+	.VGA_VS         ( VGA_VS           ),
+	.VGA_HS         ( VGA_HS           ),
+	.scanlines      (scandoublerD ? 2'b00 : status[4:3]),
+//	.rotate         ( { 1'b1, rotate } ),
+//	.ce_divider     ( 1'b1             ),
+	.blend          ( status[6]        ),
+	.scandoubler_disable(scandoublerD  ),
+	.no_csync       ( no_csync         ),
+	.ypbpr          ( ypbpr            )
 	);
 	
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_coin  = 0;
-wire       pressed = ps2_key[9];
-wire [7:0] code    = ps2_key[7:0];	
-
-always @(posedge clk_24) begin
-	reg old_state;
-	old_state <= ps2_key[10];
-	if(old_state != ps2_key[10]) begin
-		case(code)
-			'h75: btn_up         	<= pressed; // up
-			'h72: btn_down        	<= pressed; // down
-			'h6B: btn_left      		<= pressed; // left
-			'h74: btn_right       	<= pressed; // right
-			'h76: btn_coin				<= pressed; // ESC
-			'h05: btn_one_player   	<= pressed; // F1
-			'h06: btn_two_players  	<= pressed; // F2
-			'h14: btn_fire1 			<= pressed; // ctrl
-			'h11: btn_fire1 			<= pressed; // alt
-			'h29: btn_fire2   		<= pressed; // Space
-		endcase
-	end
-end
-
-wire m_left   = ~status[2] ? (btn_up | joystick_0[3] | joystick_1[3]) : (btn_left | joystick_0[1] | joystick_1[1]);
-wire m_right  = ~status[2] ? (btn_down | joystick_0[2] | joystick_1[2]) : (btn_right | joystick_0[0] | joystick_1[0]);
+user_io #(
+	.STRLEN(($size(CONF_STR)>>3)))
+user_io(
+	.clk_sys        (clk_24         ),
+	.conf_str       (CONF_STR       ),
+	.SPI_CLK        (SPI_SCK        ),
+	.SPI_SS_IO      (CONF_DATA0     ),
+	.SPI_MISO       (SPI_DO         ),
+	.SPI_MOSI       (SPI_DI         ),
+	.buttons        (buttons        ),
+	.switches       (switches       ),
+	.scandoubler_disable (scandoublerD	  ),
+	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
+	.key_strobe     (key_strobe     ),
+	.key_pressed    (key_pressed    ),
+	.key_code       (key_code       ),
+	.joystick_0     (joystick_0     ),
+	.joystick_1     (joystick_1     ),
+	.status         (status         )
+	);
 
 wire [1:0] steer;
 joy2quad steer1(
 	.CLK(clk_24),
 	.clkdiv('d22500),	
-	.right(m_right),
-	.left(m_left),	
+	.right(m_right | m_right2),
+	.left(m_left | m_left2),	
 	.steer(steer)
 	);
+	
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
+
+arcade_inputs inputs (
+	.clk         ( clk_24      ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+//	.rotate      ( rotate      ),
+//	.orientation ( 2'b11       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b0        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
+	
 
 endmodule 
