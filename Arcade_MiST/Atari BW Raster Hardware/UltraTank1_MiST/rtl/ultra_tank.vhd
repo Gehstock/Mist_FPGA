@@ -26,7 +26,7 @@ entity ultra_tank is
 port(		
 			clk_12		: in	std_logic;	-- 50MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
-			RGB			: out std_logic_vector(7 downto 0);
+			Vid			: out std_logic_vector(7 downto 0);
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
 			Blank_O		: out std_logic;  -- Composite blank output
 			HS				: out std_logic;
@@ -288,10 +288,10 @@ VB <= VBlank;
 COL: process(clk_12, Video)
 begin
 	case Video is
-		when "01" => RGB <= ("10000000");
-		when "10" => RGB <= ("01010000");
-		when "11" => RGB <= ("11111111");
-		when others => RGB <= ("00000000");
+		when "01" => Vid <= ("10000000");
+		when "10" => Vid <= ("01010000");
+		when "11" => Vid <= ("11111111");
+		when others => Vid <= ("00000000");
 	end case;
 end process;
 

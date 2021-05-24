@@ -38,9 +38,6 @@ port(
 end audio;
 
 architecture rtl of audio is
-
-signal reset						: std_logic;
-
 signal H4							: std_logic;
 signal V2							: std_logic;
 
@@ -85,8 +82,6 @@ begin
 -- (6) 64H	46 kHz
 -- (7) 128H 23 kHz
 -- (8) 256H 12 kHz
-
-reset <= (not reset_n);
 
 H4 <= HCount(2);
 V2 <= VCount(1);
