@@ -1,4 +1,4 @@
-module GunFight_mist(
+module AmazingMaze_mist(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -19,7 +19,7 @@ module GunFight_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"GUNFIGHT;;",
+	"Am.Maze;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O6,Joystick swap,Off,On;",
 	"T0,Reset;",
@@ -75,28 +75,14 @@ wire VSync;
 wire [7:0] GDB0;
 wire [7:0] GDB1;
 wire [7:0] GDB2;
-
+reg [7:0] sw[8];
 invaderst invaderst(
 	.Rst_n(~(status[0] | buttons[1])),
 	.Clk(clk_sys),
 	.ENA(),
-	.Coin(m_coin1 | m_coin2),
-	.Sel1Player(m_one_player),
-	.Fire1(~m_fireA),
-	.Fire2(~m_fire2A),
-	.GunUp1(m_fireB),
-	.GunDown1(m_fireC),
-	.MoveLeft1(~m_left),
-	.MoveRight1(~m_right),
-	.MoveUp1(~m_up),
-	.MoveDown1(~m_down),
-	.GunUp2(m_fire2B),
-	.GunDown2(m_fire2C),
-	.MoveLeft2(~m_left2),
-	.MoveRight2(~m_right2),
-	.MoveUp2(~m_up2),
-	.MoveDown2(~m_down2),
-//	.DIP(dip),
+	.GDB0({ m_up2, m_down2, m_right2, m_left2, m_up, m_down, m_right, m_left}),
+	.GDB1({ 1'b0, 1'b0,1'b0,1'b0,m_coin1, 1'b0, m_two_players, m_one_player}),
+	.GDB2(8'b0),
 	.RDB(RDB),
 	.IB(IB),
 	.RWD(RWD),
@@ -111,7 +97,7 @@ invaderst invaderst(
 	.VSync(vs)
 	);
 		
-GunFight_memory GunFight_memory (
+AmazingMaze_memory AmazingMaze_memory (
 	.Clock(clk_sys),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -203,3 +189,11 @@ arcade_inputs inputs (
 );
 
 endmodule 
+
+
+//mod_amazingmaze:
+//        begin
+//				WDEnabled 		<= 1'b0;
+
+//				software_flip  <= 0;
+//		 end
