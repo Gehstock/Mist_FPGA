@@ -97,7 +97,7 @@ pacmant pacmant(
    .O_VBLANK(vb),
 	.O_AUDIO(audio),
 	.in0(~{1'b0, custom, 1'b0, status[6], m_down, m_left, m_right, m_up}),
-   .in1(~{1'b1,m_one_player, m_coin1, 4'b1111, m_fireA}),
+   .in1(~{1'b0,m_one_player, m_coin1, 4'b0000, m_fireA}),
    .dipsw(~{8'b11111111}),//todo later
    .RESET(status[0] | buttons[1]),
 	.CLK(clk_sys),
