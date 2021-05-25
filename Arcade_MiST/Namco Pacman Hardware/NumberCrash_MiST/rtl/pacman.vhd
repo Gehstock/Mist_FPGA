@@ -513,7 +513,7 @@ begin
   end process;
 
   p_cpu_data_in_mux_comb : process(cpu_addr, cpu_iorq_l, cpu_m1_l, sync_bus_wreq_l,
-                                   iodec_in0_l, iodec_in1_l, iodec_dipsw_l, cpu_vec_reg, sync_bus_reg, program_rom_dinl, program_rom_din2, program_rom_din3,
+                                   iodec_in0_l, iodec_in1_l, iodec_dipsw_l, cpu_vec_reg, sync_bus_reg, program_rom_dinl, program_rom_din2,
 											  rams_data_out, in0, in1, dipsw)
   begin
     -- simplifed again
@@ -522,12 +522,10 @@ begin
     elsif (sync_bus_wreq_l = '0') then
       cpu_data_in <= sync_bus_reg;
     else
-      if (cpu_addr(15 downto 14) = "00") then      		-- ROM at 0000 - 27ff
+      if (cpu_addr(15 downto 14) <= "00")  then      -- ROM at 0000
         cpu_data_in <= program_rom_dinl;
-      elsif (cpu_addr(15 downto 11) = "00110") then      -- ROM at 3000 - 37ff
+      elsif(cpu_addr(15 downto 13) = "100") then     -- ROM at 8000 - 9fff
         cpu_data_in <= program_rom_din2;
-      elsif(cpu_addr(15 downto 13) = "100") then      	-- ROM at 8000 - 9fff
-        cpu_data_in <= program_rom_din3;
 
       else
         cpu_data_in <= rams_data_out;
@@ -563,16 +561,10 @@ begin
   u_program_rom2 : entity work.ROM_PGM_1
     port map (
       CLK         => clk,
-      ADDR        => cpu_addr(10 downto 0),
+      ADDR        => cpu_addr(12 downto 0),
       DATA        => program_rom_din2
       );
-
-  u_program_rom3 : entity work.ROM_PGM_2
-    port map (
-      CLK         => clk,
-      ADDR        => cpu_addr(12 downto 0),
-      DATA        => program_rom_din3
-      );		
+	
   --
   -- video subsystem
   --
