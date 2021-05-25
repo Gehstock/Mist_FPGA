@@ -371,7 +371,7 @@ begin
       V4      => vcnt(2),
       V2      => vcnt(1),
       V1      => vcnt(0),
-      FLIP    => control_reg(3)
+      FLIP    => '0'--control_reg(3)
       );
 
   p_ab_mux_comb : process(hcnt, cpu_addr, vram_addr_ab)
