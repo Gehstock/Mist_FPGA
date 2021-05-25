@@ -132,7 +132,6 @@ architecture RTL of pacmant is
     -- watchdog
     signal watchdog_cnt     : std_logic_vector(3 downto 0);
     signal watchdog_reset_l : std_logic;
---    signal freeze           : std_logic;
 
 
 begin
@@ -205,14 +204,6 @@ begin
   --
   -- cpu
   --
---  p_cpu_wait_comb : process(freeze, sync_bus_wreq_l)
---  begin
---    cpu_wait_l  <= '1';
---    if (freeze = '1') or (sync_bus_wreq_l = '0') then
---      cpu_wait_l  <= '0';
---    end if;
---  end process;
-
   p_cpu_wait_comb : process(sync_bus_wreq_l)
   begin
     cpu_wait_l  <= '1';
@@ -242,7 +233,6 @@ begin
         watchdog_cnt <= "1111";
       elsif (iodec_wdr_l = '0') then
         watchdog_cnt <= "0000";
---      elsif rising_vblank and (freeze = '0') then
 		 elsif rising_vblank  then
         watchdog_cnt <= watchdog_cnt + "1";
       end if;

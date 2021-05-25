@@ -1,7 +1,7 @@
 //============================================================================
 //  Arcade: Number Crash
 //
-//  Version for MiSTer
+//  Version for MiST
 //  Copyright (C) 2021 Gehstock
 //
 //  This program is free software; you can redistribute it and/or modify it
@@ -45,6 +45,8 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Rack Test (Cheat),Off,On;",
+	"O78,Coinage,1C_1C,2C_1C,3C_1C,4C_1C;",
+	"O9A,Lives,4,3,2,1;",
 	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
@@ -52,7 +54,10 @@ localparam CONF_STR = {
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
+wire       test = status[6];
 
+wire [1:0] Coinage = status[8:7];
+wire [1:0] Lives = status[10:9];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -90,7 +95,6 @@ wire        no_csync;
 wire       	key_pressed;
 wire  [7:0] key_code;
 wire       	key_strobe;
-wire			custom = 1'b1;//todo
 
 pacmant pacmant(
 	.O_VIDEO_R(r),
@@ -101,9 +105,9 @@ pacmant pacmant(
    .O_HBLANK(hb),
    .O_VBLANK(vb),
 	.O_AUDIO(audio),
-	.in0(~{1'b0, custom, 1'b0, status[6], m_down, m_left, m_right, m_up}),
+	.in0(~{1'b0, 1'b1, 1'b0, test, m_down, m_left, m_right, m_up}),
    .in1(~{1'b0,m_one_player, m_coin1, 4'b0000, m_fireA}),
-   .dipsw(~{8'b11111111}),//todo later
+   .dipsw(~{1'b0,1'b0,1'b0,1'b0,Lives,~Coinage}),
    .RESET(status[0] | buttons[1]),
 	.CLK(clk_sys),
    .ENA_6(ce_6m)
@@ -127,7 +131,6 @@ mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.rotate({1'b1,rotate}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
-	.ce_divider(1'b1),
 	.blend(status[5]),
 	.no_csync(no_csync),
 	.ypbpr(ypbpr)
@@ -169,7 +172,7 @@ wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, 
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
-	.clk         ( clk_sys    ),
+	.clk         ( clk_sys     ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),
 	.key_code    ( key_code    ),
@@ -177,7 +180,6 @@ arcade_inputs inputs (
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
 	.orientation ( 2'b11       ),
-//	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
