@@ -49,6 +49,11 @@ localparam CONF_STR = {
 	"V,v1.20.",`BUILD_DATE
 };
 
+wire       rotate = status[2];
+wire [1:0] scanlines = status[4:3];
+wire       blend = status[5];
+
+
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
@@ -119,7 +124,7 @@ mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.rotate({1'b1,status[2]}),
+	.rotate({1'b1,rotate}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(status[4:3]),
 	.ce_divider(1'b1),
@@ -139,8 +144,9 @@ user_io(
 	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches       (switches       ),
-	.scandoubler_disable (scandoublerD	  ),
+	.scandoubler_disable (scandoublerD),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -169,8 +175,8 @@ arcade_inputs inputs (
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
-	.rotate      ( status[2]   ),
-	.orientation ( 2'b10       ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b11       ),
 //	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b1        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),

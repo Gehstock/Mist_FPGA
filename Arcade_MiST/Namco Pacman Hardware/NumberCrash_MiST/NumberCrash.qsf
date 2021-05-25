@@ -159,7 +159,6 @@ set_global_assignment -name VHDL_FILE rtl/pacman_audio.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/GFX1.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_0.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_1.vhd
-set_global_assignment -name VHDL_FILE rtl/ROM/ROM_PGM_2.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/PROM7_DST.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/PROM4_DST.vhd
 set_global_assignment -name VHDL_FILE rtl/ROM/PROM1_DST.vhd

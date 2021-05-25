@@ -132,7 +132,7 @@ architecture RTL of pacmant is
     -- watchdog
     signal watchdog_cnt     : std_logic_vector(3 downto 0);
     signal watchdog_reset_l : std_logic;
-    signal freeze           : std_logic;
+--    signal freeze           : std_logic;
 
 
 begin
@@ -205,10 +205,18 @@ begin
   --
   -- cpu
   --
-  p_cpu_wait_comb : process(freeze, sync_bus_wreq_l)
+--  p_cpu_wait_comb : process(freeze, sync_bus_wreq_l)
+--  begin
+--    cpu_wait_l  <= '1';
+--    if (freeze = '1') or (sync_bus_wreq_l = '0') then
+--      cpu_wait_l  <= '0';
+--    end if;
+--  end process;
+
+  p_cpu_wait_comb : process(sync_bus_wreq_l)
   begin
     cpu_wait_l  <= '1';
-    if (freeze = '1') or (sync_bus_wreq_l = '0') then
+    if (sync_bus_wreq_l = '0') then
       cpu_wait_l  <= '0';
     end if;
   end process;
@@ -234,7 +242,8 @@ begin
         watchdog_cnt <= "1111";
       elsif (iodec_wdr_l = '0') then
         watchdog_cnt <= "0000";
-      elsif rising_vblank and (freeze = '0') then
+--      elsif rising_vblank and (freeze = '0') then
+		 elsif rising_vblank  then
         watchdog_cnt <= watchdog_cnt + "1";
       end if;
 
@@ -466,11 +475,11 @@ begin
     -- 0 interrupt ena
     -- 1 sound ena
     -- 2 not used
-    -- 3 flip
+    -- 3 not used
     -- 4 1 player start lamp
     -- 5 2 player start lamp
     -- 6 coin lockout
-    -- 7 coin counter
+    -- 7 not used
 
     wait until rising_edge(clk);
     if (ena_6 = '1') then
@@ -522,7 +531,7 @@ begin
     elsif (sync_bus_wreq_l = '0') then
       cpu_data_in <= sync_bus_reg;
     else
-      if (cpu_addr(15 downto 14) <= "00")  then      -- ROM at 0000
+      if (cpu_addr(15 downto 14) <= "00")  then      -- ROM at 0000 - 3fff
         cpu_data_in <= program_rom_dinl;
       elsif(cpu_addr(15 downto 13) = "100") then     -- ROM at 8000 - 9fff
         cpu_data_in <= program_rom_din2;
