@@ -121,7 +121,7 @@ mist_video #(.COLOR_DEPTH(1)) mist_video(
 	.SPI_DI(SPI_DI),
 	.R(Video),
 	.G(Video),
-	.B(1'b0),
+	.B(Video),
 	.HSync(hs),
 	.VSync(vs),
 	.VGA_R(VGA_R),
@@ -189,11 +189,3 @@ arcade_inputs inputs (
 );
 
 endmodule 
-
-
-//mod_amazingmaze:
-//        begin
-//				WDEnabled 		<= 1'b0;
-
-//				software_flip  <= 0;
-//		 end

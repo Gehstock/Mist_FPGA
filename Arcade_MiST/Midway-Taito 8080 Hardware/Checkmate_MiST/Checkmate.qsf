@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		BalloonBomber_assignment_defaults.qdf
+#		Checkmate_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -85,7 +85,7 @@ set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 
 # Analysis & Synthesis Assignments
 # ================================
-set_global_assignment -name TOP_LEVEL_ENTITY BalloonBomber_mist
+set_global_assignment -name TOP_LEVEL_ENTITY Checkmate_mist
 set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
@@ -152,25 +152,18 @@ set_global_assignment -name EDA_OUTPUT_DATA_FORMAT NONE -section_id eda_simulati
 
 # end ENTITY(OzmaWars_mist)
 # -------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/BalloonBomber_mist.sv
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp5.stp
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Checkmate_mist.sv
 set_global_assignment -name VHDL_FILE rtl/invaders.vhd
 set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
 set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/BalloonBomber_memory.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Checkmate_memory.sv
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/tn07.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/tn06.vhd
-set_global_assignment -name VHDL_FILE "rtl/roms/tn05-1.vhd"
-set_global_assignment -name VHDL_FILE rtl/roms/tn04.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/tn03.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/tn02.vhd
-set_global_assignment -name VHDL_FILE rtl/roms/tn01.vhd
 set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp5.stp
-set_global_assignment -name SIGNALTAP_FILE output_files/stp5.stp
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
-set_global_assignment -name SMART_RECOMPILE ON
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

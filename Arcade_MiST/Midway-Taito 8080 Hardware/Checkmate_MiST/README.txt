@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Balloon Bomber to MiST by Gehstock 
--- 24 May 2021
+-- Arcade: Checkmate to MiST by Gehstock 
+-- 26 May 2021
 -- 
 ---------------------------------------------------------------------------------
 -- 
@@ -12,12 +12,12 @@
 -- 
 -- 
 -- Keyboard inputs :
+--	ESC	:	Coin
+--   	F1      : 	Start
+--   	Ctrl    : 	Fire
+--   	Joystick: 	Movement
 --
---   F1          : Start
---   SPACE       : Fire
---   RIGHT/LEFT  : Movement
---
--- Joystick support.
+-- 4 Joystick support.
 -- 
 -- 
 ---------------------------------------------------------------------------------

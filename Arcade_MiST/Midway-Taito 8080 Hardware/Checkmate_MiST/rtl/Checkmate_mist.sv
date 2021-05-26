@@ -1,4 +1,4 @@
-module BalloonBomber_mist(
+module Checkmate_mist(
 	output        LED,						
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -19,15 +19,13 @@ module BalloonBomber_mist(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"BallBomb;;",
-	"O2,Rotate Controls,Off,On;",
+	"Checkmate;;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"T0,Reset;",
 	"V,v1.20.",`BUILD_DATE
 };
 
 wire  [1:0] scanlines = status[4:3];
-wire        rotate    = status[2];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -37,15 +35,14 @@ wire pll_locked;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.areset(),
 	.c0(clk_core),
 	.c1(clk_vid)
 );
 
-wire [31:0] status;
+wire [63:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0,joystick_1;
+wire [31:0] joystick_0,joystick_1,joystick_2,joystick_3;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
@@ -74,14 +71,10 @@ invaderst invaderst(
 	.Rst_n(~(status[0] | buttons[1])),
 	.Clk(clk_core),
 	.ENA(),
-	.Coin(m_coin1 | m_coin2),
-	.Sel1Player(~m_one_player),
-	.Sel2Player(~m_two_players),
-	.Fire(~m_fireA),
-	.MoveLeft(~m_left),
-	.MoveRight(~m_right),
-	.MoveUp(~m_up),
-	.MoveDown(~m_down),	
+	.GDB0({m_right2,m_left2,m_down2,m_up2,m_right,m_left,m_down,m_up}),
+	.GDB1({{m_right3,m_left3,m_down3,m_up3,m_right4,m_left4,m_down4,m_up4}}),
+	.GDB2({1'b0,1'b0,1'b0,1'b1,1'b0,1'b0,1'b0,1'b1}),//Service,Language,Language,Unused,Rounds,Rounds,Unused,Coinage
+	.GDB3({m_coin1,3'b000,m_four_players,m_three_players,m_two_players,m_one_player}),
 	.RDB(RDB),
 	.IB(IB),
 	.RWD(RWD),
@@ -96,7 +89,7 @@ invaderst invaderst(
 	.VSync(vs)
 	);
 
-BalloonBomber_memory BalloonBomber_memory (
+Checkmate_memory Checkmate_memory (
 	.Clock(clk_core),
 	.RW_n(RWE_n),
 	.Addr(AD),
@@ -129,7 +122,7 @@ mist_video #(.COLOR_DEPTH(1)) mist_video(
 	.VGA_B(VGA_B),
 	.VGA_VS(VGA_VS),
 	.VGA_HS(VGA_HS),
-	.rotate({1'b0,rotate}),
+//	.rotate({1'b0,rotate}),
 	.scandoubler_disable(scandoublerD),
 	.scanlines(scanlines),
 	.ce_divider(1'b0),
@@ -156,6 +149,8 @@ user_io(
 	.key_code       (key_code       ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
+	.joystick_2     (joystick_2     ),
+	.joystick_3     (joystick_3     ),
 	.status         (status         )
 	);
 
@@ -168,6 +163,9 @@ dac dac (
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+
+wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D, m_fire3E, m_fire3F;
+wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B, m_fire4C, m_fire4D, m_fire4E, m_fire4F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
@@ -177,13 +175,17 @@ arcade_inputs inputs (
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
-	.rotate      ( rotate      ),
-	.orientation ( {2'b01}     ),
+	.joystick_2  ( joystick_2  ),
+	.joystick_3  ( joystick_3  ),
+//	.rotate      ( rotate      ),
+//	.orientation ( {2'b01}     ),
 	.joyswap     ( 1'b0        ),
-	.oneplayer   ( 1'b1        ),
+	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
+	.player3     ( {m_fire3F, m_fire3E, m_fire3D, m_fire3C, m_fire3B, m_fire3A, m_up3, m_down3, m_left3, m_right3} ),
+	.player4     ( {m_fire4F, m_fire4E, m_fire4D, m_fire4C, m_fire4B, m_fire4A, m_up4, m_down4, m_left4, m_right4} )
 );
 
 endmodule
