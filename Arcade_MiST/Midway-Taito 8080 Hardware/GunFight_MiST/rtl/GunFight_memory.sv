@@ -18,7 +18,7 @@ wire [7:0]rom_data_5;
 wire [7:0]rom_data_6;
 wire [7:0]rom_data_7;
 
-
+//Set 2
 sprom #(
 	.init_file("./roms/gf-h.hex"),
 	.widthad_a(9),
