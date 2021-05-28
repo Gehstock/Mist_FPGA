@@ -28,8 +28,7 @@ localparam CONF_STR = {
 };
 
 assign 		LED = ~ioctl_downl;
-//assign 		AUDIO_R = AUDIO_L;
-
+assign 		AUDIO_R = AUDIO_L;
 wire pll_locked,clock_28p636, clk3p579;
 pll pll(
 	.locked				( pll_locked		),
@@ -56,13 +55,14 @@ channel_f channel_f(
    .ioctl_wr			( ~ioctl_wr			),//todo
    .ioctl_addr			( ioctl_addr		),
    .ioctl_dout			( ioctl_dout		),
-   .ioctl_wait			(						),//todo
+   .ioctl_wait			( ioctl_wait		),//todo
    .audio				( audio				)
 );
   
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
+wire        ioctl_wait;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;	
 
@@ -101,11 +101,10 @@ mist_video #(.COLOR_DEPTH(6),.SD_HCNT_WIDTH(10)) mist_video(
 	.no_csync			( no_csync			)
 	);
 
-wire [31:0] status;
+wire [63:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire [31:0] joystick_0;
-wire [31:0] joystick_1;
+wire [31:0] joystick_0, joystick_1;
 wire        scandoublerD;
 wire  [7:0] r, g, b;
 wire        hs, vs, blankn;
@@ -138,23 +137,14 @@ user_io(
 	.status         	( status         	)
 	);
 
-//dac #(
-//	.C_bits(16))
-//dac(
-//	.clk_i				( clock_28p636		),
-//	.res_n_i				( 1'b1				),
-//	.dac_i				( audio				),
-//	.dac_o				( AUDIO_L			)
-//	);
-	
-mist_audio #(16,0,0) mist_audio(
-	.clk					( clock_28p636		),
-	.reset_n				( 1'b1				),
-	.audio_inL			( audio				),
-//	.audio_inR			( audio				),
-	.AUDIO_L				( AUDIO_L			),
-	.AUDIO_R				( AUDIO_R			)
-);
+dac #(
+	.C_bits(16))
+dac(
+	.clk_i				( clock_28p636		),
+	.res_n_i				( 1'b1				),
+	.dac_i				( audio				),
+	.dac_o				( AUDIO_L			)
+	);	
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
