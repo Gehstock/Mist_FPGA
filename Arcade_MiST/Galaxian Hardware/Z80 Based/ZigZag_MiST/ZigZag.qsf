@@ -17,8 +17,8 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 14:29:21  May 10, 2019
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 15:44:31  May 29, 2021
 #
 # -------------------------------------------------------------------------- #
 #
@@ -60,22 +60,12 @@ set_global_assignment -name VHDL_FILE rtl/Rom/rom_k.vhd
 set_global_assignment -name VHDL_FILE rtl/Rom/rom_h.vhd
 set_global_assignment -name VHDL_FILE rtl/Rom/prog.vhd
 set_global_assignment -name VHDL_FILE rtl/Rom/col.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80as.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
-set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ym2149.sv
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video_mixer.sv
-set_global_assignment -name VERILOG_FILE rtl/scandoubler.v
 set_global_assignment -name VHDL_FILE rtl/pll.vhd
-set_global_assignment -name VERILOG_FILE rtl/osd.v
-set_global_assignment -name VERILOG_FILE rtl/mist_io.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hq2x.sv
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
-set_global_assignment -name VHDL_FILE rtl/dac.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ym2149.sv
+set_global_assignment -name QIP_FILE ../../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../../common/CPU/T80/T80.qip
 
 # Pin & Location Assignments
 # ==========================
