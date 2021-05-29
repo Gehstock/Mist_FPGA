@@ -32,8 +32,7 @@ module arlet_6502(
     output reg we,              // active high write enable strobe
     input irq_n,                // active low interrupt request
     input nmi_n,                // active low non-maskable interrupt
-    input ready,                // CPU updates when ready = 1
-    output [15:0] pc_monitor    // program counter monitor signal for debugging
+    input ready                // CPU updates when ready = 1
 );
 
     wire [7:0] dbo_c;
@@ -49,8 +48,7 @@ module arlet_6502(
         .WE(we_c),
         .IRQ(~irq_n),
         .NMI(~nmi_n),
-        .RDY(ready),
-        .PC_MONITOR(pc_monitor)
+        .RDY(ready)
     );
 
     always @(posedge clk or posedge rst)

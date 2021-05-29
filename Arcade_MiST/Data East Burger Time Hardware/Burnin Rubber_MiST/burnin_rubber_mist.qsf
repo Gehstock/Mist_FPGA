@@ -151,7 +151,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/burnin_rubber_mist.sv
 set_global_assignment -name VHDL_FILE rtl/burnin_rubber.vhd
 set_global_assignment -name VHDL_FILE "rtl/burnin_rubber _sound.vhd"
 set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/fg_sp_graphx_3.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/fg_sp_graphx_2.vhd

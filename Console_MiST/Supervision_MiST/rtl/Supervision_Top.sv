@@ -19,7 +19,6 @@ module Supervision_Top(
 );
 
 reg [15:0] nmi_clk;
-//wire clk_cpu;
 wire nmi = nmi_clk == 0;
 always @(posedge clk_cpu) 
 	nmi_clk <= nmi_clk + 16'b1;
@@ -65,7 +64,6 @@ reg [7:0] ch2_freq_hi, ch2_freq_low, ch2_length, ch2_vduty;
 reg [7:0] audio_dma_addr_low, audio_dma_addr_high;
 reg [7:0] audio_dma_ctrl, audio_dma_length, audio_dma_trigger;
 reg [7:0] noise_ctrl, noise_freq_vol, noise_length;
-//wire [3:0] audio_ch1, audio_ch2;
 
 ////////////////////// IRQ //////////////////////////
 reg [13:0] timer_div;
@@ -94,7 +92,7 @@ always @(posedge clk_cpu)
   else
     timer_div <= 14'hff;
 
-// irq_timer
+ irq_timer
 always @(posedge clk_cpu)
   if (sys_cs && cpu_we && AB[2:0] == 3'h3)
     irq_timer <= cpu_dout;
@@ -182,15 +180,19 @@ always @(posedge clk_sys)
 
 
 // write to dma registers
+//CAUTION:  This DMA can only be used to move data from WRAM/cartridge ROM to VRAM!  
+//Attempting to move data to a non-VRAM address will cause serious problems to occur. 
+//See my findings at the bottom of the document in the DMA timing section.
+
 always @(posedge clk_sys)
   if (dma_cs && cpu_we)
     case (AB[2:0])
-      3'h0: dma_src_lo <= cpu_dout;
-      3'h1: dma_src_hi <= cpu_dout;
-      3'h2: dma_dst_lo <= cpu_dout;
-      3'h3: dma_dst_hi <= cpu_dout;
-      3'h4: dma_length <= cpu_dout;
-      3'h5: dma_ctrl   <= cpu_dout;
+      3'h0: dma_src_lo <= cpu_dout;//DMA Source low
+      3'h1: dma_src_hi <= cpu_dout;//DMA Source high
+      3'h2: dma_dst_lo <= cpu_dout;//DMA Destination low
+      3'h3: dma_dst_hi <= cpu_dout;//DMA Destination high
+      3'h4: dma_length <= cpu_dout;//DMA Length
+      3'h5: dma_ctrl   <= cpu_dout;//DMA Control
       default:
         dma_ctrl <= 8'd0;
     endcase
@@ -199,7 +201,7 @@ always @(posedge clk_sys)
 always @(posedge clk_sys)
   if (sys_cs && cpu_we)
     case (AB[2:0])
-     // 3'h3: irq_timer = cpu_dout;
+//      3'h3: irq_timer = cpu_dout;
       3'h6: sys_ctl <= cpu_dout;
     endcase
 
@@ -237,7 +239,7 @@ always @(posedge clk_sys)
 //);
 
 assign cpu_rom_addr = rom_addr;	
-assign rom_dout = cpu_rom_data;
+assign rom_dout = rom_cs ? cpu_rom_data : 8'hff;
 
 
 ram88 wram(

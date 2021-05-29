@@ -59,13 +59,13 @@ always @(posedge clk)
   if (ce && lcdx != 0 && lcdy != 0) begin
     if (ce_pxl) begin
 		 case ({white,data[index+:2]})
-			3'b000: { red, green, blue } <= 24'h87BA6B;
-			3'b001: { red, green, blue } <= 24'h6BA378;
-			3'b010: { red, green, blue } <= 24'h386B82;
-			3'b011: { red, green, blue } <= 24'h384052;
+			3'b000: { red, green, blue } <= 24'h87BA6B;//lightest colour
+			3'b001: { red, green, blue } <= 24'h6BA378;//1/3rd darkness
+			3'b010: { red, green, blue } <= 24'h386B82;//2/3rd darkness
+			3'b011: { red, green, blue } <= 24'h384052;//dark as possible
 			
 			3'b100: { red, green, blue } <= 24'hFFFFFF;//white
-			3'b101: { red, green, blue } <= 24'hC0C0C0;//silver
+			3'b101: { red, green, blue } <= 24'hC0C0C0;//light gray
 			3'b110: { red, green, blue } <= 24'h808080;//gray
 			3'b111: { red, green, blue } <= 24'h000000;//black
 		 endcase
