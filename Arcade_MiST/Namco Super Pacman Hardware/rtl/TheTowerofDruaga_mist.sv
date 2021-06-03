@@ -34,7 +34,7 @@ module TheTowerofDruaga_mist (
 wire  [6:0] core_mod;
 
 localparam CONF_STR = {
-	`CORE_NAME, ";ROM;",
+	`CORE_NAME, ";;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
@@ -48,31 +48,6 @@ wire        rotate    = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend     = status[5];
 wire        flip      = status[7];
-
-wire        dcFreeze   = status[29];
-wire        dcService  = status[30];
-wire        dcCabinet  = 1'b0; // (upright only)
-
-// The Tower of Druaga [t]
-wire  [1:0] dtLives = status[9:8];
-
-// Mappy [m]
-wire        dmRoundP   = status[6];
-wire  [2:0] dmRank		 = status[12:10];
-wire        dmDemoSnd	 = status[13];
-wire  [2:0] dmExtend	 = status[16:14];
-wire  [1:0] dmLives    = status[18:17];
-
-// DigDug2 [d]
-wire        ddLives    = status[19];
-wire  [1:0] ddExtend   = status[21:20];
-wire        ddLevelSel = status[22];
-
-// Motos [o]
-wire       doLives    = status[23];
-wire       doRank     = status[24];
-wire [1:0] doExtend   = status[26:25];
-wire       doDemoSnd  = status[27];
 
 reg   [7:0] DSW0;
 reg   [7:0] DSW1;

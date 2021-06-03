@@ -180,32 +180,6 @@ end vectrex;
 
 architecture syn of vectrex is
 
-  component YM2149
-  port (
-    CLK         : in  std_logic;
-    CE          : in  std_logic;
-    RESET       : in  std_logic;
-    BDIR        : in  std_logic; -- Bus Direction (0 - read , 1 - write)
-    BC          : in  std_logic; -- Bus control
-    DI          : in  std_logic_vector(7 downto 0);
-    DO          : out std_logic_vector(7 downto 0);
-    CHANNEL_A   : out std_logic_vector(7 downto 0);
-    CHANNEL_B   : out std_logic_vector(7 downto 0);
-    CHANNEL_C   : out std_logic_vector(7 downto 0);
-
-    SEL         : in  std_logic;
-    MODE        : in  std_logic;
-
-    ACTIVE      : out std_logic_vector(5 downto 0);
-
-    IOA_in      : in  std_logic_vector(7 downto 0);
-    IOA_out     : out std_logic_vector(7 downto 0);
-
-    IOB_in      : in  std_logic_vector(7 downto 0);
-    IOB_out     : out std_logic_vector(7 downto 0)
-    );
-  end component;
-
 component mc6809 is port
 (
 	CPU    : in  std_logic;
@@ -787,20 +761,29 @@ video_vblank <= vblank;
 scan_video_addr <= vcnt_video * std_logic_vector(to_unsigned(max_h,10)) + hcnt_video;
 
 -- sound
-audio_1  <= 	("00"&ay_chan_a) +
-					("00"&ay_chan_b) +
-					("00"&ay_chan_c) +
-					("00"&dac_sound);
+process (clock_24)
+begin
+	if rising_edge(clock_24) then
+		if ay_audio_chan = "00" then ay_chan_a <= ay_audio_muxed; end if;
+		if ay_audio_chan = "01" then ay_chan_b <= ay_audio_muxed; end if;
+		if ay_audio_chan = "10" then ay_chan_c <= ay_audio_muxed; end if;
+	end if;
+end process;
+
+audio_1  <=     ("00"&ay_chan_a) +
+                ("00"&ay_chan_b) +
+                ("00"&ay_chan_c) +
+                ("00"&dac_sound);
 
 audio_out <=  "000"&audio_1(9 downto 3) + audio_speech;
 
 -- vectrex just toggle port A forced/high Z to produce serial data
 -- when in high Z vectrex sense port A to get speech chip ready for new byte
-vectrex_serial_bit_in <= ay_ioa_out(4) and speech_mode;
+vectrex_serial_bit_in <= (ay_ioa_oe or ay_ioa_out(4)) and speech_mode;
 
 -- get serial data from vectrex joystick port
 
-process (cpu_clock, reset)
+process (clock_24, reset)
   begin
 	if reset='1' then
 		vectrex_bd_rate_div <= X"00";
@@ -963,34 +946,37 @@ port map(
  ENA_4           => via_en_4      -- 4x system clock (4HZ)   _-_-_-_-_-
 );
 
-
-
 -- AY-3-8910
+ay_3_8910_2 : entity work.YM2149
+port map(
+  -- data bus
+  I_DA       => via_pa_o,    -- in  std_logic_vector(7 downto 0);
+  O_DA       => ay_do,     -- out std_logic_vector(7 downto 0);
+  O_DA_OE_L  => open,      -- out std_logic;
+  -- control
+  I_A9_L     => '0',       -- in  std_logic;
+  I_A8       => '1',       -- in  std_logic;
+  I_BDIR     => via_pb_o(4),  -- in  std_logic;
+  I_BC2      => '1',       -- in  std_logic;
+  I_BC1      => via_pb_o(3),   -- in  std_logic;
+  I_SEL_L    => '1',       -- in  std_logic;
 
-  ym2149_inst: YM2149
-  port map (
-    CLK         => clock_24,
-    CE          => cpu_clock_en,
-    RESET       => not reset_n,
-    BDIR        => via_pb_o(4),
-    BC          => via_pb_o(3),
-    DI          => via_pa_o,
-    DO          => ay_do,
-    CHANNEL_A   => ay_chan_a,
-    CHANNEL_B   => ay_chan_b,
-    CHANNEL_C   => ay_chan_c,
+  O_AUDIO    => ay_audio_muxed, -- out std_logic_vector(7 downto 0);
+  O_CHAN     => ay_audio_chan,  -- out std_logic_vector(1 downto 0);
 
-    SEL         => '0',
-    MODE        => '0',
+  -- port a
+  I_IOA      => players_switches, -- in  std_logic_vector(7 downto 0);
+  O_IOA      => ay_ioa_out,       -- out std_logic_vector(7 downto 0);
+  O_IOA_OE_L => ay_ioa_oe,        -- out std_logic;
+  -- port b
+  I_IOB      => (others => '0'), -- in  std_logic_vector(7 downto 0);
+  O_IOB      => open,            -- out std_logic_vector(7 downto 0);
+  O_IOB_OE_L => open,            -- out std_logic;
 
-    ACTIVE      => open,
-
-    IOA_in      => players_switches,
-    IOA_out     => ay_ioa_out,
-
-    IOB_in      => (others => '0'),
-    IOB_out     => open
-    );
+  ENA        => cpu_clock_en,    -- in  std_logic; -- clock enable for higher speed operation
+  RESET_L    => reset_n,         -- in  std_logic;
+  CLK        => clock_24         -- in  std_logic
+);
 
 -- select hardware speakjet or VHDL sp0256
 

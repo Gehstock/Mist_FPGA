@@ -47,7 +47,6 @@ localparam CONF_STR = {
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [15:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire [15:0] joy_ana_0;
@@ -85,22 +84,39 @@ pll pll (
 	);
 
 assign SDRAM_CLK = clk_24;
-wire [15:0] sdram_do;
-assign cart_do = sdram_do[7:0];
+assign SDRAM_CKE = 1;
 
-sdram cart
+reg         sdram_req;
+wire [24:1] sdram_a = ioctl_downl ? ioctl_addr[24:1] : cart_addr[14:1];
+wire  [1:0] sdram_ds = ioctl_downl ? {ioctl_addr[0], ~ioctl_addr[0]} : 2'b11;
+wire [15:0] sdram_q;
+assign      cart_do = cart_addr[0] ? sdram_q[15:8] : sdram_q[7:0];
+
+sdram #(24) cart
 (
-    .*,
-    .init(~pll_locked),
-    .clk(clk_24),
-    .wtbt(2'b00),
-    .dout(sdram_do),
-    .din ({ioctl_dout, ioctl_dout}),
-    .addr(ioctl_downl ? ioctl_addr : cart_addr),
-    .we(ioctl_downl & ioctl_wr),
-    .rd(!ioctl_downl & cart_rd),
-	.ready()
+	.*,
+	.clk(clk_24),
+	.init_n(pll_locked),
+	.port1_req(sdram_req),
+	.port1_ack(),
+	.port1_a(sdram_a),
+	.port1_we(ioctl_downl),
+	.port1_ds(sdram_ds),
+	.port1_d({ioctl_dout, ioctl_dout}),
+	.port1_q(sdram_q)
 );
+
+always @(posedge clk_24) begin
+	reg [14:1] cart_addrD;
+
+	if (ioctl_downl) begin
+		if (ioctl_wr) sdram_req <= !sdram_req;
+	end
+	else begin
+		cart_addrD <= cart_addr[14:1];
+		if (cart_rd & cart_addr[14:1] != cart_addrD) sdram_req <= !sdram_req;
+	end
+end
 
 reg reset = 0;
 reg second_reset = 0;
