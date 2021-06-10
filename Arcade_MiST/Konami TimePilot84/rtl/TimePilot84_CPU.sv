@@ -291,7 +291,7 @@ end
 wire [15:0] mA;
 wire  [7:0] mD_out;
 wire        m_rw;
-
+/*
 cpu09 u12G
 (
 	.clk(~clk_49m),
@@ -306,14 +306,13 @@ cpu09 u12G
 	.firq(0),
 	.nmi(0)
 );
+*/
 
-/*
-// buggy (playfield scrolling is broken with this CPU)
 mc6809is u12G
 (
-		.CLK(clk_49m),
-		.fallE_en(n_me_en),
-		.fallQ_en(n_mq_en),
+    .CLK(clk_49m),
+    .fallE_en(n_me_en),
+    .fallQ_en(n_mq_en),
     .D(mD_in),
     .DOut(mD_out),
     .ADDR(mA),
@@ -325,7 +324,7 @@ mc6809is u12G
     .nRESET(n_res),
     .nDMABREQ(1'b1)
 );
-*/
+
 //Multiplex data inputs to primary MC6809E
 wire [7:0] mD_in =
 		sndbrd_dir                       ? sndbrd_D:
