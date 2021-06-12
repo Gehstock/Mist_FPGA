@@ -137,26 +137,14 @@ ninjakun_input inps(
 	.INPD1(INPD1)
 );
 
-dataselector_3D_8B cdt0(
-	.out(CP0DT),  
-	.df(CP0ID),
-	.en0(CS_IN0), 
-	.dt0(INPD0),
-	.en1(CS_SH0), 
-	.dt1(SHDT0),
-	.en2(~CP0AD[15]), 
-	.dt2(ROM0D)
-);
+assign CP0DT = CS_IN0 ? INPD0 :
+               CS_SH0 ? SHDT0 :
+               ~CP0AD[15] ? ROM0D :
+               CP0ID;
 
-dataselector_3D_8B cdt1(
-	.out(CP1DT),  
-	.df(CP1ID),
-	.en0(CS_IN1), 
-	.dt0(INPD1),
-	.en1(CS_SH1), 
-	.dt1(SHDT1),
-	.en2(~CP1AD[15]), 
-	.dt2(ROM1D)
-);
+assign CP1DT = CS_IN1 ? INPD1 :
+               CS_SH1 ? SHDT1 :
+               ~CP1AD[15] ? ROM1D :
+               CP1ID;
 
 endmodule 

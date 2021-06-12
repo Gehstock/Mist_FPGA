@@ -103,19 +103,12 @@ dpram #(8,10) bgv_hi(MCLK, CS_BGV & CPWRT &  BGADR[10], BGADR[9:0], CPODT, BGDAT
 dpram #(8,11) spa   (MCLK, CS_SPA & CPWRT, CPADR[10:0], CPODT, SPDAT, ~MCLK, 1'b0, SPAAD, 8'h0, SPADT);
 dpram #(8,9)  pal   (MCLK, CS_PAL & CPWRT, CPADR[8:0], CPODT, PLDAT,  MCLK, 1'b0, PALET, 8'h0, POUT);
 
-dataselector_5D_8B cpxdsel(
-	.out(CPIDT),
-	.en0(CS_PSG),
-	.dt0(PSDAT),
-	.en1(CS_FGV),
-	.dt1(FGDAT),
-	.en2(CS_BGV),
-	.dt2(BGDAT),
-	.en3(CS_SPA),
-	.dt3(SPDAT),
-	.en4(CS_PAL),
-	.dt4(PLDAT)
-);
+assign CPIDT = CS_PSG ? PSDAT :
+               CS_FGV ? FGDAT :
+               CS_BGV ? BGDAT :
+               CS_SPA ? SPDAT :
+               CS_PAL ? PLDAT :
+               8'hFF;
 
 ninjakun_psg psg(
 	.MCLK(MCLK),
@@ -137,4 +130,4 @@ ninjakun_psg psg(
 	.SNDO(SNDOUT)
 );
 
-endmodule 
+endmodule
