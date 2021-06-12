@@ -1,7 +1,8 @@
 module ninjakun_main(
-	input				RESET,
-	input       MCLK,
-	input				VBLK,
+	input        RESET,
+	input        MCLK,
+	input        RAIDERS5,
+	input        VBLK,
 
 	input	  [7:0]	CTR1,
 	input	  [7:0]	CTR2,
@@ -11,6 +12,7 @@ module ninjakun_main(
 	input	  [7:0]	CPIDT,
 	output			CPRED,
 	output			CPWRT,
+	output          CPSEL,
 
 	output [14:0]	CPU1ADDR,
 	input  [7:0]	CPU1DT,
@@ -72,6 +74,7 @@ ninjakun_cpumux ioshare(
 	.CPIDT(CPIDT),
 	.CPRED(CPRED),
 	.CPWRT(CPWRT),
+	.CPSEL(CPSEL),
 	.CP0CE_P(CP0CE_P),
 	.CP0CE_N(CP0CE_N),
 	.CP0AD(CP0AD),
@@ -91,6 +94,7 @@ ninjakun_cpumux ioshare(
 wire CS_SH0, CS_SH1, CS_IN0, CS_IN1;
 wire SYNWR0, SYNWR1;
 ninjakun_adec adec(
+	.RAIDERS5(RAIDERS5),
 	.CP0AD(CP0AD), 
 	.CP0WR(CP0WR),
 	.CP1AD(CP1AD), 
@@ -113,8 +117,8 @@ assign ROM1D = CPU2DT;
 wire [7:0] SHDT0, SHDT1;
 
 dpram #(8,11) shmem(
-	MCLK, CS_SH0 & CP0WR, { CP0AD[10] ,CP0AD[9:0]}, CP0OD, SHDT0,
-	MCLK, CS_SH1 & CP1WR, {~CP1AD[10], CP1AD[9:0]}, CP1OD, SHDT1);
+	MCLK, CS_SH0 & CP0WR, {            CP0AD[10] ,CP0AD[9:0]}, CP0OD, SHDT0,
+	MCLK, CS_SH1 & CP1WR, {RAIDERS5 ^ ~CP1AD[10], CP1AD[9:0]}, CP1OD, SHDT1);
 
 wire [7:0] INPD0, INPD1;
 ninjakun_input inps(

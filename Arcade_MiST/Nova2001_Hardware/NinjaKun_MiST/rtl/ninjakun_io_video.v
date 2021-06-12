@@ -2,28 +2,32 @@
 
 module ninjakun_io_video
 (
-	input				MCLK,
-	input				PCLK_EN,
-	input				RESET,
-	input	  [8:0]	PH,
-	input	  [8:0]	PV,
-	input  [15:0]	CPADR,
-	input   [7:0]	CPODT,
-	output  [7:0]	CPIDT,
-	input    		CPRED,
-	input    		CPWRT,
-	input   [7:0]  DSW1,
-	input   [7:0]  DSW2,
-	output			VBLK,
-	output  [7:0]	POUT,
-	output [15:0]	SNDOUT,
-	output [12:0]	sp_rom_addr,
-	input  [31:0]	sp_rom_data,
+	input         MCLK,
+	input         RAIDERS5,
+	input         PCLK_EN,
+	input         RESET,
+	input   [8:0] PH,
+	input   [8:0] PV,
+	input  [15:0] CPADR,
+	input   [7:0] CPODT,
+	output  [7:0] CPIDT,
+	input         CPRED,
+	input         CPWRT,
+	input         CPSEL,
+	input   [7:0] DSW1,
+	input   [7:0] DSW2,
+	input   [7:0] CTR1,
+	input   [7:0] CTR2,
+	output        VBLK,
+	output  [7:0] POUT,
+	output [15:0] SNDOUT,
+	output [12:0] sp_rom_addr,
+	input  [31:0] sp_rom_data,
 	input         sp_rdy,
-	output [12:0]	fg_rom_addr,
-	input  [31:0]	fg_rom_data,
-	output [12:0]	bg_rom_addr,
-	input  [31:0]	bg_rom_data
+	output [12:0] fg_rom_addr,
+	input  [31:0] fg_rom_data,
+	output [12:0] bg_rom_addr,
+	input  [31:0] bg_rom_data
 );
 
 wire  [9:0]	FGVAD;
@@ -32,12 +36,16 @@ wire  [9:0]	BGVAD;
 wire [15:0]	BGVDT;
 wire [10:0]	SPAAD;
 wire  [7:0]	SPADT;
-wire  [7:0]	SCRPX, SCRPY;
+wire  [7:0]	SCRPX = RAIDERS5 ? SCRPX_CPU : SCRPX_PSG, SCRPY = RAIDERS5 ? SCRPY_CPU : SCRPY_PSG;
+wire  [7:0]	SCRPX_PSG, SCRPY_PSG;
+reg   [7:0] SCRPX_CPU, SCRPY_CPU;
 wire  [8:0]	PALET;
+
 NINJAKUN_VIDEO video (
 	.RESET(RESET),
 	.MCLK(MCLK),
 	.PCLK_EN(PCLK_EN),
+	.RAIDERS5(RAIDERS5),
 	.PH(PH),
 	.PV(PV),
 	.PALAD(PALET),	// Pixel Output (Palet Index)
@@ -60,15 +68,28 @@ NINJAKUN_VIDEO video (
 	.bg_rom_data(bg_rom_data)
 );
 
-wire CS_PSG, CS_FGV, CS_BGV, CS_SPA, CS_PAL;
+wire CS_SCRX, CS_SCRY, CS_PSG, CS_FGV, CS_BGV, CS_SPA, CS_PAL;
 ninjakun_sadec sadec(
+	.RAIDERS5(RAIDERS5),
 	.CPADR(CPADR),
+	.CPSEL(CPSEL),
+	.CS_SCRX(CS_SCRX),
+	.CS_SCRY(CS_SCRY),
 	.CS_PSG(CS_PSG),
 	.CS_FGV(CS_FGV),
 	.CS_BGV(CS_BGV),
 	.CS_SPA(CS_SPA),
 	.CS_PAL(CS_PAL)
 );
+always @(posedge MCLK) begin
+	if (RESET) begin
+		SCRPX_CPU <= 0;
+		SCRPY_CPU <= 0;
+	end else begin
+		if (CS_SCRX) SCRPX_CPU <= CPODT;
+		if (CS_SCRY) SCRPY_CPU <= CPODT;
+	end
+end
 
 wire  [7:0] PSDAT, FGDAT = CPADR[10] ? FGDAT16[15:8] : FGDAT16[7:0], BGDAT = CPADR[10] ? BGDAT16[15:8] : BGDAT16[7:0], SPDAT, PLDAT;
 wire [15:0] FGDAT16, BGDAT16;
@@ -98,6 +119,7 @@ dataselector_5D_8B cpxdsel(
 
 ninjakun_psg psg(
 	.MCLK(MCLK),
+	.RAIDERS5(RAIDERS5),
 	.ADR(CPADR[1:0]),
 	.CS(CS_PSG),
 	.WR(CPWRT),
@@ -107,8 +129,11 @@ ninjakun_psg psg(
 	.RD(CPRED),
 	.DSW1(DSW1),
 	.DSW2(DSW2),
-	.SCRPX(SCRPX),
-	.SCRPY(SCRPY),
+	.CTR1(CTR1),
+	.CTR2(CTR2),
+	.VBLK(VBLK),
+	.SCRPX(SCRPX_PSG),
+	.SCRPY(SCRPY_PSG),
 	.SNDO(SNDOUT)
 );
 

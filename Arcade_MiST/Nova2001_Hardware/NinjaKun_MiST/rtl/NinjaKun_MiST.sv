@@ -34,6 +34,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O5,Blend,Off,On;",
+	"O6,Service,Off,On;",
 	"DIP;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
@@ -47,6 +48,21 @@ assign 		SDRAM_CKE = 1;
 wire        rotate = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend = status[5];
+wire        service = status[6];
+
+wire  [6:0] core_mod;
+wire        RAIDERS5 = core_mod == 1;
+
+reg   [7:0] CTR1, CTR2;
+
+always @(*) begin
+	CTR1 = ~{2'b11, m_one_player, 1'b0, m_fireA, m_fireB, m_right, m_left };
+	CTR2 = ~{~(m_coin1 | m_coin2), ~service, m_two_players, 1'b0, m_fire2A, m_fire2B, m_right2, m_left2 };
+	if (RAIDERS5) begin
+		CTR1 = ~{1'b0, 1'b0, m_one_player, m_fireA, m_up, m_down, m_right, m_left };
+		CTR2 = ~{(m_coin1 | m_coin2), service, m_two_players, m_fire2A, m_up2, m_down2, m_right2, m_left2};
+	end
+end
 
 wire CLOCK_48, pll_locked;
 pll pll(
@@ -175,8 +191,9 @@ wire [11:0] POUT;
 ninjakun_top ninjakun_top(
 	.RESET(reset),
 	.MCLK(CLOCK_48),
-	.CTR1(~{2'b11, m_one_player, 1'b0, m_fireA, m_fireB, m_right, m_left }),
-	.CTR2(~{~(m_coin1 | m_coin2), 1'b1, m_two_players, 1'b0, m_fireB, m_fire2B, m_right2, m_left2 }),
+	.RAIDERS5(RAIDERS5),
+	.CTR1(CTR1),
+	.CTR2(CTR2),
 	.DSW1(status[15:8]),
 	.DSW2(status[23:16]),
 	.PH(HPOS),
@@ -244,6 +261,7 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches       (switches       ),
+	.core_mod       (core_mod       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
 	.no_csync       (no_csync       ),

@@ -6,6 +6,7 @@ module ninjakun_cpumux
 	input   [7:0]	CPIDT,
 	output    		CPRED,
 	output    		CPWRT,
+	output          CPSEL,
 
 	output reg		CP0CL,
 	output reg		CP0CE_P,
@@ -26,6 +27,7 @@ module ninjakun_cpumux
 	input    		CP1WR
 );
 
+assign     CPSEL = CSIDE;
 reg  [7:0] CP0DT, CP1DT;
 reg  [3:0] PHASE;
 reg		  CSIDE;

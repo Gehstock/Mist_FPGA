@@ -2,24 +2,25 @@
 
 module NINJAKUN_SP
 (
-	input       MCLK,
-	input       PCLK_EN,
-	input				RESET,
+	input         MCLK,
+	input         PCLK_EN,
+	input         RESET,
+	input         RAIDERS5,
 
-	input   [8:0]	PH,
-	input	  [8:0]	PV,
+	input   [8:0] PH,
+	input   [8:0] PV,
 
-	output [10:0]	SPAAD,
-	input   [7:0]	SPADT,
+	output [10:0] SPAAD,
+	input   [7:0] SPADT,
 
-	output [12:0]	SPCAD,
-	input  [31:0]	SPCDT,
-	input				SPCFT,
+	output [12:0] SPCAD,
+	input  [31:0] SPCDT,
+	input         SPCFT,
 
-	output  [8:0]	SPOUT
+	output  [8:0] SPOUT
 );
 
-wire 		  WPEN;
+wire       WPEN;
 wire [8:0] WPAD;
 wire [7:0] WPIX;
 
@@ -42,7 +43,7 @@ always @(posedge MCLK) begin
 end
 
 NINJAKUN_SPENG eng (
-	MCLK, RESET, PH, PV,
+	MCLK, RESET, RAIDERS5, PH, PV,
 	SPAAD, SPADT,
 	SPCAD, SPCDT, SPCFT,
 	 WPAD,  WPIX, WPEN
@@ -55,34 +56,38 @@ endmodule
 
 module NINJAKUN_SPENG
 (
-	input				MCLK,
-	input				RESET,
+	input         MCLK,
+	input         RESET,
+	input         RAIDERS5,
 
-	input	 [8:0]	PH,
-	input  [8:0]	PV,
+	input   [8:0] PH,
+	input   [8:0] PV,
 
-	output [10:0]	SPAAD,
-	input  [7:0]	SPADT,
+	output [10:0] SPAAD,
+	input   [7:0] SPADT,
 
-	output reg [12:0]	SPCAD,
-	input  [31:0]	SPCDT,
-	input				SPCFT,
+	output reg [12:0] SPCAD,
+	input  [31:0] SPCDT,
+	input         SPCFT,
 
-	output [8:0]	WPAD,
-	output [7:0]	WPIX,
-	output			WPEN
+	output [8:0]  WPAD,
+	output [7:0]  WPIX,
+	output        WPEN
 );
 
 reg  [5:0] SPRNO;
 reg  [1:0] SPRIX;
-assign	  SPAAD = {SPRNO, 3'h0, SPRIX};
+assign     SPAAD = {SPRNO, 3'h0, SPRIX};
 
 reg  [7:0] ATTR;
-wire [3:0] PALNO = ATTR[3:0];
-wire 		  FLIPH = ATTR[4];
-wire 		  FLIPV = ATTR[5];
-wire 		  XPOSH = ATTR[6];
-wire 		  DSABL = ATTR[7];
+//wire [3:0] PALNO = RAIDERS5 ? ATTR[7:4] : ATTR[3:0];
+reg  [3:0] PALNO;
+reg        FLIPH;
+reg        FLIPV;
+//wire 		  FLIPH = ATTR[4];
+//wire 		  FLIPV = ATTR[5];
+wire       XPOSH = !RAIDERS5 & ATTR[6];
+wire       DSABL = RAIDERS5 ? ATTR[3] : ATTR[7];
 
 reg  [7:0] YPOS;
 reg  [7:0] NV;
@@ -93,11 +98,11 @@ wire       YHIT = (HV[7:4]==4'b1111) & (~DSABL);
 reg  [7:0] XPOS;
 reg  [4:0] WP;
 wire [3:0] WOFS = {4{FLIPH}}^(WP[3:0]);
-assign 	  WPAD = {1'b0,XPOS}-{XPOSH,8'h0}+WOFS-1'd1;
-assign 	  WPEN = ~(WP[4]|(WPIX[3:0]==0));
+assign     WPAD = {1'b0,XPOS}-{XPOSH,8'h0}+WOFS-1'd1;
+assign     WPEN = ~(WP[4]|(WPIX[3:0]==0));
 
 reg  [7:0] PTNO;
-reg		  CRS;
+reg        CRS;
 
 function [3:0] XOUT;
 input  [2:0] N;
@@ -151,12 +156,23 @@ always @( posedge MCLK ) begin
 		end
 	 `FETCH1: begin
 			ATTR   = SPADT; /* ATTR must block assign */
+			if (!RAIDERS5) begin
+				PALNO <= SPADT[3:0];
+				FLIPH <= SPADT[4];
+				FLIPV <= SPADT[5];
+			end else begin
+				PALNO <= SPADT[7:4];
+			end
 			SPRIX <= 0;
 			STATE <= YHIT ? `FETCH2 : `NEXT;
 		end
 
 	 `FETCH2: begin
-			PTNO  <= SPADT;
+			if (RAIDERS5) begin
+				FLIPH <= SPADT[0];
+				FLIPV <= SPADT[1];
+			end
+			PTNO  <= RAIDERS5 ? { ATTR[2:0], SPADT[7:2] } : SPADT;
 			SPRIX <= 1;
 			STATE <= `FETCH3;
 		end

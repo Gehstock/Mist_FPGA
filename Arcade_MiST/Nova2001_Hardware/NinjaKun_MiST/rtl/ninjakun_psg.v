@@ -1,18 +1,22 @@
 module ninjakun_psg
 (
-	input				MCLK,
-	input	 [1:0]	ADR,
-	input				CS,
-	input				WR,
-	input	 [7:0]	ID,
-	output [7:0]	OD,
-	input				RESET,
-	input				RD,
-	input	 [7:0]	DSW1,
-	input	 [7:0]	DSW2,
-	output [7:0]	SCRPX,
-	output [7:0]	SCRPY,
-	output [15:0]	SNDO
+	input         MCLK,
+	input         RAIDERS5,
+	input   [1:0] ADR,
+	input         CS,
+	input         WR,
+	input   [7:0] ID,
+	output  [7:0] OD,
+	input         RESET,
+	input         RD,
+	input   [7:0] DSW1,
+	input   [7:0] DSW2,
+	input   [7:0] CTR1,
+	input   [7:0] CTR2,
+	input         VBLK,
+	output  [7:0] SCRPX,
+	output  [7:0] SCRPY,
+	output [15:0] SNDO
 );
 
 wire [7:0] OD0, OD1;
@@ -60,8 +64,8 @@ YM2149 psg0(
 	.I_SEL_L(1'b0),
 	.O_AUDIO(S0x),
 	.O_CHAN(S0c),
-	.I_IOA(DSW1),
-	.I_IOB(DSW2),
+	.I_IOA(RAIDERS5 ? {~VBLK, CTR1[6:0]} : DSW1),
+	.I_IOB(RAIDERS5 ? CTR2 : DSW2),
 	.ENA(ENA),
 	.RESET_L(~RESET),
 	.CLK(MCLK)
@@ -78,8 +82,8 @@ YM2149 psg1(
 	.I_SEL_L(1'b0),
 	.O_AUDIO(S1x),
 	.O_CHAN(S1c),
-	.I_IOA(8'd0),
-	.I_IOB(8'd0),
+	.I_IOA(RAIDERS5 ? DSW1 : 8'd0),
+	.I_IOB(RAIDERS5 ? DSW2 : 8'd0),
 	.O_IOA(SCRPX),
 	.O_IOB(SCRPY),
 	.ENA(ENA),

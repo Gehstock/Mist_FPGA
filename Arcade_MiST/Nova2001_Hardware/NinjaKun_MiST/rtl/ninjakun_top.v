@@ -11,6 +11,7 @@ module ninjakun_top
 (
 	input          RESET,      // RESET
 	input          MCLK,       // Master Clock (48.0MHz)
+	input          RAIDERS5,
 	input	  [7:0]	CTR1,			// Control Panel
 	input	  [7:0]	CTR2,
 	input	  [7:0]	DSW1,			// DipSW
@@ -40,11 +41,13 @@ assign PCLK_EN = CLKDIV[2:0] == 3'b111;
 
 wire [15:0] CPADR;
 wire  [7:0] CPODT, CPIDT;
+wire        CPSEL;
 wire        CPRED, CPWRT, VBLK;
 
 ninjakun_main ninjakun_main(
 	.RESET(RESET),
 	.MCLK(MCLK),
+	.RAIDERS5(RAIDERS5),
 	.VBLK(VBLK),
 	.CTR1(CTR1),
 	.CTR2(CTR2),
@@ -53,6 +56,7 @@ ninjakun_main ninjakun_main(
 	.CPIDT(CPIDT),
 	.CPRED(CPRED),
 	.CPWRT(CPWRT),
+	.CPSEL(CPSEL),
 	.CPU1ADDR(CPU1ADDR),
 	.CPU1DT(CPU1DT),
 	.CPU2ADDR(CPU2ADDR),
@@ -68,6 +72,7 @@ wire  [8:0] PALET;
 wire  [7:0] SCRPX, SCRPY;
 ninjakun_io_video ninjakun_io_video(
 	.MCLK(MCLK),
+	.RAIDERS5(RAIDERS5),
 	.PCLK_EN(PCLK_EN),
 	.RESET(RESET),
 	.PH(PH),
@@ -77,8 +82,11 @@ ninjakun_io_video ninjakun_io_video(
 	.CPIDT(CPIDT),
 	.CPRED(CPRED),
 	.CPWRT(CPWRT),
+	.CPSEL(CPSEL),
 	.DSW1(DSW1),
 	.DSW2(DSW2),
+	.CTR1(CTR1),
+	.CTR2(CTR2),
 	.VBLK(VBLK),
 	.POUT(POUT),
 	.SNDOUT(SNDOUT),

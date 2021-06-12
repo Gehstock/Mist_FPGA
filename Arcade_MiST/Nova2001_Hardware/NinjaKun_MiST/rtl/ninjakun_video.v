@@ -2,28 +2,29 @@
 
 module NINJAKUN_VIDEO
 (
-	input					RESET,
-	input					MCLK,
-	input					PCLK_EN,
+	input         RESET,
+	input         MCLK,
+	input         PCLK_EN,
+	input         RAIDERS5,
 	
-	input   [8:0]		PH,
-	input   [8:0]		PV,
+	input   [8:0] PH,
+	input   [8:0] PV,
 
-	output  [8:0]		PALAD,	// Pixel Output (Palet Index)
+	output  [8:0] PALAD,	// Pixel Output (Palet Index)
 
-	output  [9:0]		FGVAD,	// FG
-	input  [15:0]		FGVDT,
+	output  [9:0] FGVAD,	// FG
+	input  [15:0] FGVDT,
 
-	output  [9:0]		BGVAD,	// BG
-	input  [15:0]		BGVDT,
-	input   [7:0]		BGSCX,
-	input   [7:0]		BGSCY,
+	output  [9:0] BGVAD,	// BG
+	input  [15:0] BGVDT,
+	input   [7:0] BGSCX,
+	input   [7:0] BGSCY,
 
-	output [10:0]		SPAAD,	// Sprite
-	input   [7:0]		SPADT,
+	output [10:0] SPAAD,	// Sprite
+	input   [7:0] SPADT,
 
-	output				VBLK,
-	input					DBGPD,	// Palet Display (for Debug)
+	output        VBLK,
+	input         DBGPD,	// Palet Display (for Debug)
 
 	output [12:0] sp_rom_addr,
 	input  [31:0] sp_rom_data,
@@ -63,7 +64,7 @@ assign BGCDT = bg_rom_data;
 wire		  FGPRI;
 wire [8:0] FGOUT;
 NINJAKUN_FG fg(
-  MCLK, PCLK_EN,
+  MCLK, PCLK_EN, RAIDERS5,
 	PH, PV,
 	FGVAD, FGVDT,
 	FGCAD, FGCDT,
@@ -74,8 +75,9 @@ wire FGPPQ = FGOPQ & (~FGPRI);
 
 // Back-Ground Scanline Generator
 wire [8:0] BGOUT;
+
 NINJAKUN_BG bg(
-	MCLK, PCLK_EN,
+	MCLK, PCLK_EN, RAIDERS5,
 	PH, PV,
 	BGSCX, BGSCY,
 	BGVAD, BGVDT,
@@ -85,8 +87,9 @@ NINJAKUN_BG bg(
 
 // Sprite Scanline Generator
 wire [8:0] SPOUT;
+
 NINJAKUN_SP sp(
-	MCLK, PCLK_EN, RESET,
+	MCLK, PCLK_EN, RESET, RAIDERS5,
 	PH, PV,
 	SPAAD, SPADT,
 	SPCAD, SPCDT, SPCFT,
@@ -98,38 +101,37 @@ wire SPOPQ = (SPOUT[3:0]!=0);
 wire [8:0] PDOUT = (PV[7]|PV[8]) ? 9'd0 : {PV[6:2],PH[7:4]};
 
 // Color Mixer
-DSEL4_9B cmix( PALAD,
-	DBGPD, PDOUT,
-	FGPPQ, FGOUT,
-   SPOPQ, SPOUT,
-	FGOPQ, FGOUT,
-			 BGOUT
-);
+assign PALAD = DBGPD ? PDOUT :
+               FGPPQ ? FGOUT :
+               SPOPQ ? SPOUT :
+               FGOPQ ? FGOUT :
+               BGOUT;
 
 endmodule
 
 // ForeGround Scanline Generator
 module NINJAKUN_FG
 (
-	input					MCLK,
-	input					PCLK_EN,
+	input         MCLK,
+	input         PCLK_EN,
+	input         RAIDERS5,
 
-	input   [8:0]		PH,		// CRTC
-	input	  [8:0]		PV,
+	input   [8:0] PH,		// CRTC
+	input   [8:0] PV,
 
-	output reg [9:0]	FGVAD,	// VRAM
-	input	 [15:0]		FGVDT,
+	output reg [9:0] FGVAD,	// VRAM
+	input  [15:0] FGVDT,
 
-	output reg [12:0]	FGCAD,
-	input  [31:0]		FGCDT,
+	output reg [12:0] FGCAD,
+	input  [31:0] FGCDT,
 
-	output  [9:0]		FGOUT		// PIXEL OUT : {PRIO,PALNO[8:0]}
+	output  [9:0] FGOUT		// PIXEL OUT : {PRIO,PALNO[8:0]}
 );
 
 wire  [8:0] POSH  = PH+9'd8+9'd1;
 wire  [8:0] POSV  = PV+9'd32;
 
-wire  [9:0] CHRNO = {1'b0,FGVDT[13],FGVDT[7:0]};
+wire  [9:0] CHRNO = RAIDERS5 ? {2'b00, FGVDT[7:0]} : {1'b0,FGVDT[13],FGVDT[7:0]};
 reg  [31:0] CDT;
 
 reg   [4:0] PAL;
@@ -137,7 +139,7 @@ reg   [3:0] OUT;
 always @( posedge MCLK ) begin
 	if (PCLK_EN)
 	case(POSH[2:0])
-	 0: begin OUT <= CDT[7:4]  ; PAL   <= FGVDT[12:8]; end
+	 0: begin OUT <= CDT[7:4]  ; PAL   <= RAIDERS5 ? {1'b0, FGVDT[15:12]} : FGVDT[12:8]; end
 	 1: begin OUT <= CDT[3:0]  ; FGVAD <= {POSV[7:3],POSH[7:3]}; end
 	 2: begin OUT <= CDT[15:12]; end
 	 3: begin OUT <= CDT[11:8] ; end
@@ -156,28 +158,29 @@ endmodule
 // BackGround Scanline Generator
 module NINJAKUN_BG
 (
-	input					MCLK,
-	input					PCLK_EN,
+	input         MCLK,
+	input         PCLK_EN,
+	input         RAIDERS5,
 
-	input   [8:0]		PH,		// CRTC
-	input	  [8:0]		PV,
+	input   [8:0] PH,		// CRTC
+	input   [8:0] PV,
 
-	input   [7:0]		BGSCX,	// SCRREG
-	input	  [7:0]		BGSCY,
+	input   [7:0] BGSCX,	// SCRREG
+	input   [7:0] BGSCY,
 
-	output reg [9:0]	BGVAD,	// VRAM
-	input	 [15:0]		BGVDT,
+	output reg [9:0] BGVAD,	// VRAM
+	input  [15:0] BGVDT,
 
-	output reg [12:0]	BGCAD,
-	input  [31:0]		BGCDT,
-	
-	output  [8:0]		BGOUT		// OUTPUT
+	output reg [12:0] BGCAD,
+	input  [31:0] BGCDT,
+
+	output  [8:0] BGOUT		// OUTPUT
 );
 
 wire  [8:0] POSH  = PH+BGSCX+9'd2;
 wire  [8:0] POSV  = PV+BGSCY+9'd32;
 
-wire  [9:0] CHRNO = {BGVDT[15:14],BGVDT[7:0]};
+wire  [9:0] CHRNO = RAIDERS5 ? {1'b0, BGVDT[8:0]} : {BGVDT[15:14],BGVDT[7:0]};
 reg  [31:0] CDT;
 
 reg   [3:0] PAL;
@@ -185,7 +188,7 @@ reg   [3:0] OUT;
 always @( posedge MCLK ) begin
 	if (PCLK_EN)
 	case(POSH[2:0])
-	 0: begin OUT <= CDT[7:4]  ; PAL   <= BGVDT[11:8]; end
+	 0: begin OUT <= CDT[7:4]  ; PAL   <= RAIDERS5 ? BGVDT[15:12] : BGVDT[11:8]; end
 	 1: begin OUT <= CDT[3:0]  ; BGVAD <= {POSV[7:3],POSH[7:3]}; end
 	 2: begin OUT <= CDT[15:12]; end
 	 3: begin OUT <= CDT[11:8] ; end
@@ -199,33 +202,3 @@ end
 assign BGOUT = { 1'b1, PAL, OUT };
 
 endmodule
-
-
-module DSEL4_9B
-(
-	output [8:0] OUT,
-
-	input 		 EN1,
-	input  [8:0] IN1,
-
-	input 		 EN2,
-	input  [8:0] IN2,
-
-	input 		 EN3,
-	input  [8:0] IN3,
-
-	input 		 EN4,
-	input  [8:0] IN4,
-
-	input  [8:0] IND
-);
-
-assign OUT = EN1 ? IN1: 
-				 EN2 ? IN2: 
-				 EN3 ? IN3: 
-				 EN4 ? IN4:
- 				       IND;
-
-endmodule
-
-

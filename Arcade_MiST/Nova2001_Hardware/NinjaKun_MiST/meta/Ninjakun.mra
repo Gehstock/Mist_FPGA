@@ -41,20 +41,24 @@
 		<dip bits="15" name="Infinite Lives" ids="Yes,No"/>
 	</switches>
 
-	<rom index="1"></rom>
+	<rom index="1"><part>0</part></rom>
 	<rom index="0" zip="ninjakun.zip" md5="99e80f22f7a77cf1d574ce89486b385f">
+		<!-- gfx1 -->
 		<part crc="a74c4297" name="ninja-6.7n"/>
 		<part crc="53a72039" name="ninja-7.7p"/>
 		<part crc="4a99d857" name="ninja-8.7s"/>
 		<part crc="dede49e4" name="ninja-9.7t"/>
+		<!-- gfx2 -->
 		<part crc="0d55664a" name="ninja-10.2c"/>
 		<part crc="12ff9597" name="ninja-11.2d"/>
 		<part crc="e9b75807" name="ninja-12.4c"/>
 		<part crc="1760ed2c" name="ninja-13.4d"/>
+		<!-- main cpu -->
 		<part crc="1c1dc141" name="ninja-1.7a"/>
 		<part crc="39cc7d37" name="ninja-2.7b"/>
 		<part crc="d542bfe3" name="ninja-3.7d"/>
 		<part crc="a57385c6" name="ninja-4.7e"/>
+		<!-- sub cpu -->
 		<part crc="164a42c4" name="ninja-5.7h"/>
 		<part crc="39cc7d37" name="ninja-2.7b"/>
 		<part crc="d542bfe3" name="ninja-3.7d"/>
