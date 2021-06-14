@@ -3,7 +3,7 @@
 module ninjakun_io_video
 (
 	input         MCLK,
-	input         RAIDERS5,
+	input   [1:0] HWTYPE,
 	input         PCLK_EN,
 	input         RESET,
 	input   [8:0] PH,
@@ -27,8 +27,13 @@ module ninjakun_io_video
 	output [12:0] fg_rom_addr,
 	input  [31:0] fg_rom_data,
 	output [12:0] bg_rom_addr,
-	input  [31:0] bg_rom_data
+	input  [31:0] bg_rom_data,
+	input   [4:0] PALADR,
+	input         PALWR,
+	input   [7:0] PALDAT
 );
+
+`include "rtl/defs.v"
 
 wire  [9:0]	FGVAD;
 wire [15:0]	FGVDT;
@@ -36,6 +41,7 @@ wire  [9:0]	BGVAD;
 wire [15:0]	BGVDT;
 wire [10:0]	SPAAD;
 wire  [7:0]	SPADT;
+wire            RAIDERS5 = HWTYPE == `HW_RAIDERS5;
 wire  [7:0]	SCRPX = RAIDERS5 ? SCRPX_CPU : SCRPX_PSG, SCRPY = RAIDERS5 ? SCRPY_CPU : SCRPY_PSG;
 wire  [7:0]	SCRPX_PSG, SCRPY_PSG;
 reg   [7:0] SCRPX_CPU, SCRPY_CPU;
@@ -45,7 +51,7 @@ NINJAKUN_VIDEO video (
 	.RESET(RESET),
 	.MCLK(MCLK),
 	.PCLK_EN(PCLK_EN),
-	.RAIDERS5(RAIDERS5),
+	.HWTYPE(HWTYPE),
 	.PH(PH),
 	.PV(PV),
 	.PALAD(PALET),	// Pixel Output (Palet Index)
@@ -70,7 +76,7 @@ NINJAKUN_VIDEO video (
 
 wire CS_SCRX, CS_SCRY, CS_PSG, CS_FGV, CS_BGV, CS_SPA, CS_PAL;
 ninjakun_sadec sadec(
-	.RAIDERS5(RAIDERS5),
+	.HWTYPE(HWTYPE),
 	.CPADR(CPADR),
 	.CPSEL(CPSEL),
 	.CS_SCRX(CS_SCRX),
@@ -94,14 +100,14 @@ end
 wire  [7:0] PSDAT, FGDAT = CPADR[10] ? FGDAT16[15:8] : FGDAT16[7:0], BGDAT = CPADR[10] ? BGDAT16[15:8] : BGDAT16[7:0], SPDAT, PLDAT;
 wire [15:0] FGDAT16, BGDAT16;
 wire  [9:0] BGOFS =  CPADR[9:0]+{SCRPY[7:3],SCRPX[7:3]};
-wire [10:0] BGADR = {CPADR[10],BGOFS};
+wire [10:0] BGADR = HWTYPE[1] ? CPADR : {CPADR[10],BGOFS};
 
 dpram #(8,10) fgv_lo(MCLK, CS_FGV & CPWRT & ~CPADR[10], CPADR[9:0], CPODT, FGDAT16[ 7:0], MCLK, 1'b0, FGVAD, 8'd0, FGVDT[ 7:0]);
 dpram #(8,10) fgv_hi(MCLK, CS_FGV & CPWRT &  CPADR[10], CPADR[9:0], CPODT, FGDAT16[15:8], MCLK, 1'b0, FGVAD, 8'd0, FGVDT[15:8]);
 dpram #(8,10) bgv_lo(MCLK, CS_BGV & CPWRT & ~BGADR[10], BGADR[9:0], CPODT, BGDAT16[ 7:0], MCLK, 1'b0, BGVAD, 8'd0, BGVDT[ 7:0]);
 dpram #(8,10) bgv_hi(MCLK, CS_BGV & CPWRT &  BGADR[10], BGADR[9:0], CPODT, BGDAT16[15:8], MCLK, 1'b0, BGVAD, 8'd0, BGVDT[15:8]);
 dpram #(8,11) spa   (MCLK, CS_SPA & CPWRT, CPADR[10:0], CPODT, SPDAT, ~MCLK, 1'b0, SPAAD, 8'h0, SPADT);
-dpram #(8,9)  pal   (MCLK, CS_PAL & CPWRT, CPADR[8:0], CPODT, PLDAT,  MCLK, 1'b0, PALET, 8'h0, POUT);
+dpram #(8,9)  pal   (MCLK, CS_PAL & CPWRT, CPADR[8:0], CPODT, PLDAT,  MCLK, PALWR, PALWR ? PALADR : PALET, PALDAT, POUT);
 
 assign CPIDT = CS_PSG ? PSDAT :
                CS_FGV ? FGDAT :
@@ -112,7 +118,7 @@ assign CPIDT = CS_PSG ? PSDAT :
 
 ninjakun_psg psg(
 	.MCLK(MCLK),
-	.RAIDERS5(RAIDERS5),
+	.HWTYPE(HWTYPE),
 	.ADR(CPADR[1:0]),
 	.CS(CS_PSG),
 	.WR(CPWRT),

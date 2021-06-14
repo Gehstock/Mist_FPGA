@@ -5,8 +5,8 @@ module NINJAKUN_VIDEO
 	input         RESET,
 	input         MCLK,
 	input         PCLK_EN,
-	input         RAIDERS5,
-	
+	input   [1:0] HWTYPE,
+
 	input   [8:0] PH,
 	input   [8:0] PV,
 
@@ -34,6 +34,10 @@ module NINJAKUN_VIDEO
 	output [12:0] bg_rom_addr,
 	input  [31:0] bg_rom_data
 );
+
+`include "rtl/defs.v"
+
+wire RAIDERS5 = HWTYPE == `HW_RAIDERS5;
 
 assign VBLK = (PV>=193);
 
@@ -64,7 +68,7 @@ assign BGCDT = bg_rom_data;
 wire		  FGPRI;
 wire [8:0] FGOUT;
 NINJAKUN_FG fg(
-  MCLK, PCLK_EN, RAIDERS5,
+  MCLK, PCLK_EN, HWTYPE,
 	PH, PV,
 	FGVAD, FGVDT,
 	FGCAD, FGCDT,
@@ -77,7 +81,7 @@ wire FGPPQ = FGOPQ & (~FGPRI);
 wire [8:0] BGOUT;
 
 NINJAKUN_BG bg(
-	MCLK, PCLK_EN, RAIDERS5,
+	MCLK, PCLK_EN, HWTYPE,
 	PH, PV,
 	BGSCX, BGSCY,
 	BGVAD, BGVDT,
@@ -114,7 +118,7 @@ module NINJAKUN_FG
 (
 	input         MCLK,
 	input         PCLK_EN,
-	input         RAIDERS5,
+	input   [1:0] HWTYPE,
 
 	input   [8:0] PH,		// CRTC
 	input   [8:0] PV,
@@ -131,7 +135,7 @@ module NINJAKUN_FG
 wire  [8:0] POSH  = PH+9'd8+9'd1;
 wire  [8:0] POSV  = PV+9'd32;
 
-wire  [9:0] CHRNO = RAIDERS5 ? {2'b00, FGVDT[7:0]} : {1'b0,FGVDT[13],FGVDT[7:0]};
+wire  [9:0] CHRNO = (HWTYPE == `HW_RAIDERS5 || HWTYPE == `HW_NOVA2001) ? {2'b00, FGVDT[7:0]} : {1'b0,FGVDT[13],FGVDT[7:0]};
 reg  [31:0] CDT;
 
 reg   [4:0] PAL;
@@ -139,7 +143,7 @@ reg   [3:0] OUT;
 always @( posedge MCLK ) begin
 	if (PCLK_EN)
 	case(POSH[2:0])
-	 0: begin OUT <= CDT[7:4]  ; PAL   <= RAIDERS5 ? {1'b0, FGVDT[15:12]} : FGVDT[12:8]; end
+	 0: begin OUT <= CDT[7:4]  ; PAL   <= HWTYPE == `HW_RAIDERS5 ? {1'b0, FGVDT[15:12]} : FGVDT[12:8]; end
 	 1: begin OUT <= CDT[3:0]  ; FGVAD <= {POSV[7:3],POSH[7:3]}; end
 	 2: begin OUT <= CDT[15:12]; end
 	 3: begin OUT <= CDT[11:8] ; end
@@ -150,7 +154,7 @@ always @( posedge MCLK ) begin
 	endcase
 end
 
-assign FGOUT = { PAL[4], 1'b0, PAL[3:0], OUT }; 
+assign FGOUT = HWTYPE == `HW_NOVA2001 ? (OUT == 4'h1 ? PAL : { PAL[4], OUT }) : { PAL[4], 1'b0, PAL[3:0], OUT };
 
 endmodule
 
@@ -160,7 +164,7 @@ module NINJAKUN_BG
 (
 	input         MCLK,
 	input         PCLK_EN,
-	input         RAIDERS5,
+	input   [1:0] HWTYPE,
 
 	input   [8:0] PH,		// CRTC
 	input   [8:0] PV,
@@ -177,10 +181,12 @@ module NINJAKUN_BG
 	output  [8:0] BGOUT		// OUTPUT
 );
 
-wire  [8:0] POSH  = PH+BGSCX+9'd2;
+wire  [8:0] POSH  = PH+BGSCX+(HWTYPE == `HW_NOVA2001 ? 9'd9 : 9'd2) /* synthesis keep */;
 wire  [8:0] POSV  = PV+BGSCY+9'd32;
 
-wire  [9:0] CHRNO = RAIDERS5 ? {1'b0, BGVDT[8:0]} : {BGVDT[15:14],BGVDT[7:0]};
+wire  [9:0] CHRNO = HWTYPE == `HW_RAIDERS5 ? {1'b0, BGVDT[8:0]} : 
+                    HWTYPE == `HW_NOVA2001 ? {2'b10, BGVDT[7:0]}:
+                    {BGVDT[15:14],BGVDT[7:0]};
 reg  [31:0] CDT;
 
 reg   [3:0] PAL;
@@ -188,7 +194,7 @@ reg   [3:0] OUT;
 always @( posedge MCLK ) begin
 	if (PCLK_EN)
 	case(POSH[2:0])
-	 0: begin OUT <= CDT[7:4]  ; PAL   <= RAIDERS5 ? BGVDT[15:12] : BGVDT[11:8]; end
+	 0: begin OUT <= CDT[7:4]  ; PAL   <= HWTYPE == `HW_RAIDERS5 ? BGVDT[15:12] : BGVDT[11:8]; end
 	 1: begin OUT <= CDT[3:0]  ; BGVAD <= {POSV[7:3],POSH[7:3]}; end
 	 2: begin OUT <= CDT[15:12]; end
 	 3: begin OUT <= CDT[11:8] ; end
@@ -199,6 +205,6 @@ always @( posedge MCLK ) begin
 	endcase
 end
 
-assign BGOUT = { 1'b1, PAL, OUT };
+assign BGOUT = HWTYPE == `HW_NOVA2001 ? {1'b1, (OUT == 4'h1 ? PAL : OUT)} : { 1'b1, PAL, OUT };
 
 endmodule

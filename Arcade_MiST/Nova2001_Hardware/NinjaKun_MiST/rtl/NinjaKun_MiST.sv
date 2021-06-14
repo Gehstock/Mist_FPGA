@@ -27,7 +27,8 @@ module NinjaKun_MiST (
 	output        SDRAM_CKE
 );
 
-`include "rtl\build_id.v" 
+`include "rtl/build_id.v"
+`include "rtl/defs.v"
 
 localparam CONF_STR = {
 	"NINJAKUN;;",
@@ -42,7 +43,7 @@ localparam CONF_STR = {
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = CLOCK_48;
+assign 		SDRAM_CLK = CLOCK_96;
 assign 		SDRAM_CKE = 1;
 
 wire        rotate = status[2];
@@ -51,23 +52,29 @@ wire        blend = status[5];
 wire        service = status[6];
 
 wire  [6:0] core_mod;
-wire        RAIDERS5 = core_mod == 1;
+wire  [1:0] hwtype = core_mod[1:0];
 
-reg   [7:0] CTR1, CTR2;
+reg   [7:0] CTR1, CTR2, CTR3;
 
 always @(*) begin
 	CTR1 = ~{2'b11, m_one_player, 1'b0, m_fireA, m_fireB, m_right, m_left };
 	CTR2 = ~{~(m_coin1 | m_coin2), ~service, m_two_players, 1'b0, m_fire2A, m_fire2B, m_right2, m_left2 };
-	if (RAIDERS5) begin
+	CTR3 = 0;
+	if (hwtype == `HW_RAIDERS5) begin
 		CTR1 = ~{1'b0, 1'b0, m_one_player, m_fireA, m_up, m_down, m_right, m_left };
 		CTR2 = ~{(m_coin1 | m_coin2), service, m_two_players, m_fire2A, m_up2, m_down2, m_right2, m_left2};
+	end else if (hwtype == `HW_NOVA2001) begin
+		CTR1 = ~{m_fireA, m_fireB, 2'b00, m_right, m_left, m_down, m_up};
+		CTR2 = ~{m_fire2A, m_fire2B, 2'b00, m_right2, m_left2, m_down2, m_up2};
+		CTR3 = ~{5'b00000, m_two_players, m_one_player, m_coin1 | m_coin2};
 	end
 end
 
-wire CLOCK_48, pll_locked;
+wire CLOCK_96, CLOCK_48, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(CLOCK_48),
+	.c0(CLOCK_96),
+	.c1(CLOCK_48),
 	.locked(pll_locked)
 	);
 
@@ -125,10 +132,10 @@ wire [31:0] fg_rom_do;
 wire [12:0] bg_rom_addr;
 wire [31:0] bg_rom_do;
 
-sdram sdram(
+sdram #(96) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( CLOCK_48     ),
+	.clk           ( CLOCK_96     ),
 
 	// port1 used for main + aux CPU
 	.port1_req     ( port1_req    ),
@@ -191,11 +198,12 @@ wire [11:0] POUT;
 ninjakun_top ninjakun_top(
 	.RESET(reset),
 	.MCLK(CLOCK_48),
-	.RAIDERS5(RAIDERS5),
+	.HWTYPE(hwtype),
 	.CTR1(CTR1),
 	.CTR2(CTR2),
+	.CTR3(CTR3),
 	.DSW1(status[15:8]),
-	.DSW2(status[23:16]),
+	.DSW2({(hwtype == `HW_NOVA2001 ? ~service : status[23]), status[22:16]}),
 	.PH(HPOS),
 	.PV(VPOS),
 	.PCLK_EN(PCLK_EN),
@@ -211,7 +219,11 @@ ninjakun_top ninjakun_top(
 	.fg_rom_addr(fg_rom_addr),
 	.fg_rom_data(fg_rom_do),
 	.bg_rom_addr(bg_rom_addr),
-	.bg_rom_data(bg_rom_do)
+	.bg_rom_data(bg_rom_do),
+	.PALADR(ioctl_addr[4:0]),
+	.PALWR(ioctl_addr[23:5] == {16'h0180, 3'b000} && ioctl_wr),
+	.PALDAT(ioctl_dout)
+
 );
 
 wire  [7:0] oPIX;

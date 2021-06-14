@@ -53,7 +53,7 @@ set_time_format -unit ns -decimal_places 3
 
 create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
 
-set sys_clk   "pll|altpll_component|auto_generated|pll1|clk[0]"
+set sys_clk   "pll|altpll_component|auto_generated|pll1|clk[1]"
 set sdram_clk "pll|altpll_component|auto_generated|pll1|clk[0]"
 #**************************************************************
 # Create Generated Clock

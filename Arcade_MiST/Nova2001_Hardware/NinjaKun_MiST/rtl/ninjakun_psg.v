@@ -1,7 +1,7 @@
 module ninjakun_psg
 (
 	input         MCLK,
-	input         RAIDERS5,
+	input   [1:0] HWTYPE,
 	input   [1:0] ADR,
 	input         CS,
 	input         WR,
@@ -19,17 +19,27 @@ module ninjakun_psg
 	output [15:0] SNDO
 );
 
+`include "rtl/defs.v"
+
 wire [7:0] OD0, OD1;
-assign OD = ADR[1] ? OD1 : OD0;
+assign OD = psg1cs ? OD1 : OD0;
 
 reg [7:0] SA0, SB0, SC0; wire [7:0] S0x; wire [1:0] S0c;
 reg [7:0] SA1, SB1, SC1; wire [7:0] S1x; wire [1:0] S1c;
 
-reg [2:0] encnt;
+reg [3:0] encnt;
 reg ENA;
 always @(posedge MCLK) begin
 	ENA <= (encnt==0);
 	encnt <= encnt+1'd1;
+	case (HWTYPE)
+	`HW_NINJAKUN, `HW_RAIDERS5:
+		if (encnt == 7) encnt <= 0; // 6 MHz
+	`HW_NOVA2001:
+		if (encnt == 11) encnt <= 0; // 4 MHz
+	default: ;
+	endcase
+
 	case (S0c)
 	2'd0: SA0 <= S0x;
 	2'd1: SB0 <= S0x;
@@ -44,14 +54,19 @@ always @(posedge MCLK) begin
 	endcase
 end
 
-wire psgxad = ~ADR[0];
-wire psg0cs = CS & (~ADR[1]);
+wire psgxad = HWTYPE == `HW_NOVA2001 ? ADR[1] : ~ADR[0];
+wire psg0cs = CS & (HWTYPE == `HW_NOVA2001 ? ~ADR[0] : ~ADR[1]);
 wire psg0bd = psg0cs & (WR|psgxad);
 wire psg0bc = psg0cs & ((~WR)|psgxad);
 
-wire psg1cs = CS & ADR[1];
+wire psg1cs = CS & (HWTYPE == `HW_NOVA2001 ? ADR[0] : ADR[1]);
 wire psg1bd = psg1cs & (WR|psgxad);
 wire psg1bc = psg1cs & ((~WR)|psgxad);
+
+wire [7:0] IOA_PSG0, IOB_PSG0;
+wire [7:0] IOA_PSG1, IOB_PSG1;
+assign SCRPX = HWTYPE == `HW_NOVA2001 ? IOA_PSG0 : IOA_PSG1;
+assign SCRPY = HWTYPE == `HW_NOVA2001 ? IOB_PSG0 : IOB_PSG1;
 
 YM2149 psg0(
 	.I_DA(ID),
@@ -64,8 +79,10 @@ YM2149 psg0(
 	.I_SEL_L(1'b0),
 	.O_AUDIO(S0x),
 	.O_CHAN(S0c),
-	.I_IOA(RAIDERS5 ? {~VBLK, CTR1[6:0]} : DSW1),
-	.I_IOB(RAIDERS5 ? CTR2 : DSW2),
+	.I_IOA(HWTYPE == `HW_RAIDERS5 ? {~VBLK, CTR1[6:0]} : DSW1),
+	.I_IOB(HWTYPE == `HW_RAIDERS5 ? CTR2 : DSW2),
+	.O_IOA(IOA_PSG0),
+	.O_IOB(IOB_PSG0),
 	.ENA(ENA),
 	.RESET_L(~RESET),
 	.CLK(MCLK)
@@ -82,10 +99,10 @@ YM2149 psg1(
 	.I_SEL_L(1'b0),
 	.O_AUDIO(S1x),
 	.O_CHAN(S1c),
-	.I_IOA(RAIDERS5 ? DSW1 : 8'd0),
-	.I_IOB(RAIDERS5 ? DSW2 : 8'd0),
-	.O_IOA(SCRPX),
-	.O_IOB(SCRPY),
+	.I_IOA(HWTYPE == `HW_NINJAKUN ? 8'd0 : DSW1),
+	.I_IOB(HWTYPE == `HW_NINJAKUN ? 8'd0 : DSW2),
+	.O_IOA(IOA_PSG1),
+	.O_IOB(IOB_PSG1),
 	.ENA(ENA),
 	.RESET_L(~RESET),
 	.CLK(MCLK)
