@@ -21,7 +21,7 @@ module NINJAKUN_SP
 );
 
 wire       WPEN;
-wire [8:0] WPAD;
+wire [7:0] WPAD;
 wire [7:0] WPIX;
 
 reg  [7:0] POUT;
@@ -31,7 +31,7 @@ reg  [9:0] radr0=0,radr1=1;
 wire [7:0] POUTi;
 
 dpram #(8,10) ldbuf(
-	MCLK, WPEN, {PV[0], WPAD}, WPIX, 8'd0,
+	MCLK, WPEN, {PV[0], 1'b0, WPAD}, WPIX, 8'd0,
 	MCLK, (radr0==radr1), radr0, 8'd0, POUTi);
 
 always @(posedge MCLK) begin 
@@ -70,7 +70,7 @@ module NINJAKUN_SPENG
 	input  [31:0] SPCDT,
 	input         SPCFT,
 
-	output [8:0]  WPAD,
+	output [7:0]  WPAD,
 	output [7:0]  WPIX,
 	output        WPEN
 );
@@ -79,15 +79,11 @@ reg  [5:0] SPRNO;
 reg  [1:0] SPRIX;
 assign     SPAAD = {SPRNO, 3'h0, SPRIX};
 
-reg  [7:0] ATTR;
-//wire [3:0] PALNO = RAIDERS5 ? ATTR[7:4] : ATTR[3:0];
 reg  [3:0] PALNO;
 reg        FLIPH;
 reg        FLIPV;
-//wire 		  FLIPH = ATTR[4];
-//wire 		  FLIPV = ATTR[5];
-wire       XPOSH = !RAIDERS5 & ATTR[6];
-wire       DSABL = RAIDERS5 ? ATTR[3] : ATTR[7];
+reg        XPOSH;
+reg        DSABL;
 
 reg  [7:0] YPOS;
 reg  [7:0] NV;
@@ -132,6 +128,7 @@ assign	  WPIX = {PALNO, XOUT(WP[2:0],WP[3] ? CDT1 : CDT0)};
 `define NEXT	7
 
 reg  [2:0] STATE;
+reg        PH8_D;
 always @( posedge MCLK ) begin
 	if (RESET) begin
 		STATE <= `WAIT;
@@ -140,8 +137,9 @@ always @( posedge MCLK ) begin
 	case (STATE)
 
 	 `WAIT: begin
+			PH8_D <= PH[8];
 			WP <= 16;
-			if (~PH[8]) begin
+			if (PH8_D & ~PH[8]) begin
 				NV <= PV+5'd17;
 				SPRNO <= 0;
 				SPRIX <= 2;
@@ -155,13 +153,17 @@ always @( posedge MCLK ) begin
 			STATE <= `FETCH1;
 		end
 	 `FETCH1: begin
-			ATTR   = SPADT; /* ATTR must block assign */
 			if (!RAIDERS5) begin
 				PALNO <= SPADT[3:0];
 				FLIPH <= SPADT[4];
 				FLIPV <= SPADT[5];
+				XPOSH <= SPADT[6];
+				DSABL <= SPADT[7];
 			end else begin
 				PALNO <= SPADT[7:4];
+				DSABL <= SPADT[3];
+				XPOSH <= 0;
+				PTNO[8:6] <= SPADT[2:0];
 			end
 			SPRIX <= 0;
 			STATE <= YHIT ? `FETCH2 : `NEXT;
@@ -172,7 +174,7 @@ always @( posedge MCLK ) begin
 				FLIPH <= SPADT[0];
 				FLIPV <= SPADT[1];
 			end
-			PTNO  <= RAIDERS5 ? { ATTR[2:0], SPADT[7:2] } : SPADT;
+			PTNO  <= RAIDERS5 ? { PTNO[8:6], SPADT[7:2] } : SPADT;
 			SPRIX <= 1;
 			STATE <= `FETCH3;
 		end
@@ -199,7 +201,7 @@ always @( posedge MCLK ) begin
 
 	 `DRAW: begin
 			WP <= WP+1'd1;
-			if (WP[4]) STATE <= `NEXT;
+			if (&WP[3:0]) STATE <= `NEXT;
  	   end
 
 	 `NEXT: begin
