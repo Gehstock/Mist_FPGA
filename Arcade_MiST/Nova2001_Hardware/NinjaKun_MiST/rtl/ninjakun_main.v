@@ -15,7 +15,7 @@ module ninjakun_main(
 	output        CPWRT,
 	output        CPSEL,
 
-	output [14:0] CPU1ADDR,
+	output [15:0] CPU1ADDR,
 	input  [7:0]  CPU1DT,
 	output [14:0] CPU2ADDR,
 	input  [7:0]  CPU2DT
@@ -111,7 +111,7 @@ ninjakun_adec adec(
 
 
 wire [7:0] ROM0D, ROM1D;
-assign CPU1ADDR = CP0AD[14:0];
+assign CPU1ADDR = CP0AD;
 assign ROM0D = CPU1DT;
 assign CPU2ADDR = CP1AD[14:0];
 assign ROM1D = CPU2DT;
@@ -146,6 +146,7 @@ ninjakun_input inps(
 assign CP0DT = CS_IN0 ? INPD0 :
                CS_SH0 ? SHDT0 :
                ~CP0AD[15] ? ROM0D :
+			   (HWTYPE == `HW_PKUNWAR && CP0AD[15:13] == 3'b111) ? ROM0D :
                CP0ID;
 
 assign CP1DT = CS_IN1 ? INPD1 :

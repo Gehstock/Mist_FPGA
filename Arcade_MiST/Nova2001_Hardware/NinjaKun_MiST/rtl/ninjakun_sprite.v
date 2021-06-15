@@ -13,7 +13,7 @@ module NINJAKUN_SP
 	output [10:0] SPAAD,
 	input   [7:0] SPADT,
 
-	output [12:0] SPCAD,
+	output [13:0] SPCAD,
 	input  [31:0] SPCDT,
 	input         SPCFT,
 
@@ -66,7 +66,7 @@ module NINJAKUN_SPENG
 	output [10:0] SPAAD,
 	input   [7:0] SPADT,
 
-	output reg [12:0] SPCAD,
+	output reg [13:0] SPCAD,
 	input  [31:0] SPCDT,
 	input         SPCFT,
 
@@ -101,7 +101,7 @@ wire [3:0] WOFS = {4{FLIPH}}^(WP[3:0]);
 assign     WPAD = {1'b0,XPOS}-{XPOSH,8'h0}+WOFS-1'd1;
 assign     WPEN = ~(WP[4]|(WPIX[3:0]==0));
 
-reg  [7:0] PTNO;
+reg  [8:0] PTNO;
 reg        CRS;
 
 function [3:0] XOUT;
@@ -135,7 +135,7 @@ reg  [2:0] STATE;
 always @( posedge MCLK ) begin
 	if (RESET) begin
 		STATE <= `WAIT;
-		SPCAD <= 13'h1fff;
+		SPCAD <= 14'h3fff;
 	end else
 	case (STATE)
 

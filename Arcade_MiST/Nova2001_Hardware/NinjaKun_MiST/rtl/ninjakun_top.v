@@ -22,16 +22,16 @@ module ninjakun_top
 	output        PCLK_EN,    // PIXEL CLOCK ENABLE
 	output  [7:0] POUT,       // PIXEL OUT
 	output [15:0] SNDOUT,     // Sound Output (LPCM unsigned 16bits)
-	output [14:0] CPU1ADDR,
+	output [15:0] CPU1ADDR,
 	input  [7:0]  CPU1DT,
 	output [14:0] CPU2ADDR,
 	input  [7:0]  CPU2DT,
-	output [12:0] sp_rom_addr,
+	output [13:0] sp_rom_addr,
 	input  [31:0] sp_rom_data,
 	input         sp_rdy,
 	output [12:0] fg_rom_addr,
 	input  [31:0] fg_rom_data,
-	output [12:0] bg_rom_addr,
+	output [13:0] bg_rom_addr,
 	input  [31:0] bg_rom_data,
 	input   [4:0] PALADR,
 	input         PALWR,

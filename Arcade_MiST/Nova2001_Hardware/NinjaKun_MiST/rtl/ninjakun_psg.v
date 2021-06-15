@@ -37,7 +37,7 @@ always @(posedge MCLK) begin
 		if (encnt == 7) encnt <= 0; // 6 MHz
 	`HW_NOVA2001:
 		if (encnt == 11) encnt <= 0; // 4 MHz
-	default: ;
+	default: ; // 3 MHz
 	endcase
 
 	case (S0c)
@@ -68,6 +68,8 @@ wire [7:0] IOA_PSG1, IOB_PSG1;
 assign SCRPX = HWTYPE == `HW_NOVA2001 ? IOA_PSG0 : IOA_PSG1;
 assign SCRPY = HWTYPE == `HW_NOVA2001 ? IOB_PSG0 : IOB_PSG1;
 
+wire IO_TYPE = HWTYPE == `HW_RAIDERS5 || HWTYPE == `HW_PKUNWAR;
+
 YM2149 psg0(
 	.I_DA(ID),
 	.O_DA(OD0),
@@ -79,8 +81,8 @@ YM2149 psg0(
 	.I_SEL_L(1'b0),
 	.O_AUDIO(S0x),
 	.O_CHAN(S0c),
-	.I_IOA(HWTYPE == `HW_RAIDERS5 ? {~VBLK, CTR1[6:0]} : DSW1),
-	.I_IOB(HWTYPE == `HW_RAIDERS5 ? CTR2 : DSW2),
+	.I_IOA(IO_TYPE ? {~VBLK, CTR1[6:0]} : DSW1),
+	.I_IOB(IO_TYPE ? CTR2 : DSW2),
 	.O_IOA(IOA_PSG0),
 	.O_IOB(IOB_PSG0),
 	.ENA(ENA),

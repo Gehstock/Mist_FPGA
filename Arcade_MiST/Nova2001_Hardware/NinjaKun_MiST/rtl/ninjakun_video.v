@@ -26,30 +26,28 @@ module NINJAKUN_VIDEO
 	output        VBLK,
 	input         DBGPD,	// Palet Display (for Debug)
 
-	output [12:0] sp_rom_addr,
+	output [13:0] sp_rom_addr,
 	input  [31:0] sp_rom_data,
 	input         sp_rdy,
 	output [12:0] fg_rom_addr,
 	input  [31:0] fg_rom_data,
-	output [12:0] bg_rom_addr,
+	output [13:0] bg_rom_addr,
 	input  [31:0] bg_rom_data
 );
 
 `include "rtl/defs.v"
 
-wire RAIDERS5 = HWTYPE == `HW_RAIDERS5;
-
 assign VBLK = (PV>=193);
 
 // ROMs
 wire			SPCFT = sp_rdy;
-wire [12:0]	SPCAD;
+wire [13:0]	SPCAD;
 wire [31:0]	SPCDT;
 
 wire [12:0]	FGCAD;
 wire [31:0]	FGCDT;
 
-wire [12:0] BGCAD;
+wire [13:0] BGCAD;
 wire [31:0] BGCDT;
 
 //NJFGROM sprom(~VCLKx4, SPCAD, SPCDT, ROMCL, ROMAD, ROMDT, ROMEN);
@@ -74,11 +72,11 @@ NINJAKUN_FG fg(
 	FGCAD, FGCDT,
   {FGPRI, FGOUT}
 );
-wire FGOPQ =(FGOUT[3:0]!=0);
-wire FGPPQ = FGOPQ & (~FGPRI);
+wire FGOPQ = HWTYPE != `HW_PKUNWAR & (FGOUT[3:0]!=0);
+wire FGPPQ = HWTYPE != `HW_PKUNWAR & FGOPQ & (~FGPRI);
 
 // Back-Ground Scanline Generator
-wire [8:0] BGOUT;
+wire [8:0] BGOUT, BGPRI;
 
 NINJAKUN_BG bg(
 	MCLK, PCLK_EN, HWTYPE,
@@ -86,14 +84,16 @@ NINJAKUN_BG bg(
 	BGSCX, BGSCY,
 	BGVAD, BGVDT,
 	BGCAD, BGCDT,
-	BGOUT
+	BGOUT, BGPRI
 );
+
+wire BGFRC = BGPRI && BGOUT[3:0] != 0;
 
 // Sprite Scanline Generator
 wire [8:0] SPOUT;
 
 NINJAKUN_SP sp(
-	MCLK, PCLK_EN, RESET, RAIDERS5,
+	MCLK, PCLK_EN, RESET, (HWTYPE == `HW_PKUNWAR || HWTYPE == `HW_RAIDERS5),
 	PH, PV,
 	SPAAD, SPADT,
 	SPCAD, SPCDT, SPCFT,
@@ -106,6 +106,7 @@ wire [8:0] PDOUT = (PV[7]|PV[8]) ? 9'd0 : {PV[6:2],PH[7:4]};
 
 // Color Mixer
 assign PALAD = DBGPD ? PDOUT :
+               BGFRC ? BGOUT :
                FGPPQ ? FGOUT :
                SPOPQ ? SPOUT :
                FGOPQ ? FGOUT :
@@ -175,18 +176,20 @@ module NINJAKUN_BG
 	output reg [9:0] BGVAD,	// VRAM
 	input  [15:0] BGVDT,
 
-	output reg [12:0] BGCAD,
+	output reg [13:0] BGCAD,
 	input  [31:0] BGCDT,
 
-	output  [8:0] BGOUT		// OUTPUT
+	output  [8:0] BGOUT,	// OUTPUT
+	output reg    BGPRI
 );
 
-wire  [8:0] POSH  = PH+BGSCX+(HWTYPE == `HW_NOVA2001 ? 9'd9 : 9'd2) /* synthesis keep */;
+wire  [8:0] POSH  = PH+BGSCX+((HWTYPE == `HW_NOVA2001 || HWTYPE == `HW_PKUNWAR) ? 9'd9 : 9'd2) /* synthesis keep */;
 wire  [8:0] POSV  = PV+BGSCY+9'd32;
 
-wire  [9:0] CHRNO = HWTYPE == `HW_RAIDERS5 ? {1'b0, BGVDT[8:0]} : 
-                    HWTYPE == `HW_NOVA2001 ? {2'b10, BGVDT[7:0]}:
-                    {BGVDT[15:14],BGVDT[7:0]};
+wire  [10:0] CHRNO = HWTYPE == `HW_RAIDERS5 ? {2'b10, BGVDT[8:0]} : 
+                     HWTYPE == `HW_NOVA2001 ? {3'b110, BGVDT[7:0]}:
+					 HWTYPE == `HW_PKUNWAR  ? BGVDT[10:0]:
+                     {1'b1,BGVDT[15:14],BGVDT[7:0]};
 reg  [31:0] CDT;
 
 reg   [3:0] PAL;
@@ -194,7 +197,10 @@ reg   [3:0] OUT;
 always @( posedge MCLK ) begin
 	if (PCLK_EN)
 	case(POSH[2:0])
-	 0: begin OUT <= CDT[7:4]  ; PAL   <= HWTYPE == `HW_RAIDERS5 ? BGVDT[15:12] : BGVDT[11:8]; end
+	 0: begin OUT <= CDT[7:4]  ;
+		      PAL   <= (HWTYPE == `HW_RAIDERS5 || HWTYPE == `HW_PKUNWAR) ? BGVDT[15:12] : BGVDT[11:8];
+		      BGPRI <= HWTYPE == `HW_PKUNWAR && BGVDT[11];
+		end
 	 1: begin OUT <= CDT[3:0]  ; BGVAD <= {POSV[7:3],POSH[7:3]}; end
 	 2: begin OUT <= CDT[15:12]; end
 	 3: begin OUT <= CDT[11:8] ; end
@@ -205,6 +211,6 @@ always @( posedge MCLK ) begin
 	endcase
 end
 
-assign BGOUT = HWTYPE == `HW_NOVA2001 ? {1'b1, (OUT == 4'h1 ? PAL : OUT)} : { 1'b1, PAL, OUT };
+assign BGOUT = HWTYPE[1] ? {1'b1, (OUT == 4'h1 ? PAL : OUT)} : { 1'b1, PAL, OUT };
 
 endmodule

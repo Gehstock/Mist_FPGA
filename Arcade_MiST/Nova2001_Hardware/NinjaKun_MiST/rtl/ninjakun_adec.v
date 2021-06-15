@@ -47,6 +47,15 @@ always @(*) begin
 
 		SYNWR0 = 0;
 		SYNWR1 = 0;
+	end else if (HWTYPE == `HW_PKUNWAR) begin
+		CS_IN0 = 0;
+		CS_IN1 = 0;
+
+		CS_SH0 = (CP0AD[15:11] == 5'b1100_0);
+		CS_SH1 = 0;
+
+		SYNWR0 = 0;
+		SYNWR1 = 0;
 	end
 end
 

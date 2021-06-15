@@ -21,12 +21,12 @@ module ninjakun_io_video
 	output        VBLK,
 	output  [7:0] POUT,
 	output [15:0] SNDOUT,
-	output [12:0] sp_rom_addr,
+	output [13:0] sp_rom_addr,
 	input  [31:0] sp_rom_data,
 	input         sp_rdy,
 	output [12:0] fg_rom_addr,
 	input  [31:0] fg_rom_data,
-	output [12:0] bg_rom_addr,
+	output [13:0] bg_rom_addr,
 	input  [31:0] bg_rom_data,
 	input   [4:0] PALADR,
 	input         PALWR,
@@ -100,7 +100,7 @@ end
 wire  [7:0] PSDAT, FGDAT = CPADR[10] ? FGDAT16[15:8] : FGDAT16[7:0], BGDAT = CPADR[10] ? BGDAT16[15:8] : BGDAT16[7:0], SPDAT, PLDAT;
 wire [15:0] FGDAT16, BGDAT16;
 wire  [9:0] BGOFS =  CPADR[9:0]+{SCRPY[7:3],SCRPX[7:3]};
-wire [10:0] BGADR = HWTYPE[1] ? CPADR : {CPADR[10],BGOFS};
+wire [10:0] BGADR = HWTYPE[1] ? CPADR[10:0] : {CPADR[10],BGOFS};
 
 dpram #(8,10) fgv_lo(MCLK, CS_FGV & CPWRT & ~CPADR[10], CPADR[9:0], CPODT, FGDAT16[ 7:0], MCLK, 1'b0, FGVAD, 8'd0, FGVDT[ 7:0]);
 dpram #(8,10) fgv_hi(MCLK, CS_FGV & CPWRT &  CPADR[10], CPADR[9:0], CPODT, FGDAT16[15:8], MCLK, 1'b0, FGVAD, 8'd0, FGVDT[15:8]);

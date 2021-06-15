@@ -67,6 +67,9 @@ always @(*) begin
 		CTR1 = ~{m_fireA, m_fireB, 2'b00, m_right, m_left, m_down, m_up};
 		CTR2 = ~{m_fire2A, m_fire2B, 2'b00, m_right2, m_left2, m_down2, m_up2};
 		CTR3 = ~{5'b00000, m_two_players, m_one_player, m_coin1 | m_coin2};
+	end else if (hwtype == `HW_PKUNWAR) begin
+		CTR1 = ~{2'b00, m_one_player, 2'b00, m_fireA, m_right, m_left };
+		CTR2 = ~{(m_coin1 | m_coin2), service, m_two_players, 2'b00, m_fire2A, m_right2, m_left2 };
 	end
 end
 
@@ -122,14 +125,14 @@ data_io data_io(
 wire [24:0] cpu_ioctl_addr = ioctl_addr - 17'h10000;
 reg         port1_req, port2_req;
 
-wire [14:0] cpu1_rom_addr, cpu2_rom_addr;
+wire [15:0] cpu1_rom_addr, cpu2_rom_addr;
 wire [15:0] cpu1_rom_do, cpu2_rom_do;
-wire [12:0] sp_rom_addr;
+wire [13:0] sp_rom_addr;
 wire [31:0] sp_rom_do;
 wire        sp_rdy;
 wire [12:0] fg_rom_addr;
 wire [31:0] fg_rom_do;
-wire [12:0] bg_rom_addr;
+wire [13:0] bg_rom_addr;
 wire [31:0] bg_rom_do;
 
 sdram #(96) sdram(
@@ -146,9 +149,9 @@ sdram #(96) sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[15:1]} ),
 	.cpu1_q        ( cpu1_rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : {1'b1, cpu2_rom_addr[14:1]} ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : {2'b01, cpu2_rom_addr[14:1]} ),
 	.cpu2_q        ( cpu2_rom_do ),
 
 	// port2 for graphics
@@ -162,10 +165,10 @@ sdram #(96) sdram(
 
 	.fg_addr       ( ioctl_downl ? 15'h7fff : {1'b0, fg_rom_addr} ),
 	.fg_q          ( fg_rom_do ),
-	.sp_addr       ( ioctl_downl ? 15'h7fff : {1'b0, sp_rom_addr} ),
+	.sp_addr       ( ioctl_downl ? 15'h7fff : sp_rom_addr ),
 	.sp_q          ( sp_rom_do ),
 	.sp_rdy        ( sp_rdy ),
-	.bg_addr       ( ioctl_downl ? 15'h7fff : {1'b1, bg_rom_addr} ),
+	.bg_addr       ( ioctl_downl ? 15'h7fff : bg_rom_addr ),
 	.bg_q          ( bg_rom_do )
 );
 
