@@ -65,8 +65,10 @@ module sdram (
 	output reg [31:0] fg_q,
 	input      [16:2] sp_addr,
 	output reg [31:0] sp_q,
-	output reg        sp_rdy
+	output            sp_rdy
 );
+
+parameter MHZ = 80; // 80 MHz default clock, adjust to calculate the refresh rate correctly
 
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
 localparam BURST_LENGTH   = 3'b001; // 000=1, 001=2, 010=4, 011=8
@@ -78,7 +80,7 @@ localparam NO_WRITE_BURST = 1'b1;   // 0= write burst enabled, 1=only single acc
 localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BURST_LENGTH}; 
 
 // 64ms/8192 rows = 7.8us -> 842 cycles@108MHz
-localparam RFRSH_CYCLES = 10'd842;
+localparam RFRSH_CYCLES = 16'd78*MHZ/10;
 
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------
@@ -222,6 +224,9 @@ always @(*) begin
 	end
 end
 
+assign sp_rdy = |sp_rdy_r;
+reg [1:0] sp_rdy_r;
+
 always @(posedge clk) begin
 
 	// permanently latch ram data to reduce delays
@@ -231,7 +236,7 @@ always @(posedge clk) begin
 	sd_cmd <= CMD_NOP;  // default: idle
 	refresh_cnt <= refresh_cnt + 1'd1;
 
-	sp_rdy <= 0;
+	sp_rdy_r <= {sp_rdy_r[0], 1'b0};
 
 	if(init) begin
 		// initialization takes place at the end of the reset phase
@@ -357,7 +362,7 @@ always @(posedge clk) begin
 				PORT_REQ: begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
 				PORT_FG : begin    fg_q[31:16] <= sd_din; end
 				PORT_BG : begin    bg_q[31:16] <= sd_din; end
-				PORT_SP : begin    sp_q[31:16] <= sd_din; sp_rdy <= 1; end
+				PORT_SP : begin    sp_q[31:16] <= sd_din; sp_rdy_r <= 2'b11; end
 				default: ;
 			endcase;
 		end

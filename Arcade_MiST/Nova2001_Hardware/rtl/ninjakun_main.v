@@ -1,23 +1,27 @@
 module ninjakun_main(
-	input				RESET,
-	input       MCLK,
-	input				VBLK,
+	input         RESET,
+	input         MCLK,
+	input   [1:0] HWTYPE,
+	input         VBLK,
 
-	input	  [7:0]	CTR1,
-	input	  [7:0]	CTR2,
+	input   [7:0] CTR1,
+	input   [7:0] CTR2,
+	input   [7:0] CTR3,
 
-	output [15:0]	CPADR,
-	output  [7:0]	CPODT,
-	input	  [7:0]	CPIDT,
-	output			CPRED,
-	output			CPWRT,
+	output [15:0] CPADR,
+	output  [7:0] CPODT,
+	input   [7:0] CPIDT,
+	output        CPRED,
+	output        CPWRT,
+	output        CPSEL,
 
-	output [14:0]	CPU1ADDR,
-	input  [7:0]	CPU1DT,
-	output [14:0]	CPU2ADDR,
-	input  [7:0]	CPU2DT
+	output [15:0] CPU1ADDR,
+	input  [7:0]  CPU1DT,
+	output [14:0] CPU2ADDR,
+	input  [7:0]  CPU2DT
 );
 
+`include "rtl/defs.v"
 
 wire	CP0IQ, CP0IQA;
 wire	CP1IQ, CP1IQA;
@@ -52,7 +56,7 @@ Z80IP cpu0(
 );
 
 Z80IP cpu1(
-	.reset_in(RESET),
+	.reset_in(RESET | HWTYPE[1]),
 	.clk(MCLK),
 	.clken_p(CP1CE_P),
 	.clken_n(CP1CE_N),
@@ -72,6 +76,7 @@ ninjakun_cpumux ioshare(
 	.CPIDT(CPIDT),
 	.CPRED(CPRED),
 	.CPWRT(CPWRT),
+	.CPSEL(CPSEL),
 	.CP0CE_P(CP0CE_P),
 	.CP0CE_N(CP0CE_N),
 	.CP0AD(CP0AD),
@@ -91,6 +96,7 @@ ninjakun_cpumux ioshare(
 wire CS_SH0, CS_SH1, CS_IN0, CS_IN1;
 wire SYNWR0, SYNWR1;
 ninjakun_adec adec(
+	.HWTYPE(HWTYPE),
 	.CP0AD(CP0AD), 
 	.CP0WR(CP0WR),
 	.CP1AD(CP1AD), 
@@ -105,25 +111,29 @@ ninjakun_adec adec(
 
 
 wire [7:0] ROM0D, ROM1D;
-assign CPU1ADDR = CP0AD[14:0];
+assign CPU1ADDR = CP0AD;
 assign ROM0D = CPU1DT;
 assign CPU2ADDR = CP1AD[14:0];
 assign ROM1D = CPU2DT;
 
 wire [7:0] SHDT0, SHDT1;
+wire RAIDERS5 = HWTYPE == `HW_RAIDERS5;
 
 dpram #(8,11) shmem(
-	MCLK, CS_SH0 & CP0WR, { CP0AD[10] ,CP0AD[9:0]}, CP0OD, SHDT0,
-	MCLK, CS_SH1 & CP1WR, {~CP1AD[10], CP1AD[9:0]}, CP1OD, SHDT1);
+	MCLK, CS_SH0 & CP0WR, {            CP0AD[10] ,CP0AD[9:0]}, CP0OD, SHDT0,
+	MCLK, CS_SH1 & CP1WR, {RAIDERS5 ^ ~CP1AD[10], CP1AD[9:0]}, CP1OD, SHDT1);
 
 wire [7:0] INPD0, INPD1;
 ninjakun_input inps(
 	.MCLK(MCLK),
 	.RESET(RESET),
+	.HWTYPE(HWTYPE),
 	.CTR1i(CTR1),	// Control Panel (Negative Logic)
 	.CTR2i(CTR2),
+	.CTR3i(CTR3),
 	.VBLK(VBLK), 
-	.AD0(CP0AD[1:0]),
+//	.AD0(CP0AD[1:0]),
+	.AD0({HWTYPE[1] ? CP0AD[3] : CP0AD[1], CP0AD[0]}),
 	.OD0(CP0OD[7:6]),
 	.WR0(SYNWR0),
 	.AD1(CP1AD[1:0]),
@@ -133,26 +143,15 @@ ninjakun_input inps(
 	.INPD1(INPD1)
 );
 
-dataselector_3D_8B cdt0(
-	.out(CP0DT),  
-	.df(CP0ID),
-	.en0(CS_IN0), 
-	.dt0(INPD0),
-	.en1(CS_SH0), 
-	.dt1(SHDT0),
-	.en2(~CP0AD[15]), 
-	.dt2(ROM0D)
-);
+assign CP0DT = CS_IN0 ? INPD0 :
+               CS_SH0 ? SHDT0 :
+               ~CP0AD[15] ? ROM0D :
+			   (HWTYPE == `HW_PKUNWAR && CP0AD[15:13] == 3'b111) ? ROM0D :
+               CP0ID;
 
-dataselector_3D_8B cdt1(
-	.out(CP1DT),  
-	.df(CP1ID),
-	.en0(CS_IN1), 
-	.dt0(INPD1),
-	.en1(CS_SH1), 
-	.dt1(SHDT1),
-	.en2(~CP1AD[15]), 
-	.dt2(ROM1D)
-);
+assign CP1DT = CS_IN1 ? INPD1 :
+               CS_SH1 ? SHDT1 :
+               ~CP1AD[15] ? ROM1D :
+               CP1ID;
 
 endmodule 

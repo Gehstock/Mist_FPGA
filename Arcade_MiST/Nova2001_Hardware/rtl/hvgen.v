@@ -22,7 +22,7 @@ always @(posedge CLK) begin
 	if (PCLK_EN) begin
 		case (hcnt)
 			 15: begin HBLK <= 0; hcnt <= hcnt+1'd1; end
-			272: begin HBLK <= 1; hcnt <= hcnt+1'd1; end
+			271: begin HBLK <= 1; hcnt <= hcnt+1'd1; end
 			311: begin HSYN <= 0; hcnt <= hcnt+1'd1; end
 			342: begin HSYN <= 1; hcnt <= 471;    end
 			511: begin hcnt <= 0;

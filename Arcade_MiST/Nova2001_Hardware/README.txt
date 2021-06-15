@@ -2,6 +2,8 @@
 -- 
 -- Arcade: Ninja Kun port to MiST by Slingshot
 -- 29 December 2019
+-- Added Nova 2001, Raiders5 and Penguin-Kun Wars
+-- 15 June 2021
 -- 
 ---------------------------------------------------------------------------------
 -- 

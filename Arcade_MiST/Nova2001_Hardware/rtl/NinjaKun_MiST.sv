@@ -27,35 +27,57 @@ module NinjaKun_MiST (
 	output        SDRAM_CKE
 );
 
-`include "rtl\build_id.v" 
+`include "rtl/build_id.v"
+`include "rtl/defs.v"
 
 localparam CONF_STR = {
-	"NINJAKUN;ROM;",
+	"NINJAKUN;;",
 	"O2,Rotate Controls,Off,On;",
-	"O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"O34,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O5,Blend,Off,On;",
-	"O8,Difficulty,Normal,Hard;",
-	"O9A,Lives,4,3,2,5;",
-	"OB,1st Extra,30000,40000;",
-	"OCD,2nd Extra (Every),50000,70000,90000,None;",
-	"OF,Allow Continue,No,Yes;",
-	"OG,Free Play,No,Yes;",
-	"OH,Endless(If Free Play),No,Yes;",
-	"OE,Demo Sound,Off,On;",
-	"OI,Name Letters,8,3;",
+	"O6,Service,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = CLOCK_48;
+assign 		SDRAM_CLK = CLOCK_96;
 assign 		SDRAM_CKE = 1;
 
-wire CLOCK_48, pll_locked;
+wire        rotate = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend = status[5];
+wire        service = status[6];
+
+wire  [6:0] core_mod;
+wire  [1:0] hwtype = core_mod[1:0];
+
+reg   [7:0] CTR1, CTR2, CTR3;
+
+always @(*) begin
+	CTR1 = ~{2'b11, m_one_player, 1'b0, m_fireA, m_fireB, m_right, m_left };
+	CTR2 = ~{~(m_coin1 | m_coin2), ~service, m_two_players, 1'b0, m_fire2A, m_fire2B, m_right2, m_left2 };
+	CTR3 = 0;
+	if (hwtype == `HW_RAIDERS5) begin
+		CTR1 = ~{1'b0, 1'b0, m_one_player, m_fireA, m_up, m_down, m_right, m_left };
+		CTR2 = ~{(m_coin1 | m_coin2), service, m_two_players, m_fire2A, m_up2, m_down2, m_right2, m_left2};
+	end else if (hwtype == `HW_NOVA2001) begin
+		CTR1 = ~{m_fireA, m_fireB, 2'b00, m_right, m_left, m_down, m_up};
+		CTR2 = ~{m_fire2A, m_fire2B, 2'b00, m_right2, m_left2, m_down2, m_up2};
+		CTR3 = ~{5'b00000, m_two_players, m_one_player, m_coin1 | m_coin2};
+	end else if (hwtype == `HW_PKUNWAR) begin
+		CTR1 = ~{2'b00, m_one_player, 2'b00, m_fireA, m_right, m_left };
+		CTR2 = ~{(m_coin1 | m_coin2), service, m_two_players, 2'b00, m_fire2A, m_right2, m_left2 };
+	end
+end
+
+wire CLOCK_96, CLOCK_48, pll_locked;
 pll pll(
 	.inclk0(CLOCK_27),
-	.c0(CLOCK_48),
+	.c0(CLOCK_96),
+	.c1(CLOCK_48),
 	.locked(pll_locked)
 	);
 
@@ -66,6 +88,7 @@ wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
+wire        no_csync;
 wire [15:0] audio;
 wire        hs, vs;
 wire [3:0] 	r, g, b;
@@ -102,20 +125,20 @@ data_io data_io(
 wire [24:0] cpu_ioctl_addr = ioctl_addr - 17'h10000;
 reg         port1_req, port2_req;
 
-wire [14:0] cpu1_rom_addr, cpu2_rom_addr;
+wire [15:0] cpu1_rom_addr, cpu2_rom_addr;
 wire [15:0] cpu1_rom_do, cpu2_rom_do;
-wire [12:0] sp_rom_addr;
+wire [13:0] sp_rom_addr;
 wire [31:0] sp_rom_do;
 wire        sp_rdy;
 wire [12:0] fg_rom_addr;
 wire [31:0] fg_rom_do;
-wire [12:0] bg_rom_addr;
+wire [13:0] bg_rom_addr;
 wire [31:0] bg_rom_do;
 
-sdram sdram(
+sdram #(96) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( CLOCK_48     ),
+	.clk           ( CLOCK_96     ),
 
 	// port1 used for main + aux CPU
 	.port1_req     ( port1_req    ),
@@ -126,9 +149,9 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[14:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, cpu1_rom_addr[15:1]} ),
 	.cpu1_q        ( cpu1_rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : {1'b1, cpu2_rom_addr[14:1]} ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : {2'b01, cpu2_rom_addr[14:1]} ),
 	.cpu2_q        ( cpu2_rom_do ),
 
 	// port2 for graphics
@@ -142,10 +165,10 @@ sdram sdram(
 
 	.fg_addr       ( ioctl_downl ? 15'h7fff : {1'b0, fg_rom_addr} ),
 	.fg_q          ( fg_rom_do ),
-	.sp_addr       ( ioctl_downl ? 15'h7fff : {1'b0, sp_rom_addr} ),
+	.sp_addr       ( ioctl_downl ? 15'h7fff : sp_rom_addr ),
 	.sp_q          ( sp_rom_do ),
 	.sp_rdy        ( sp_rdy ),
-	.bg_addr       ( ioctl_downl ? 15'h7fff : {1'b1, bg_rom_addr} ),
+	.bg_addr       ( ioctl_downl ? 15'h7fff : bg_rom_addr ),
 	.bg_q          ( bg_rom_do )
 );
 
@@ -178,10 +201,12 @@ wire [11:0] POUT;
 ninjakun_top ninjakun_top(
 	.RESET(reset),
 	.MCLK(CLOCK_48),
-	.CTR1(~{2'b11, btn_one_player, 1'b0, m_fire, m_bomb, m_right, m_left }),
-	.CTR2(~{~btn_coin, 1'b1, btn_two_players, 1'b0, m_fire, m_bomb, m_right, m_left }),
-	.DSW1({~status[8], ~status[14], ~status[13:12], ~status[11], ~status[10:9], 1'b0}),
-	.DSW2({~status[17], ~status[16], 1'b0, ~status[15], ~status[18], 3'b111}),
+	.HWTYPE(hwtype),
+	.CTR1(CTR1),
+	.CTR2(CTR2),
+	.CTR3(CTR3),
+	.DSW1(status[15:8]),
+	.DSW2({(hwtype == `HW_NOVA2001 ? ~service : status[23]), status[22:16]}),
 	.PH(HPOS),
 	.PV(VPOS),
 	.PCLK_EN(PCLK_EN),
@@ -197,7 +222,11 @@ ninjakun_top ninjakun_top(
 	.fg_rom_addr(fg_rom_addr),
 	.fg_rom_data(fg_rom_do),
 	.bg_rom_addr(bg_rom_addr),
-	.bg_rom_data(bg_rom_do)
+	.bg_rom_data(bg_rom_do),
+	.PALADR(ioctl_addr[4:0]),
+	.PALWR(ioctl_addr[23:5] == {16'h0180, 3'b000} && ioctl_wr),
+	.PALDAT(ioctl_dout)
+
 );
 
 wire  [7:0] oPIX;
@@ -229,12 +258,13 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
-	.rotate         ( {1'b1,status[2]} ),
-	.ce_divider		  ( 1'b1             ),
-	.blend          ( status[5]        ),
+	.rotate         ( { 1'b1, rotate } ),
+	.ce_divider     ( 1'b1             ),
+	.blend          ( blend            ),
 	.scandoubler_disable( scandoublerD ),
-	.scanlines      ( status[4:3]      ),
-	.ypbpr          ( ypbpr            )
+	.scanlines      ( scanlines        ),
+	.ypbpr          ( ypbpr            ),
+	.no_csync       ( no_csync         )
 	);
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
@@ -246,8 +276,10 @@ user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.SPI_MOSI       (SPI_DI         ),
 	.buttons        (buttons        ),
 	.switches       (switches       ),
+	.core_mod       (core_mod       ),
 	.scandoubler_disable (scandoublerD	  ),
 	.ypbpr          (ypbpr          ),
+	.no_csync       (no_csync       ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
@@ -262,41 +294,25 @@ dac #(.C_bits(16))dac(
 	.dac_i(audio),
 	.dac_o(AUDIO_L)
 	);
-//											Rotated														Normal
-//wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-//wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-//reg btn_fire3 = 0;
-reg btn_coin  = 0;
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-always @(posedge CLOCK_48) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      		<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin				<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-//			'h14: btn_fire3 			<= key_pressed; // ctrl
-			'h11: btn_fire2 			<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
-
+arcade_inputs inputs (
+	.clk         ( CLOCK_48    ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( 2'b10       ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule
