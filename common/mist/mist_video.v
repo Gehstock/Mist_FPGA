@@ -166,25 +166,26 @@ cofi cofi (
 	.blue_out( cofi_b  )
 );
 
-wire [5:0] y, pb, pr;
+wire       hs, vs;
 
-rgb2ypbpr rgb2ypbpr
+RGBtoYPbPr #(6) rgb2ypbpr
 (
-	.red   ( cofi_r  ),
-	.green ( cofi_g  ),
-	.blue  ( cofi_b  ),
-	.y     ( y       ),
-	.pb    ( pb      ),
-	.pr    ( pr      )
+	.clk       ( clk_sys ),
+	.ena       ( ypbpr   ),
+
+	.red_in    ( cofi_r     ),
+	.green_in  ( cofi_g     ),
+	.blue_in   ( cofi_b     ),
+	.hs_in     ( cofi_hs    ),
+	.vs_in     ( cofi_vs    ),
+	.red_out   ( VGA_R      ),
+	.green_out ( VGA_G      ),
+	.blue_out  ( VGA_B      ),
+	.hs_out    ( hs         ),
+	.vs_out    ( vs         )
 );
 
-assign VGA_R = ypbpr?pr:cofi_r;
-assign VGA_G = ypbpr? y:cofi_g;
-assign VGA_B = ypbpr?pb:cofi_b;
-
-wire   cs = SYNC_AND ? (cofi_hs & cofi_vs) : ~(cofi_hs ^ cofi_vs);
-wire   hs = cofi_hs;
-wire   vs = cofi_vs;
+wire   cs = SYNC_AND ? (hs & vs) : ~(hs ^ vs);
 
 // a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
 // and VCC on VGA_VS (to switch into rgb mode)
