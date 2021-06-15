@@ -197,7 +197,7 @@ dac #(
 dac_l(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_ch2),
+	.dac_i(audio_ch1),
 	.dac_o(AUDIO_L)
 	);
 
@@ -206,12 +206,11 @@ dac #(
 dac_r(
 	.clk_i(clk_sys),
 	.res_n_i(1),
-	.dac_i(audio_ch1),
+	.dac_i(audio_ch2),
 	.dac_o(AUDIO_R)
 	);
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
-wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
@@ -220,13 +219,10 @@ arcade_inputs inputs (
 	.key_pressed ( key_pressed ),
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
-	//.rotate      ( rotate      ),
-	//.orientation ( orientation ),
 	.joyswap     ( status[6]     ),
 	.oneplayer   ( 1'b1   		),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
-	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} )
 );		
 
 endmodule 

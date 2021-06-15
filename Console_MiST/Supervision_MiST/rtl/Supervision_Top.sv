@@ -92,7 +92,7 @@ always @(posedge clk_cpu)
   else
     timer_div <= 14'hff;
 
- irq_timer
+// irq_timer
 always @(posedge clk_cpu)
   if (sys_cs && cpu_we && AB[2:0] == 3'h3)
     irq_timer <= cpu_dout;
@@ -239,7 +239,7 @@ always @(posedge clk_sys)
 //);
 
 assign cpu_rom_addr = rom_addr;	
-assign rom_dout = rom_cs ? cpu_rom_data : 8'hff;
+assign rom_dout = cpu_rom_data;
 
 
 ram88 wram(
@@ -329,6 +329,5 @@ cpu_65c02 cpu(
   .NMI(nmi),
   .RDY(cpu_rdy)
 );
-
 
 endmodule 
