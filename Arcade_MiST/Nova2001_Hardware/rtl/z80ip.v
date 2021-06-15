@@ -44,7 +44,7 @@ T80pa cpu(
 );
 
 wire mreq = (~i_mreq) & (i_rfsh);
-wire iorq = ~i_iorq;
+//wire iorq = ~i_iorq;
 wire rdr  = ~i_rd;
 wire wrr  = ~i_wr;
 
