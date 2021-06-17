@@ -38,9 +38,6 @@ pll pll(
 	.locked(locked)
 	);
 
-// Configuration DIP switches, these can be brought out to external switches if desired
-// making it easier to change options, otherwise it's just more stuff to hook up.
-
 // See Subs manual for complete information. Active low (0 = On, 1 = Off)  * indicates Default
 //    1 								Ping in attract mode [*(0-On) (1-Off)]
 //	      2							Time/Cred				[*(0-Each coin buys time) (1-1 Coin/Player fixed)]
@@ -48,9 +45,7 @@ pll pll(
 //						5				Free play				[*(0-Coin per play) (1-Free Play)]
 //							6	7	8	Time						[(000-0:30) (100-1:00) *(010-1:30) (110-2:00) (001-2:30) (101-3:00) (011-3:30) (111-4:00)]
 									
-wire  [7:0] DIP_Sw = "11111111"; // Config dip switches 3min
-//fixing tomorrow
-		
+wire  [7:0] DIP_Sw = 8'b10000000;		
 		
 wire [63:0] status;
 wire  [1:0] buttons;

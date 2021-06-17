@@ -217,7 +217,7 @@ port map(
 Inputs: entity work.input
 port map(
 		Clk6 => Clk6,
-		Sw_F9 => "10000000",--DIP_Sw,
+		Sw_F9 => DIP_Sw,
 		Coin1_n => Coin1_I,
 		Coin2_n => Coin2_I,
 		Start1 => Start1_I,
