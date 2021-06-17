@@ -1,4 +1,4 @@
-﻿Games that should work on this Hardware
+﻿Games that should work on similar Hardware
 
 Atari 4 Player Football 
 Atari Baseball 
@@ -16,5 +16,4 @@ Night Driver
 Sebring 
 Sky Raider 
 Starship 1 
-Subs 
 Video Pinball 
