@@ -59,7 +59,7 @@ wire 			hs, vs;
 canyon_bomber canyon_bomber(		
 	.clk_12(clk_12),
 	.Reset_I(~(status[0] | buttons[1])),		
-	.RGB(vid),
+	.VID(vid),
 	.Vblank_O(vb),
 	.HBlank_O(hb),
 	.HSync_O(hs),

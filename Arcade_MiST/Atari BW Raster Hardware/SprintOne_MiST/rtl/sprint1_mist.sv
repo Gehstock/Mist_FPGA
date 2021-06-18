@@ -57,7 +57,7 @@ wire 			hs, vs;
 sprint1 sprint1(
 	.clk_12(clk_12),
 	.Reset_n(~(status[0] | buttons[1])),
-	.RGB(vid),		
+	.VID(vid),		
 	.Hs(hs),
 	.Vs(vs),
 	.Vb(vb),		

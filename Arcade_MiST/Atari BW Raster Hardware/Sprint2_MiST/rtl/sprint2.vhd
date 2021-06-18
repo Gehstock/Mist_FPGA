@@ -31,7 +31,7 @@ entity sprint2 is
 port(		
 			clk_12		: in	std_logic;	-- 12MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
-			RGB	: out 	std_logic_vector(7 downto 0);
+			VID	: out 	std_logic_vector(7 downto 0);
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
 			Audio1_O		: out std_logic_vector(6 downto 0);  -- Ideally this should have a simple low pass filter
 			Audio2_O		: out std_logic_vector(6 downto 0);			
@@ -399,13 +399,13 @@ Hb <= HBLANK;
 Hs <= Hsync;
 Vs <= Vsync;
 
-VID: process(clk_12, Video)
+col: process(clk_12, Video)
 begin
 	case Video is
-		when "01" => RGB <= ("10000000");
-		when "10" => RGB <= ("01010000");
-		when "11" => RGB <= ("11111111");
-		when others => RGB <= ("00000000");
+		when "01" => VID <= ("10000000");
+		when "10" => VID <= ("01010000");
+		when "11" => VID <= ("11111111");
+		when others => VID <= ("00000000");
 	end case;
 end process;
 

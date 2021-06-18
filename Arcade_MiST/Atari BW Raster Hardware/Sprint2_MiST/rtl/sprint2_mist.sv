@@ -61,7 +61,7 @@ sprint2 sprint2(
 	.Vs(vs),
 	.Vb(vb),		
 	.Hb(hb),
-	.RGB(vid),			
+	.VID(vid),			
 	.Audio1_O(audio1),
 	.Audio2_O(audio2),
 	.Coin1_I(~m_coin1),

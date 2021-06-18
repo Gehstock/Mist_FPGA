@@ -64,7 +64,7 @@ dominos dominos (
 	.Vs(vs),
 	.Vb(vb),		
 	.Hb(hb),
-	.RGB(vid),			
+	.VID(vid),			
 	.Audio(audio),
 	.Coin1_I(~m_coin1),
 	.Coin2_I(~m_coin2),

@@ -35,7 +35,7 @@ port(
 			Vs				: out std_logic;
 			Vb				: out std_logic;			
 			Hb				: out std_logic;	
-			RGB			: out std_logic_vector(7 downto 0);
+			VID			: out std_logic_vector(7 downto 0);
 			Audio		   : out std_logic_vector(6 downto 0);  -- Ideally this should have a simple low pass filter
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
@@ -235,13 +235,13 @@ Vs <= Vsync;
 Video(0) <= (not BlackPF_n) nor CompBlank_s;
 Video(1) <= (not WhitePF_n); 
 
-VID: process(clk_12, Video)
+Vid_Mix: process(clk_12, Video)
 begin
 	case Video is
-		when "01" => RGB <= ("10000000");
-		when "10" => RGB <= ("01010000");
-		when "11" => RGB <= ("11111111");
-		when others => RGB <= ("00000000");
+		when "01" => VID <= ("10000000");
+		when "10" => VID <= ("01010000");
+		when "11" => VID <= ("11111111");
+		when others => VID <= ("00000000");
 	end case;
 end process;
 
