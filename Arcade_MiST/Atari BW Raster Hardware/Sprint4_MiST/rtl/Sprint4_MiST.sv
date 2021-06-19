@@ -1,4 +1,4 @@
-//FPGA implementation of Sprint 4 arcade game released by Kee Games in 1978
+//FPGA implementation of Sprint 4 arcade game released by Kee Games in 1977
 //james10952001
 module Sprint4_MiST(
 	output        LED,
