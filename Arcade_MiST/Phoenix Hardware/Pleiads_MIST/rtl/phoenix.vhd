@@ -208,12 +208,12 @@ port map(
 );
 
 -- mux prog, ram, vblank, switch... to processor data bus in
-cpu_di <= prog_do when cpu_adr(14) = '0' else
+cpu_di <= prog_do when cpu_adr(15 downto 14) = "00" else
           frgnd_ram_do when cpu_adr(13 downto 10) = 2#00_00# else
           bkgnd_ram_do when cpu_adr(13 downto 10) = 2#00_10# else
           buttons & '0' & player_start & coin when cpu_adr(13 downto 10) = 2#11_00# else--buttons & '1'
           not vblank & dip_switch(6 downto 0) when cpu_adr(13 downto 10) = 2#11_10# else
-          prog_do;
+          x"FF";
 
 -- write enable to RAMs from cpu
 frgnd_ram_we <= '1' when cpu_wr_n = '0' and cpu_adr(14 downto 10) = "10000" and adrsel = '0' else '0';
