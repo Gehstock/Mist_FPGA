@@ -493,8 +493,8 @@ module centipede(
          out0_n =     adecode[7] | write2_n;
          irqres_n   = (adecode[6] | write2_n) & mpu_reset_n;
          watchdog_n = adecode[8] | write2_n;
-         ea_ctrl_n  = {outputs_n | write_n, ab[9:7]} != 4'b0110;
-         ea_addr_n  = {outputs_n | write_n, ab[9:7]} != 4'b0111;
+         ea_ctrl_n  = 1;{outputs_n | write_n, ab[9:7]} != 4'b0110;
+         ea_addr_n  = 1;{outputs_n | write_n, ab[9:7]} != 4'b0111;
    
          pframrd_n = pf_n | brw_n;
    
@@ -530,8 +530,8 @@ module centipede(
          out0_n     = {outputs_n | write_n, ab[9:7]} != 4'b0010;
          irqres_n   = {outputs_n | write_n, ab[9:7]} != 4'b0100 & mpu_reset_n;
          watchdog_n = {outputs_n | write_n, ab[9:7]} != 4'b0101;
-         ea_ctrl_n  = 1;
-         ea_addr_n  = 1;
+         ea_ctrl_n  = {outputs_n | write_n, ab[9:7]} != 4'b0110;
+         ea_addr_n  = {outputs_n | write_n, ab[9:7]} != 4'b0111;
    
          pframrd_n = pf_n | brw_n;
    
