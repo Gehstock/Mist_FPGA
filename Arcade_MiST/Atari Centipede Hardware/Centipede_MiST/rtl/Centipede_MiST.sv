@@ -57,7 +57,7 @@ wire       blend     = status[5];
 wire       service   = status[7];
 
 wire       milliped  = core_mod[0];
-
+////wire       warlord  = 1;//core_mod[0];
 wire [23:0] dipsw;
 assign dipsw[ 7:0] = status[15:8];
 assign dipsw[23:8] = status[31:16];
@@ -120,6 +120,7 @@ always @(posedge clk_12) reset <= status[0] | buttons[1] | ioctl_downl;
 centipede centipede(
 	.clk_12mhz(clk_12),
 	.reset(reset),
+	.warl(warlord),
 	.milli(milliped),
 	.playerinput_i(~{ 1'b0, 1'b0, m_coin1, service, 1'b0, 1'b0, m_two_players, m_one_player, m_fireB, m_fireA }),
 	.trakball_i(),

@@ -3,7 +3,7 @@
 //
 // Brad Parker <brad@heeltoe.com> 10/2015
 //
-// The 6502 cpu used here is not completely cycle accurate in relation to the original "real" 6502.
+// The 6502 cpu used here is not completely cycle accurarbgite in relation to the original "real" 6502.
 // Specifically, the game makes heavy use of the knowledge about when i/o space read/writes will
 // occur in relationship to the cpu clocks, specially phi2.  The game hardware was set up to allow
 // the cpu accces on the back side of the s_4h signal, which, based on phi0, phi2 and the mpuclk was
@@ -24,6 +24,7 @@ module centipede(
 		 input 	      clk_12mhz,
  		 input 	      reset,
  		 input         milli,
+		 input         warl,
 		 input   [9:0] playerinput_i,
 		 input   [7:0] trakball_i,
 		 input   [7:0] joystick_i,
@@ -176,11 +177,13 @@ module centipede(
 
    //
    wire        comp_sync;
-   reg  [7:0]  rgbi;
+   reg  [7:0]  rgbi_ram;
+	reg  [7:0]  rgbi_rom;
    wire [7:0]  coloram_out;
    wire [7:0]  coloram_rgbi;
    wire        coloram_w_n;
-   reg 	       coloren;
+	wire [3:0]  colorom_rgbi;
+   reg 	      coloren;
 
    wire [5:0]  audio;
    //
@@ -471,7 +474,44 @@ module centipede(
    wire   outputs_n = {io_n, ab[11:10]} != 3'b001;
    
    always @(*) begin
-      if (milli) begin
+	      if (warl) begin
+         rom_n = brw_n | ~ab[14];
+
+         steerclr_n = 1;//adecode[9] | write2_n;
+
+         in0_n =     {inputs_n, ab[5:4]} != 3'b000;
+         in1_n =     {inputs_n, ab[5:4]} != 3'b001;
+         ea_read_n = {inputs_n, ab[5:4]} != 3'b011;
+   
+         swrd_n   = adecode[2];
+         pf_n     = ab[14:12] != 3'b001; // _scram
+         ram0_n   = {mos_n, ab[11:10]} != 3'b000;
+         pokey_n  = adecode[4];
+         pokey2_n = 1;
+
+         coloram_n  = 1;
+         out0_n =     adecode[7] | write2_n;
+         irqres_n   = (adecode[6] | write2_n) & mpu_reset_n;
+         watchdog_n = adecode[8] | write2_n;
+         ea_ctrl_n  = {outputs_n | write_n, ab[9:7]} != 4'b0110;
+         ea_addr_n  = {outputs_n | write_n, ab[9:7]} != 4'b0111;
+   
+         pframrd_n = pf_n | brw_n;
+   
+         {pfwr3_n, pfwr2_n, pfwr1_n, pfwr0_n} =
+					({pf_n, write_n, ab[5:4]} == 4'b0000) ? 4'b1110 :
+					({pf_n, write_n, ab[5:4]} == 4'b0001) ? 4'b1101 :
+					({pf_n, write_n, ab[5:4]} == 4'b0010) ? 4'b1011 :
+					({pf_n, write_n, ab[5:4]} == 4'b0011) ? 4'b0111 :
+					4'b1111;
+
+         {pfrd3_n, pfrd2_n, pfrd1_n, pfrd0_n} =
+						(ab[5:4] == 2'b00) ? 4'b1110 :
+						(ab[5:4] == 2'b01) ? 4'b1101 :
+						(ab[5:4] == 2'b10) ? 4'b1011 :
+						(ab[5:4] == 2'b11) ? 4'b0111 :
+						4'b1111;
+      end else if (milli) begin
          rom_n = brw_n | ~ab[14];
 
          steerclr_n = 1;//adecode[9] | write2_n;
@@ -490,8 +530,8 @@ module centipede(
          out0_n     = {outputs_n | write_n, ab[9:7]} != 4'b0010;
          irqres_n   = {outputs_n | write_n, ab[9:7]} != 4'b0100 & mpu_reset_n;
          watchdog_n = {outputs_n | write_n, ab[9:7]} != 4'b0101;
-         ea_ctrl_n  = {outputs_n | write_n, ab[9:7]} != 4'b0110;
-         ea_addr_n  = {outputs_n | write_n, ab[9:7]} != 4'b0111;
+         ea_ctrl_n  = 1;
+         ea_addr_n  = 1;
    
          pframrd_n = pf_n | brw_n;
    
@@ -951,8 +991,9 @@ module centipede(
    // a guess, based on millipede schematics
    wire pf_romx_haddr;
    assign pf_romx_haddr = milli ? mga10 : s_256h_n & pic[0];
-   assign pf_rom1_addr = { pf_romx_haddr, s_256h, pic[5:1], mga };
-   assign pf_rom0_addr = { pf_romx_haddr, s_256h, pic[5:1], mga };
+	assign pf_rom1_addr = warl ? { 1'b1, s_256h_n, pic[5:0], mga[2:0]} : { pf_romx_haddr, s_256h, pic[5:1], mga };
+   assign pf_rom0_addr = warl ? { 1'b0, s_256h_n, pic[5:0], mga[2:0]} : { pf_romx_haddr, s_256h, pic[5:1], mga };
+	
    assign pf_rom0_out_rev = { pf_rom0_out[0], pf_rom0_out[1], pf_rom0_out[2], pf_rom0_out[3],
 			      pf_rom0_out[4], pf_rom0_out[5], pf_rom0_out[6], pf_rom0_out[7] };
    
@@ -1047,24 +1088,18 @@ module centipede(
 
    // XXX implement alternate shades of blue and green...
    always @(posedge s_12mhz)
-     if (reset)
-       rgbi <= 0;
-     else if (s_6mhz_n_en)
-       rgbi <= coloram_rgbi;
+     if (reset) begin
+       rgbi_ram <= 0;
+		 rgbi_rom <= 0;
+     end else if (s_6mhz_n_en) begin
+       rgbi_ram <= coloram_rgbi;
+		 rgbi_rom <= colorom_rgbi;
+	  end
 
    assign coloram_w_n = write_n | coloram_n;
 
    wire gry0_or_1;
    assign gry0_or_1 = gry[1] | gry[0];
-     
-   //assign rama_sel = { coloram_n, gry0_or_1 };
-   
- //  assign rama = 
-//		 (rama_sel == 2'b00) ? { ab[3:0] } :
-//		 (rama_sel == 2'b01) ? { ab[3:0] } :
-//		 (rama_sel == 2'b10) ? { {gry0_or_1, 1'b1}, area[1:0] } :
-//		 (rama_sel == 2'b11) ? { {gry0_or_1, 1'b1}, gry[1:0] } :
-//		 4'b0;
 
    wire [3:0] rama_centi =  gry0_or_1 ?
       { {gry0_or_1, 1'b1}, gry[1:0] } :
@@ -1089,27 +1124,37 @@ module centipede(
       .addr_b_i(rama),
       .data_b_o(coloram_rgbi)
    );
+	
+	wire mirror = 1'b0;//connected to Video Ground
+wire [7:0] crom_a ={1'b0, mirror, s_128v, s_128h, gry[1:0], area[1:0]};
+N7 N7(
+	.clk(s_12mhz),
+	.addr(crom_a),
+	.data(colorom_rgbi)
+);
 
-   assign rgb_o = milli ? rgb_o_milli : rgb_o_centi;
-
-   wire [8:0] rgb_o_milli = ~{ rgbi[2:0], rgbi[4:3], 1'b1, rgbi[7:5] };
+   assign rgb_o = milli ? rgb_o_milli : 
+						warl ? rgb_o_warl :
+						rgb_o_centi;
+	wire [8:0] rgb_o_warl = {{3{rgbi_rom[2]}},{3{rgbi_rom[1]}},{3{rgbi_rom[0]}}};
+   wire [8:0] rgb_o_milli = ~{ rgbi_ram[2:0], rgbi_ram[4:3], 1'b1, rgbi_ram[7:5] };
    wire [8:0] rgb_o_centi = 
-		  rgbi[3:0] == 4'b0000 ? 9'b111_111_111 :
-		  rgbi[3:0] == 4'b0001 ? 9'b111_111_011 :
-		  rgbi[3:0] == 4'b0010 ? 9'b111_011_111 :
-		  rgbi[3:0] == 4'b0011 ? 9'b111_011_011 :
-		  rgbi[3:0] == 4'b0100 ? 9'b011_111_111 :
-		  rgbi[3:0] == 4'b0101 ? 9'b011_111_011 :
-		  rgbi[3:0] == 4'b0110 ? 9'b011_011_111 :
-		  rgbi[3:0] == 4'b0111 ? 9'b011_011_011 :
-		  rgbi[3:0] == 4'b1000 ? 9'b111_111_111 :
-		  rgbi[3:0] == 4'b1001 ? 9'b111_111_000 :
-		  rgbi[3:0] == 4'b1010 ? 9'b111_000_111 :
-		  rgbi[3:0] == 4'b1011 ? 9'b111_000_000 :
-		  rgbi[3:0] == 4'b1100 ? 9'b000_111_111 :
-		  rgbi[3:0] == 4'b1101 ? 9'b000_111_000 :
-		  rgbi[3:0] == 4'b1110 ? 9'b000_000_111 :
-		  rgbi[3:0] == 4'b1111 ? 9'b000_000_000 :
+		  rgbi_ram[3:0] == 4'b0000 ? 9'b111_111_111 :
+		  rgbi_ram[3:0] == 4'b0001 ? 9'b111_111_011 :
+		  rgbi_ram[3:0] == 4'b0010 ? 9'b111_011_111 :
+		  rgbi_ram[3:0] == 4'b0011 ? 9'b111_011_011 :
+		  rgbi_ram[3:0] == 4'b0100 ? 9'b011_111_111 :
+		  rgbi_ram[3:0] == 4'b0101 ? 9'b011_111_011 :
+		  rgbi_ram[3:0] == 4'b0110 ? 9'b011_011_111 :
+		  rgbi_ram[3:0] == 4'b0111 ? 9'b011_011_011 :
+		  rgbi_ram[3:0] == 4'b1000 ? 9'b111_111_111 :
+		  rgbi_ram[3:0] == 4'b1001 ? 9'b111_111_000 :
+		  rgbi_ram[3:0] == 4'b1010 ? 9'b111_000_111 :
+		  rgbi_ram[3:0] == 4'b1011 ? 9'b111_000_000 :
+		  rgbi_ram[3:0] == 4'b1100 ? 9'b000_111_111 :
+		  rgbi_ram[3:0] == 4'b1101 ? 9'b000_111_000 :
+		  rgbi_ram[3:0] == 4'b1110 ? 9'b000_000_111 :
+		  rgbi_ram[3:0] == 4'b1111 ? 9'b000_000_000 :
 		  9'd0;
 
 
