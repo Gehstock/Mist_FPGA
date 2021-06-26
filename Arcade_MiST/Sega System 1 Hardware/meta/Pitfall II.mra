@@ -15,7 +15,7 @@
 		<dip bits="14"    name="Time" ids="2 Minutes,3 Minutes"/>
 	</switches>
 	<rom index="1">
-		<part>04</part>
+		<part>00</part>
 	</rom>
 	<rom index="0" zip="pitfall2.zip" md5="07b1a752e7bf1bf17ae773d1b6977bf1" type="merged|nonmerged|split">
 		<part name="epr-6456a.116"/>

@@ -74,8 +74,8 @@ wire clk_sys, sdram_clk;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),//48
-	.c1(sdram_clk),//96
+	.c0(sdram_clk),//80
+	.c1(clk_sys),//40
 	.locked(pll_locked)
 	);
 
@@ -145,7 +145,7 @@ data_io data_io(
 
 reg port1_req, port2_req;
 wire [24:0] tl_ioctl_addr = ioctl_addr - 18'h20000;
-sdram #(96) sdram(
+sdram #(80) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
 	.clk           ( sdram_clk    ),
@@ -201,7 +201,7 @@ always @(posedge sdram_clk) begin
 end
 
 SEGASYSTEM1 System1_Top(
-	.clk48M(clk_sys),
+	.clk40M(clk_sys),
 	.reset(reset),
 
 	.INP0(INP0),
@@ -237,8 +237,8 @@ SEGASYSTEM1 System1_Top(
 wire        PCLK_EN;
 wire  [8:0] HPOS,VPOS;
 wire  [7:0] POUT;
-wire  [7:0] HOFFS = 8'd16;
-wire  [7:0] VOFFS = 0;
+wire  [7:0] HOFFS = 8'd2;
+wire  [7:0] VOFFS = 8'd2;
 wire        hs, vs;
 wire  [2:0] g, r;
 wire  [1:0] b;
