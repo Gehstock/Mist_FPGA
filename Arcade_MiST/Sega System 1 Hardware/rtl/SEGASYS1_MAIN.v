@@ -5,7 +5,7 @@
 
 module SEGASYS1_MAIN
 (
-	input				CLK48M,
+	input				CLK40M,
 
 	input				RESET,
 
@@ -38,12 +38,17 @@ module SEGASYS1_MAIN
 	input				ROMEN
 );
 
-reg [3:0] clkdiv;
-always @(posedge CLK48M) clkdiv <= clkdiv+1'd1;
-wire CLK3M_EN = clkdiv[2:0] == 0;
-
-wire			AXSCL   = CLK48M;
-wire      CPUCL_EN = CLK3M_EN;
+reg [4:0] clkdiv;
+reg       CLK4M_EN;
+always @(posedge CLK40M) begin
+	clkdiv <= clkdiv+1'd1;
+	CLK4M_EN <= 0;
+	if (clkdiv == 9) begin
+		clkdiv <= 0;
+		CLK4M_EN <= 1;
+	end
+end
+wire      CPUCL_EN = CLK4M_EN;
 
 wire  [7:0]	CPUDI;
 wire			CPURD;
@@ -54,7 +59,7 @@ wire	_cpu_rd, _cpu_wr;
 
 Z80IP maincpu(
 	.reset(RESET),
-	.clk(CLK48M),
+	.clk(CLK40M),
 	.clk_en(CPUCL_EN),
 	.adr(CPUAD),
 	.data_in(CPUDI),
@@ -88,7 +93,7 @@ wire [7:0]	cpu_rd_mrom1;
 wire [14:0] rad;
 wire  [7:0] rdt;
 
-SEGASYS1_PRGDEC decr(AXSCL,cpu_m1,CPUAD,cpu_rd_mrom0, rad,rdt, ROMCL,ROMAD,ROMDT,ROMEN);
+SEGASYS1_PRGDEC decr(CLK40M,cpu_m1,CPUAD,cpu_rd_mrom0, rad,rdt, ROMCL,ROMAD,ROMDT,ROMEN);
 
 assign cpu_rom_addr = CPUAD[15] ? CPUAD[15:0] : {1'b0, rad};
 assign rdt = cpu_rom_do;
@@ -101,7 +106,7 @@ assign cpu_rd_mrom1 = cpu_rom_do;
 // Work RAM
 wire [7:0]	cpu_rd_mram;
 wire			cpu_cs_mram = (CPUAD[15:12] == 4'b1100) & cpu_mreq;
-SRAM_4096 mainram(CLK48M, CPUAD[11:0], cpu_rd_mram, cpu_cs_mram & CPUWR, CPUDO );
+SRAM_4096 mainram(CLK40M, CPUAD[11:0], cpu_rd_mram, cpu_cs_mram & CPUWR, CPUDO );
 
 
 // Video mode latch & Sound Request
@@ -111,7 +116,7 @@ wire cpu_cs_vidm = ((CPUAD[7:0] == 8'h15)|(CPUAD[7:0] == 8'h19)) & cpu_iorq;
 wire cpu_wr_sreq = cpu_cs_sreq & _cpu_wr;
 wire cpu_wr_vidm = cpu_cs_vidm & _cpu_wr;
 
-always @(posedge CLK48M or posedge RESET) begin
+always @(posedge CLK40M or posedge RESET) begin
 	if (RESET) begin
 		VIDMD <= 0;
 		SNDRQ <= 0;
@@ -125,16 +130,12 @@ end
 
 
 // CPU data selector
-dataselector6 mcpudisel(
-	CPUDI,
-	VIDCS & cpu_mreq, VIDDO,
-	cpu_cs_vidm,  VIDMD,
-	cpu_cs_port,  cpu_rd_port,
-	cpu_cs_mram,  cpu_rd_mram,
-	cpu_cs_mrom0, cpu_rd_mrom0,
-	cpu_cs_mrom1, cpu_rd_mrom1,
-	8'hFF
-);
+assign CPUDI = (VIDCS & cpu_mreq) ? VIDDO :
+	           cpu_cs_vidm        ? VIDMD :
+	           cpu_cs_port        ? cpu_rd_port :
+	           cpu_cs_mram        ? cpu_rd_mram :
+	           cpu_cs_mrom0       ? cpu_rd_mrom0 :
+	           cpu_cs_mrom1       ? cpu_rd_mrom1 : 8'hFF;
 
 endmodule
 
@@ -162,15 +163,12 @@ wire cs_portA =  (CPUAD[4:2] == 3'b0_11) & ~CPUAD[0] & CPUIO;
 wire cs_portB =(((CPUAD[4:2] == 3'b0_11) &  CPUAD[0]) | (CPUAD[4:2] == 3'b1_00)) & CPUIO;
 
 wire [7:0] inp;
-dataselector5 dsel(
-	inp,
-	cs_port1,INP0,
-	cs_port2,INP1,
-	cs_portS,INP2,
-	cs_portA,DSW0,
-	cs_portB,DSW1,
-	8'hFF
-);
+
+assign inp = cs_port1 ? INP0 :
+             cs_port2 ? INP1 :
+             cs_portS ? INP2 :
+             cs_portA ? DSW0 :
+             cs_portB ? DSW1 : 8'hFF;
 
 assign DV = cs_port1|cs_port2|cs_portS|cs_portA|cs_portB;
 assign OD = inp;

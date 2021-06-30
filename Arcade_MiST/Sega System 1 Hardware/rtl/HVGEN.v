@@ -23,41 +23,41 @@ module HVGEN
 reg [8:0] hcnt = 0;
 reg [8:0] vcnt = 0;
 
-assign HPOS = hcnt-9'd16;
+assign HPOS = hcnt;
 assign VPOS = vcnt;
 
-wire [8:0] HS_B = 9'd288+(HOFFS*2'd2);
+wire [8:0] HS_B = 9'd462+(HOFFS*2'd2);
 wire [8:0] HS_E =  9'd32+(HS_B);
-wire [8:0] HS_N = 9'd447+(HS_E-9'd320);
 
 wire [8:0] VS_B = 9'd226+(VOFFS*3'd4);
 wire [8:0] VS_E =   9'd4+(VS_B);
-wire [8:0] VS_N = 9'd481+(VS_E-9'd230);
 
 always @(posedge CLK) begin
 	if (PCLK_EN) begin
 		hcnt <= hcnt + 1'd1;
 		case (hcnt)
-		 25: HBLK <= H240;
-		 37: HBLK <= 0;
-		277: HBLK <= H240;
-		281: HBLK <= 1;
-		511: begin
-			hcnt <= 0;
+		 13: HBLK <= H240;
+		 21: HBLK <= 0;
+		261: HBLK <= H240;
+		269: begin 
+			hcnt <= 9'd462; // original: 0-255, 448-511 = 320, now: 0-269, 462-511 = 320
+			HBLK <= 1;
+			vcnt <= vcnt + 1'd1;
 			case (vcnt)
-				223: begin VBLK <= 1; vcnt <= vcnt+9'd1; end
-				511: begin VBLK <= 0; vcnt <= 0; end
-				default: vcnt <= vcnt+9'd1;
+				223: VBLK <= 1;
+				255: vcnt <= 9'd505;
+				511: VBLK <= 0;
+				default: ;
 			endcase
 			end
-			default: hcnt <= hcnt+9'd1;
+		default: ;
 		endcase
 
 		if (hcnt==HS_B) begin HSYN <= 0; end
-		if (hcnt==HS_E) begin HSYN <= 1; hcnt <= HS_N; end
+		if (hcnt==HS_E) begin HSYN <= 1; end
 
 		if (vcnt==VS_B) begin VSYN <= 0; end
-		if (vcnt==VS_E) begin VSYN <= 1; vcnt <= VS_N; end
+		if (vcnt==VS_E) begin VSYN <= 1; end
 
 		oRGB <= (HBLK|VBLK) ? 12'h0 : iRGB;
 	end

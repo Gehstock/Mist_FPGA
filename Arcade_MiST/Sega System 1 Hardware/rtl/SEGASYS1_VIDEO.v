@@ -302,16 +302,12 @@ VRAM vram1(
 
 
 // CPU Read Data Selector
-dataselector6 videodsel(
-	cpu_dr,
-	cpu_cs_palram,  cpu_rd_palram,
-	cpu_cs_vram0,   cpu_rd_vram0,
-	cpu_cs_vram1,   cpu_rd_vram1,
-	cpu_cs_spram,   cpu_rd_spram,
-	cpu_cs_sprcoll, cpu_rd_sprcoll,
-	cpu_cs_mixcoll, cpu_rd_mixcoll,
-	8'hFF
-);
+assign cpu_dr = cpu_cs_palram  ? cpu_rd_palram :
+                cpu_cs_vram0   ? cpu_rd_vram0 :
+                cpu_cs_vram1   ? cpu_rd_vram1 :
+                cpu_cs_spram   ? cpu_rd_spram :
+                cpu_cs_sprcoll ? cpu_rd_sprcoll :
+                cpu_cs_mixcoll ? cpu_rd_mixcoll : 8'hFF;
 
 endmodule
 
@@ -454,11 +450,7 @@ always @( posedge CLK ) begin
 	end
 end
 
-dataselector1_32 pixsft(
-	BGPIX,
-	( HP[2:0] != 0 ),{ BGPN, BGCD[22:0], 1'b0 },
-						  { BG_COL/*VRAMDT[12:5]*/,   TILEDT }
-);
+assign BGPIX = ( HP[2:0] != 0 ) ? { BGPN, BGCD[22:0], 1'b0 } : { BG_COL/*VRAMDT[12:5]*/,   TILEDT };
 
 assign OPIX = { BGPN, BGCD[7], BGCD[15], BGCD[23] }; 
 
@@ -503,12 +495,10 @@ assign mixcoll    = ~(cltval[2]);
 assign mixcoll_ad = { cltval[3], SPRPX[8:4] };
 
 wire [10:0] palno_i;
-dataselector2_11 colsel(
-	palno_i,
-	cltval[1], ( 11'h400 | BG0PX[8:0] ),
-	cltval[0], ( 11'h200 | BG1PX[8:0] ),
-	           ( 11'h000 | SPRPX[8:0] )
-);
+
+assign palno_i = cltval[1] ? ( 11'h400 | BG0PX[8:0] ) :
+                 cltval[0] ? ( 11'h200 | BG1PX[8:0] ) :
+				             ( 11'h000 | SPRPX[8:0] );
 
 wire [10:0] palno_d = {HPOS[7],VPOS[7:2],HPOS[6:3]};
 
