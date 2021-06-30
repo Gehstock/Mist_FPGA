@@ -51,7 +51,7 @@ end
 wire      CPUCL_EN = CLK4M_EN;
 
 wire  [7:0]	CPUDI;
-wire			CPURD;
+//wire			CPURD;
 
 wire	cpu_m1;
 wire	cpu_mreq, cpu_iorq;
@@ -74,7 +74,7 @@ Z80IP maincpu(
 );
 
 assign CPUWR = _cpu_wr & cpu_mreq;
-assign CPURD = _cpu_rd & cpu_mreq;
+//assign CPURD = _cpu_rd & cpu_mreq;
 
 
 // Input Port
