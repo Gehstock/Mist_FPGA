@@ -22,11 +22,12 @@ module scandoubler
 (
 	// system interface
 	input            clk_sys,
+	input            bypass,
+	input            ce_divider,
+	output           pixel_ena,
 
 	// scanlines (00-none 01-25% 10-50% 11-75%)
 	input      [1:0] scanlines,
-	input            ce_x1,
-	input            ce_x2,
 
 	// shifter video interface
 	input            hs_in,
@@ -45,6 +46,32 @@ module scandoubler
 
 parameter HCNT_WIDTH = 9;
 parameter COLOR_DEPTH = 6;
+
+// pixel clock divider
+reg [1:0] i_div;
+reg ce_x1, ce_x2;
+
+always @(posedge clk_sys) begin
+	reg last_hs_in;
+	last_hs_in <= hs_in;
+	if(last_hs_in & !hs_in) begin
+		i_div <= 2'b00;
+	end else begin
+		i_div <= i_div + 2'd1;
+	end
+end
+
+always @(*) begin
+	if (!ce_divider) begin
+		ce_x1 = (i_div == 2'b01);
+		ce_x2 = i_div[0];
+	end else begin
+		ce_x1 = i_div[0];
+		ce_x2 = 1'b1;
+	end
+end
+
+assign pixel_ena = bypass ? ce_x1 : ce_x2;
 
 // --------------------- create output signals -----------------
 // latch everything once more to make it glitch free and apply scanline effect
@@ -74,9 +101,15 @@ always @(*) begin
 end
 
 always @(posedge clk_sys) begin
-	if(ce_x2) begin
+	if(bypass) begin
+		r_out <= r;
+		g_out <= g;
+		b_out <= b;
 		hs_out <= hs_sd;
-		vs_out <= vs_in;
+		vs_out <= vs_sd;
+	end else if(ce_x2) begin
+		hs_out <= hs_sd;
+		vs_out <= vs_sd;
 
 		// reset scanlines at every new screen
 		if(vs_out != vs_in) scanline <= 0;
@@ -114,7 +147,7 @@ always @(posedge clk_sys) begin
 end
 
 // scan doubler output register
-reg [COLOR_DEPTH*3-1:0] sd_out;
+wire [COLOR_DEPTH*3-1:0] sd_out = bypass ? sd_bypass_out : sd_buffer_out;
 
 // ==================================================================
 // ======================== the line buffers ========================
@@ -162,8 +195,9 @@ end
 // ==================== output timing generation ====================
 // ==================================================================
 
-reg  [HCNT_WIDTH-1:0] sd_hcnt;
-reg        hs_sd;
+reg [COLOR_DEPTH*3-1:0] sd_buffer_out, sd_bypass_out;
+reg [HCNT_WIDTH-1:0] sd_hcnt;
+reg        hs_sd, vs_sd;
 
 // timing generation runs 32 MHz (twice the input signal analysis speed)
 always @(posedge clk_sys) begin
@@ -182,7 +216,13 @@ always @(posedge clk_sys) begin
 		if(sd_hcnt == hs_rise) hs_sd <= 1;
 
 		// read data from line sd_buffer
-		sd_out <= sd_buffer[{~line_toggle, sd_hcnt}];
+		sd_buffer_out <= sd_buffer[{~line_toggle, sd_hcnt}];
+		vs_sd <= vs_in;
+	end
+	if(bypass) begin
+		sd_bypass_out <= {r_in, g_in, b_in};
+		hs_sd <= hs_in;
+		vs_sd <= vs_in;
 	end
 end
 

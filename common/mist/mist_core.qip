@@ -1,0 +1,7 @@
+set_global_assignment -name VHDL_FILE    [file join $::quartus(qip_path) mist.vhd]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) user_io.v]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mist_video.v]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) scandoubler.v]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) osd.v]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) rgb2ypbpr.v]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) cofi.sv]
