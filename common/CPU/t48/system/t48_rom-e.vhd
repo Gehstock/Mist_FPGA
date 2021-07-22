@@ -2,7 +2,7 @@
 --
 -- T8x48 ROM
 --
--- $Id: t48_rom-e.vhd,v 1.1.1.1 2006/11/25 22:15:41 arnim Exp $
+-- $Id: t48_rom-e.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2006 Arnim Laeuger (arniml@opencores.org)
 --
@@ -55,16 +55,3 @@ entity t48_rom is
   );
 
 end t48_rom;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t48_rom-e.vhd,v $
--- Revision 1.1.1.1  2006/11/25 22:15:41  arnim
--- copied from opencores.org repository release 1.0
---
--- Revision 1.1  2006/06/21 00:59:15  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

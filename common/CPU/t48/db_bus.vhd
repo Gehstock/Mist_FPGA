@@ -3,7 +3,7 @@
 -- The BUS unit.
 -- Implements the BUS port logic.
 --
--- $Id: db_bus.vhd,v 1.5 2005/06/11 10:08:43 arniml Exp $
+-- $Id: db_bus.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -144,26 +144,3 @@ begin
                 db_i;
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: db_bus.vhd,v $
--- Revision 1.5  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.4  2005/06/09 22:16:26  arniml
--- Implement db_dir_o glitch-safe
---
--- Revision 1.3  2004/10/25 20:30:18  arniml
--- delay db_dir_o by one machine cycle
--- this fixes the timing relation between BUS data and WR'
---
--- Revision 1.2  2004/04/04 14:15:45  arniml
--- add dump_compare support
---
--- Revision 1.1  2004/03/23 21:31:52  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

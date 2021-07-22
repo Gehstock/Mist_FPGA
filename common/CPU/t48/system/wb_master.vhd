@@ -2,7 +2,7 @@
 --
 -- The Wishbone master module.
 --
--- $Id: wb_master.vhd,v 1.5 2005/06/11 10:16:05 arniml Exp $
+-- $Id: wb_master.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2005, Arnim Laeuger (arniml@opencores.org)
 --
@@ -247,28 +247,3 @@ begin
                 '0';
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: wb_master.vhd,v $
--- Revision 1.5  2005/06/11 10:16:05  arniml
--- introduce prefix 't48_' for wb_master entity and configuration
---
--- Revision 1.4  2005/05/10 22:36:23  arniml
--- save data from wishbone bus in register bank with wb_ack
--- necessary to hold data from peripheral/memory until it is read by T48
---
--- Revision 1.3  2005/05/08 10:36:07  arniml
--- simplify address range:
--- - configuration range
--- - Wishbone range
---
--- Revision 1.2  2005/05/06 18:54:03  arniml
--- assign default for state_s
---
--- Revision 1.1  2005/05/05 19:49:03  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

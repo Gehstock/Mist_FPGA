@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- $Id: t48_tb_pack-p.vhd,v 1.2 2004/04/14 20:53:54 arniml Exp $
+-- $Id: t48_tb_pack-p.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --

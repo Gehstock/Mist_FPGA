@@ -3,7 +3,7 @@
 -- The Program Memory control unit.
 -- All operations related to the Program Memory are managed here.
 --
--- $Id: pmem_ctrl.vhd,v 1.5 2005/06/11 10:08:43 arniml Exp $
+-- $Id: pmem_ctrl.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -220,26 +220,3 @@ begin
   pmem_addr_o <= pmem_addr_q;
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: pmem_ctrl.vhd,v $
--- Revision 1.5  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.4  2005/06/08 19:13:53  arniml
--- fix bug report
--- "MSB of Program Counter changed upon PC increment"
---
--- Revision 1.3  2004/07/11 16:51:33  arniml
--- cleanup copyright notice
---
--- Revision 1.2  2004/04/24 23:44:25  arniml
--- move from std_logic_arith to numeric_std
---
--- Revision 1.1  2004/03/23 21:31:53  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

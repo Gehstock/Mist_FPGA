@@ -1,8 +1,7 @@
 
 README for the T48 uController project
 ======================================
-Version: $Date: 2006/07/16 01:59:23 $
-$Name:  $
+Version: $Id: README 295 2009-04-01 19:32:48Z arniml $
 
 
 Introduction
@@ -91,6 +90,14 @@ t48
     +-- sim
     |    |
     |    \-- rtl_sim        : Directory for running simulations.
+    |
+    +-- syn
+    |    |
+    |    \-- t8048          : T8048 toplevel example synthesis.
+    |         |
+    |         +-- b5x300    : for SpartanIIe 300.
+    |         |
+    |         \-- jopcyc    : for Cyclone EP1C12.
     |
     \-- sw                  : General purpose scripts and files.
          |
@@ -224,7 +231,9 @@ required ROM files for internal and external program ROM. The target 'simu'
 copies these files automatically to the simulation directory. So most likely,
 for running a test case or any other software, you will want to issue:
 
-$ make -f VERIF_DIR/include/Makefile.cell simu clean
+$ make -f VERIF_DIR/include/Makefile.cell all clean
+
+The 'all' target generates hex files for all supported testbenches.
 
 The only supported assembler is Alfred Arnold's macroassembler AS. See
 
@@ -261,3 +270,26 @@ script. For each test cell, it steps through the sequence
 It is highly recommended to redirect the output of run_regression.pl into a
 file. Otherwise, analyzing the messages related to each test cell is almost
 impossible.
+
+
+FPGA Implementation
+-------------------
+
+All of the design files contain pure RTL code. Also the RAM for the data
+memory is described by generic RTL code. It should be translated automatically
+by the tool chain to a technology specific RAM macro.
+
+There is a generic method for the program memory ROM as well, although this
+project uses a flow where hex-files are loaded by lpm_rom.vhd as the default
+method. Convert the ROM image to an RTL VHDL file with one of the two
+following commands (either from hex or bin format):
+
+  $ hex2rom -b [rom image file] rom_t48 10l8s > rom_t48.vhd
+  $ hex2rom -b [rom image file] rom_t49 11l8s > rom_t49.vhd
+
+The option -b specifies that [rom image file] contains binary data. Skip this
+option to process a file in hex format.
+
+These resulting RTL representations are instantiated by t48_rom-struct-a.vhd
+and t49_rom-struct-a.vhd. Altera and Xilinx design tools will detect and
+extract the ROM and turn it into a memory macro.

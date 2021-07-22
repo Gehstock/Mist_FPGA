@@ -3,8 +3,7 @@
 -- T8048 Microcontroller System
 -- 8048 toplevel without tri-states
 --
--- $Id: t8048_notri.vhd,v 1.7 2006/07/14 01:13:32 arniml Exp $
--- $Name:  $
+-- $Id: t8048_notri.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -243,29 +242,3 @@ begin
     );
 
 end struct;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t8048_notri.vhd,v $
--- Revision 1.7  2006/07/14 01:13:32  arniml
--- name keyword added
---
--- Revision 1.6  2006/06/21 01:02:16  arniml
--- replaced syn_rom and syn_ram with t48_rom and generic_ram_ena
---
--- Revision 1.5  2006/06/20 00:47:08  arniml
--- new input xtal_en_i
---
--- Revision 1.4  2005/11/01 21:38:48  arniml
--- wire signals for P2 low impedance marker issue
---
--- Revision 1.3  2004/12/02 22:08:42  arniml
--- introduced generic gate_port_input_g
--- forces masking of P1 and P2 input bus
---
--- Revision 1.2  2004/12/01 23:08:08  arniml
--- update
---
--------------------------------------------------------------------------------

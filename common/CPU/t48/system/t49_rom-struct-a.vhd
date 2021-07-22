@@ -2,7 +2,7 @@
 --
 -- T8x49 ROM
 --
--- $Id: t49_rom-struct-a.vhd,v 1.1.1.3 2006/11/26 10:07:52 arnim Exp $
+-- $Id: t49_rom-struct-a.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2006 Arnim Laeuger (arniml@opencores.org)
 --
@@ -63,22 +63,3 @@ begin
     );
 
 end struct;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t49_rom-struct-a.vhd,v $
--- Revision 1.1.1.3  2006/11/26 10:07:52  arnim
--- incremental import for release 1.0
---
--- Revision 1.3  2006/11/26 12:53:28  arniml
--- fix entity port names
---
--- Revision 1.2  2006/11/26 11:58:28  arniml
--- fix component name
---
--- Revision 1.1  2006/06/21 00:59:15  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

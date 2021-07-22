@@ -2,7 +2,7 @@
 --
 -- The Timer/Counter unit.
 --
--- $Id: timer-c.vhd,v 1.2 2005/06/11 10:08:43 arniml Exp $
+-- $Id: timer-c.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- All rights reserved
 --

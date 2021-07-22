@@ -3,8 +3,7 @@
 -- T8039 Microcontroller System
 -- 8039 toplevel without tri-states
 --
--- $Id: t8039_notri.vhd,v 1.5 2006/07/14 01:13:32 arniml Exp $
--- $Name:  $
+-- $Id: t8039_notri.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -203,25 +202,3 @@ begin
     );
 
 end struct;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t8039_notri.vhd,v $
--- Revision 1.5  2006/07/14 01:13:32  arniml
--- name keyword added
---
--- Revision 1.4  2006/06/21 01:02:35  arniml
--- replaced syn_ram with generic_ram_ena
---
--- Revision 1.3  2006/06/20 00:47:08  arniml
--- new input xtal_en_i
---
--- Revision 1.2  2005/11/01 21:38:10  arniml
--- wire signals for P2 low impedance marker issue
---
--- Revision 1.1  2004/12/03 19:42:34  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

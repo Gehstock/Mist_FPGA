@@ -3,7 +3,7 @@
 -- The Port 2 unit.
 -- Implements the Port 2 logic.
 --
--- $Id: p2.vhd,v 1.9 2006/06/20 00:46:04 arniml Exp $
+-- $Id: p2.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -236,40 +236,3 @@ begin
   p2h_low_imp_o <= h_low_imp_del_q;
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: p2.vhd,v $
--- Revision 1.9  2006/06/20 00:46:04  arniml
--- new input xtal_en_i
---
--- Revision 1.8  2005/11/01 21:27:55  arniml
--- * change low impedance markers for P2
---   separate marker for low and high part
--- * p2_o output is also registered to prevent combinational
---   output to pads
---
--- Revision 1.7  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.6  2004/07/11 16:51:33  arniml
--- cleanup copyright notice
---
--- Revision 1.5  2004/05/17 13:52:46  arniml
--- Fix bug "ANL and ORL to P1/P2 read port status instead of port output register"
---
--- Revision 1.4  2004/04/24 23:44:25  arniml
--- move from std_logic_arith to numeric_std
---
--- Revision 1.3  2004/03/29 19:39:58  arniml
--- rename pX_limp to pX_low_imp
---
--- Revision 1.2  2004/03/28 13:11:43  arniml
--- rework Port 2 expander handling
---
--- Revision 1.1  2004/03/23 21:31:53  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

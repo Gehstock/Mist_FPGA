@@ -3,7 +3,7 @@
 -- The Data Memory control unit.
 -- All accesses to the Data Memory are managed here.
 --
--- $Id: dmem_ctrl.vhd,v 1.5 2006/06/20 01:07:16 arniml Exp $
+-- $Id: dmem_ctrl.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -200,25 +200,3 @@ begin
   dmem_we_o   <= to_stdLogic(write_dmem_i);
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: dmem_ctrl.vhd,v $
--- Revision 1.5  2006/06/20 01:07:16  arniml
--- add note about clock enable for data memory RAM macro
---
--- Revision 1.4  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.3  2004/04/24 23:44:25  arniml
--- move from std_logic_arith to numeric_std
---
--- Revision 1.2  2004/04/18 18:58:29  arniml
--- clean up sensitivity list
---
--- Revision 1.1  2004/03/23 21:31:52  arniml
--- initial check-in
---
--------------------------------------------------------------------------------
