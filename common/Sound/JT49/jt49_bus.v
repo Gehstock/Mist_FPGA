@@ -12,21 +12,21 @@
 
     You should have received a copy of the GNU General Public License
     along with JT49.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
     Date: 28-Jan-2019
-    
+
     Based on sqmusic, by the same author
-    
+
     */
 
-// This is a wrapper with the BDIR/BC1 pins    
+// This is a wrapper with the BDIR/BC1 pins
 
 module jt49_bus ( // note that input ports are not multiplexed
     input            rst_n,
     input            clk,    // signal on positive edge
-    input            clk_en,
+    input            clk_en /* synthesis direct_enable = 1 */,
     // bus control pins of original chip
     input            bdir,
     input            bc1,
@@ -34,19 +34,27 @@ module jt49_bus ( // note that input ports are not multiplexed
 
     input            sel, // if sel is low, the clock is divided by 2
     output     [7:0] dout,
+    output     [9:0] sound,  // combined channel output
     output     [7:0] A,      // linearised channel output
     output     [7:0] B,
-    output     [7:0] C
+    output     [7:0] C,
+    output           sample,
+
+    input      [7:0] IOA_in,
+    output     [7:0] IOA_out,
+
+    input      [7:0] IOB_in,
+    output     [7:0] IOB_out
 );
 
-parameter [1:0] COMP=2'b00;
+parameter [2:0] COMP=3'b000;
 
 reg wr_n, cs_n;
 reg [3:0] addr;
 reg addr_ok;
 reg [7:0] din_latch;
 
-always @(posedge clk) 
+always @(posedge clk)
     if( !rst_n ) begin
         wr_n    <= 1'b1;
         cs_n    <= 1'b1;
@@ -79,9 +87,15 @@ jt49 #(.COMP(COMP)) u_jt49( // note that input ports are not multiplexed
     .din    (  din_latch ),
     .sel    (  sel       ), // if sel is low, the clock is divided by 2
     .dout   (  dout      ),
+    .sound  (  sound     ),  // combined channel output
+    .sample (  sample    ),
     .A      (  A         ),      // linearised channel output
     .B      (  B         ),
-    .C      (  C         )
+    .C      (  C         ),
+    .IOA_in (  IOA_in    ),
+    .IOA_out(  IOA_out   ),
+    .IOB_in (  IOB_in    ),
+    .IOB_out(  IOB_out   )
 );
 
 endmodule // jt49_bus

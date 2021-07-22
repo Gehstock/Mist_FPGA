@@ -15,38 +15,42 @@
     
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 10-Nov-2018
-    
-    Based on sqmusic, by the same author
+    Date: 15-Jan-2019
     
     */
 
+// DC removal filter
+// input is unsigned
+// output is signed
 
-module jt49_div #(parameter W=12 )(   
-    (* direct_enable *) input cen,
-    input           clk, // this is the divided down clock from the core
-    input           rst_n,
-    input [W-1:0]  period,
-    output reg      div
+module jt49_dcrm(
+    input                clk,
+    input                cen,
+    input                rst,
+    input         [7:0]  din,
+    output reg signed [7:0]  dout
 );
 
-reg [W-1:0]count;
+wire signed [7:0] ave0, ave1;
 
-wire [W-1:0] one = { {W-1{1'b0}}, 1'b1};
+jt49_mave u_mave0(
+    .clk    ( clk           ),
+    .cen    ( cen           ),
+    .rst    ( rst           ),
+    .din    ( {1'b0, din[7:1] }  ),
+    .dout   ( ave0          )
+);
 
-always @(posedge clk, negedge rst_n ) begin
-  if( !rst_n) begin
-    count <= one;
-    div   <= 1'b0;
-  end
-  else if(cen) begin
-    if( count>=period ) begin
-        count <= one;
-        div   <= ~div;
-    end
-    else
-        /*if( period!={W{1'b0}} )*/ count <=  count + one ;
-  end
-end
+jt49_mave u_mave1(
+    .clk    ( clk    ),
+    .cen    ( cen    ),
+    .rst    ( rst    ),
+    .din    ( ave0   ),
+    .dout   ( ave1   )
+);
+
+always @(posedge clk)
+    if( cen )
+        dout <= ({1'b0,din} - {ave1,1'b0})>>>1;
 
 endmodule

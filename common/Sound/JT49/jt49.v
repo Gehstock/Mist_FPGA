@@ -24,23 +24,32 @@
 module jt49 ( // note that input ports are not multiplexed
     input            rst_n,
     input            clk,    // signal on positive edge
-    input            clk_en,
+    input            clk_en /* synthesis direct_enable = 1 */,
     input  [3:0]     addr,
     input            cs_n,
     input            wr_n,  // write
     input  [7:0]     din,
     input            sel, // if sel is low, the clock is divided by 2
     output reg [7:0] dout,
+    output reg [9:0] sound,  // combined channel output
     output reg [7:0] A,      // linearised channel output
     output reg [7:0] B,
-    output reg [7:0] C
+    output reg [7:0] C,
+    output           sample,
+
+    input      [7:0] IOA_in,
+    output     [7:0] IOA_out,
+
+    input      [7:0] IOB_in,
+    output     [7:0] IOB_out
 );
 
-parameter [1:0] COMP=2'b00;
+parameter [2:0] COMP=3'b000;
 parameter       CLKDIV=3;
-wire [1:0] comp = COMP;
+wire [2:0] comp = COMP;
 
-reg [7:0] regarray[15:0];
+reg  [7:0] regarray[15:0];
+wire [7:0] port_A, port_B;
 
 wire [4:0] envelope;
 wire bitA, bitB, bitC;
@@ -48,6 +57,12 @@ wire noise;
 reg Amix, Bmix, Cmix;
 
 wire cen16, cen256;
+
+assign IOA_out = regarray[14];
+assign IOB_out = regarray[15];
+assign port_A  = !regarray[7][6] ? IOA_in : IOA_out;
+assign port_B  = !regarray[7][7] ? IOB_in : IOB_out;
+assign sample  = cen16;
 
 jt49_cen #(.CLKDIV(CLKDIV)) u_cen(
     .clk    ( clk     ),
@@ -149,17 +164,24 @@ always @(posedge clk) if( clk_en ) begin
     logC <= !Cmix ? 5'd0 : (use_envC ? envelope : volC );
 end
 
+reg [9:0] acc;
+
 always @(posedge clk, negedge rst_n) begin
     if( !rst_n ) begin
         acc_st <= 4'b1;
+        acc    <= 10'd0;
         A      <= 8'd0;
         B      <= 8'd0;
         C      <= 8'd0;
+        sound  <= 10'd0;
     end else if(clk_en) begin
         acc_st <= { acc_st[2:0], acc_st[3] };
+        acc <= acc + {2'b0,lin};
         case( acc_st )
             4'b0001: begin
                 log   <= logA;
+                acc   <= 10'd0;
+                sound <= acc;
             end
             4'b0010: begin
                 A   <= lin;
@@ -177,7 +199,7 @@ always @(posedge clk, negedge rst_n) begin
     end
 end
 
-reg [7:0] read_mask;
+reg  [7:0] read_mask;
 
 always @(*)
     case(addr)
@@ -209,6 +231,8 @@ always @(posedge clk, negedge rst_n) begin
         last_write  <= write;
         // Data read
         case( addr )
+            4'he: dout <= port_A;
+            4'hf: dout <= port_B;
             default: dout <= regarray[ addr ] & read_mask;
         endcase
         // Data write
