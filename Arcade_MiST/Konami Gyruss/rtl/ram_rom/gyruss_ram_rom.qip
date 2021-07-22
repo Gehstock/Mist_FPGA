@@ -1,0 +1,3 @@
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ram_rom/rom_loader.sv
+set_global_assignment -name VHDL_FILE rtl/ram_rom/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/ram_rom/dpram_dc.vhd

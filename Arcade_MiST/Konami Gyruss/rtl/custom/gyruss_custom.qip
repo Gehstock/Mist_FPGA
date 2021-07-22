@@ -1,0 +1,7 @@
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k082.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k083.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k501.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k502.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k503.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/KONAMI-1/KONAMI1.sv
+set_global_assignment -name VERILOG_FILE rtl/custom/KONAMI-1/mc6809isk.v
