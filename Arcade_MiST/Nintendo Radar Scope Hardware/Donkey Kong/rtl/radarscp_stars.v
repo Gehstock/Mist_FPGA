@@ -31,6 +31,7 @@ module radarscp_stars(
 	input        I_FLIPn,
 	input        I_SOU2,
 
+	input        DL_CLK,
 	input [15:0] DL_ADDR,
 	input        DL_WR,
 	input  [7:0] DL_DATA
@@ -101,7 +102,7 @@ dpram #(11,8) U_3E (
 	.address_a(STARS_A),
 	.q_a(STARS_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[10:0]),
 	.wren_b(DL_WR && DL_ADDR[15:11] == {4'hF, 1'b1}),
 	.data_b(DL_DATA)

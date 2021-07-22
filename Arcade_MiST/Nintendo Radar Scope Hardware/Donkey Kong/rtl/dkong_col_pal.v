@@ -29,6 +29,7 @@ module dkong_col_pal(
 	output [3:0]O_G,
 	output [3:0]O_B,
 
+	input DL_CLK,
 	input [15:0] DL_ADDR,
 	input DL_WR,
 	input [7:0] DL_DATA
@@ -63,7 +64,7 @@ dpram #(9,8) col1 (
 	.address_a(W_1EF_Q[9:2]),
 	.q_a(W_2F_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[7:0]),
 	.wren_b(DL_WR && DL_ADDR[15:9] == {4'hF, 3'b001}),
 	.data_b(DL_DATA)
@@ -80,7 +81,7 @@ dpram #(9,8) col2 (
 	.address_a(W_1EF_Q[9:2]),
 	.q_a(W_2E_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[7:0]),
 	.wren_b(DL_WR && DL_ADDR[15:9] == {4'hF, 3'b000}),
 	.data_b(DL_DATA)

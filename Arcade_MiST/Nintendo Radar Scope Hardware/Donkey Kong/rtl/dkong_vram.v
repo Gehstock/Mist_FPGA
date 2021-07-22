@@ -45,6 +45,7 @@ module dkong_vram(
 	output O_VRAMBUSYn,
 	output O_ESBLKn,
 
+	input DL_CLK,
 	input [15:0] DL_ADDR,
 	input DL_WR,
 	input [7:0] DL_DATA
@@ -90,7 +91,7 @@ dpram #(8,4) col3 (
 	.address_a({W_vram_AB[9:7],W_vram_AB[4:0]}),
 	.q_a(W_2N_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[7:0]),
 	.wren_b(DL_WR && DL_ADDR[15:8] == 8'hF4),
 	.data_b(DL_DATA[3:0])
@@ -186,7 +187,7 @@ dpram #(12,8) vid1 (
 	.address_a({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.q_a(W_3P_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'h8),
 	.data_b(DL_DATA)
@@ -203,7 +204,7 @@ dpram #(12,8) vid2 (
 	.address_a({I_4H_Q0,WO_DB[7:0],I_VF_CNT[2:0]}),
 	.q_a(W_3N_DO),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'h9),
 	.data_b(DL_DATA)
