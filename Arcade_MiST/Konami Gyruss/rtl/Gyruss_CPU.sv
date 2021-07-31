@@ -666,13 +666,15 @@ wire cs_linebuffer, sprite_flip;
 wire [5:0] k503_R;
 k503 u9F
 (
+	.clk(clk_49m),
+	.clk_en(cen_6m),
 	.OB(spriteram_reg[7:0]),
 	.VCNT(vcnt_lat),
 	.H4(h_cnt[2]),
-	.H8(0),
+	.H8(1'b0),
 	.LD(h_cnt[1:0] != 2'b11),
 	.OCS(cs_linebuffer),
-	.OFLP(sprite_flip),
+	.NE83(sprite_flip),
 	.R(k503_R)
 );
 assign spriterom_A[5] = k503_R[5];
@@ -819,11 +821,11 @@ wire [4:0] sprite_D;
 wire sprite_lbuff_sel, sprite_lbuff_dec0, sprite_lbuff_dec1;
 k502 u6B
 (
-	.RESET(1),
 	.CK1(clk_49m),
+	.CK1_EN(cen_12m),
 	.CK2(clk_49m),
-	.CEN(cen_6m),
-	.LD0(h_cnt[2:0] == 3'b000),
+	.CK2_EN(cen_6m),
+	.LD0(h_cnt[2:0] != 3'b111),
 	.H2(h_cnt[1]),
 	.H256(h_cnt[8]),
 	.SPAL(sprite_lut_D),
