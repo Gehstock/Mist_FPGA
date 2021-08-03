@@ -48,14 +48,15 @@ wire        landscape = core_mod[3];
 
 assign 		LED = ~ioctl_downl;
 assign 		AUDIO_R = AUDIO_L;
-assign 		SDRAM_CLK = clock_24;
+assign 		SDRAM_CLK = clock_48;
 assign 		SDRAM_CKE = 1;
 
-wire pll_locked,clock_24;
+wire pll_locked,clock_24,clock_48;
 pll pll(
 	.locked(pll_locked),
 	.inclk0(CLOCK_27),
-	.c0(clock_24)//W_CLK_24576M
+	.c0(clock_48),
+	.c1(clock_24)//W_CLK_24576M
 	);
 
 wire [15:0] main_rom_a;
@@ -72,7 +73,7 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 
 data_io data_io(
-	.clk_sys       ( clock_24     ),
+	.clk_sys       ( clock_48     ),
 	.SPI_SCK       ( SPI_SCK      ),
 	.SPI_SS2       ( SPI_SS2      ),
 	.SPI_DI        ( SPI_DI       ),
@@ -84,10 +85,10 @@ data_io data_io(
 );
 
 reg port1_req, port2_req;
-sdram #(24) sdram(
+sdram #(48) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clock_24     ),
+	.clk           ( clock_48     ),
 
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
@@ -116,7 +117,7 @@ sdram #(24) sdram(
 );
 
 // ROM download controller
-always @(posedge clock_24) begin
+always @(posedge clock_48) begin
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
@@ -173,6 +174,7 @@ dkong_top dkong(
 	.O_VGA_H_SYNCn(hs_n),
 	.O_VGA_V_SYNCn(vs_n),
 
+	.DL_CLK(clock_48),
 	.DL_ADDR(ioctl_addr[15:0]),
 	.DL_WR(ioctl_wr && ioctl_addr[23:16] == 0),
 	.DL_DATA(ioctl_dout),

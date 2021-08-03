@@ -1,5 +1,7 @@
 // Composite-like horizontal blending by Kitrinx
 
+// AMR - disable shift register recognition
+(* altera_attribute = "-name AUTO_SHIFT_REGISTER_RECOGNITION OFF" *)
 module cofi (
     input        clk,
     input        pix_ce,
@@ -9,22 +11,24 @@ module cofi (
     input        vblank,
     input        hs,
     input        vs,
-    input  [5:0] red,
-    input  [5:0] green,
-    input  [5:0] blue,
+    input  [VIDEO_DEPTH-1:0] red,
+    input  [VIDEO_DEPTH-1:0] green,
+    input  [VIDEO_DEPTH-1:0] blue,
 
     output reg       hblank_out,
     output reg       vblank_out,
     output reg       hs_out,
     output reg       vs_out,
-    output reg [5:0] red_out,
-    output reg [5:0] green_out,
-    output reg [5:0] blue_out
+    output reg [VIDEO_DEPTH-1:0] red_out,
+    output reg [VIDEO_DEPTH-1:0] green_out,
+    output reg [VIDEO_DEPTH-1:0] blue_out
 );
 
-    function bit [5:0] color_blend (
-        input [5:0] color_prev,
-        input [5:0] color_curr,
+parameter VIDEO_DEPTH=8;
+
+    function bit [VIDEO_DEPTH-1:0] color_blend (
+        input [VIDEO_DEPTH-1:0] color_prev,
+        input [VIDEO_DEPTH-1:0] color_curr,
         input blank_last
     );
     begin
@@ -32,9 +36,9 @@ module cofi (
     end
     endfunction
 
-reg [5:0] red_last;
-reg [5:0] green_last;
-reg [5:0] blue_last;
+reg [VIDEO_DEPTH-1:0] red_last;
+reg [VIDEO_DEPTH-1:0] green_last;
+reg [VIDEO_DEPTH-1:0] blue_last;
 
 wire      ce = enable ? pix_ce : 1'b1;
 always @(posedge clk) if (ce) begin

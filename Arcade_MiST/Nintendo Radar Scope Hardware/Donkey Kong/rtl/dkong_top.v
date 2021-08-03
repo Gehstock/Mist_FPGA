@@ -53,6 +53,7 @@ module dkong_top
 	output  [7:0] O_SOUND_DAT,
 
 	// EXTERNAL ROMS
+	input         DL_CLK,
 	input  [15:0] DL_ADDR,
 	input         DL_WR,
 	input   [7:0] DL_DATA,
@@ -414,6 +415,7 @@ dkong_obj obj
 	.O_FLIP_HV(W_FLIP_HV),
 	.O_L_CMPBLKn(W_L_CMPBLKn),
 
+	.DL_CLK(DL_CLK),
 	.DL_ADDR(DL_ADDR),
 	.DL_WR(DL_WR),
 	.DL_DATA(DL_DATA)
@@ -440,6 +442,7 @@ dkong_vram vram
 	.O_VRAMBUSYn(W_VRAMBUSYn),
 	.O_ESBLKn(),
 
+	.DL_CLK(DL_CLK),
 	.DL_ADDR(DL_ADDR),
 	.DL_WR(DL_WR),
 	.DL_DATA(DL_DATA)
@@ -465,6 +468,7 @@ radarscp_stars rstars
 	.I_FLIPn(W_FLIPn),
 	.I_SOU2(W_6H_Q[2]),
 
+	.DL_CLK(DL_CLK),
 	.DL_ADDR(DL_ADDR),
 	.DL_WR(DL_WR),
 	.DL_DATA(DL_DATA)
@@ -500,6 +504,7 @@ dkong_col_pal cpal
 	.O_G(W_GREEN),
 	.O_B(W_BLUE),
 
+	.DL_CLK(DL_CLK),
 	.DL_ADDR(DL_ADDR),
 	.DL_WR(DL_WR),
 	.DL_DATA(DL_DATA)

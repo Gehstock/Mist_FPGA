@@ -3,7 +3,7 @@
 -- The T48 Bus Connector.
 -- Multiplexes all drivers of the T48 bus.
 --
--- $Id: bus_mux.vhd,v 1.2 2005/06/11 10:08:43 arniml Exp $
+-- $Id: bus_mux.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -98,16 +98,3 @@ begin
   end generate;
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: bus_mux.vhd,v $
--- Revision 1.2  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.1  2004/03/23 21:31:52  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

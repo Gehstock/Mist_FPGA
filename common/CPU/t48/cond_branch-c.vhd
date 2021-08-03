@@ -3,7 +3,7 @@
 -- The Conditional Branch Logic unit.
 -- Decisions whether to take a jump or not are made here.
 --
--- $Id: cond_branch-c.vhd,v 1.2 2005/06/11 10:08:43 arniml Exp $
+-- $Id: cond_branch-c.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --

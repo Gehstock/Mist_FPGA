@@ -22,14 +22,14 @@
     */
 
 module jt49_eg(
-  input  wire      cen,
-  input  wire      clk, // this is the divided down clock from the core
-  input  wire      step,
-  input  wire      null_period,
-  input  wire      rst_n,
-  input  wire      restart,
-  input  wire[3:0] ctrl,
-  output reg [4:0] env
+  (* direct_enable *) input cen,
+  input           clk, // this is the divided down clock from the core
+  input           step,
+  input           null_period,
+  input           rst_n,
+  input           restart,
+  input [3:0]     ctrl,
+  output reg [4:0]env
 );
 
 reg inv, stop;

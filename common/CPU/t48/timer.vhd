@@ -2,7 +2,7 @@
 --
 -- The Timer/Counter unit.
 --
--- $Id: timer.vhd,v 1.7 2006/11/30 14:31:59 arniml Exp $
+-- $Id: timer.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -250,35 +250,3 @@ begin
   overflow_o <= to_stdLogic(overflow_q);
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: timer.vhd,v $
--- Revision 1.7  2006/11/30 14:31:59  arniml
--- reset counter_q
---
--- Revision 1.6  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.5  2004/07/11 16:51:33  arniml
--- cleanup copyright notice
---
--- Revision 1.4  2004/07/04 13:06:45  arniml
--- counter_q is not cleared during reset
--- this would match all different descriptions of the Counter as
--- a) if the software assumes that the Counter is modified during reset, it
---    will initialize the Counter anyhow
--- b) the special case 'Counter not modified during reset' is covered
---
--- Revision 1.3  2004/05/16 15:32:57  arniml
--- fix edge detector bug for counter
---
--- Revision 1.2  2004/04/15 22:05:13  arniml
--- increment prescaler with MSTATE4
---
--- Revision 1.1  2004/03/23 21:31:53  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

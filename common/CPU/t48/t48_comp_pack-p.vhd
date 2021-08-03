@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- $Id: t48_comp_pack-p.vhd,v 1.11 2006/06/20 00:46:04 arniml Exp $
+-- $Id: t48_comp_pack-p.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, 2005, Arnim Laeuger (arniml@opencores.org)
 --
@@ -262,31 +262,6 @@ package t48_comp_pack is
       int_executed_i    : in  boolean;
       int_pending_o     : out boolean;
       int_in_progress_o : out boolean
-    );
-  end component;
-
-  component t48_opc_table
-    port (
-      opcode_i      : in  word_t;
-      multi_cycle_o : out std_logic;
-      mnemonic_o    : out mnemonic_t
-    );
-  end component;
-
-  component t48_opc_decoder
-    generic (
-      register_mnemonic_g : integer := 1
-    );
-    port (
-      clk_i         : in  std_logic;
-      res_i         : in  std_logic;
-      en_clk_i      : in  boolean;
-      data_i        : in  word_t;
-      read_bus_i    : in  boolean;
-      inj_int_i     : in  boolean;
-      opcode_o      : out word_t;
-      mnemonic_o    : out mnemonic_t;
-      multi_cycle_o : out boolean
     );
   end component;
 

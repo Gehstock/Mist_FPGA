@@ -3,7 +3,7 @@
 -- The Program Status Word (PSW).
 -- Implements the PSW with its special bits.
 --
--- $Id: psw.vhd,v 1.8 2005/06/11 10:08:43 arniml Exp $
+-- $Id: psw.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -210,34 +210,3 @@ begin
   bs_o        <= psw_q(bs_c);
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: psw.vhd,v $
--- Revision 1.8  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.7  2004/07/11 16:51:33  arniml
--- cleanup copyright notice
---
--- Revision 1.6  2004/04/24 23:44:25  arniml
--- move from std_logic_arith to numeric_std
---
--- Revision 1.5  2004/04/24 11:25:39  arniml
--- removed dummy_s - workaround not longer needed for GHDL 0.11.1
---
--- Revision 1.4  2004/04/18 18:59:01  arniml
--- add temporary workaround for GHDL 0.11
---
--- Revision 1.3  2004/04/04 14:15:45  arniml
--- add dump_compare support
---
--- Revision 1.2  2004/03/28 21:28:13  arniml
--- take auxiliary carry from direct ALU connection
---
--- Revision 1.1  2004/03/23 21:31:53  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

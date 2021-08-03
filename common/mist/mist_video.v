@@ -38,11 +38,11 @@ module mist_video
 	input        VSync,
 
 	// MiST video output signals
-	output [5:0] VGA_R,
-	output [5:0] VGA_G,
-	output [5:0] VGA_B,
-	output       VGA_VS,
-	output       VGA_HS
+	output reg [5:0] VGA_R,
+	output reg [5:0] VGA_G,
+	output reg [5:0] VGA_B,
+	output reg       VGA_VS,
+	output reg       VGA_HS
 );
 
 parameter OSD_COLOR    = 3'd4;
@@ -59,59 +59,15 @@ wire [5:0] SD_B_O;
 wire       SD_HS_O;
 wire       SD_VS_O;
 
-reg  [5:0] R_full;
-reg  [5:0] G_full;
-reg  [5:0] B_full;
-
-always @(*) begin
-	if (COLOR_DEPTH == 6) begin
-		R_full = R;
-		G_full = G;
-		B_full = B;
-	end else if (COLOR_DEPTH == 2) begin
-		R_full = {3{R}};
-		G_full = {3{G}};
-		B_full = {3{B}};
-	end else if (COLOR_DEPTH == 1) begin
-		R_full = {6{R}};
-		G_full = {6{G}};
-		B_full = {6{B}};
-	end else begin
-		R_full = { R, R[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
-		G_full = { G, G[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
-		B_full = { B, B[COLOR_DEPTH-1 -:(6-COLOR_DEPTH)] };
-	end
-end
-
-reg [1:0] i_div;
-reg ce_x1, ce_x2;
-
-always @(posedge clk_sys) begin
-	reg last_hs_in;
-	last_hs_in <= HSync;
-	if(last_hs_in & !HSync) begin
-		i_div <= 2'b00;
-	end else begin
-		i_div <= i_div + 2'd1;
-	end
-end
-
-always @(*) begin
-	if (!ce_divider) begin
-		ce_x1 = (i_div == 2'b01);
-		ce_x2 = i_div[0];
-	end else begin
-		ce_x1 = i_div[0];
-		ce_x2 = 1'b1;
-	end
-end
+wire pixel_ena;
 
 scandoubler #(SD_HCNT_WIDTH, COLOR_DEPTH) scandoubler
 (
 	.clk_sys    ( clk_sys    ),
+	.bypass     ( scandoubler_disable ),
+	.ce_divider ( ce_divider ),
 	.scanlines  ( scanlines  ),
-	.ce_x1      ( ce_x1      ),
-	.ce_x2      ( ce_x2      ),
+	.pixel_ena  ( pixel_ena  ),
 	.hs_in      ( HSync      ),
 	.vs_in      ( VSync      ),
 	.r_in       ( R          ),
@@ -132,15 +88,15 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR, OSD_AUTO_CE) osd
 (
 	.clk_sys ( clk_sys ),
 	.rotate  ( rotate  ),
-	.ce      ( scandoubler_disable ? ce_x1 : ce_x2 ),
+	.ce      ( pixel_ena ),
 	.SPI_DI  ( SPI_DI  ),
 	.SPI_SCK ( SPI_SCK ),
 	.SPI_SS3 ( SPI_SS3 ),
-	.R_in    ( scandoubler_disable ? R_full : SD_R_O ),
-	.G_in    ( scandoubler_disable ? G_full : SD_G_O ),
-	.B_in    ( scandoubler_disable ? B_full : SD_B_O ),
-	.HSync   ( scandoubler_disable ? HSync : SD_HS_O ),
-	.VSync   ( scandoubler_disable ? VSync : SD_VS_O ),
+	.R_in    ( SD_R_O ),
+	.G_in    ( SD_G_O ),
+	.B_in    ( SD_B_O ),
+	.HSync   ( SD_HS_O ),
+	.VSync   ( SD_VS_O ),
 	.R_out   ( osd_r_o ),
 	.G_out   ( osd_g_o ),
 	.B_out   ( osd_b_o )
@@ -149,13 +105,13 @@ osd #(OSD_X_OFFSET, OSD_Y_OFFSET, OSD_COLOR, OSD_AUTO_CE) osd
 wire [5:0] cofi_r, cofi_g, cofi_b;
 wire       cofi_hs, cofi_vs;
 
-cofi cofi (
+cofi #(6) cofi (
 	.clk     ( clk_sys ),
-	.pix_ce  ( scandoubler_disable ? ce_x1 : ce_x2 ),
+	.pix_ce  ( pixel_ena ),
 	.enable  ( blend   ),
-	.hblank  ( ~(scandoubler_disable ? HSync : SD_HS_O) ),
-	.hs      ( scandoubler_disable ? HSync : SD_HS_O ),
-	.vs      ( scandoubler_disable ? VSync : SD_VS_O ),
+	.hblank  ( ~SD_HS_O ),
+	.hs      ( SD_HS_O ),
+	.vs      ( SD_VS_O ),
 	.red     ( osd_r_o ),
 	.green   ( osd_g_o ),
 	.blue    ( osd_b_o ),
@@ -166,7 +122,8 @@ cofi cofi (
 	.blue_out( cofi_b  )
 );
 
-wire       hs, vs;
+wire       hs, vs, cs;
+wire [5:0] r,g,b;
 
 RGBtoYPbPr #(6) rgb2ypbpr
 (
@@ -178,18 +135,22 @@ RGBtoYPbPr #(6) rgb2ypbpr
 	.blue_in   ( cofi_b     ),
 	.hs_in     ( cofi_hs    ),
 	.vs_in     ( cofi_vs    ),
-	.red_out   ( VGA_R      ),
-	.green_out ( VGA_G      ),
-	.blue_out  ( VGA_B      ),
+	.cs_in     ( SYNC_AND ? (cofi_hs & cofi_vs) : ~(cofi_hs ^ cofi_vs) ),
+	.red_out   ( r          ),
+	.green_out ( g          ),
+	.blue_out  ( b          ),
 	.hs_out    ( hs         ),
-	.vs_out    ( vs         )
+	.vs_out    ( vs         ),
+	.cs_out    ( cs         )
 );
 
-wire   cs = SYNC_AND ? (hs & vs) : ~(hs ^ vs);
-
-// a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
-// and VCC on VGA_VS (to switch into rgb mode)
-assign VGA_HS = ((~no_csync & scandoubler_disable) || ypbpr)? cs : hs;
-assign VGA_VS = ((~no_csync & scandoubler_disable) || ypbpr)? 1'b1 : vs;
-
+always @(posedge clk_sys) begin
+	VGA_R  <= r;
+	VGA_G  <= g;
+	VGA_B  <= b;
+	// a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
+	// and VCC on VGA_VS (to switch into rgb mode)
+	VGA_HS <= ((~no_csync & scandoubler_disable) || ypbpr)? cs : hs;
+	VGA_VS <= ((~no_csync & scandoubler_disable) || ypbpr)? 1'b1 : vs;
+end
 endmodule

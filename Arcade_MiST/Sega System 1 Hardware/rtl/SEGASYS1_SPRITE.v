@@ -147,7 +147,7 @@ always @ ( posedge VCLKx8 ) if (VCLKx4_EN) begin
 			// get yofs/xpos/bank
 			2: begin
 				yofs <= hitsprvps[hitr];
-				xpos <= sprdt[8:1]+14;
+				xpos <= ((sprdt[8:0]+1)>>1) + 8'd14;
 				bank <= { sprdt[13], sprdt[14], sprdt[15] };
 				spr_ofs <= 2;
 				phaseHD <= 3;
@@ -175,7 +175,7 @@ always @ ( posedge VCLKx8 ) if (VCLKx4_EN) begin
 					we      <= 1'b0;
 					rdat    <= sprchdt;
 					nowflip <= srcadrs[15];
-					srcadrs <= hflip ? (srcadrs-1) : (srcadrs+1);
+					srcadrs <= hflip ? (srcadrs-1'd1) : (srcadrs+1'd1);
 					if ((hflip && !srcadrs[0]) || (!hflip && srcadrs[0])) waitcnt <= 6; // assume 16 bit words are cached
 					phaseHD <= 7;
 				end else
@@ -202,7 +202,7 @@ always @ ( posedge VCLKx8 ) if (VCLKx4_EN) begin
 						sprcoll_ad <= sprcoll_adr;
 					end
 				end
-				xpos <= xpos+1;
+				xpos <= xpos+1'd1;
 				phaseHD <= 9;
 			end
 			9: begin
@@ -227,7 +227,7 @@ always @ ( posedge VCLKx8 ) if (VCLKx4_EN) begin
 						sprcoll_ad <= sprcoll_adr;
 					end
 				end
-				xpos <= xpos+1;
+				xpos <= xpos+1'd1;
 				//waitcnt <= 5;
 				phaseHD <= 6;
 			end
@@ -237,7 +237,7 @@ always @ ( posedge VCLKx8 ) if (VCLKx4_EN) begin
 				sprcoll <= 1'b0;
 				we <= 1'b0;
 				phaseHD <= ( hitr == (hits-1) ) ? 15 : 1;
-				hitr <= hitr+1;
+				hitr <= hitr+1'd1;
 			end
 			
 			default: begin

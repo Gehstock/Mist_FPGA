@@ -3,7 +3,7 @@
 -- The Interrupt Controller.
 -- It collects the interrupt sources and notifies the decoder.
 --
--- $Id: int.vhd,v 1.7 2006/06/20 00:46:03 arniml Exp $
+-- $Id: int.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -251,39 +251,3 @@ begin
   int_in_progress_o <= int_in_progress_q and int_state_q /= IDLE;
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: int.vhd,v $
--- Revision 1.7  2006/06/20 00:46:03  arniml
--- new input xtal_en_i
---
--- Revision 1.6  2005/11/01 21:26:24  arniml
--- operate ale_q and int_q with xtal_i after shift of ALE assertion to XTAL3
---
--- Revision 1.5  2005/09/13 21:00:16  arniml
--- Fix bug reports:
--- "Target address of JMP to Program Memory Bank 1 corrupted by interrupt"
--- "Return address of CALL to Program Memory Bank 1 corrupted by interrupt"
--- int_in_progress_o was active one cycle before int_pending_o is
--- asserted. this confused the mb multiplexer which determines the state of
--- the memory bank selection flag
---
--- Revision 1.4  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.3  2004/07/11 16:51:33  arniml
--- cleanup copyright notice
---
--- Revision 1.2  2004/06/30 21:18:28  arniml
--- Fix bug report:
--- "Program Memory bank can be switched during interrupt"
--- int module emits int_in_progress signal that is used inside the decoder
--- to hold mb low for JMP and CALL during interrupts
---
--- Revision 1.1  2004/03/23 21:31:52  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

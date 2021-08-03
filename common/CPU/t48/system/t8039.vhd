@@ -2,8 +2,7 @@
 --
 -- T8039 Microcontroller System
 --
--- $Id: t8039.vhd,v 1.7 2006/07/14 01:13:32 arniml Exp $
--- $Name:  $
+-- $Id: t8039.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -181,25 +180,3 @@ begin
   -----------------------------------------------------------------------------
 
 end struct;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t8039.vhd,v $
--- Revision 1.7  2006/07/14 01:13:32  arniml
--- name keyword added
---
--- Revision 1.6  2006/06/20 00:47:08  arniml
--- new input xtal_en_i
---
--- Revision 1.5  2005/11/02 23:41:43  arniml
--- properly drive P1 and P2 with low impedance markers
---
--- Revision 1.4  2005/11/01 21:37:45  arniml
--- wire signals for P2 low impedance marker issue
---
--- Revision 1.3  2004/12/03 19:43:12  arniml
--- added hierarchy t8039_notri
---
--------------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 -- The Arithmetic Logic Unit (ALU).
 -- It contains the ALU core plus the Accumulator and the Temp Reg.
 --
--- $Id: alu.vhd,v 1.9 2005/06/11 10:08:43 arniml Exp $
+-- $Id: alu.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -413,37 +413,3 @@ begin
               (others => bus_idle_level_c);
 
 end rtl;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: alu.vhd,v $
--- Revision 1.9  2005/06/11 10:08:43  arniml
--- introduce prefix 't48_' for all packages, entities and configurations
---
--- Revision 1.8  2004/04/24 23:43:56  arniml
--- move from std_logic_arith to numeric_std
---
--- Revision 1.7  2004/04/07 22:09:03  arniml
--- remove unused signals
---
--- Revision 1.6  2004/04/07 20:56:23  arniml
--- default assignment for aux_carry_o
---
--- Revision 1.5  2004/04/06 20:21:53  arniml
--- fix sensitivity list
---
--- Revision 1.4  2004/04/06 18:10:41  arniml
--- rework adder and force resource sharing between ADD, INC and DEC
---
--- Revision 1.3  2004/04/04 14:18:52  arniml
--- add measures to implement XCHD
---
--- Revision 1.2  2004/03/28 21:08:51  arniml
--- support for DA instruction
---
--- Revision 1.1  2004/03/23 21:31:52  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- $Id: t48_system_comp_pack-p.vhd,v 1.8 2006/06/20 00:47:08 arniml Exp $
+-- $Id: t48_system_comp_pack-p.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --

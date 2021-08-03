@@ -535,13 +535,12 @@ endgenerate
 ///////////////////////////////////////////////////////////////////////
 
 
-always @(posedge CLK)
+always @(posedge CLK or posedge wNMIClear)
 begin
-	reg old_sample;
-	old_sample <= NMISample2;
-
-    if (wNMIClear == 1) NMILatched <= 1;
-    else if(old_sample & ~NMISample2) NMILatched <= NMIMask;
+	if (wNMIClear == 1)
+		NMILatched <= 1;
+	else if (fallE_en && ~NMISample & NMISample2) // falling edge of NMISample2
+		NMILatched <= NMIMask;
 end
 
 //

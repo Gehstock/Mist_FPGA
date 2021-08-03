@@ -49,6 +49,7 @@ module dkong_obj(
 	output 				O_FLIP_HV,
 	output 				O_L_CMPBLKn,
 
+	input DL_CLK,
 	input [15:0] DL_ADDR,
 	input DL_WR,
 	input [7:0] DL_DATA
@@ -329,7 +330,7 @@ dpram #(12,8) obj1 (
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7C),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hA),
 	.data_b(DL_DATA)
@@ -346,7 +347,7 @@ dpram #(12,8) obj2 (
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7D),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hB),
 	.data_b(DL_DATA)
@@ -363,7 +364,7 @@ dpram #(12,8) obj3 (
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7E),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hC),
 	.data_b(DL_DATA)
@@ -380,7 +381,7 @@ dpram #(12,8) obj4 (
 	.address_a(W_ROM_OBJ_AB),
 	.q_a(W_OBJ_DO_7F),
 
-	.clock_b(CLK_24M),
+	.clock_b(DL_CLK),
 	.address_b(DL_ADDR[11:0]),
 	.wren_b(DL_WR && DL_ADDR[15:12] == 4'hD),
 	.data_b(DL_DATA)

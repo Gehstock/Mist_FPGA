@@ -2,8 +2,7 @@
 --
 -- T8048 Microcontroller System
 --
--- $Id: t8048.vhd,v 1.11 2006/07/14 01:13:32 arniml Exp $
--- $Name:  $
+-- $Id: t8048.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -185,47 +184,3 @@ begin
 
 
 end struct;
-
-
--------------------------------------------------------------------------------
--- File History:
---
--- $Log: t8048.vhd,v $
--- Revision 1.11  2006/07/14 01:13:32  arniml
--- name keyword added
---
--- Revision 1.10  2006/06/20 00:47:08  arniml
--- new input xtal_en_i
---
--- Revision 1.9  2005/11/02 23:41:43  arniml
--- properly drive P1 and P2 with low impedance markers
---
--- Revision 1.8  2005/11/01 21:38:31  arniml
--- wire signals for P2 low impedance marker issue
---
--- Revision 1.7  2004/12/03 19:44:36  arniml
--- removed obsolete constant
---
--- Revision 1.6  2004/12/02 22:08:42  arniml
--- introduced generic gate_port_input_g
--- forces masking of P1 and P2 input bus
---
--- Revision 1.5  2004/12/01 23:09:47  arniml
--- intruduced hierarchy t8048_notri where all system functionality
--- except bidirectional ports is handled
---
--- Revision 1.4  2004/10/24 09:10:16  arniml
--- Fix for:
--- P1 constantly in push-pull mode in t8048
---
--- Revision 1.3  2004/05/20 21:58:26  arniml
--- Fix for:
--- External Program Memory ignored when EA = 0
---
--- Revision 1.2  2004/03/29 19:40:14  arniml
--- rename pX_limp to pX_low_imp
---
--- Revision 1.1  2004/03/24 21:32:27  arniml
--- initial check-in
---
--------------------------------------------------------------------------------

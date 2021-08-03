@@ -24,15 +24,15 @@
 `timescale 1ns / 1ps
 
 module jt49_noise(
-    input  wire      cen,
-    input  wire      clk,
-    input  wire      rst_n,
-    input  wire[4:0] period,
-    output reg       noise
+  (* direct_enable *) input cen,
+    input       clk,
+    input       rst_n,
+    input [4:0] period,
+    output reg  noise
 );
 
-reg[5:0] count;
-reg[16:0] poly17;
+reg [5:0]count;
+reg [16:0]poly17;
 wire poly17_zero = poly17==17'b0;
 wire noise_en;
 reg last_en;

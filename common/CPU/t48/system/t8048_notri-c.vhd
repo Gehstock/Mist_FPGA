@@ -2,7 +2,7 @@
 --
 -- T8048 Microcontroller System
 --
--- $Id: t8048_notri-c.vhd,v 1.2 2006/06/21 01:02:16 arniml Exp $
+-- $Id: t8048_notri-c.vhd 295 2009-04-01 19:32:48Z arniml $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
