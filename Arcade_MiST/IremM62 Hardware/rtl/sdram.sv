@@ -166,7 +166,7 @@ assign SDRAM_nWE  = sd_cmd[0];
 
 reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
-reg [17:1] addr_last[2];
+reg [17:1] addr_last[2:1];
 reg [19:2] addr_last2[4];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;

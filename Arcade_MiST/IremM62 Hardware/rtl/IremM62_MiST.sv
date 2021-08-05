@@ -167,6 +167,7 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) data_io(
 	.SPI_SS4       ( SPI_SS4      ),
 	.SPI_DI        ( SPI_DI       ),
 	.SPI_DO        ( SPI_DO       ),
+	.clkref_n      ( ~clkref      ),
 	.ioctl_download( ioctl_downl  ),
 	.ioctl_index   ( ioctl_index  ),
 	.ioctl_wr      ( ioctl_wr     ),
