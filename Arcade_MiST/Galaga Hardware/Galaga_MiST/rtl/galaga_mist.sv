@@ -20,13 +20,27 @@ module galaga_mist
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"Galaga;;",
+	"GALAGA;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"T6,Reset;",
+	"O6,Flip screen,Off,On;",
+	"O7,Self-test mode,Off,On;",
+	"T1,Service trigger,Off,On;",
+	"DIP;",
+	"T0,Reset;",
 	"V,v1.21.",`BUILD_DATE
 };
+
+wire        rotate    = status[2];
+wire  [1:0] scanlines = status[4:3];
+wire        blend     = status[5];
+wire        flip      = status[6];
+wire        selftest  = status[7];
+wire        service   = status[1];
+
+wire  [7:0] dipa      = ~status[15:8];
+wire  [7:0] dipb      = ~status[23:16];
 
 assign LED = 1;
 assign AUDIO_R = AUDIO_L;
@@ -40,63 +54,14 @@ pll pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [9:0] kbjoy;
 wire  [7:0] joystick_0;
 wire  [7:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
-wire [10:0] ps2_key;
-wire [9:0] audio;
-wire hs, vs;
-wire blankn = ~(hb | vb);
-wire hb, vb;
-wire [2:0] r,g;
-wire [1:0] b;
-
-galaga galaga(
-	.clock_18(clk_18),
-	.reset(status[0] | status[6] | buttons[1]),
-	.video_r(r),
-	.video_g(g),
-	.video_b(b),
-	.video_hb(hb),
-	.video_vb(vb),
-	.video_hs(hs),
-	.video_vs(vs),
-	.audio(audio),
-	.coin(btn_coin),
-	.start1(btn_one_player),
-	.left1(m_left),
-	.right1(m_right),
-	.fire1(m_fire),
-	.start2(btn_two_players),
-	.left2(m_left),
-	.right2(m_right),
-	.fire2(m_fire)
-	);
-	
-mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
-	.clk_sys(clk_18),
-	.SPI_SCK(SPI_SCK),
-	.SPI_SS3(SPI_SS3),
-	.SPI_DI(SPI_DI),
-	.R(blankn ? r : 0),
-	.G(blankn ? g : 0),
-	.B(blankn ? {b[0], b} : 0),
-	.HSync(hs),
-	.VSync(vs),
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_VS(VGA_VS),
-	.VGA_HS(VGA_HS),
-	.ce_divider(1'b1),
-	.blend(status[5]),
-	.rotate({1'b1,status[2]}),
-	.scanlines(scandoublerD ? 2'b00 : status[4:3]),
-	.scandoubler_disable(scandoublerD),
-	.ypbpr(ypbpr)
-	);
+wire        no_csync;
+wire        key_strobe;
+wire        key_pressed;
+wire  [7:0] key_code;
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
@@ -110,6 +75,7 @@ user_io(
 	.buttons        (buttons        ),
 	.switches       (switches       ),
 	.scandoubler_disable (scandoublerD	  ),
+	.no_csync       (no_csync       ),
 	.ypbpr          (ypbpr          ),
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
@@ -119,8 +85,106 @@ user_io(
 	.status         (status         )
 	);
 
+wire        ioctl_downl;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire  [7:0] ioctl_dout;
+
+data_io data_io(
+	.clk_sys       ( clk_18       ),
+	.SPI_SCK       ( SPI_SCK      ),
+	.SPI_SS2       ( SPI_SS2      ),
+	.SPI_DI        ( SPI_DI       ),
+	.ioctl_download( ioctl_downl  ),
+	.ioctl_index   ( ioctl_index  ),
+	.ioctl_wr      ( ioctl_wr     ),
+	.ioctl_addr    ( ioctl_addr   ),
+	.ioctl_dout    ( ioctl_dout   )
+);
+
+wire [15:0] audio;
+wire hs, vs;
+wire blankn = ~(hb | vb);
+wire hb, vb;
+wire [2:0] r,g;
+wire [1:0] b;
+reg  service_trg;
+reg  reset;
+
+always @(posedge clk_18) begin
+	reg serviceD;
+	reg [19:0] service_cnt = 0;
+
+	serviceD <= service;
+	if (~serviceD & service) service_cnt <= 24'hFFFFF;
+	else if (|service_cnt) service_cnt <= service_cnt - 1'd1;
+
+	service_trg <= |service_cnt;
+
+	reset <= status[0] | buttons[1] | ioctl_downl;
+end
+
+galaga galaga(
+	.clock_18(clk_18),
+	.reset(reset),
+	.flip_screen(flip),
+	.video_r(r),
+	.video_g(g),
+	.video_b(b),
+	.blank_h(hb),
+	.blank_v(vb),
+	.video_hs(hs),
+	.video_vs(vs),
+	.audio(audio),
+	.coin1(m_coin1),
+	.start1(m_one_player),
+	.left1(m_left),
+	.right1(m_right),
+	.fire1(m_fireA),
+	.start2(m_two_players),
+	.left2(m_left2),
+	.right2(m_right2),
+	.fire2(m_fire2A),
+
+	.dip_switch_a(dipa),
+	.dip_switch_b(dipb),
+
+	.service(service_trg),
+	.self_test(selftest),
+	.pause(1'b0),
+
+	.dn_addr(ioctl_addr),
+	.dn_data(ioctl_dout),
+	.dn_wr(ioctl_wr)
+	);
+	
+mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
+	.clk_sys(clk_18),
+	.SPI_SCK(SPI_SCK),
+	.SPI_SS3(SPI_SS3),
+	.SPI_DI(SPI_DI),
+	.R(blankn ? r : 0),
+	.G(blankn ? g : 0),
+	.B(blankn ? {b, b[1]} : 0),
+	.HSync(hs),
+	.VSync(vs),
+	.VGA_R(VGA_R),
+	.VGA_G(VGA_G),
+	.VGA_B(VGA_B),
+	.VGA_VS(VGA_VS),
+	.VGA_HS(VGA_HS),
+	.ce_divider(1'b1),
+	.no_csync(no_csync),
+	.blend(blend),
+	.rotate({~flip,rotate}),
+	.scanlines(scanlines),
+	.scandoubler_disable(scandoublerD),
+	.ypbpr(ypbpr)
+	);
+
 dac #(
-	.C_bits(10))
+	.C_bits(16))
 dac(
 	.clk_i(clk_18),
 	.res_n_i(1),
@@ -128,44 +192,25 @@ dac(
 	.dac_o(AUDIO_L)
 	);
 
-//											Rotated														Normal
-wire m_up     = ~status[2] ? btn_left | joystick_0[1] | joystick_1[1] : btn_up | joystick_0[3] | joystick_1[3];
-wire m_down   = ~status[2] ? btn_right | joystick_0[0] | joystick_1[0] : btn_down | joystick_0[2] | joystick_1[2];
-wire m_left   = ~status[2] ? btn_down | joystick_0[2] | joystick_1[2] : btn_left | joystick_0[1] | joystick_1[1];
-wire m_right  = ~status[2] ? btn_up | joystick_0[3] | joystick_1[3] : btn_right | joystick_0[0] | joystick_1[0];
 
-wire m_fire   = btn_fire1 | joystick_0[4] | joystick_1[4];
-wire m_bomb   = btn_fire2 | joystick_0[5] | joystick_1[5];
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-reg btn_one_player = 0;
-reg btn_two_players = 0;
-reg btn_left = 0;
-reg btn_right = 0;
-reg btn_down = 0;
-reg btn_up = 0;
-reg btn_fire1 = 0;
-reg btn_fire2 = 0;
-reg btn_fire3 = 0;
-reg btn_coin  = 0;
-wire       key_pressed;
-wire [7:0] key_code;
-wire       key_strobe;
-
-always @(posedge clk_18) begin
-	if(key_strobe) begin
-		case(key_code)
-			'h75: btn_up         	<= key_pressed; // up
-			'h72: btn_down        	<= key_pressed; // down
-			'h6B: btn_left      	<= key_pressed; // left
-			'h74: btn_right       	<= key_pressed; // right
-			'h76: btn_coin			<= key_pressed; // ESC
-			'h05: btn_one_player   	<= key_pressed; // F1
-			'h06: btn_two_players  	<= key_pressed; // F2
-			'h14: btn_fire3 		<= key_pressed; // ctrl
-			'h11: btn_fire2 		<= key_pressed; // alt
-			'h29: btn_fire1   		<= key_pressed; // Space
-		endcase
-	end
-end
+arcade_inputs inputs (
+	.clk         ( clk_18      ),
+	.key_strobe  ( key_strobe  ),
+	.key_pressed ( key_pressed ),
+	.key_code    ( key_code    ),
+	.joystick_0  ( joystick_0  ),
+	.joystick_1  ( joystick_1  ),
+	.rotate      ( rotate      ),
+	.orientation ( {~flip, 1'b1} ),
+	.joyswap     ( 1'b0        ),
+	.oneplayer   ( 1'b1        ),
+	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
+	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+);
 
 endmodule 
