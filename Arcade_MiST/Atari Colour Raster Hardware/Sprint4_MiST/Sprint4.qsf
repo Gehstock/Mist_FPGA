@@ -17,15 +17,15 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 00:18:09  March 09, 2019
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 20:52:42  September 02, 2021
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		DottoriKun_assignment_defaults.qdf
+#		Sprint4_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -39,11 +39,37 @@
 
 # Project-Wide Assignments
 # ========================
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 12.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "13:44:34  AUGUST 14, 2017"
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:52:16  OCTOBER 10, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
-set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Sprint4_MiST.sv
+set_global_assignment -name VHDL_FILE rtl/sprint4.vhd
+set_global_assignment -name VHDL_FILE rtl/synchronizer.vhd
+set_global_assignment -name VHDL_FILE rtl/colormix.vhd
+set_global_assignment -name VHDL_FILE rtl/playfield.vhd
+set_global_assignment -name VHDL_FILE rtl/motion.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu_mem.vhd
+set_global_assignment -name VHDL_FILE rtl/collision.vhd
+set_global_assignment -name VHDL_FILE rtl/inputs.vhd
+set_global_assignment -name VHDL_FILE rtl/gearshift.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/joy2quad.sv
+set_global_assignment -name VHDL_FILE rtl/sound.vhd
+set_global_assignment -name VHDL_FILE rtl/screech.vhd
+set_global_assignment -name VHDL_FILE rtl/EngineSound.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/PROM_SYNC.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_H5.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_N6.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_M6.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_L6.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_C1.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_N1_Low.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_K1_High.vhd
+set_global_assignment -name VHDL_FILE rtl/rom/ROM_E1.vhd
+set_global_assignment -name VHDL_FILE rtl/ram1k.vhd
+set_global_assignment -name VERILOG_FILE rtl/pll.v
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/T65/T65.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -85,16 +111,15 @@ set_location_assignment PIN_13 -to CONF_DATA0
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
-set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
 
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
-set_global_assignment -name TOP_LEVEL_ENTITY DottoriKun_MiST
-set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS OFF
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY Sprint4_MiST
 
 # Fitter Assignments
 # ==================
@@ -106,16 +131,18 @@ set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_DATA7_THROUGH_DATA2_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name RESERVE_OTHER_AP_PINS_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
 # Assembler Assignments
 # =====================
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
-set_global_assignment -name STRATIX_CONFIGURATION_DEVICE EPCS4
 set_global_assignment -name GENERATE_RBF_FILE ON
+
+# SignalTap II Assignments
+# ========================
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp3.stp
 
 # Power Estimation Assignments
 # ============================
@@ -129,27 +156,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(DE1_Default)
-
-	# start DESIGN_PARTITION(Top)
-	# ---------------------------
-
-		# Incremental Compilation Assignments
-		# ===================================
-		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -entity DE1_Default -section_id Top
-		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -entity DE1_Default -section_id Top
-		set_global_assignment -name PARTITION_COLOR 16764057 -entity DE1_Default -section_id Top
-		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -entity DE1_Default -section_id Top
-
-	# end DESIGN_PARTITION(Top)
-	# -------------------------
-
-# end ENTITY(DE1_Default)
-# -----------------------
-
-# -----------------------------
-# start ENTITY(DottoriKun_MiST)
+# --------------------------
+# start ENTITY(Sprint4_MiST)
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
@@ -163,17 +171,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(DottoriKun_MiST)
-# ---------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/DottoriKun_MiST.sv
-set_global_assignment -name VERILOG_FILE rtl/dottori.v
-set_global_assignment -name VERILOG_FILE rtl/ROM1.v
-set_global_assignment -name VERILOG_FILE rtl/ROM2.v
-set_global_assignment -name VERILOG_FILE rtl/ROM3.v
-set_global_assignment -name VERILOG_FILE rtl/ROM4.v
-set_global_assignment -name VERILOG_FILE rtl/RAM.v
-set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name VERILOG_FILE rtl/cpu_z80.v
-set_global_assignment -name QIP_FILE ../../common/CPU/tv80/TV80.qip
-set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+# end ENTITY(Sprint4_MiST)
+# ------------------------
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

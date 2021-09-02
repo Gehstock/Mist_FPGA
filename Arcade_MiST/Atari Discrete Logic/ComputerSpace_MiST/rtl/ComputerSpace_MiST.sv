@@ -117,13 +117,13 @@ mist_video #(
 	.COLOR_DEPTH(4), 
 	.SD_HCNT_WIDTH(9)) 
 mist_video(
-	.clk_sys        ( clk_25          ),
+	.clk_sys        ( clk_25           ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R			(~blank ? r : 0	   ),
-	.G			(~blank ? g : 0	   ),
-	.B			(~blank ? b : 0	   ),
+	.R					 (~blank ? r : 0	  ),
+	.G					 (~blank ? g : 0	  ),
+	.B					 (~blank ? b : 0	  ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),

@@ -35,7 +35,7 @@ localparam CONF_STR = {
 	"MARIO;ROM;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
-	"O6,Service,Off,On;",
+//	"O6,Service,Off,On;",
    "O7A,Analogue Sound Vol,100%,Off,10%,20%,30%,40%,50%,60%,70%,80%,90%,;",
 
 	"T0,Reset;",
@@ -65,7 +65,7 @@ wire        ypbpr;
 wire  [15:0] audio;
 wire        hs_n, vs_n;
 wire        hb, vb;
-wire        blankn = ~vb;//~(hb | vb);
+wire        blankn = ~(hb | vb);
 wire [2:0] 	r, g;
 wire [1:0] 	b;
 
@@ -111,18 +111,20 @@ sdram sdram(
 
 	.cpu1_addr     ( ioctl_downl ? 15'h7fff : cpu_rom_addr[15:1] ),
 	.cpu1_q        ( cpu_rom_do ),
+	.cpu2_addr     ( ioctl_downl ? 15'h7fff : snd_rom_addr[12:1] ),
+	.cpu2_q        ( snd_rom_do ),
 
 	// port2 for sound board
-	.port2_req     ( port2_req ),
+	.port2_req     ( ),
 	.port2_ack     ( ),
-	.port2_a       ( ioctl_addr[23:1] - 15'h4800 ),
-	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
-	.port2_we      ( ioctl_downl ),
-	.port2_d       ( {ioctl_dout, ioctl_dout} ),
+	.port2_a       ( 15'h7fff ),
+	.port2_ds      ( ),
+	.port2_we      ( ),
+	.port2_d       ( ),
 	.port2_q       ( ),
 
-	.snd_addr      ( ioctl_downl ? 15'h7fff : snd_rom_addr[12:1] ),
-	.snd_q         ( snd_rom_do )
+	.sp_addr       ( 15'h7fff ),
+	.sp_q          (  )
 );
 
 
@@ -183,7 +185,7 @@ mist_video #(.COLOR_DEPTH(3),.SD_HCNT_WIDTH(11)) mist_video(
 	.SPI_DI(SPI_DI),
 	.R(blankn ? r : 0),
 	.G(blankn ? g : 0),
-	.B(blankn ? {b[1], b} : 0),
+	.B(blankn ? {b[0], b} : 0),
 	.HSync(~hs_n),
 	.VSync(~vs_n),
 	.VGA_R(VGA_R),

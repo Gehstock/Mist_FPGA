@@ -103,7 +103,7 @@ wire    [7:0]S_PROG_D ;
 //                   I_CLK_48M, I_DLADDR, I_DLDATA, I_DLWR);
 
 snd_rom snd_rom(
-	.clk(I_CLK_48M),
+	.clk(I_CLK_48M & S_ROM_OE),
 	.addr(S_ROM_A),
 	.data(S_PROG_D)
 );

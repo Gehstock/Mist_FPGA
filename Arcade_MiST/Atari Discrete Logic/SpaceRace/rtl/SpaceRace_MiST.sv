@@ -66,7 +66,7 @@ wire        hb, vb;
 wire        blankn = ~(hb | vb);
 // Monochrome video
 wire VIDEO, SCORE;
-wire [3:0]  video = VIDEO ? 4'hF : SCORE ? 4'hB: 4'h0;
+wire [3:0]  vid = VIDEO ? 4'hF : SCORE ? 4'hB: 4'h0;
 
 wire        key_strobe;
 wire        key_pressed;
@@ -128,11 +128,11 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(9)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? video : 0   ),
-	.G              ( blankn ? video : 0   ),
-	.B              ( blankn ? video : 0   ),
-	.HSync          ( hs               ),
-	.VSync          ( vs               ),
+	.R              ( blankn ? vid : 0 ),
+	.G              ( blankn ? vid : 0 ),
+	.B              ( blankn ? vid : 0 ),
+	.HSync          ( ~hs              ),
+	.VSync          ( ~vs              ),
 	.VGA_R          ( VGA_R            ),
 	.VGA_G          ( VGA_G            ),
 	.VGA_B          ( VGA_B            ),
