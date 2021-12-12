@@ -40,8 +40,8 @@ module user_io (
 	output reg   [31:0] joystick_2,
 	output reg   [31:0] joystick_3,
 	output reg   [31:0] joystick_4,
-	output reg   [15:0] joystick_analog_0,
-	output reg   [15:0] joystick_analog_1,
+	output reg   [31:0] joystick_analog_0,
+	output reg   [31:0] joystick_analog_1,
 	output        [1:0] buttons,
 	output        [1:0] switches,
 	output              scandoubler_disable,
@@ -104,6 +104,7 @@ parameter PS2DIV=100; // master clock divider for psk2_kbd/mouse clk
 parameter ROM_DIRECT_UPLOAD=0; // direct upload used for file uploads from the ARM
 parameter SD_IMAGES=2; // number of block-access images (max. 4 supported in current firmware)
 parameter PS2BIDIR=0; // bi-directional PS2 interface
+parameter FEATURES=0; // requested features from the firmware
 
 localparam W = $clog2(SD_IMAGES);
 
@@ -139,8 +140,8 @@ wire [7:0] sd_cmd = { 4'h6, sd_conf, sd_sdhc, sd_wr[drive_sel], sd_rd[drive_sel]
 wire spi_sck = SPI_CLK;
 
 // ---------------- PS2 ---------------------
-// 8 byte fifos to store ps2 bytes
-localparam PS2_FIFO_BITS = 3;
+// 16 byte fifos to store ps2 bytes
+localparam PS2_FIFO_BITS = 4;
 
 reg ps2_clk;
 always @(posedge clk_sys) begin
@@ -495,6 +496,11 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin : spi_transmitter
 				if(byte_cnt[0]) spi_byte_out <= serial_out_status;
 				else spi_byte_out <= serial_out_byte;
 
+			// core features
+			8'h80:
+				if (byte_cnt == 0) spi_byte_out <= 8'h80;
+				else spi_byte_out <= FEATURES[(4-byte_cnt)<<3 +:8];
+
 			endcase
 		end
 	end
@@ -624,6 +630,18 @@ always @(posedge clk_sys) begin : cmd_block
 							joystick_analog_0[7:0] <= spi_byte_in;
 						else if(stick_idx == 1)
 							joystick_analog_1[7:0] <= spi_byte_in;
+					end else if(abyte_cnt == 4) begin
+						// fourth byte is 2nd x axis
+						if(stick_idx == 0)
+							joystick_analog_0[31:24] <= spi_byte_in;
+						else if(stick_idx == 1)
+							joystick_analog_1[31:24] <= spi_byte_in;
+					end else if(abyte_cnt == 5) begin
+						// fifth byte is 2nd y axis
+						if(stick_idx == 0)
+							joystick_analog_0[23:16] <= spi_byte_in;
+						else if(stick_idx == 1)
+							joystick_analog_1[23:16] <= spi_byte_in;
 					end
 				end
 

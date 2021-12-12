@@ -8,10 +8,10 @@ module arcade_inputs(
 	input         key_strobe,
 	input         key_pressed,
 	input   [7:0] key_code,
-	input  [15:0] joystick_0,
-	input  [15:0] joystick_1,
-	input  [15:0] joystick_2,
-	input  [15:0] joystick_3,
+	input  [19:0] joystick_0,
+	input  [19:0] joystick_1,
+	input  [19:0] joystick_2,
+	input  [19:0] joystick_3,
 
 	// required rotating of controls
 	input         rotate,
@@ -24,36 +24,43 @@ module arcade_inputs(
 
 	// tilt, coin4-1, start4-1
 	output  [8:0] controls,
-	// fire12-1, up, down, left, right
-	output [15:0] player1,
-	output [15:0] player2,
-	output [15:0] player3,
-	output [15:0] player4
+	// up2, down2, left2, right2, fire12-1, up, down, left, right
+	output [19:0] player1,
+	output [19:0] player2,
+	output [19:0] player3,
+	output [19:0] player4
 );
 
 assign controls = { btn_tilt,
                     btn_coin | btn_coin4_mame, btn_coin | btn_coin3_mame, btn_coin | btn_coin2_mame, btn_coin | btn_coin1_mame,
-										btn_four_players | btn_start4_mame, btn_three_players | btn_start3_mame, btn_two_players | btn_start2_mame, btn_one_player | btn_start1_mame };
+                    btn_four_players | btn_start4_mame, btn_three_players | btn_start3_mame, btn_two_players | btn_start2_mame, btn_one_player | btn_start1_mame };
 
-wire [15:0] joy0 = joyswap ? joystick_1 : joystick_0;
-wire [15:0] joy1 = joyswap ? joystick_0 : joystick_1;
-wire [15:0] joy2 = joystick_2;
-wire [15:0] joy3 = joystick_3;
+wire [19:0] joy0 = joyswap ? joystick_1 : joystick_0;
+wire [19:0] joy1 = joyswap ? joystick_0 : joystick_1;
+wire [19:0] joy2 = joystick_2;
+wire [19:0] joy3 = joystick_3;
 
-wire [15:0] p1;
-wire [15:0] p2;
-wire [15:0] p3;
-wire [15:0] p4;
+wire [19:0] p1;
+wire [19:0] p2;
+wire [19:0] p3;
+wire [19:0] p4;
 
 assign p1[15:4] = joy0[15:4] | { 4'h0, btn_fireH,  btn_fireG,  btn_fireF,  btn_fireE,  btn_fireD,  btn_fireC,  btn_fireB,  btn_fireA };
 assign p2[15:4] = joy1[15:4] | { 4'h0, btn_fire2H, btn_fire2G, btn_fire2F, btn_fire2E, btn_fire2D, btn_fire2C, btn_fire2B, btn_fire2A };
 assign p3[15:4] = joy2[15:4];
 assign p4[15:4] = joy3[15:4];
 
-control_rotator r1(joy0[3:0], {btn_up,  btn_down,  btn_left,  btn_right }, rotate, orientation, p1[3:0]);
-control_rotator r2(joy1[3:0], {btn_up2, btn_down2, btn_left2, btn_right2}, rotate, orientation, p2[3:0]);
-control_rotator r3(joy2[3:0], 4'd0, rotate, orientation, p3[3:0]);
-control_rotator r4(joy3[3:0], 4'd0, rotate, orientation, p4[3:0]);
+// Left or only stick
+control_rotator l1(joy0[3:0], {btn_up,  btn_down,  btn_left,  btn_right }, rotate, orientation, p1[3:0]);
+control_rotator l2(joy1[3:0], {btn_up2, btn_down2, btn_left2, btn_right2}, rotate, orientation, p2[3:0]);
+control_rotator l3(joy2[3:0], 4'd0, rotate, orientation, p3[3:0]);
+control_rotator l4(joy3[3:0], 4'd0, rotate, orientation, p4[3:0]);
+
+// Right stick
+control_rotator r1(joy0[19:16], 4'd0, rotate, orientation, p1[19:16]);
+control_rotator r2(joy1[19:16], 4'd0, rotate, orientation, p2[19:16]);
+control_rotator r3(joy2[19:16], 4'd0, rotate, orientation, p3[19:16]);
+control_rotator r4(joy3[19:16], 4'd0, rotate, orientation, p4[19:16]);
 
 assign player1 = oneplayer ? p1 | p2 : p1;
 assign player2 = oneplayer ? p1 | p2 : p2;

@@ -36,7 +36,7 @@ module sd_card (
     output        sd_sdhc,
 
     input         img_mounted,
-    input  [31:0] img_size,
+    input  [63:0] img_size,
 
     output reg    sd_busy = 0,
     // data coming in from io controller
@@ -49,6 +49,9 @@ module sd_card (
     input   [8:0] sd_buff_addr,
 
     // configuration input
+    // in case of a VHD file, this will determine the SD Card type returned to the SPI master
+    // in case of a pass-through, the firmware will display a warning if SDHC is not allowed,
+    // but the card inserted is SDHC
     input         allow_sdhc,
 
     input         sd_cs,
@@ -57,9 +60,9 @@ module sd_card (
     output reg    sd_sdo
 );
 
-wire [31:0] OCR = { 1'b1, sd_sdhc, 6'h0, 9'h1f, 15'h0 };  // bit31 = finished powerup
-                                                          // bit30 = 1 -> high capaciry card (sdhc)
-                                                          // 15-23 supported voltage range
+wire [31:0] OCR = { 1'b1, sdhc, 6'h0, 9'h1f, 15'h0 };  // bit31 = finished powerup
+                                                       // bit30 = 1 -> high capaciry card (sdhc)
+                                                       // 15-23 supported voltage range
 wire [7:0] READ_DATA_TOKEN = 8'hfe;
 
 // number of bytes to wait after a command before sending the reply
@@ -131,12 +134,16 @@ assign     sd_conf = sd_configuring;
 
 reg        sd_configuring = 1;
 reg  [4:0] conf_buff_ptr;
-reg  [7:0] conf_byte;
+reg  [7:0] conf_byte_orig;
 reg[255:0] csdcid;
+
+reg        vhd = 0;
+reg [40:0] vhd_size;
 
 // conf[0]==1 -> io controller is using an sdhc card
 wire sd_has_sdhc = conf[0];
-assign sd_sdhc = allow_sdhc && sd_has_sdhc;
+assign sd_sdhc = (allow_sdhc & sd_has_sdhc) | vhd; // report to user_io
+wire sdhc = allow_sdhc & (sd_has_sdhc | vhd);      // used internally
 
 always @(posedge clk_sys) begin
     reg old_mounted;
@@ -148,21 +155,71 @@ always @(posedge clk_sys) begin
         end
         else csdcid[(31-sd_buff_addr) << 3 +:8] <= sd_buff_dout;
     end
-    conf_byte <= csdcid[(31-conf_buff_ptr) << 3 +:8];
+    conf_byte_orig <= csdcid[(31-conf_buff_ptr) << 3 +:8];
 
     old_mounted <= img_mounted;
     if (~old_mounted & img_mounted) begin
-        // update card size in case of a virtual SD image
-        if (sd_sdhc)
-            // CSD V2.0 size = (c_size + 1) * 512K
-            csdcid[69:48] <= {9'd0, img_size[31:19] } - 1'd1;
-        else begin
-            // CSD V1.0 no. of blocks = c_size ** (c_size_mult + 2)
-            csdcid[49:47] <= 3'd7; //c_size_mult
-            csdcid[73:62] <= img_size[29:18]; //c_size
-        end
+        vhd <= |img_size;
+        vhd_size <= img_size[40:0];
     end
 end
+
+// CSD V1.0 no. of blocks = c_size ** (c_size_mult + 2)
+wire [127:0] csd_sd = {
+    8'h00,                  // CSD_STRUCTURE + reserved
+    8'h2d,                  // TAAC
+    8'd0,                   // NSAC
+    8'h32,                  // TRAN_SPEED
+    12'h5b5,                // CCC
+    4'h9,                   // READ_BL_LEN
+    1'b1, 1'b0, 1'b0, 1'b0, // READ_BL_PARTIAL, WRITE_BLK_MISALIGN, READ_BLK_MISALIGN, DSR_IMP
+    2'd0, vhd_size[29:18],  // reserved + C_SIZE
+    3'b111,                 // VDD_R_CURR_MIN
+    3'b110,                 // VDD_R_CURR_MAX
+    3'b111,                 // VDD_W_CURR_MIN
+    3'b110,                 // VDD_W_CURR_MAX
+    3'd7,                   // C_SIZE_MULT
+    1'b1,                   // ERASE_BLK_EN
+    7'd127,                 // SECTOR_SIZE
+    7'd0,                   // WP_GRP_SIZE
+    1'b0,                   // WP_GRP_ENABLE,
+    2'b00,                  // reserved,
+    3'd5,                   // R2W_FACTOR,
+    4'h9,                   // WRITE_BL_LEN,
+    1'b0,                   // WRITE_BL_PARTIAL,
+    5'd0,                   // reserved,
+    8'd0,
+    7'h67,                  // CRC (wrong, but usually not checked)
+    1'b1 };
+
+// CSD V2.0 size = (c_size + 1) * 512K
+wire [127:0] csd_sdhc = {
+    8'h40,                  // CSD_STRUCTURE + reserved
+    8'h0e,                  // TAAC
+    8'd0,                   // NSAC
+    8'h32,                  // TRAN_SPEED
+    12'h5b5,                // CCC
+    4'h9,                   // READ_BL_LEN
+    1'b0, 1'b0, 1'b0, 1'b0, // READ_BL_PARTIAL, WRITE_BLK_MISALIGN, READ_BLK_MISALIGN, DSR_IMP
+    6'd0,                   // reserved
+    vhd_size[40:19] - 1'd1, // C_SIZE
+    1'b0,                   // reserved
+    1'b1,                   // ERASE_BLK_EN
+    7'd127,                 // SECTOR_SIZE
+    7'd0,                   // WP_GRP_SIZE
+    1'b0,                   // WP_GRP_ENABLE,
+    2'b00,                  // reserved,
+    3'd2,                   // R2W_FACTOR,
+    4'h9,                   // WRITE_BL_LEN,
+    1'b0,                   // WRITE_BL_PARTIAL,
+    5'd0,                   // reserved,
+    8'd0,
+    7'h78,                  // CRC (wrong, but usually not checked)
+    1'b1 };
+
+wire [7:0] conf_byte = (!conf_buff_ptr[4] | !vhd) ? conf_byte_orig : // CID or CSD if not VHD
+                                             sdhc ? csd_sdhc[(15-conf_buff_ptr[3:0]) << 3 +:8] :
+                                                      csd_sd[(15-conf_buff_ptr[3:0]) << 3 +:8];
 
 always@(posedge clk_sys) begin
 
@@ -223,7 +280,7 @@ always@(posedge clk_sys) begin
         RD_STATE_WAIT_BUSY:
         if (~sd_busy) begin
             sd_buff_sel <= 0;
-            sd_lba <= sd_sdhc?args[39:8]:{9'd0, args[39:17]};
+            sd_lba <= sdhc?args[39:8]:{9'd0, args[39:17]};
             sd_rd <= 1;                      // trigger request to io controller
             sd_busy <= 1;
             read_state <= RD_STATE_WAIT_IO;
@@ -501,7 +558,7 @@ always@(posedge clk_sys) begin
         if (~sd_busy) begin
             if (wr_first) begin
                 sd_buff_sel <= 0;
-                sd_lba <= sd_sdhc?args[39:8]:{9'd0, args[39:17]};
+                sd_lba <= sdhc?args[39:8]:{9'd0, args[39:17]};
                 wr_first <= 0;
             end else begin
                 sd_buff_sel <= !sd_buff_sel;

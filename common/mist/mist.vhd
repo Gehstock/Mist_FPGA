@@ -17,21 +17,24 @@ generic(
 	PS2DIV : integer := 100;
 	ROM_DIRECT_UPLOAD : boolean := false;
 	SD_IMAGES: integer := 2;
-	PS2BIDIR : boolean := false
+	PS2BIDIR : boolean := false;
+	FEATURES: std_logic_vector(31 downto 0) := (others=>'0')
 );
 port (
 	clk_sys           : in std_logic;
 	clk_sd            : in std_logic := '0';
 	SPI_CLK, SPI_SS_IO, SPI_MOSI :in std_logic;
 	SPI_MISO          : out std_logic;
-	conf_str          : in std_logic_vector(8*STRLEN-1 downto 0);
+	conf_str          : in std_logic_vector(8*STRLEN-1 downto 0) := (others => '0');
+	conf_addr         : out std_logic_vector(9 downto 0);
+	conf_chr          : in  std_logic_vector(7 downto 0) := (others => '0');
 	joystick_0        : out std_logic_vector(31 downto 0);
 	joystick_1        : out std_logic_vector(31 downto 0);
 	joystick_2        : out std_logic_vector(31 downto 0);
 	joystick_3        : out std_logic_vector(31 downto 0);
 	joystick_4        : out std_logic_vector(31 downto 0);
-	joystick_analog_0 : out std_logic_vector(15 downto 0);
-	joystick_analog_1 : out std_logic_vector(15 downto 0);
+	joystick_analog_0 : out std_logic_vector(31 downto 0);
+	joystick_analog_1 : out std_logic_vector(31 downto 0);
 	status            : out std_logic_vector(63 downto 0);
 	switches          : out std_logic_vector(1 downto 0);
 	buttons           : out std_logic_vector(1 downto 0);

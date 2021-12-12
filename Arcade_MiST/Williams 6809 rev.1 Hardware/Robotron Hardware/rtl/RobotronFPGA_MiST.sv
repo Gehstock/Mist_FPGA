@@ -107,8 +107,8 @@ always @(*) begin
 	begin
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
 		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
-		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
-		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+		JA  = ~{ m_fireD|m_right2|m_rightB, m_fireC|m_left2|m_leftB, m_fireB|m_down2|m_downB, m_fireA|m_up2|m_upB, m_right, m_left, m_down, m_up };
+		JB  = ~{ m_fireD|m_right2|m_rightB, m_fireC|m_left2|m_leftB, m_fireB|m_down2|m_downB, m_fireA|m_up2|m_upB, m_right, m_left, m_down, m_up };
 	end
 	7'h1: // JOUST
 	begin
@@ -121,8 +121,8 @@ always @(*) begin
 		blitter_sc2 = 1;
 		BTN = { m_one_player, m_two_players, m_coin1 | m_coin2, reset };
 		// Fire Up/Down/Left/Right maps to joystick 1/2/3/4 and keyboard R/F/D/G (MAME style)
-		JA  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
-		JB  = ~{ m_fireD|m_right2, m_fireC|m_left2, m_fireB|m_down2, m_fireA|m_up2, m_right, m_left, m_down, m_up };
+		JA  = ~{ m_fireD|m_right2|m_rightB, m_fireC|m_left2|m_leftB, m_fireB|m_down2|m_downB, m_fireA|m_up2|m_upB, m_right, m_left, m_down, m_up };
+		JB  = ~{ m_fireD|m_right2|m_rightB, m_fireC|m_left2|m_leftB, m_fireB|m_down2|m_downB, m_fireA|m_up2|m_upB, m_right, m_left, m_down, m_up };
 	end
 	7'h3: // BUBBLES
 	begin
@@ -225,8 +225,8 @@ pll_aud pll_aud (
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire [19:0] joystick_0;
+wire [19:0] joystick_1;
 wire        scandoublerD;
 wire        no_csync;
 wire        ypbpr;
@@ -487,11 +487,11 @@ always @(posedge clk_sys) begin
 	else if (m_down | m_down2) sin_y <= 1;
 end
 
-// General controls
-wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
-wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
-wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D, m_fire3E, m_fire3F;
-wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B, m_fire4C, m_fire4D, m_fire4E, m_fire4F;
+// Common inputs
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF, m_upB, m_downB, m_leftB, m_rightB;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F, m_up2B, m_down2B, m_left2B, m_right2B;
+wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D, m_fire3E, m_fire3F, m_up3B, m_down3B, m_left3B, m_right3B;
+wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B, m_fire4C, m_fire4D, m_fire4E, m_fire4F, m_up4B, m_down4B, m_left4B, m_right4B;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
@@ -506,10 +506,10 @@ arcade_inputs inputs (
 	.joyswap     ( joyswap     ),
 	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
-	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
-	.player3     ( {m_fire3F, m_fire3E, m_fire3D, m_fire3C, m_fire3B, m_fire3A, m_up3, m_down3, m_left3, m_right3} ),
-	.player4     ( {m_fire4F, m_fire4E, m_fire4D, m_fire4C, m_fire4B, m_fire4A, m_up4, m_down4, m_left4, m_right4} )
+	.player1     ( {m_upB, m_downB, m_leftB, m_rightB, 6'd0, m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     ( {m_up2B, m_down2B, m_left2B, m_right2B, 6'd0, m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} ),
+	.player3     ( {m_up3B, m_down3B, m_left3B, m_right3B, 6'd0, m_fire3F, m_fire3E, m_fire3D, m_fire3C, m_fire3B, m_fire3A, m_up3, m_down3, m_left3, m_right3} ),
+	.player4     ( {m_up4B, m_down4B, m_left4B, m_right4B, 6'd0, m_fire4F, m_fire4E, m_fire4D, m_fire4C, m_fire4B, m_fire4A, m_up4, m_down4, m_left4, m_right4} )
 );
 
 endmodule 
