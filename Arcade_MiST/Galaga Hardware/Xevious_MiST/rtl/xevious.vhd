@@ -36,7 +36,7 @@
 ---------------------------------------------------------------------------------
 --  Features :
 --   TV 15KHz mode only (atm)
---   Cocktail mode : todo 
+--   Cocktail mode : done
 --
 --   Sound ok, Ship explode ok with true mb88 processor
 
@@ -178,6 +178,12 @@ port(
  right          : in std_logic;
  fire           : in std_logic;
  bomb           : in std_logic;
+ up2            : in std_logic;
+ down2          : in std_logic;
+ left2          : in std_logic;
+ right2         : in std_logic;
+ fire2          : in std_logic;
+ bomb2          : in std_logic;
 
  dl_addr        : in std_logic_vector(16 downto 0);
  dl_wr          : in std_logic;
@@ -194,6 +200,9 @@ architecture struct of xevious is
  signal slot            : std_logic_vector(2 downto 0) := (others => '0');
  signal hcnt            : std_logic_vector(8 downto 0);
  signal vcnt            : std_logic_vector(8 downto 0);
+ signal hflip           : std_logic_vector(8 downto 0);
+ signal vflip           : std_logic_vector(8 downto 0);
+ signal bg_mask         : std_logic_vector(8 downto 0);
  signal vblank          : std_logic;
  signal ena_vidgen      : std_logic;
  signal ena_snd_machine : std_logic;
@@ -443,7 +452,7 @@ clock_18n <= not clock_18;
 reset_n   <= not reset;
 
 dip_switch_a <= dipa; -- | cabinet(1) | lives(2)| bonus life(3) | coinage A(2) |
-dip_switch_b <= dipb(7 downto 5) & not bomb & dipb(3 downto 1) & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
+dip_switch_b <= dipb(7 downto 5) & not bomb2 & dipb(3 downto 1) & not bomb; -- |freeze(1)| difficulty(2)| input B(1) | coinage B (2) | Flags bonus life (1) | input A (1) |
 dip_switch_do <= 	dip_switch_a(to_integer(unsigned(ram_bus_addr(3 downto 0)))) & 
 									dip_switch_b(to_integer(unsigned(ram_bus_addr(3 downto 0))));
 
@@ -541,6 +550,10 @@ begin
 	
  end if;
 end process;
+
+hflip <= hcnt when flip_h = '0' else 544 - hcnt;
+vflip <= vcnt when flip_h = '0' else not vcnt;
+bg_mask <= "000000000" when flip_h = '1' else "000000111";
 
 --- SPRITES MACHINE ---
 -----------------------
@@ -758,15 +771,16 @@ end process;
 -- for horizontal offset only 6 msb (8-3) are used to get synchronized with 8 pixels addressing process.
 -- for background the 3 lsb (2-0) will be use to control a shift register to finish horizontal scrolling. 
 -- even in original there is no provision to finish horizontal scrolling for foreground. 
-bg_scan_h    <= hcnt + (bg_offset_hs(8 downto 3) & "000");
-bg_scan_v    <= vcnt +  bg_offset_vs;
+bg_scan_h    <= hflip + 264 + (bg_offset_hs(8 downto 3) & "000") when flip_h = '1' else hflip + (bg_offset_hs(8 downto 3) & "000");
+bg_scan_v    <= vflip - bg_offset_vs when flip_h = '1' else vflip +  bg_offset_vs;
 bg_scan_addr <= bg_scan_v(7 downto 3) & bg_scan_h(8 downto 3);
 
 fg_offset_hs <= fg_offset_h + ('1'&X"77"); --sw(8 downto 0);--('1'&X"77"); -- dbg
 fg_offset_vs <= fg_offset_v + ('0'&X"00"); --sw(17 downto 9);--('0'&X"00"); -- dbg
 
-fg_scan_h    <= hcnt + (fg_offset_hs(8 downto 3) & "000");
-fg_scan_v    <= vcnt +  fg_offset_vs;
+fg_scan_h    <= hflip - (fg_offset_hs(8 downto 3) & "000") - 32 when flip_h = '1' else hflip + (fg_offset_hs(8 downto 3) & "000");
+fg_scan_v    <= vflip - fg_offset_vs + 4 when flip_h = '1' else vcnt + fg_offset_vs;
+
 fg_scan_addr <= fg_scan_v(7 downto 3) & fg_scan_h(8 downto 3);
 	
 process (clock_18, slot24)
@@ -816,19 +830,19 @@ end process;
 -- set bg graphics rom address (external) from bg tile code, vertical bg line with respect to vertical flip
 -- rom data will be latch within bg/fg machine for slot24 = "01011" and slot24 = "10001"  
 with bg_attr_p(7) select
-bg_grphx_addr <= 	bg_attr_p(0) & bg_code_p & bg_scan_v(2 downto 0) when '0',
-									bg_attr_p(0) & bg_code_p & not bg_scan_v(2 downto 0) when others;
+bg_grphx_addr <= bg_attr_p(0) & bg_code_p & bg_scan_v(2 downto 0) when '0',
+                 bg_attr_p(0) & bg_code_p & not bg_scan_v(2 downto 0) when others;
 
 -- set fg graphics rom address (external) from fg tile code, vertical fg line with respect to vertical flip
 -- (flip H is used to access rom horizontal flipped character)
 -- rom data will be latch within bg/fg machine for slot24 = "00101"  
 with fg_attr_p(7) select
-fg_grphx_addr <= 	flip_h & fg_code_p & fg_scan_v(2 downto 0) when '0',
-									flip_h & fg_code_p & not fg_scan_v(2 downto 0) when others; 
+fg_grphx_addr <= flip_h & fg_code_p & fg_scan_v(2 downto 0) when '0',
+                 flip_h & fg_code_p & not fg_scan_v(2 downto 0) when others; 
 
 -- serialize bg graphics (2 bits / pixel)
-bg_bits <= bg_grphx_0(to_integer(unsigned(hcnt(2 downto 0) xor "111"))) &
-					 bg_grphx_1(to_integer(unsigned(hcnt(2 downto 0) xor "111" ))) ;
+bg_bits <= bg_grphx_0(to_integer(unsigned(hcnt(2 downto 0) xor not(flip_h & flip_h & flip_h)))) &
+           bg_grphx_1(to_integer(unsigned(hcnt(2 downto 0) xor not(flip_h & flip_h & flip_h))));
 
 -- serialize fg graphics (1 bit / pixel)
 fg_bit <= fg_grphx(to_integer(unsigned(hcnt(2 downto 0)  xor "111")));
@@ -848,13 +862,12 @@ begin
 		bg_color_delay_5 <= bg_color_delay_5(6 downto 0) & bg_palette_msb_do(1);
 		
 		-- select delay line output to finish bg horizontal scrolling with respect to 3 lsb bits
-		bg_color(0) <= bg_color_delay_0(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		bg_color(1) <= bg_color_delay_1(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		bg_color(2) <= bg_color_delay_2(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		bg_color(3) <= bg_color_delay_3(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		bg_color(4) <= bg_color_delay_4(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		bg_color(5) <= bg_color_delay_5(to_integer(unsigned(not bg_offset_hs(2 downto 0))));
-		
+		bg_color(0) <= bg_color_delay_0(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(1) <= bg_color_delay_1(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(2) <= bg_color_delay_2(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(3) <= bg_color_delay_3(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(4) <= bg_color_delay_4(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(5) <= bg_color_delay_5(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
 		-- set fg color or transparent color with respect to fg serialized graphic bit
 		if fg_bit = '1' then
 			fg_color <= "0"&fg_attr(1 downto 0) & fg_attr(5 downto 2);
@@ -1298,8 +1311,8 @@ port map(
  ena        => cs5Xxx_ena,
 
  r0_port_in  => not left&not down&not right&not up, -- pin 22,23,24,25
- r1_port_in  => x"F", -- pin 26,27,28,29
- r2_port_in  => not start2&not start1&'1'&not fire, -- pin 30,31,32,33
+ r1_port_in  => not left2&not down2&not right2&not up2, -- pin 26,27,28,29
+ r2_port_in  => not start2&not start1&not fire2&not fire, -- pin 30,31,32,33
  r3_port_in  => not b_test&"11"&not coin, -- pin 34,35,36,37
  r0_port_out => open, 
  r1_port_out => open,
