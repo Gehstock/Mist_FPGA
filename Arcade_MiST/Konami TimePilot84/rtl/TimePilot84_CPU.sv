@@ -140,11 +140,12 @@ end
 
 //Konami 082 custom chip - responsible for all video timings
 wire vblk, h1, h2, h4, h8, h16, h32, h64, h128, n_h256, v1, v2, v4, v8, v16, v32, v64, v128;
-wire h1_en, h2_en, h4_en, h8_en, h16_en, h32_en, h64_en, h128_en, n_h256_en;
+wire n_h256_en;
 k082 u6A
 (
+	.reset(1'b1),
 	.clk(clk_49m),
-	.clk_en(pixel_clk_en),
+	.cen(pixel_clk_en),
 	.n_vsync(video_vsync),
 	.sync(video_csync),
 	.n_hsync(video_hsync),
@@ -160,15 +161,6 @@ k082 u6A
 	.h64(h64),
 	.h128(h128),
 	.n_h256(n_h256),
-
-	.h1_en(h1_en),
-	.h2_en(h2_en),
-	.h4_en(h4_en),
-	.h8_en(h8_en),
-	.h16_en(h16_en),
-	.h32_en(h32_en),
-	.h64_en(h64_en),
-	.h128_en(h128_en),
 	.n_h256_en(n_h256_en),
 
 	.v1(v1),

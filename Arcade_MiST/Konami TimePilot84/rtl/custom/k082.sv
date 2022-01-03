@@ -2,7 +2,7 @@
 // 
 //  SystemVerilog implementation of the Konami 082 custom chip, used by
 //  several Konami arcade PCBs to generate video timings
-//  Copyright (C) 2020 Ace
+//  Copyright (C) 2020, 2021 Ace
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@
 //Chip pinout:
 /*        _____________
         _|             |_
-VCC    |_|1          28|_| VCC
+reset  |_|1          28|_| VCC
         _|             |_
 h1     |_|2          27|_| GND
         _|             |_
@@ -56,60 +56,94 @@ clk    |_|13         16|_| vblk
 GND    |_|14         15|_| n_vblk
          |_____________|
 
-Note: Pins 1, 12 and 27 may control other features of the 082 - these, if any, have not
+Note: Pins 12 and 27 may control other features of the 082 - these, if any, have not
 been modelled yet.
 */
 
 module k082
 (
-	input      clk,
-	input      clk_en,
-	output     n_vsync, sync,
-	output     n_hsync, //Not exposed on the original chip
-	output reg vblk = 1,
-	output     n_vblk,
-	output     h1, h2, h4, h8, h16, h32, h64, h128, h256, n_h256,
-	output     v1, v2, v4, v8, v16, v32, v64, v128,
-	output     h1_en, h2_en, h4_en, h8_en, h16_en, h32_en, h64_en, h128_en, h256_en, n_h256_en
+	input       reset, //Active low
+	input       clk,
+	input       cen, //Set to 1 if using this code to replace a real 082
+	input [3:0] h_center, v_center, //These inputs are additions for screen centering and don't exist on the actual 082
+	output      n_vsync, sync,
+	output      n_hsync, //Not exposed on the original chip
+	output reg  vblk = 1,
+	output      n_vblk,
+	output reg  vblk_irq_en = 0, //This is an extra output not present on the real 082 to signal when to
+	                             //trigger a VBlank IRQ (signal is active high)
+	output      h1, h2, h4, h8, h16, h32, h64, h128, h256, n_h256, n_h256_en,
+	output      v1, v2, v4, v8, v16, v32, v64, v128
 );
 
+//The horizontal and vertical counters are 9 bits wide - delcare them here
 reg [8:0] h_cnt = 9'd0;
 reg [8:0] v_cnt = 9'd0;
 
-always_ff @(posedge clk) if (clk_en) begin
-	h_cnt <= h_cnt + 9'd1;
-	case(h_cnt)
-		48: begin
-			v_cnt <= v_cnt + 9'd1;
-		end
-		176: begin
-			case(v_cnt)
-				16: begin
-					vblk <= 0;
-					v_cnt <= v_cnt + 9'd1;
-				end
-				271: begin
-					vblk <= 0;
-					v_cnt <= v_cnt + 9'd1;
-				end
-				495: begin
-					vblk <= 1;
-					v_cnt <= v_cnt + 9'd1;
-				end
-				511: v_cnt <= 9'd248;
-				default: v_cnt <= v_cnt + 9'd1;
-			endcase
-		end
-		511: h_cnt <= 9'd128;
-		default: ;
-	endcase
+//Define the range of values the vertical counter will count between based on the additional vertical center signal
+//Shift the screen up by 1 line when horizontal centering shifts the screen left
+wire [8:0] vcnt_start = 9'd248 - v_center;
+wire [8:0] vcnt_end = 9'd511 - v_center;
+
+//The horizontal and vertical counters behave as follows at every rising edge of the pixel clock:
+//-Start at 0, then count to 511 (both counters increment by 1 when the horizontal counter is set to 48)
+//-Horizontal counter resets to 128 for a total of 383 horizontal lines
+//-Vertical counter resets to 248 for a total of 263 vertical lines (adjustable with added vertical center signal)
+//-Vertical counter increments when the horizontal counter equals 176
+//-VBlank is active when the horizontal counter is between 495 - 511 and 248 - 270
+//Model this behavior here
+always_ff @(posedge clk or negedge reset) begin
+	if(!reset) begin
+		h_cnt <= 9'd0;
+		v_cnt <= 9'd0;
+	end
+	else if(cen) begin
+		case(h_cnt)
+			48: begin
+				v_cnt <= v_cnt + 9'd1;
+				h_cnt <= h_cnt + 9'd1;
+			end
+			176: begin
+				h_cnt <= h_cnt + 9'd1;
+				case(v_cnt)
+					16: begin
+						vblk <= 0;
+						v_cnt <= v_cnt + 9'd1;
+					end
+					271: begin
+						vblk <= 0;
+						v_cnt <= v_cnt + 9'd1;
+					end
+					495: begin
+						vblk <= 1;
+						vblk_irq_en <= 1;
+						v_cnt <= v_cnt + 9'd1;
+					end
+					vcnt_end: v_cnt <= vcnt_start;
+					default: v_cnt <= v_cnt + 9'd1;
+				endcase
+			end
+			177: begin
+				vblk_irq_en <= 0;
+				h_cnt <= h_cnt + 9'd1;
+			end
+			511: h_cnt <= 9'd128;
+			default: h_cnt <= h_cnt + 9'd1;
+		endcase
+	end
 end
 
+//The Konami 082 has both an active low VBlank and an active high VBlank - generate the active low VBlank by inverting
+//the active high VBlank generated in the previous sequential block
 assign n_vblk = ~vblk;
-assign n_hsync = ~(h_cnt > 175 && h_cnt < 208);
-assign n_vsync = v_cnt[8];
+
+//Generate active low HSync, VSync and composite sync
+assign n_hsync = h_center[3] ? ~(h_cnt > (182 - h_center[2:0]) && h_cnt < (215 - h_center[2:0])):
+                               ~(h_cnt > (175 - h_center[2:0]) && h_cnt < (208 - h_center[2:0]));
+assign n_vsync = h_center[3] ? ~(v_cnt >= vcnt_start + 9'd1 && v_cnt <= vcnt_start + 9'd9) : ~(v_cnt >= vcnt_start && v_cnt <= vcnt_start + 9'd8);
 assign sync = n_hsync ^ n_vsync;
 
+//Assign the individual horizontal counter bits to their respective outputs (also invert bit 8 of the horizontal counter for H256)
 assign h1 = h_cnt[0];
 assign h2 = h_cnt[1];
 assign h4 = h_cnt[2];
@@ -120,18 +154,9 @@ assign h64 = h_cnt[6];
 assign h128 = h_cnt[7];
 assign h256 = ~h_cnt[8];
 assign n_h256 = h_cnt[8];
-
-assign h1_en = !h_cnt[0];
-assign h2_en = h_cnt[1:0] == 2'b01;
-assign h4_en = h_cnt[2:0] == 3'b011;
-assign h8_en = h_cnt[3:0] == 4'b0111;
-assign h16_en = h_cnt[4:0] == 5'b01111;
-assign h32_en = h_cnt[5:0] == 6'b011111;
-assign h64_en = h_cnt[6:0] == 7'b0111111;
-assign h128_en = h_cnt[7:0] == 8'b01111111;
-assign h256_en = h_cnt[8:0] == 9'b111111111;
 assign n_h256_en = h_cnt[8:0] == 9'b011111111;
 
+//Assign the individual vertical counter bits to their respective outputs
 assign v1 = v_cnt[0];
 assign v2 = v_cnt[1];
 assign v4 = v_cnt[2];

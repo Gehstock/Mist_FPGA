@@ -225,6 +225,7 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+set_global_assignment -name ALLOW_POWER_UP_DONT_CARE ON
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Gyruss_MiST.sv
 set_global_assignment -name QIP_FILE rtl/pll.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Gyruss.sv
@@ -234,6 +235,7 @@ set_global_assignment -name VERILOG_FILE rtl/jt49_dcrm2.v
 set_global_assignment -name VERILOG_FILE rtl/hiscore.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Gyruss_SND.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Gyruss_CPU.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/KONAMI1.sv
 set_global_assignment -name VERILOG_FILE rtl/Filters/gyruss_lpf.v
 set_global_assignment -name VERILOG_FILE rtl/Filters/gyruss_lpf_medium.v
 set_global_assignment -name VERILOG_FILE rtl/Filters/gyruss_lpf_light.v
@@ -249,5 +251,5 @@ set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/t48/i8039.qip
 set_global_assignment -name QIP_FILE ../../common/Sound/JT49/jt49.qip
 set_global_assignment -name SIGNALTAP_FILE output_files/sndcpu.stp
-set_global_assignment -name ALLOW_POWER_UP_DONT_CARE ON
+set_global_assignment -name VERILOG_FILE ../../common/CPU/MC6809/mc6809is.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
