@@ -17,6 +17,7 @@
 // Revision: 
 // Revision 1.0  - Initial Release
 // Revision 1.0s - Sinchronous version (by Sorgelig)
+// Revision 1.0sk - Add direct injection of KONAMI-1 encrypted opcodes (by Ace)
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
@@ -41,12 +42,14 @@
 
 module mc6809is
 #(
-    parameter ILLEGAL_INSTRUCTIONS="GHOST"
+    parameter ILLEGAL_INSTRUCTIONS="GHOST",
+    parameter IS_KONAMI1="FALSE"
 ) 
 (
     input   CLK,
     input   fallE_en,
     input   fallQ_en,
+    input   [7:0]  OP,
 
     input   [7:0]  D,
     output  [7:0]  DOut,
@@ -452,7 +455,10 @@ wire [7:0] MappedInstruction;
 generate
 if (ILLEGAL_INSTRUCTIONS=="GHOST")
 begin : ghost
-    assign MappedInstruction = MapInstruction(D);  
+  if(IS_KONAMI1=="FALSE") //Modification by Ace: accept opcodes directly for KONAMI-1 CPU
+    assign MappedInstruction = MapInstruction(D);
+  else
+    assign MappedInstruction = MapInstruction(OP);
 end
 else
 begin
