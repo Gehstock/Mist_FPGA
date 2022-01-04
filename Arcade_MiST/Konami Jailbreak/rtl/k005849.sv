@@ -148,23 +148,21 @@ reg hblank = 0;
 reg vblank = 0;
 
 reg frame_odd_even = 0;
-reg hmask = 0;
 always_ff @(posedge CK49) begin
 	if(cen_6m) begin
 		case(h_cnt)
 			5: begin
-				hblank <= 0;
+				hblank <= hmask_en;
 				h_cnt <= h_cnt + 9'd1;
 			end
 			13: begin
-				hmask <= 0;
+				hblank <= 0;
 				h_cnt <= h_cnt + 9'd1;
 			end
 			//Blank the left-most and right-most 8 lines when the 005849's horizontal mask register bit
 			//(register 3 bit 7) is active
 			253: begin
-				if(hmask_en)
-					hmask <= 1;
+				hblank <= hmask_en;
 				h_cnt <= h_cnt + 9'd1;
 			end
 			261: begin
@@ -205,9 +203,9 @@ assign SYNC = HSYC ^ VSYC;
 
 //------------------------------------------------------------- IRQs -----------------------------------------------------------//
 //Edge detection for VBlank and vertical counter bit 5 for IRQ generation
-reg old_vblank, old_vcnt5;
+reg old_vblank, old_vcnt4;
 always_ff @(posedge CK49) begin
-	old_vcnt5 <= v_cnt[5];
+	old_vcnt4 <= v_cnt[4];
 	old_vblank <= vblank;
 end
 
@@ -228,7 +226,7 @@ always_ff @(posedge CK49) begin
 	if(!RES || !nmi_mask)
 		nmi <= 1;
 	else begin
-		if(old_vcnt5 && !v_cnt[5])
+		if(old_vcnt4 && !v_cnt[4])
 		nmi <= 0;
 	end
 end
@@ -410,14 +408,17 @@ dpram_dc #(.widthad_a(12)) VRAM_SPR_SHADOW
 
 //-------------------------------------------------------- Tilemap layer -------------------------------------------------------//
 
-//**The following code is the original tilemap renderer from MiSTerX's Green Beret core with some minor tweaks**//
+//**The following code id based on the original tilemap renderer from MiSTerX's Green Beret core with some minor tweaks**//
+//**Added proper pipelining of external ROM data //**
+
 //XOR horizontal and vertical counter bits with flipscreen bit
 wire [8:0] hcnt_x = h_cnt ^ {9{flipscreen}};
 wire [8:0] vcnt_x = v_cnt ^ {9{flipscreen}};
 
 //Generate tilemap position - horizontal position is the sum of the horizontal counter, vertical position is the vertical counter
 //
-wire [8:0] tilemap_hpos = {h_cnt[8], hcnt_x[7:0]} + (~zram_scroll_dir ? {zram1_D[0], zram0_D} : 9'd0);
+wire [8:0] xscroll = (~zram_scroll_dir ? {zram1_D[0], zram0_D} : 9'd0);
+wire [8:0] tilemap_hpos = {h_cnt[8], hcnt_x[7:0]} + xscroll;
 wire [8:0] tilemap_vpos = vcnt_x + (zram_scroll_dir ? {zram1_D[0], zram0_D} : 9'd0);
 
 //Address output to tile section of VRAM
@@ -431,7 +432,7 @@ wire [10:0] tile_index = {tilemap_bank, tileram_attrib_D[7:6], tileram_code_D};
 wire [3:0] tile_color = tileram_attrib_D[3:0];
 reg  [3:0] tile_color_r, tile_color_rr;
 reg        tile_attrib7_r, tile_attrib7_rr;
-reg        tile_hflip_r;
+reg        tile_hflip_r, tile_hflip_rr;
 reg  [7:0] RD_r;
 
 //Tile flip attributes are stored in bits 4 (horizontal) and 5 (vertical)
@@ -445,36 +446,36 @@ always_ff @(posedge CK49) begin
 			R <= {tile_index, (tilemap_vpos[2:0] ^ {3{tile_vflip}}), (tilemap_hpos[2:1] ^ {2{tile_hflip}})};
 			// Apply appropriate delay to flags
 			tile_hflip_r <= tile_hflip;
+			tile_hflip_rr <= tile_hflip_r;
 			tile_color_r <= tile_color;
 			tile_color_rr <= tile_color_r;
 			tile_attrib7_r <= tileram_attrib_D[7];
 			tile_attrib7_rr <= tile_attrib7_r;
+			// latch tile ROM output
 			RD_r <= RD;
 		end
 	end
 end
 
 //Multiplex tilemap ROM data down from 8 bits to 4 using bit 0 of the horizontal position
-wire [3:0] tile_pixel = (tilemap_hpos[0] ^ tile_hflip_r) ? RD_r[3:0] : RD_r[7:4];
+wire [3:0] tile_pixel = (hcnt_x[0] ^ tile_hflip_rr) ? RD_r[3:0] : RD_r[7:4];
 
 //Retrieve tilemap select bit from the NOR of bit 7 of the tile attributes with the priority override bit
-reg tilemap_en = 0;
-always_ff @(posedge CK49) begin
-	if(cen_6m) begin
-		tilemap_en <= ~(tile_attrib7_rr | tile_priority_override);
-	end
-end
+wire tilemap_force = ~(tile_attrib7_rr | tile_priority_override) & |tilemap_D;
 
 //Address output to tilemap LUT PROM
 assign VCF = tile_color_rr;
 assign VCB = tile_pixel;
+reg [3:0] pix0, pix1;
 
-//Delay tilemap data by one horizontal line
-reg [3:0] tilemap_D = 4'd0;
 always_ff @(posedge CK49) begin
-	if(cen_6m)
-		tilemap_D <= VCD;
+	if(cen_6m) begin
+		pix0 <= VCD;
+		pix1 <= pix0;
+	end
 end
+
+wire [3:0] tilemap_D = xscroll[0] ? pix1 : pix0;
 
 //-------------------------------------------------------- Sprite layer --------------------------------------------------------//
 
@@ -506,14 +507,14 @@ always_ff @(posedge CK49) begin
 					sprite_fsm_state <= 0;
 					//When the sprite Y attribute is set to 0, skip the current sprite, otherwise obtain the sprite Y attribute
 					//and scan out the other sprite attributes
-					else begin
-						if(hy) begin
-							sprite_attrib3 <= spriteram_D;
-							sprite_offset <= 2;
-							sprite_fsm_state <= sprite_fsm_state + 3'd1;
-						end
-						else sprite_index <= sprite_index + 6'd1;
+				else begin
+					if(hy) begin
+						sprite_attrib3 <= spriteram_D;
+						sprite_offset <= 2;
+						sprite_fsm_state <= sprite_fsm_state + 3'd1;
 					end
+					else sprite_index <= sprite_index + 6'd1;
+				end
 				end
 			2: begin
 					sprite_attrib2 <= spriteram_D;
@@ -536,7 +537,8 @@ always_ff @(posedge CK49) begin
 			5: if (S_req == S_ack) begin
 					xcnt <= xcnt + 5'd1;
 					sprite_fsm_state <= wre ? sprite_fsm_state : 3'd1;
-					S_req <= (wre & xcnt[0]) ? !S_req : S_req;
+					// request external memory access in every 4 pixels (16 bits)
+					S_req <= (wre & xcnt[1:0] == 2'b11) ? !S_req : S_req;
 				end
 			default:;
 		endcase
@@ -544,7 +546,7 @@ end
 
 //Subtract sprite attribute byte 2 with bit 7 of sprite attribute byte 1 to obtain sprite X position and XOR with the
 //flipscreen bit
-wire [8:0] sprite_x = ({1'b0, sprite_attrib2} - {sprite_attrib1[7], 8'h00}) ^ {9{flipscreen}};
+wire [8:0] sprite_x = ({1'b0, sprite_attrib2} - {sprite_attrib1[7], 8'h00} + 3'd5) ^ {9{flipscreen}};
 
 //If the sprite state machine is in state 1, obtain sprite Y position directly from sprite RAM, otherwise obtain it from
 //sprite attribute byte 3 and XOR with the flipscreen bit
@@ -573,18 +575,7 @@ assign S = {sprite_code, ly[3], lx[3], ly[2:0], lx[2:1]};
 //Multiplex sprite ROM data down from 8 bits to 4 using bit 0 of the horizontal position
 wire [3:0] sprite_pixel = lx[0] ? SD[3:0] : SD[7:4];
 
-//Latch the sprite bank from bit 3 of register 3 on the rising edge of VSync and XNOR with the added SPFL signal to flip this bit
-//for Green Beret
-//TODO: Find the actual internal register bit (if any) on the 005849 to properly handle this
-reg sprite_bank = 0;
-reg old_vsync;
-always_ff @(posedge CK49) begin
-	old_vsync <= VSYC;
-	if(!VSYC)
-		sprite_bank <= 0;
-	else if(!old_vsync && VSYC)
-		sprite_bank <= ~(reg3[3] ^ SPFL);
-end
+wire sprite_bank = reg3[3] ^ SPFL;
 
 wire [11:0] spriteram_A = {3'b000, sprite_bank, sprite_index, sprite_offset};
 
@@ -654,17 +645,17 @@ end
 //--------------------------------------------------------- Color mixer --------------------------------------------------------//
 
 //Multiplex tile and sprite data, then output the final result
-wire tile_sprite_sel = (tilemap_en | ~(|sprite_D));
-wire [3:0] tile_sprite_D = tile_sprite_sel ? tilemap_D : sprite_D;
+wire tile_bg_sel = tilemap_force | ~(|sprite_D);
+wire [3:0] tile_pix_D = tile_bg_sel ? tilemap_D : sprite_D;
 
 //Latch and output pixel data
 reg [4:0] pixel_D;
 always_ff @(posedge CK49) begin
 	if(cen_6m)
-		pixel_D <= {tile_sprite_sel, tile_sprite_D};
+		pixel_D <= {tile_bg_sel, tile_pix_D};
 end
 //If the horizontal mask is active, black out the left-most and right-most 8 columns to limit the display area to 240x224, otherwise
 //output the full 256x224
-assign COL = hmask ? 5'd0 : pixel_D;
+assign COL = pixel_D;
 
 endmodule

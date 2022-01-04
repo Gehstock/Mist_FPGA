@@ -52,6 +52,7 @@ wire        pause = status[1];
 
 wire  [1:0] orientation = 2'b10;
 wire [23:0] dip_sw = ~status[31:8];
+wire        gberet = core_mod[0];
 
 assign 		LED = ~ioctl_downl;
 assign 		SDRAM_CLK = clock_98;
@@ -124,7 +125,7 @@ data_io data_io(
 	.ioctl_addr    ( ioctl_addr   ),
 	.ioctl_dout    ( ioctl_dout   )
 );
-wire [24:0] bg_ioctl_addr = ioctl_addr - 16'h8000;
+wire [24:0] bg_ioctl_addr = ioctl_addr - 16'hc000;
 
 reg port1_req, port2_req;
 sdram #(98) sdram(
@@ -211,7 +212,9 @@ Jailbreak Jailbreak_inst
 	.p2_joystick({~m_down2 | m_up2, ~m_up2, ~m_right2 | m_left2, ~m_left2}),
 	.p1_buttons({~m_fireB, ~m_fireA}),
 	.p2_buttons({~m_fire2B, ~m_fire2A}),
-	
+
+	.gberet(gberet),
+
 	.dipsw(dip_sw),                      // input [24:0] dipsw
 	
 	.sound(audio),                       // output [15:0] sound

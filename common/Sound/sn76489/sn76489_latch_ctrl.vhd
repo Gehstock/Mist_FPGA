@@ -91,6 +91,7 @@ begin
       reg_q     <= (others => '0');
       we_q      <= false;
       ready_q   <= '0';
+      we_n_d    <= '1';
 
     elsif clock_i'event and clock_i = '1' then
       if clk_en_i then
