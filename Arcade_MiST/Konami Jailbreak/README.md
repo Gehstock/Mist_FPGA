@@ -2,6 +2,8 @@
 
 https://github.com/MiSTer-devel/Arcade-Jailbreak_MiSTer
 
+Green Beret/Mr. Goemon added by Slingshot
+
 ## Usage
 
 - Create ROM and ARC files from the MRA files using the MRA utility.

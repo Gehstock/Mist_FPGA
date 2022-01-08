@@ -253,6 +253,7 @@ set_global_assignment -name VHDL_FILE rtl/VLM5030/vlm5030_pack.vhd
 set_global_assignment -name VHDL_FILE rtl/VLM5030/vlm5030_gl.vhd
 set_global_assignment -name QIP_FILE rtl/pll.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name VERILOG_FILE ../../common/CPU/MC6809/mc6809is.v
 set_global_assignment -name QIP_FILE ../../common/Sound/sn76489/sn76489.qip
 set_global_assignment -name SIGNALTAP_FILE output_files/sdram.stp
