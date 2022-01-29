@@ -453,6 +453,7 @@ mylstar_board mylstar_board
 	.rom_init_address(ioctl_addr),
 	.rom_init_data(ioctl_dout),
 	.nvram_data(ioctl_din),
+	.bgram(core_mod == mod_krull),
 
 	.vflip(flip),
 	.hflip(flip),

@@ -34,6 +34,7 @@ module mylstar_board
   input  [17:0] rom_init_address,
   input   [7:0] rom_init_data,
   output  [7:0] nvram_data,
+  input         bgram, // E11-12 writeable
 
   input vflip,
   input hflip,
@@ -722,7 +723,7 @@ dpram  #(.addr_width(13),.data_width(8)) E11_12 (
   .ce(1'b0),
   //.ce(L10_Q1),
   .oe(1'b0),
-  .we(rom_init ? rom_init_address < 18'h10000 : ~nBOJRWR),
+  .we(rom_init ? rom_init_address < 18'h10000 : bgram & ~nBOJRWR),
   .waddr(rom_init ? rom_init_address : addr[12:0]),
   .wdata(rom_init ? rom_init_data : cpu_dout),
   .doutb(BGRAMROM_Q)
