@@ -25,6 +25,7 @@ module mylstar_board
   output  [5:0] OP2720,
   output  [4:0] OP3337,
   output  [7:0] OP4740,
+  output        trackball_reset, //op1
 
   input   [7:0] dip_switch,
 
@@ -57,6 +58,7 @@ assign blue = G14_Q;
 assign OP2720 = A10[5:0];
 assign OP4740 = A9[7:0];
 assign OP3337 = A8[4:0];
+assign trackball_reset = op1_sel;
 
 reg  CLK5;
 wire IOM;
@@ -127,7 +129,7 @@ end
 //    CPU/RAM/ROM     //
 ////////////////////////
 
-wire [7:0] A1J2 = trackball_sel ? IPA1J2 : 8'd0;
+wire [7:0] A1J2 = (trackball0_sel | trackball1_sel) ? IPA1J2 : 8'd0;
 
 wire [7:0] ram_dout = C5_Q | C6_Q | C7_Q | C9_10_Q | C8_9_Q | C10_11_Q;
 wire [7:0] rom_dout;
@@ -220,18 +222,20 @@ always @(*) begin: B9
 		endcase
 end
 
-reg dip_sel, IP1710_sel, IP4740_sel, trackball_sel;
+reg dip_sel, IP1710_sel, IP4740_sel, trackball0_sel, trackball1_sel;
 always @(*) begin : B10
 	// IO read selects
 	dip_sel = 0;
 	IP1710_sel = 0;
 	IP4740_sel = 0;
-	trackball_sel = 0;
+	trackball0_sel = 0;
+	trackball1_sel = 0;
 	if (~RD_n & ram_io_ce & addr[12:11] == 2'b11 & ~addr[3])
 		case (addr[2:0])
 			3'd0: dip_sel = 1;
 			3'd1: IP1710_sel = 1;
-			3'd2: trackball_sel = 1;
+			3'd2: trackball0_sel = 1;
+			3'd3: trackball1_sel = 1;
 			3'd4: IP4740_sel = 1;
 			default: ;
 		endcase

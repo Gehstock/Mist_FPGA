@@ -106,17 +106,28 @@ localparam mod_curvebal = 4;
 localparam mod_tylz     = 5;
 localparam mod_insector = 6;
 
-wire [5:0] OP2720;
-wire [7:0] IP1710;
-wire [7:0] IP4740;
-wire [7:0] IPA1J2;
+wire  [7:0] spinner_pos;
+wire        spinner_reset;
+spinner spinner (
+	.clock_40(clk_sys),
+	.reset(spinner_reset),
+	.btn_left(m_fireC | m_leftB),
+	.btn_right(m_fireD | m_rightB),
+	.ctc_zc_to_2(vb),
+	.spin_angle(spinner_pos)
+);
+
+reg  [5:0] OP2720;
+reg  [7:0] IP1710;
+reg  [7:0] IP4740;
+reg  [7:0] IPA1J2;
 
 always @(*) begin
 
-	IPA1J2 <= 8'd0;
-	IP4740 <= 8'd0;
+	IPA1J2 = 8'd0;
+	IP4740 = 8'd0;
 
-	IP1710 <= {
+	IP1710 = {
 		m_fireA, // test 1
 		~service,      // test 2
 		2'b0,
@@ -127,7 +138,7 @@ always @(*) begin
 	};
 
 	if (~diagonal) begin
-		IP4740 <= {
+		IP4740 = {
 			m_down2,
 			m_up2,
 			m_left2,
@@ -138,7 +149,7 @@ always @(*) begin
 			m_right
 		};
 	end else begin
-		IP4740 <= {
+		IP4740 = {
 			m_down2 & m_left2,  // down + left
 			m_up2 & m_right2,   // up + right
 			m_left2 & m_up2,    // left + up
@@ -161,7 +172,7 @@ always @(*) begin
 
 		mod_mplanets:
 		begin
-			IP1710 <= {
+			IP1710 = {
 				~service,    // test 2
 				m_fireA, // test 1
 				4'd0,
@@ -169,7 +180,7 @@ always @(*) begin
 				m_coin1
 			};
 
-			IP4740 <= {
+			IP4740 = {
 				m_fireB,// button 2
 
 				m_two_players, // p2
@@ -182,12 +193,12 @@ always @(*) begin
 				m_up
 			};
 
-			//IPA1J2 <= spinner_0[7:0];
+			IPA1J2 = spinner_pos;
 		end
 
 		mod_krull:
 		begin
-			IP1710 <= {
+			IP1710 = {
 				m_two_players,
 				m_one_player,
 				2'b00,
@@ -196,7 +207,7 @@ always @(*) begin
 				m_fireA, // select in test mode
 				~service
 			};
-			IP4740 <= {
+			IP4740 = {
 				m_left, // left joystick
 				m_down,
 				m_right,
@@ -210,7 +221,7 @@ always @(*) begin
 
 		mod_curvebal:
 		begin
-			IP1710 <= {
+			IP1710 = {
 				4'd0,
 				m_coin2,
 				m_coin1, // coin 1
@@ -218,7 +229,7 @@ always @(*) begin
 				~service,    // test 2
 			};
 
-			IP4740 <= {
+			IP4740 = {
 				1'b0, // n/a
 				m_fireD | m_down, // bunt
 				1'b0, // n/a
@@ -232,7 +243,7 @@ always @(*) begin
 
 		mod_tylz:
 		begin
-			IP1710 <= { // IN1
+			IP1710 = { // IN1
 				4'd0,
 				m_coin1,
 				m_coin2,
@@ -240,7 +251,7 @@ always @(*) begin
 				~service
 			};
 
-			IP4740 <= { // IN4
+			IP4740 = { // IN4
 				1'b0,
 				m_two_players, // p2
 				m_one_player,  // p1
@@ -255,7 +266,7 @@ always @(*) begin
 
 		mod_insector:
 		begin
-			IP1710 <= { // IN1
+			IP1710 = { // IN1
 				1'b0,
 				~service,
 				m_fire2B,
@@ -266,7 +277,7 @@ always @(*) begin
 				m_fireA
 			};
 
-			IP4740 <= { // IN4
+			IP4740 = { // IN4
 				m_left2,
 				m_down2,
 				m_right2,
@@ -444,6 +455,7 @@ mylstar_board mylstar_board
 	.IPA1J2(IPA1J2),
 	.OP2720(OP2720),
 	.OP3337(),
+	.trackball_reset(spinner_reset),
 
 	.dip_switch(dip_sw),
 
