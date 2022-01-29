@@ -448,11 +448,11 @@ assign VV = {8{VERTFLOP}} ^ {D16_S, Vlatch[3:0]};
 //  Foreground objects  //
 //////////////////////////
 
-wire [7:0] E1_2_dout;
-assign E1_2_Q = ~E1_2_dout;
 
 wire [5:0] FGREG_addr = H[5:0];
 
+wire [7:0] E1_2_dout;
+assign E1_2_Q = ~(E1_2_dout - {hflip, 3'd0});
 //vertical position reg
 dpram #(.addr_width(10),.data_width(8)) E1_2(
   .clk(clk_sys),
@@ -467,7 +467,7 @@ dpram #(.addr_width(10),.data_width(8)) E1_2(
 
 wire [7:0] E2_3_dout;
 assign E2_3_Q = ~E2_3_dout;
-//horizontal position reg
+//object select reg
 dpram #(.addr_width(10),.data_width(8)) E2_3(
   .clk(clk_sys),
   .addr(FGREG_addr),
@@ -480,8 +480,8 @@ dpram #(.addr_width(10),.data_width(8)) E2_3(
 );
 
 wire [7:0] E4_dout;
-assign E4_Q = ~E4_dout;
-//object select reg
+assign E4_Q = ~(E4_dout + {vflip, 2'd0});
+//horizontal position reg
 dpram #(.addr_width(10),.data_width(8)) E4(
   .clk(clk_sys),
   .addr(FGREG_addr),
