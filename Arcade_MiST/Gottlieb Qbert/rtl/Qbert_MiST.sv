@@ -373,11 +373,11 @@ sdram #(80) sdram(
 	.port1_ack     ( ),
 	.port1_a       ( ioctl_addr[23:1] ),
 	.port1_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
-	.port1_we      ( ioctl_downl ),
+	.port1_we      ( rom_init ),
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, main_rom_addr[15:1]} ),
+	.cpu1_addr     ( rom_init ? 16'hffff : {1'b0, main_rom_addr[15:1]} ),
 	.cpu1_q        ( main_rom_do ),
 	.cpu2_addr     ( 16'hffff ),
 	.cpu2_q        ( ),
@@ -387,11 +387,11 @@ sdram #(80) sdram(
 	.port2_ack     ( ),
 	.port2_a       ( {bg_ioctl_addr[13:0], bg_ioctl_addr[15]} ), // merge fg roms to 32-bit wide words
 	.port2_ds      ( {bg_ioctl_addr[14], ~bg_ioctl_addr[14]} ),
-	.port2_we      ( ioctl_downl ),
+	.port2_we      ( rom_init ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 14'h3fff : bg_addr ),
+	.sp_addr       ( rom_init ? 14'h3fff : bg_addr ),
 	.sp_q          ( bg_do )
 );
 
@@ -400,7 +400,7 @@ always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
 
 	ioctl_wr_last <= ioctl_wr;
-	if (ioctl_downl) begin
+	if (rom_init) begin
 		if (~ioctl_wr_last && ioctl_wr) begin
 			port1_req <= ~port1_req;
 			port2_req <= ~port2_req;
