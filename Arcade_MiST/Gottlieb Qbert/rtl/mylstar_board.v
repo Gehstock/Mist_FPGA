@@ -21,7 +21,7 @@ module mylstar_board
 
   input   [7:0] IP1710,
   input   [7:0] IP4740,
-  input   [7:0] IPA1J2,
+  input  [15:0] IPA1J2,
   output  [5:0] OP2720,
   output  [4:0] OP3337,
   output  [7:0] OP4740,
@@ -129,7 +129,8 @@ end
 //    CPU/RAM/ROM     //
 ////////////////////////
 
-wire [7:0] A1J2 = (trackball0_sel | trackball1_sel) ? IPA1J2 : 8'd0;
+wire [7:0] A1J2 = trackball0_sel ? IPA1J2[15:8] : 
+                  trackball1_sel ? IPA1J2[7:0] : 8'd0;
 
 wire [7:0] ram_dout = C5_Q | C6_Q | C7_Q | C9_10_Q | C8_9_Q | C10_11_Q;
 wire [7:0] rom_dout;

@@ -10,9 +10,10 @@
 	<rbf>qbert</rbf>
 	<buttons names="Swing,Start 1P,Start 2P,Coin,Service Select,Bunt,Pitch Left,Pitch Right" default="A,Start,Select,R,L,X,B,Y"/>
 	<switches default="01"  page_id="1" page_name="Switches" base="16">
-		<dip bits="3" name="2 player game" ids="1 credit,2 credits"></dip>
-		<dip bits="5,6" name="Difficulty" ids="Easy,Hard,Medium,Vey Hard"></dip>
-		<dip bits="2" name="Demo Sounds" ids="Off,On"></dip>
+		<dip bits="0" name="Difficulty" ids="Easy,Hard"/>
+		<dip bits="3" name="2 player game" ids="1 credit,2 credits"/>
+		<dip bits="2" name="Demo Sounds" ids="Off,On"/>
+		<dip bits="5" name="Coin Options" ids="Normal,French"/>
 	</switches>
 	<rom index="1">
 		<part>4</part>
