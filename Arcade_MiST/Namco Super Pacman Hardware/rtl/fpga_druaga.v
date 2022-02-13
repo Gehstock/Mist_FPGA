@@ -41,8 +41,6 @@ module fpga_druaga
     input           FLIP_SCREEN
 );
 
-parameter [2:0] SUPERPAC=3'd5;
-
 // Clock Generator
 reg [4:0] CLKS;
 
@@ -79,7 +77,7 @@ wire [10:0]     vram_a;
 wire [15:0]     vram_d;
 wire [6:0]      spra_a;
 wire [23:0]     spra_d;
-MEMS #(.SUPERPAC(SUPERPAC)) mems
+MEMS mems
 (
     MCLK,
     CLKCPUx2,
@@ -101,7 +99,7 @@ wire SCPU_IRQ, SCPU_IRQEN;
 wire SCPU_RESET, IO_RESET;
 wire PSG_ENABLE;
 
-REGS #(.SUPERPAC(SUPERPAC)) regs
+REGS regs
 (
     CLKCPUx2, RESET, oVB,
     MCPU_ADRS, MCPU_VMA, MCPU_WE,
@@ -117,7 +115,7 @@ REGS #(.SUPERPAC(SUPERPAC)) regs
 
 // I/O Controler
 wire IsMOTOS;
-IOCTRL #(.SUPERPAC(SUPERPAC)) ioctrl(
+IOCTRL ioctrl(
     CLKCPUx2, oVB, IO_RESET, MCPU_CS_IO, MCPU_WE, MCPU_ADRS[5:0],
     MCPU_DO,
     IO_O,
@@ -241,8 +239,7 @@ module MEMS
     input  [2:0]    MODEL
 );
 
-parameter [2:0] SUPERPAC=3'd5;
-parameter [2:0] GROBDA=3'd6;
+`include "param.v"
 
 wire [7:0] mrom_d, srom_d;
 //DLROM #(15,8) mcpui( CPUCLKx2, MCPU_ADRS[14:0], mrom_d, ROMCL,ROMAD[14:0],ROMDT,ROMEN & (ROMAD[16:15]==2'b0_0));
@@ -266,7 +263,7 @@ wire mrom_cs  = ( MCPU_ADRS[15] ) & MCPU_VMA;    // $8000-$FFFF
 
 always @(*) begin
     cram_ad = mram_ad;
-    if( MODEL == SUPERPAC || MODEL == GROBDA) begin
+    if( MODEL == SUPERPAC || MODEL == GROBDA || MODEL == PACNPAL) begin
         mram_cs0 = ( MCPU_ADRS[15:10] == 6'b000000 ) && MCPU_VMA;    // $0000-$03FF
         mram_cs1 = ( MCPU_ADRS[15:10] == 6'b000001 ) && MCPU_VMA;    // $0400-$07FF
         mram_cs2 = ( MCPU_ADRS[15:11] == 5'b00001  ) && MCPU_VMA;    // $1000-$17FF
@@ -352,16 +349,14 @@ module REGS
     input  [2:0]        MODEL
 );
 
-parameter [2:0] SUPERPAC=3'd5;
-parameter [2:0] GROBDA=3'd6;
-
+`include "param.v"
 // BG Scroll Register
 wire    MCPU_SCRWE = ( ( MCPU_ADRS[15:11] == 5'b00111 ) & MCPU_VMA & MCPU_WE );
 
 always @ ( negedge MCPU_CLK or posedge RESET ) begin
     if ( RESET ) SCROLL <= 8'h0;
     else begin
-        if( MODEL==SUPERPAC || MODEL==GROBDA)
+        if( MODEL==SUPERPAC || MODEL==GROBDA || MODEL==PACNPAL)
             SCROLL <= 8'd0;
         else if ( MCPU_SCRWE )
             SCROLL <= MCPU_ADRS[10:3];

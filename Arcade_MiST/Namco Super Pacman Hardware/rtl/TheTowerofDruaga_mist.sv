@@ -66,7 +66,7 @@ always @(*) begin
 	DSW2 = 0;
 
 	case (core_mod)
-	7'h0, 7'h1, 7'h3, 7'h6: // DRUAGA, DIGDUG2, GROBDA
+	7'h0, 7'h1, 7'h3: // DRUAGA, DIGDUG2
 	begin
 		DSW0 = status[15:8];
 		DSW1 = status[23:16];
@@ -78,6 +78,13 @@ always @(*) begin
 		DSW1 = status[23:16];
 		DSW2 = { {2{status[27:24]}} };
 	end
+	7'h6: // GROBDA
+	begin
+		DSW0 = status[15:8];
+		DSW1 = {status[23:22], m_fire2B, m_fireB, status[19:16]};
+		DSW2 = status[31:24];
+	end
+
 	default:
 	begin
 		DSW0 = status[15:8];
@@ -112,8 +119,6 @@ wire        no_csync;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-
-// assign core_mod=7'd5;
 
 user_io #(.STRLEN($size(CONF_STR)>>3))user_io(
 	.clk_sys        (clock_48       ),
