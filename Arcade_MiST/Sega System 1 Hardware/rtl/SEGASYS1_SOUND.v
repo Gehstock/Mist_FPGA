@@ -1,6 +1,6 @@
 // Copyright (c) 2017,19 MiSTer-X
 
-`define EN_SCPU	(ROMAD[17:13]==5'b00_110)	// $0C000-$0DFFF
+`define EN_SCPU        (ROMAD[18:15]==4'b000_0) // $0-$7fff
 
 module SEGASYS1_SOUND
 (
@@ -12,7 +12,7 @@ module SEGASYS1_SOUND
 
 	output [15:0] sndout,
 
-	output [12:0] snd_rom_addr,
+	output [14:0] snd_rom_addr,
 	input   [7:0] snd_rom_do
 );
 
@@ -24,7 +24,7 @@ wire clk8M_en,clk4M_en,clk2M_en;
 SndClkGen clkgen(clk40M,clk8M_en,clk4M_en,clk2M_en);
 
 //----------------------------------
-//  Z80 (1.5625MHz)
+//  Z80 (4MHz)
 //----------------------------------
 wire [15:0] cpu_ad;
 wire  [7:0] cpu_di, cpu_do;
@@ -59,7 +59,7 @@ wire  [7:0]		rom_dt;		// ROM
 wire  [7:0]		ram_do;		// RAM
 wire  [7:0]		comlatch;	// Sound Command Latch
 
-assign snd_rom_addr = cpu_ad[12:0];
+assign snd_rom_addr = cpu_ad[14:0];
 assign rom_dt = snd_rom_do;
 
 //DLROM #(13,8) subir( cpuclkx2, cpu_ad[12:0], rom_dt, ROMCL,ROMAD,ROMDT,ROMEN & `EN_SCPU );

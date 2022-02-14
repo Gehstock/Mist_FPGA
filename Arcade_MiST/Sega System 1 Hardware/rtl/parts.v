@@ -155,52 +155,66 @@ endmodule
 //----------------------------------
 module VRAMs
 (
-	input					clk0,
-	input       [9:0]	adr0,
-	output reg  [7:0]	dat0,
-	input       [7:0]	dtw0,
-	input					wen0,
+	input              clk,
+	input      [12:0]  adr0,
+	output reg  [7:0]  dat0,
+	input       [7:0]  dtw0,
+	input              wen0,
 
-	input					clk1,
-	input       [9:0]	adr1,
-	output reg  [7:0]	dat1
+	input      [12:0]  adr1,
+	output reg  [7:0]  dat1,
+
+	input      [12:0]  adr2,
+	output reg  [7:0]  dat2
 );
 
-reg [7:0] core [0:1023];
+reg   [7:0] core ['h2000];
 
-always @( posedge clk0 ) begin
+reg         sel;
+reg  [12:0] adr;
+reg   [7:0] dat;
+
+always @( posedge clk ) begin
 	if (wen0) core[adr0] <= dtw0;
-	else dat0 <= core[adr0];
+	dat0 <= core[adr0];
+
+	adr <= sel ? adr1 : adr2;
+	dat <= core[adr];
 end
 
-always @( posedge clk1 ) begin
-	dat1 <= core[adr1];
+always @( posedge clk ) begin
+	sel <= ~sel;
+	if (sel) dat1 <= dat; else dat2 <= dat;
 end
 
 endmodule
 
 module VRAM
 (
-	input					clk0,
-	input     [10:0]	adr0,
-	output     [7:0]	dat0,
-	input      [7:0]	dtw0,
-	input					wen0,
+	input            clk,
+	input    [13:0]  adr0,
+	output    [7:0]  dat0,
+	input     [7:0]  dtw0,
+	input            wen0,
 
-	input					clk1,
-	input       [9:0]	adr1,
-	output     [15:0]	dat1
+	input    [12:0]  adr1,
+	output   [15:0]  dat1,
+	input    [12:0]  adr2,
+	output   [15:0]  dat2
 );
 
 wire even = ~adr0[0];
 wire  odd =  adr0[0];
 
-wire [7:0] do00, do01, do10, do11;
-VRAMs ram0( clk0, adr0[10:1], do00, dtw0, wen0 & even, clk1, adr1, do10 );
-VRAMs ram1( clk0, adr0[10:1], do01, dtw0, wen0 &  odd, clk1, adr1, do11 );
+wire [7:0] do00, do01, do10, do11, do20, do21;
+VRAMs ram0(clk, adr0[13:1], do00, dtw0, wen0 & even,
+           adr1, do10, adr2, do20);
+VRAMs ram1(clk, adr0[13:1], do01, dtw0, wen0 &  odd,
+           adr1, do11, adr2, do21);
 
-assign dat0 = adr0[0] ? do01 : do00;
+assign dat0 = odd ? do01 : do00;
 assign dat1 = { do11, do10 };
+assign dat2 = { do21, do20 };
 
 endmodule
 

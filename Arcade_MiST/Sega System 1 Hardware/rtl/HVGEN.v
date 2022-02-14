@@ -6,9 +6,9 @@ module HVGEN
 	output  [8:0] VPOS,
 	input         CLK,
 	input         PCLK_EN,
-	input  [14:0] iRGB,
+	input  [11:0] iRGB,
 
-	output reg [14:0]	oRGB,
+	output reg [11:0]	oRGB,
 	output reg        HBLK = 1,
 	output reg        VBLK = 1,
 	output reg        HSYN = 1,
