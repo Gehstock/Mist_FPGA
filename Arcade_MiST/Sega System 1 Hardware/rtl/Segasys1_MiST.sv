@@ -52,7 +52,7 @@ always @(*) begin
 	INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireB,m_fireA,m_fireC};
 	INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2B,m_fire2A,m_fire2C};
 	INP2 = ~{2'b00,m_two_players, m_one_player,3'b000, m_coin1};
-	if (core_mod[4]) begin
+	if (core_mod[5]) begin
 		// Block Gal
 		INP0 = ~spin[8:1];
 		INP1 = ~spin[8:1];

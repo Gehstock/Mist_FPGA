@@ -66,6 +66,8 @@
 -- -------
 --
 -- Choplifter
+-- Toki no Senshi - Chrono Soldier
+-- Ufo Senshi Yohko Chan
 -- Wonder Boy in Monster Land
 --
 --
@@ -76,6 +78,4 @@
 -- 119
 -- Senryaku Game Bopeep
 -- Shooting Master
--- Toki no Senshi - Chrono Soldier
--- Ufo Senshi Yohko Chan
 -- Warball
