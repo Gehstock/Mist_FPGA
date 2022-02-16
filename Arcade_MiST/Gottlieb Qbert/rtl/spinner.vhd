@@ -36,8 +36,8 @@ begin
 				if btn_left = '1' then spin_count <= spin_count - 3; end if; -- left
 				if btn_right = '1' then spin_count <= spin_count + 3; end if; -- right
 			else
-				if btn_left = '1' then spin_count <= spin_count - 55; end if;
-				if btn_right = '1' then spin_count <= spin_count + 55; end if;
+				if btn_left = '1' then spin_count <= spin_count - 15; end if;
+				if btn_right = '1' then spin_count <= spin_count + 15; end if;
 			end if;
 		end if;
 	end if;

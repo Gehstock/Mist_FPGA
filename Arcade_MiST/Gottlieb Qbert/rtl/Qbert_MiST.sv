@@ -55,7 +55,7 @@ wire        flip = status[7];
 wire        service = status[8];
 wire        diagonal = status[9];
 
-wire  [1:0] orientation = {flip, core_mod != mod_tylz && core_mod != mod_insector};
+wire  [1:0] orientation = {flip, core_mod != mod_tylz && core_mod != mod_insector && core_mod != mod_kngtmare && core_mod != mod_argus};
 wire  [7:0] dip_sw = status[23:16];
 
 assign 		LED = ~ioctl_downl;
@@ -105,9 +105,12 @@ localparam mod_krull    = 3;
 localparam mod_curvebal = 4;
 localparam mod_tylz     = 5;
 localparam mod_insector = 6;
+localparam mod_argus    = 7;
+localparam mod_kngtmare = 8;
 
-wire  [7:0] spinner_pos;
 wire        spinner_reset;
+// Mad Planets spinner
+wire  [7:0] spinner_pos;
 spinner spinner (
 	.clock_40(clk_sys),
 	.reset(spinner_reset),
@@ -117,14 +120,36 @@ spinner spinner (
 	.spin_angle(spinner_pos)
 );
 
+// Argus trackball
+wire  [15:0] trackball_pos;
+spinner spinnerX (
+	.clock_40(clk_sys),
+	.reset(spinner_reset),
+	.btn_left(m_left),
+	.btn_right(m_right),
+	.btn_acc(1'b1),
+	.ctc_zc_to_2(vb),
+	.spin_angle(trackball_pos[15:8])
+);
+
+spinner spinnerY (
+	.clock_40(clk_sys),
+	.reset(spinner_reset),
+	.btn_left(m_up),
+	.btn_right(m_down),
+	.btn_acc(1'b1),
+	.ctc_zc_to_2(vb),
+	.spin_angle(trackball_pos[7:0])
+);
+
 reg  [5:0] OP2720;
 reg  [7:0] IP1710;
 reg  [7:0] IP4740;
-reg  [7:0] IPA1J2;
+reg [15:0] IPA1J2;
 
 always @(*) begin
 
-	IPA1J2 = 8'd0;
+	IPA1J2 = 16'd0;
 	IP4740 = 8'd0;
 
 	IP1710 = {
@@ -193,7 +218,7 @@ always @(*) begin
 				m_up
 			};
 
-			IPA1J2 = spinner_pos;
+			IPA1J2 = {spinner_pos, spinner_pos};
 		end
 
 		mod_krull:
@@ -289,6 +314,48 @@ always @(*) begin
 				m_up
 			};
 		end
+
+		mod_argus:
+		begin
+			IP1710 = { // IN1
+				4'h0,
+				m_coin2,
+				m_coin1,
+				m_fireA,
+				~service
+			};
+
+			IP4740 = { // IN4
+				4'h0,
+				m_fire2A,
+				m_fire2B,
+				m_fireA,
+				m_fireB
+			};
+			IPA1J2 = trackball_pos;
+		end
+
+		mod_kngtmare:
+		begin
+			IP1710 = { // IN1
+				4'h0,
+				m_coin2,
+				m_coin1,
+				2'b00
+			};
+
+			IP4740 = { // IN4
+				m_two_players,
+				m_one_player,
+				m_fireB,
+				m_fireA,
+				m_rightB | m_right2,
+				m_left,
+				m_leftB | m_left2,
+				m_right
+			};
+		end
+
 		default:
 		begin
 		end
@@ -465,7 +532,7 @@ mylstar_board mylstar_board
 	.rom_init_address(ioctl_addr),
 	.rom_init_data(ioctl_dout),
 	.nvram_data(ioctl_din),
-	.bgram(core_mod == mod_krull),
+	.bgram(core_mod == mod_krull || core_mod == mod_argus),
 
 	.vflip(flip),
 	.hflip(flip),

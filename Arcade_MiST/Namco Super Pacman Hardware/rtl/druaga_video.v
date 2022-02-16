@@ -35,8 +35,7 @@ module DRUAGA_VIDEO
     input           FLIP_SCREEN
 );
 
-parameter [2:0] SUPERPAC=3'd5;
-parameter [2:0] GROBDA=3'd6;
+`include "param.v"
 
 wire [8:0] HPOS = PH-8'd16;
 wire [8:0] VPOS = PV;
@@ -91,11 +90,11 @@ always @ ( posedge VCLKx8 ) begin
 end
 
 
-assign CLT0_A = BGPN ^ ( (MODEL==SUPERPAC || MODEL==GROBDA) ? 8'h0 : 8'h03 );
-assign VRAM_A = VRAMADRS & ( (MODEL==SUPERPAC || MODEL==GROBDA) ? 11'h3FF : 11'h7FF );
+assign CLT0_A = BGPN ^ ( (MODEL==SUPERPAC || MODEL==GROBDA || MODEL==PACNPAL) ? 8'h0 : 8'h03 );
+assign VRAM_A = VRAMADRS & ( (MODEL==SUPERPAC || MODEL==GROBDA || MODEL==PACNPAL) ? 11'h3FF : 11'h7FF );
 
 wire            BGHI  = BGH & (CLT0_D!=4'd15);
-wire    [4:0]   BGCOL = { 1'b1, ((MODEL==SUPERPAC || MODEL==GROBDA) ? ~CLT0_D :CLT0_D) };
+wire    [4:0]   BGCOL = { 1'b1, ((MODEL==SUPERPAC || MODEL==GROBDA || MODEL==PACNPAL) ? ~CLT0_D :CLT0_D) };
 
 always @(*) begin
     COL  = HPOS[8:3] ^ {5{FLIP_SCREEN}};
@@ -103,7 +102,7 @@ always @(*) begin
     // rather than the original circuit count.
     ROW = (VPOS[8:3] + 6'h2) ^ {5{FLIP_SCREEN}};
 
-    if( MODEL==SUPERPAC  || MODEL==GROBDA ) begin
+    if( MODEL==SUPERPAC  || MODEL==GROBDA || MODEL==PACNPAL) begin
         VRAMADRS = { 1'b0,
                       COL[5] ? {COL[4:0], ROW[4:0]} :
                                {ROW[4:0], COL[4:0]}
@@ -119,7 +118,7 @@ end
 //----------------------------------------
 wire    [4:0] SPCOL;
 
-DRUAGA_SPRITE #(.SUPERPAC(SUPERPAC)) spr
+DRUAGA_SPRITE spr
 (
     VCLKx8, VCLK_EN,
     HPOS, VPOS, oHB,

@@ -32,6 +32,7 @@ module Segasys1_MiST(
 `include "rtl/build_id.v" 
 
 `define CORE_NAME "FLICKY"
+
 localparam CONF_STR = {
 	`CORE_NAME,";ROM;",
 	"O2,Rotate Controls,Off,On;",
@@ -51,6 +52,12 @@ always @(*) begin
 	INP0 = ~{m_left, m_right,m_up, m_down,1'b0,m_fireB,m_fireA,m_fireC};
 	INP1 = ~{m_left2,m_right2,m_up2, m_down2,1'b0,m_fire2B,m_fire2A,m_fire2C};
 	INP2 = ~{2'b00,m_two_players, m_one_player,3'b000, m_coin1};
+	if (core_mod[5]) begin
+		// Block Gal
+		INP0 = ~spin[8:1];
+		INP1 = ~spin[8:1];
+		INP2 = ~{m_fire2A | |mouse_flags[2:0], m_fireA | |mouse_flags[2:0], m_two_players, m_one_player, 2'b00, m_coin2, m_coin1};
+	end else
 	if (core_mod[3]) begin
 		//WaterMatch
 		INP0 = ~{m_left, m_right, m_up, m_down, m_left2,m_right2,m_up2,m_down2};
@@ -59,11 +66,22 @@ always @(*) begin
 	end
 end
 
+wire signed [8:0] spin;
+wire signed [8:0] spin_next = spin + mouse_x;
+always @(posedge clk_sys) begin
+	if (mouse_strobe) begin
+		if (spin[8] != mouse_x[8] || spin[8] == spin_next[8])
+			spin <= spin_next;
+		else
+			spin <= {spin[8], {8{~spin[8]}}};
+	end
+end
+
 wire  [7:0] DSW0 = status[15: 8];
 wire  [7:0] DSW1 = status[23:16];
 
-wire  [6:0] core_mod;  // [0]=SYS1/SYS2,[1]=H/V,[2]=H256/H240,[3]=4controllers
-wire  [1:0] orientation = { 1'b0, core_mod[1] };
+wire  [6:0] core_mod;  // [0]=SYS1/SYS2,[1]=H/V,[2]=H256/H240,[3]=4controllers,[4]=CW/CCW,[5]=spinner,[6]=SYS2 rowscroll,
+wire  [1:0] orientation = { core_mod[4], core_mod[1] };
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = sdram_clk;
@@ -89,6 +107,10 @@ wire  [7:0] joystick_3;
 wire        key_pressed;
 wire        key_strobe;
 wire  [7:0] key_code;
+wire signed [8:0] mouse_x;
+wire signed [8:0] mouse_y;
+wire  [7:0] mouse_flags;
+wire        mouse_strobe;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
@@ -111,19 +133,23 @@ user_io(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
+	.mouse_strobe   (mouse_strobe   ),
+	.mouse_x        (mouse_x        ),
+	.mouse_y        (mouse_y        ),
+	.mouse_flags    (mouse_flags    ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
 	.status         (status         )
 	);
 
 wire [15:0] audio;
-wire [15:0] rom_addr;
-wire [15:0] rom_do;
-wire [15:0] spr_rom_addr;
+wire [16:0] cpu_rom_addr;
+wire [15:0] cpu_rom_do;
+wire [16:0] spr_rom_addr;
 wire [15:0] spr_rom_do;
-wire [12:0] snd_rom_addr;
+wire [14:0] snd_rom_addr;
 wire [15:0] snd_rom_do;
-wire [13:0] tile_rom_addr;
+wire [15:0] tile_rom_addr;
 wire [23:0] tile_rom_do;
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
@@ -144,7 +170,7 @@ data_io data_io(
 );
 
 reg port1_req, port2_req;
-wire [24:0] tl_ioctl_addr = ioctl_addr - 18'h20000;
+wire [24:0] tl_ioctl_addr = ioctl_addr - 20'h40000;
 sdram #(80) sdram(
 	.*,
 	.init_n        ( pll_locked   ),
@@ -159,11 +185,11 @@ sdram #(80) sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]}), // offset 0
-	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h6000 + snd_rom_addr[12:1]) ), // offset c000
+	.cpu1_addr     ( ioctl_downl ? 17'h1ffff : (17'h4000 + cpu_rom_addr[16:1]) ), // offset 8000h
+	.cpu1_q        ( cpu_rom_do ),
+	.cpu2_addr     ( ioctl_downl ? 17'h1ffff : snd_rom_addr[14:1] ), // offset 0
 	.cpu2_q        ( snd_rom_do ),
-	.cpu3_addr     ( ioctl_downl ? 16'hffff : (16'h8000 + spr_rom_addr[15:1]) ), // offset 10000
+	.cpu3_addr     ( ioctl_downl ? 17'h1ffff : (17'h10000 + spr_rom_addr[16:1]) ), // offset 20000h
 	.cpu3_q        ( spr_rom_do ),
 
 	// port2 for backround tiles
@@ -175,7 +201,7 @@ sdram #(80) sdram(
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'h7fff : tile_rom_addr ),
+	.sp_addr       ( ioctl_downl ? 16'hffff : tile_rom_addr ),
 	.sp_q          ( tile_rom_do )
 );
 
@@ -210,13 +236,17 @@ SEGASYSTEM1 System1_Top(
 
 	.DSW0(DSW0),
 	.DSW1(DSW1),
+
+	.SYSTEM2(core_mod[0]),
+	.SYSTEM2_ROWSCROLL(core_mod[6]),
+
 	.PH(HPOS),
 	.PV(VPOS),
 	.PCLK_EN(PCLK_EN),
 	.POUT(POUT),
 
-	.cpu_rom_addr(rom_addr),
-	.cpu_rom_do( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
+	.cpu_rom_addr(cpu_rom_addr),
+	.cpu_rom_do(cpu_rom_addr[0] ? cpu_rom_do[15:8] : cpu_rom_do[7:0] ),
 
 	.snd_rom_addr(snd_rom_addr),
 	.snd_rom_do(snd_rom_addr[0] ? snd_rom_do[15:8] : snd_rom_do[7:0] ),
@@ -228,20 +258,19 @@ SEGASYSTEM1 System1_Top(
 	.tile_rom_do(tile_rom_do),
 
 	.ROMCL(clk_sys),
-	.ROMAD(ioctl_addr[17:0]),
-	.ROMDT( ioctl_dout ),
-	.ROMEN( ioctl_wr ),
+	.ROMAD(ioctl_addr),
+	.ROMDT(ioctl_dout),
+	.ROMEN(ioctl_wr),
 	.SOUT(audio)
 );
 
 wire        PCLK_EN;
 wire  [8:0] HPOS,VPOS;
-wire  [7:0] POUT;
+wire [11:0] POUT;
 wire  [7:0] HOFFS = 8'd2;
 wire  [7:0] VOFFS = 8'd2;
 wire        hs, vs;
-wire  [2:0] g, r;
-wire  [1:0] b;
+wire  [3:0] b, g, r;
 
 HVGEN hvgen
 (
@@ -250,14 +279,14 @@ HVGEN hvgen
 	.H240(core_mod[2]),.HOFFS(HOFFS),.VOFFS(VOFFS)
 );
 
-mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
 	.R              ( r                ),
 	.G              ( g                ),
-	.B              ( {b, b[1]}        ),
+	.B              ( b                ),
 	.HSync          ( hs               ),
 	.VSync          ( vs               ),
 	.VGA_R          ( VGA_R            ),
@@ -267,7 +296,7 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_HS         ( VGA_HS           ),
 	.ce_divider     ( 1'b0             ),
 	.blend          ( blend            ),
-	.rotate         ( {1'b0, rotate}   ),
+	.rotate         ( {core_mod[4], rotate}   ),
 	.scandoubler_disable(scandoublerD  ),
 	.scanlines      ( scanlines        ),
 	.ypbpr          ( ypbpr            ),

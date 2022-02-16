@@ -678,13 +678,8 @@ reg [15:0] unhandled_addr ;
 always @ (posedge clk_20M ) begin
     
     if ( rd_n == 0 ) begin
-               // read program rom
-        if (cpu_addr == 16'h049a ) begin
-            // patch rom to bypass "secret" pal protection
-            // cpu tries to read val from 0x9803 which is state machine pal
-            // written to on all tile ram access. should try converting pal logic to verilog.
-            cpu_din <= 0;
-        end else if ( cpu_addr >= 16'h0000 && cpu_addr < 16'h8000 ) begin
+        // read program rom
+        if ( cpu_addr >= 16'h0000 && cpu_addr < 16'h8000 ) begin
             cpu_din <= rom_do; // 0x0000
         end else if ( cpu_addr >= 16'h8000 && cpu_addr < 16'h8400 ) begin   
             cpu_din <= bg_ram0_data;
@@ -695,7 +690,7 @@ always @ (posedge clk_20M ) begin
         end else if ( cpu_addr >= 16'h8c00 && cpu_addr < 16'h9000 ) begin   
             cpu_din <= fg_ram1_data;
         end else if ( cpu_addr == 16'h9803 ) begin   
-            cpu_din <= 0;
+            cpu_din <= u001_dout;
         end else if ( cpu_addr == 16'ha000 ) begin   
             cpu_din <= p1;
         end else if ( cpu_addr == 16'ha001 ) begin
@@ -754,6 +749,24 @@ always @ (posedge clk_20M ) begin
         end
     end
 end
+
+// u001 "secret" pal protection
+// cpu tries to read val from 0x9803 which is state machine pal
+// written to on all tile ram access..
+
+wire [7:0] u001_dout ;
+
+reg gfx_ram_wr_old;
+always @(posedge clk_20M) gfx_ram_wr_old <= gfx_fg_ram0_wr | gfx_fg_ram1_wr;
+wire secret_pal_clk_en = ~gfx_ram_wr_old & (gfx_fg_ram0_wr | gfx_fg_ram1_wr);
+
+secret_pal u001
+(
+	.clk( clk_20M ),
+	.clk_en( secret_pal_clk_en ),
+	.din( cpu_dout ),
+	.dout( u001_dout )
+);
 
 // first 256 bytes are attribute data
 // bit 7 of attr == MSB of tile 

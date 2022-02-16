@@ -10,8 +10,11 @@
 	<rbf>qbert</rbf>
 	<buttons names="Service Select,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
 	<switches default="01"  page_id="1" page_name="Switches" base="16">
-		<dip bits="4" name="Demo Sounds" ids="On,Off"></dip>
+		<dip bits="0" name="Demo Sounds" ids="On,Off"></dip>
+		<dip bits="1" name="Difficulty" ids="Normal,Hard"></dip>
 		<dip bits="3" name="Lives" ids="3,5"></dip>
+		<dip bits="5" name="Hexagon" ids="Roving,Stationary"></dip>
+		<dip bits="6,7" name="Bonus Life" ids="30k 80k/50k,30k 60k/30k,40k 90k/50k,50k 125k/75k"></dip>
 	</switches>
 	<rom index="1">
 		<part>3</part>

@@ -37,6 +37,5 @@
         <part crc="16ee4ca2" name="f10--1.bin"/>
         <part crc="ff7fe284" name="j10--4.bin"/>
         <part crc="badf5876" name="j2-u001.bin"/>
-        <patch offset="0x049a"> 00 </patch>
   </rom>
 </misterromdescription>

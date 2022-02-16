@@ -42,13 +42,12 @@ reg     [9:0]   pSTKTRG12;
 reg     [2:0]   pCSTART12;
 
 reg             bUpdate;
-reg             bIOMode;
+reg     [1:0]   bIOMode;
 
-parameter [2:0] SUPERPAC=3'd5;
-
+`include "param.v"
 
 assign  OUT = { 4'b1111, outr };
-assign  IsMOTOS = bIOMode;
+assign  IsMOTOS = bIOMode == 1;
 
 // Detect falling edges:
 wire      [11:0]   iSTKTRG12 = ( STKTRG12 ^ pSTKTRG12 ) & STKTRG12;
@@ -60,13 +59,13 @@ BCDCONV creditsBCD( credits, CREDIT_ONES, CREDIT_TENS );
 always @ ( posedge CLK ) begin
     if ( ENABLE ) begin
         if ( ADRS[5] )  begin
-            if ( WR ) memc[ADRS[4:0]] <= IN;
+            if ( WR ) memc[ADRS[4:0]] <= IN[3:0];
             outr <= memc[ADRS[4:0]];
         end else if ( ADRS[4] ) begin
-            if ( WR ) memb[ADRS[3:0]] <= IN;
+            if ( WR ) memb[ADRS[3:0]] <= IN[3:0];
             outr <= memb[ADRS[3:0]];
         end else begin
-            if ( WR ) mema[ADRS[3:0]] <= IN;
+            if ( WR ) mema[ADRS[3:0]] <= IN[3:0];
             outr <= mema[ADRS[3:0]];
         end
     end
@@ -78,14 +77,28 @@ always @ ( posedge CLK ) begin
         credits    <= 0;
     end else begin
         if ( UPDATE & (~bUpdate) ) begin
-            if ( mema[4'h8] == 4'h8 || MODEL==SUPERPAC )
-                bIOMode <= 1'b1;       // Is running "Motos" ?
+            if (MODEL == PACNPAL)
+                bIOMode <= 2'd3;
+            else if (MODEL == GROBDA)
+                bIOMode <= 2'd2;
+            else if ( mema[4'h8] == 4'h8 || MODEL==SUPERPAC)
+                bIOMode <= 2'd1;       // Is running "Motos" ?
 
-            if ( bIOMode ) begin
-                `include "ioctrl_1.v"
+            if ( bIOMode == 3) begin
+                `include "ioctrl_1a.v"
+                `include "ioctrl_2b.v"
+            end
+            else if ( bIOMode == 2) begin
+                `include "ioctrl_0a.v"
+                `include "ioctrl_1b.v"
+            end
+            else if ( bIOMode == 1) begin
+                `include "ioctrl_1a.v"
+                `include "ioctrl_1b.v"
             end
             else begin
-                `include "ioctrl_0.v"
+                `include "ioctrl_0a.v"
+                `include "ioctrl_0b.v"
             end
 
             pCSTART12 <= CSTART12;

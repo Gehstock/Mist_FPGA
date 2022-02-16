@@ -46,11 +46,11 @@ module sdram (
 	input      [15:0] port1_d,
 	output reg [15:0] port1_q,
 
-	input      [16:1] cpu1_addr,
+	input      [17:1] cpu1_addr,
 	output reg [15:0] cpu1_q,
-	input      [16:1] cpu2_addr,
+	input      [17:1] cpu2_addr,
 	output reg [15:0] cpu2_q,
-	input      [16:1] cpu3_addr,
+	input      [17:1] cpu3_addr,
 	output reg [15:0] cpu3_q,
 
 	input             port2_req,
@@ -61,7 +61,7 @@ module sdram (
 	input      [15:0] port2_d,
 	output reg [31:0] port2_q,
 	
-	input      [16:2] sp_addr,
+	input      [17:2] sp_addr,
 	output reg [31:0] sp_q
 );
 
@@ -156,8 +156,8 @@ assign SDRAM_nWE  = sd_cmd[0];
 
 reg [24:1] addr_latch[3];
 reg [24:1] addr_latch_next[2];
-reg [16:1] addr_last[4];
-reg [16:2] addr_last2[2];
+reg [17:1] addr_last[4];
+reg [17:2] addr_last2[2];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
@@ -190,13 +190,13 @@ always @(*) begin
 		addr_latch_next[0] = { 1'b0, port1_a };
 	end else if (cpu1_addr != addr_last[PORT_CPU1]) begin
 		next_port[0] = PORT_CPU1;
-		addr_latch_next[0] = { 8'd0, cpu1_addr };
+		addr_latch_next[0] = { 7'd0, cpu1_addr };
 	end else if (cpu2_addr != addr_last[PORT_CPU2]) begin
 		next_port[0] = PORT_CPU2;
-		addr_latch_next[0] = { 8'd0, cpu2_addr };
+		addr_latch_next[0] = { 7'd0, cpu2_addr };
 	end else if (cpu3_addr != addr_last[PORT_CPU3]) begin
 		next_port[0] = PORT_CPU3;
-		addr_latch_next[0] = { 8'd0, cpu3_addr };
+		addr_latch_next[0] = { 7'd0, cpu3_addr };
 	end else begin
 		next_port[0] = PORT_NONE;
 		addr_latch_next[0] = addr_latch[0];
@@ -210,7 +210,7 @@ always @(*) begin
 		addr_latch_next[1] = { 1'b1, port2_a };
 	end else if (sp_addr != addr_last2[PORT_SP]) begin
 		next_port[1] = PORT_SP;
-		addr_latch_next[1] = { 1'b1, 7'd0, sp_addr, 1'b0 };
+		addr_latch_next[1] = { 1'b1, 6'd0, sp_addr, 1'b0 };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -257,7 +257,7 @@ always @(posedge clk) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[0][22:10];
 				SDRAM_BA <= addr_latch_next[0][24:23];
-				addr_last[next_port[0]] <= addr_latch_next[0][16:1];
+				addr_last[next_port[0]] <= addr_latch_next[0][17:1];
 				if (next_port[0] == PORT_REQ) begin
 					{ oe_latch[0], we_latch[0] } <= { ~port1_we, port1_we };
 					ds[0] <= port1_ds;
@@ -281,7 +281,7 @@ always @(posedge clk) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[1][22:10];
 				SDRAM_BA <= addr_latch_next[1][24:23];
-				addr_last2[next_port[1]] <= addr_latch_next[1][16:2];
+				addr_last2[next_port[1]] <= addr_latch_next[1][17:2];
 				if (next_port[1] == PORT_REQ) begin
 					{ oe_latch[1], we_latch[1] } <= { ~port1_we, port1_we };
 					ds[1] <= port2_ds;
