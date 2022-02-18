@@ -5,6 +5,20 @@
     <manufacturer>Capcom</manufacturer>
     <rbf>sonson</rbf>
 
+    <switches base="8" page_id="1" page_name="Switches">
+        <!-- DSW1 -->
+        <dip bits="0,3"   name="Coinage"     ids="1C_1C,1C_2C,1C_3C,1C_4C,1C_5C,1C_6C,1C_7C,2C_1C,2C_3C,2C_5C,3C_1C,3C_2C,3C_4C,4C_1C,4C_3C,Free Play"/>
+        <dip bits="5"     name="Demo Sounds" ids="Off,On"/>
+        <dip bits="6"     name="Service"     ids="Off,On"/>
+        <!-- dip bits="7"     name="Flip Screen" ids="Off,On"/-->
+
+        <!-- DSW2 -->
+        <dip bits="8,9"   name="Lives"       ids="3,4,5,7"/>
+        <dip bits="11,12" name="Bonus_Life"  ids="20000,30000,20k/80k/100k,30k/90k/120k"/>
+        <dip bits="13,14" name="Difficulty"  ids="Easy,Normal,Hard,Very Hard"/>
+        <dip bits="15"    name="Freeze"      ids="Off,On"/>
+    </switches>
+
     <rom index="0" zip="sonson.zip" md5="d17bc11db95dd6e2d44ac342b3462259" type="merged|nonmerged">
       <!-- CPU2, 8k -->
       <part name="ss_6.c11"/>

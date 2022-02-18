@@ -193,7 +193,7 @@ begin
     end if;
   end process;
 
-	cpu_reset <= rst_24M;
+  cpu_reset <= rst_24M;
 
   cpu_inst : mc6809i
   port map

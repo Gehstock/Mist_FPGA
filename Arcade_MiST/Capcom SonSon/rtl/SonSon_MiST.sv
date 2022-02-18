@@ -35,9 +35,7 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
-	"O6,Freeze,Off,On;",
-	//"O7,Flip,Off,On;",
-	"O8,Test,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -45,9 +43,9 @@ localparam CONF_STR = {
 wire       rotate    = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend     = status[5];
-wire       freeze   = status[6];
-wire       flip   = status[7];
-wire       test   = status[8];
+
+wire  [7:0] dip1 = status[15:8];
+wire  [7:0] dip2 = status[23:16];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CKE = 1; 
@@ -204,8 +202,8 @@ target_top target_top(
 	.clk_sys(clk_sys),
 	.clk_vid_en(clk_vid_en),
 	.reset_in(reset),
-  .snd_l(snd_l),
-  .snd_r(snd_r),
+	.snd_l(snd_l),
+	.snd_r(snd_r),
 	.vid_hs(hs),
 	.vid_vs(vs),
 	.vid_hb(hb),
@@ -216,8 +214,8 @@ target_top target_top(
 	.inputs_p1(~{2'b00,m_down,m_up,m_right,m_left,1'b0,m_fireA}),
 	.inputs_p2(~{2'b00,m_down2,m_up2,m_right2,m_left2,1'b0,m_fire2A}),
 	.inputs_sys(~{2'b00,m_coin2,m_coin1,2'b00,m_two_players,m_one_player}),
-	.inputs_dip1(~{flip,test,6'b011111}),
-	.inputs_dip2(~{freeze,7'b1111111}),
+	.inputs_dip1(~dip1),
+	.inputs_dip2(~dip2),
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_addr[0] ? rom_do[15:8] : rom_do[7:0]),
 	.snd_rom_addr(snd_rom_addr),

@@ -12,7 +12,6 @@ port(
   clkrst_i     : in from_CLKRST_t;
   sound_irq    : in std_logic;
   sound_data   : in std_logic_vector(7 downto 0);
-  vblank       : in std_logic;
   audio_out_l  : out std_logic_vector(9 downto 0);
   audio_out_r  : out std_logic_vector(9 downto 0);
   snd_rom_addr : out std_logic_vector(12 downto 0);
@@ -82,8 +81,6 @@ END COMPONENT;
   signal ay2_chan_c    : std_logic_vector(7 downto 0);
   signal ay2_do        : std_logic_vector(7 downto 0);
 
-  signal vblank_r      : std_logic;
-
 begin
 
   -- cs
@@ -125,35 +122,36 @@ begin
   end process;
 
   process (clk, reset)
+    variable count : unsigned(16 downto 0);
   begin
     if reset = '1' then
       cpu_irq <= '0';
     elsif rising_edge(clk) then
-      vblank_r <= vblank;
-      if vblank_r = '0' and vblank = '1' then
+      count := count + 1;
+      if count = 100000 then -- 60Hz*4
         cpu_irq <= '1';
+        count := (others => '0');
       elsif cpu_ba = '0' and cpu_bs = '1' then
         cpu_irq <= '0';
       end if;
     end if;
   end process;
 
-	cpu_inst : mc6809i
-	port map
-    (
+  cpu_inst : mc6809i
+  port map (
     D         => cpu_di,
     DOut      => cpu_do,
     ADDR      => cpu_addr,
     RnW       => cpu_rw,
     E         => clk_E,
     Q         => clk_Q,
-    BS     		=> cpu_bs,
-    BA     		=> cpu_ba,
-    nIRQ			=> not cpu_irq,
+    BS        => cpu_bs,
+    BA        => cpu_ba,
+    nIRQ      => not cpu_irq,
     nFIRQ     => sound_irq,
-    nNMI			=> '1',
-    AVMA  		=> open,
-    BUSY  		=> open,
+    nNMI      => '1',
+    AVMA      => open,
+    BUSY      => open,
     LIC       => open,
     nHALT     => '1',	 
     nRESET    => not reset,
@@ -179,13 +177,13 @@ begin
     ENA         => clk_en_snd,
     RESET_L     => not reset,
     I_A8        => '1',
-    I_A9_L      => not ay1_cs,
-    I_BDIR      => not cpu_rw,
-    I_BC1       => not cpu_addr(0) or cpu_rw,
+    I_A9_L      => '0',
+    I_BDIR      => ay1_cs and not cpu_rw,
+    I_BC1       => ay1_cs and not cpu_addr(0) and not cpu_rw,
     I_DA        => cpu_do,
     O_DA        => ay1_do,
 
-		O_AUDIO_L   => audio_out_l,
+    O_AUDIO_L   => audio_out_l,
 
     I_IOA       => (others => '0'),
 
@@ -198,13 +196,13 @@ begin
     ENA         => clk_en_snd,
     RESET_L     => not reset,
     I_A8        => '1',
-    I_A9_L      => not ay2_cs,
-    I_BDIR      => not cpu_rw,
-    I_BC1       => not cpu_addr(0) or cpu_rw,
+    I_A9_L      => '0',
+    I_BDIR      => ay2_cs and not cpu_rw,
+    I_BC1       => ay2_cs and not cpu_addr(0) and not cpu_rw,
     I_DA        => cpu_do,
     O_DA        => ay2_do,
 
-		O_AUDIO_L   => audio_out_r,
+    O_AUDIO_L   => audio_out_r,
 
     I_IOA       => (others => '0'),
 
