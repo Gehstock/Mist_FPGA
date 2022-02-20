@@ -40,9 +40,6 @@ end entity PACE;
 
 architecture SYN of PACE is
 
-	constant CLK_1US_COUNTS : integer := 
-    integer(27 * PACE_CLK0_MULTIPLY_BY / PACE_CLK0_DIVIDE_BY);
-
   signal to_tilemap_ctl   : to_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
   signal from_tilemap_ctl : from_TILEMAP_CTL_a(1 to PACE_VIDEO_NUM_TILEMAPS);
 
@@ -52,10 +49,10 @@ architecture SYN of PACE is
   signal to_sprite_reg    : to_SPRITE_REG_t;
   signal to_sprite_ctl    : to_SPRITE_CTL_t;
   signal from_sprite_ctl  : from_SPRITE_CTL_t;
-	signal spr0_hit					: std_logic;
+  signal spr0_hit					: std_logic;
 
   signal to_graphics      : to_GRAPHICS_t;
-	signal from_graphics    : from_GRAPHICS_t;
+  signal from_graphics    : from_GRAPHICS_t;
 
   signal snd_irq          : std_logic;
   signal snd_data         : std_logic_vector(7 downto 0);
@@ -88,7 +85,7 @@ begin
       sprite_reg_o    => to_sprite_reg,
       sprite_i        => from_sprite_ctl,
       sprite_o        => to_sprite_ctl,
-			spr0_hit				=> spr0_hit,
+      spr0_hit        => spr0_hit,
 
       graphics_i      => from_graphics,
       graphics_o      => to_graphics,
@@ -100,9 +97,9 @@ begin
       platform_i      => platform_i,
       platform_o      => platform_o,
       cpu_rom_addr    => cpu_rom_addr,
-      cpu_rom_do	    => cpu_rom_do,
+      cpu_rom_do      => cpu_rom_do,
       tile_rom_addr   => tile_rom_addr,
-      tile_rom_do	    => tile_rom_do
+      tile_rom_do     => tile_rom_do
     );
 
   graphics_inst : entity work.Graphics                                    
@@ -135,7 +132,6 @@ begin
 
       sound_irq       => snd_irq,
       sound_data      => snd_data,
-      vblank          => video_out.vblank,
 
       audio_out_l     => audio_o.ldata(9 downto 0),
       audio_out_r     => audio_o.rdata(9 downto 0),

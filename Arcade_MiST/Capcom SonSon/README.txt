@@ -7,7 +7,7 @@ MiST port usage
 ===============
 
 - Create ROM file from the MRA file using the MRA utility.
-  Example: mra -z /path/to/mame/roms SonSon.mra
+  Example: mra -A -z /path/to/mame/roms SonSon.mra
 - Copy the ROM files to the root of the SD Card
 - Copy the RBF files to the SD Card
 
