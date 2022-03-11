@@ -52,7 +52,8 @@ localparam GAME_BLOCKADE = 0;
 localparam GAME_COMOTION = 1;
 localparam GAME_HUSTLE = 2;
 localparam GAME_BLASTO = 3;
-
+localparam GAME_MINESWEEPER = 4;
+localparam GAME_MINESWEEPER4 = 5;
 // CPU and Video system clock enables
 // ----------------------------------
 

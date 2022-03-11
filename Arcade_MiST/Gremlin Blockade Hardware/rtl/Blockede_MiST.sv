@@ -20,11 +20,8 @@ module Blockede_MiST(
 
 localparam CONF_STR = {
 	"BLOCKADE;;",
-//	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-//	"O5,Blend,Off,On;",
 	"O7,Pause,Off,On;",
-//	"O89,Color,Green,White,Yellow,Red;",
 	"OGJ,Analog Video H-Pos,0,-1,-2,-3,-4,-5,-6,-7,8,7,6,5,4,3,2,1;",
 	"OKN,Analog Video V-Pos,0,-1,-2,-3,-4,-5,-6,-7,8,7,6,5,4,3,2,1;",
 	"DIP;",
@@ -32,7 +29,6 @@ localparam CONF_STR = {
 	"V,v1.50.",`BUILD_DATE
 };
 
-//wire       rotate    = status[2];
 wire [1:0] scanlines 			= status[4:3];
 wire       blend     			= status[5];
 wire       btn_pause   			= status[7];
@@ -47,24 +43,26 @@ pll pll(
 	.c0(clk_sys)
 	);
 
-wire [31:0] status;
+wire [63:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
-wire        scandoublerD;
-wire  [6:0] core_mod;
-wire        ypbpr;
-wire        no_csync;
+wire [31:0] joystick_0;
+wire [31:0] joystick_1;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
-wire   		vid;
-wire [2:0] video_rgb = {3{vid}} & overlay_mask;
-wire [5:0] rgb_out;
+
+wire  [6:0] core_mod;
+
+wire   		vid;wire  [2:0] video_rgb = {3{vid}} & overlay_mask;
+wire  [5:0] rgb_out;
+wire        scandoublerD;
 wire        hs, vs, vb, hb;
 wire        blankn = ~(hb | vb);
-wire  [15:0] audio;
+wire        ypbpr;
+wire        no_csync;
+
+wire [15:0] audio;
 
 wire        ioctl_downl;
 wire        ioctl_upl;
@@ -105,9 +103,7 @@ mist_video #(.COLOR_DEPTH(2), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.scanlines      ( scanlines        ),
-//	.rotate         ( { 1'b0, rotate } ),
 	.ce_divider     ( 1'b0             ),
-	.blend          ( blend            ),
 	.scandoubler_disable(scandoublerD  ),
 	.no_csync       ( no_csync         ),
 	.ypbpr          ( ypbpr            )
@@ -178,8 +174,6 @@ arcade_inputs inputs (
 	.key_code    ( key_code    ),
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
-//	.rotate      ( rotate      ),
-//	.orientation ( 2'b01       ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
@@ -200,16 +194,16 @@ reg [1:0] dip_blasto_coin;
 reg dip_blasto_demosounds;
 reg dip_blasto_time;
 reg dip_boom;
+reg [2:0] dip_minesweeper_lives;
+reg dip_minesweeper_cabinet;
 reg [1:0] dip_overlay_type;
 reg [2:0] overlay_mask;
-reg [7:0] sw;
+wire [7:0] sw = status[15:8];
 reg [7:0] IN_1;
 reg [7:0] IN_2;
 reg [7:0] IN_4;
 always @(posedge clk_sys)
 begin
-//	if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout;
-sw = status[15:8];
  	case(core_mod)
 	7'h0: // GAME_BLOCKADE
 	begin
@@ -252,13 +246,33 @@ sw = status[15:8];
 	end
 	7'h3: // GAME_BLASTO
 	begin
-		dip_blasto_coin = sw[1:0];
-		dip_blasto_demosounds = sw[2];
+		dip_blasto_coin <= sw[1:0];
+		dip_blasto_demosounds <= sw[2];
 		dip_blasto_time = sw[3];		
 		dip_overlay_type <= sw[5:4];
 		IN_1 <= ~{m_coin1, 3'b0, dip_blasto_time, dip_blasto_demosounds, dip_blasto_coin};
 		IN_2 <= ~{m_fireA, m_two_players, m_one_player, 4'b0000, m_fire2A}; 
 		IN_4 <= ~{m_up, m_left, m_down, m_right, m_up2, m_left2, m_down2, m_right2};		
+	end
+	7'h4: // GAME_Minesweeper
+	begin
+		dip_minesweeper_cabinet <= sw[0];
+		dip_boom <= sw[1];
+		dip_minesweeper_lives <= sw[3:2];
+		dip_overlay_type <= sw[5:4];
+		IN_1 <= ~{m_coin1, dip_minesweeper_lives, 1'b0, dip_boom, 1'b0/*dip_minesweeper_cabinet*/, 1'b0};
+		IN_2 <= ~{m_left2, m_down2, m_right2, m_up2, m_left, m_down, m_right, m_up}; 
+		IN_4 <= ~{8'b00000000};		
+	end
+	7'h5: // GAME_Minesweeper (4-Player)
+	begin
+		dip_minesweeper_cabinet <= sw[0];
+		dip_boom <= sw[1];
+		dip_minesweeper_lives <= sw[3:2];
+		dip_overlay_type <= sw[5:4];
+		IN_1 <= ~{m_coin1, dip_minesweeper_lives, 1'b0, dip_boom, 1'b0/*dip_minesweeper_cabinet*/, 1'b0};
+		IN_2 <= ~{m_left2, m_down2, m_right2, m_up2, m_left, m_down, m_right, m_up}; 
+		IN_4 <= ~{m_left4, m_down4, m_right4, m_up4, m_left3, m_down3, m_right3, m_up3}; 	
 	end
 	endcase
 		// Generate overlay colour mask
@@ -288,12 +302,13 @@ reg rom_downloaded = 1'b0;
 wire rom_download = ioctl_downl && ioctl_index == 8'b0;
 wire reset = (status[0] | buttons[1] | rom_download | ~rom_downloaded);
 // Latch release reset if ROM data is received (stops sound circuit from going off if ROMs are not found)
-always @(posedge clk_sys) if(rom_download && ioctl_dout > 8'b0) rom_downloaded <= 1'b1; 
+always @(posedge clk_sys) 
+	if(rom_download && ioctl_dout > 8'b0) rom_downloaded <= 1'b1; 
 
 blockade blockade(
 	.clk				(clk_sys),
 	.reset			(reset),
-	.pause			(pause),
+	.pause			(btn_pause),
 	.game_mode		(core_mod),
 	.ce_pix			(ce_pix),
 	.video			(vid),
