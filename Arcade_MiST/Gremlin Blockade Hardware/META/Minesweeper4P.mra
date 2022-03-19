@@ -3,7 +3,7 @@
 	<year>1977</year>
 	<manufacturer>Gremlin</manufacturer>
 
-	<setname>mineswpr</setname>
+	<setname>mineswpr4</setname>
 	<mameversion>0229</mameversion>
 	<rbf>blockade</rbf>
 
@@ -16,7 +16,7 @@
 	</switches>
 
 	<rom index="1"><part>05</part></rom>
-	<rom index="0" md5="none" zip="mineswpr.zip">
+	<rom index="0" md5="none" zip="mineswpr.zip|mineswpr4.zip">
 		<!-- GAME ROMS -->
 		<part crc="none" name="mineswee.h0p"/>
 		<part crc="none" name="mineswee.l0p"/>
