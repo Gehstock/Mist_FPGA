@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity turkey_shoot_decoder is
+entity williams2_decoder is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(8 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of turkey_shoot_decoder is
+architecture prom of williams2_decoder is
 	type rom is array(0 to  511) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"00",X"40",X"80",X"01",X"41",X"81",X"02",X"42",X"82",X"03",X"43",X"83",X"04",X"44",X"84",X"05",

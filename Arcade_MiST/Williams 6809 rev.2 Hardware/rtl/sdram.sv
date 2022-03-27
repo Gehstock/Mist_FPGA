@@ -4,21 +4,21 @@
 // sdram controller implementation for the MiST board
 // https://github.com/mist-devel/mist-board
 // 
-// Copyright (c) 2013 Till Harbaum <till@harbaum.org> 
+// Copyright (c) 2013 Till Harbaum <till@harbaum.org>
 // Copyright (c) 2019 Gyorgy Szombathelyi
 //
-// This source file is free software: you can redistribute it and/or modify 
-// it under the terms of the GNU General Public License as published 
-// by the Free Software Foundation, either version 3 of the License, or 
-// (at your option) any later version. 
-// 
+// This source file is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
 // This source file is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License 
-// along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 module sdram (
@@ -46,11 +46,11 @@ module sdram (
 	input      [15:0] port1_d,
 	output reg [15:0] port1_q,
 
-	input      [16:1] cpu1_addr,
+	input      [19:1] cpu1_addr,
 	output reg [15:0] cpu1_q,
-	input      [16:1] cpu2_addr,
+	input      [19:1] cpu2_addr,
 	output reg [15:0] cpu2_q,
-	input      [16:1] cpu3_addr,
+	input      [19:1] cpu3_addr,
 	output reg [15:0] cpu3_q,
 
 	input             port2_req,
@@ -60,10 +60,12 @@ module sdram (
 	input       [1:0] port2_ds,
 	input      [15:0] port2_d,
 	output reg [31:0] port2_q,
-	
-	input      [16:2] sp_addr,
+
+	input      [17:2] sp_addr,
 	output reg [31:0] sp_q
 );
+
+parameter  MHZ = 16'd80; // 80 MHz default clock, set it to proper value to calculate refresh rate
 
 localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles@<100MHz
 localparam BURST_LENGTH   = 3'b001; // 000=1, 001=2, 010=4, 011=8
@@ -74,8 +76,8 @@ localparam NO_WRITE_BURST = 1'b1;   // 0= write burst enabled, 1=only single acc
 
 localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BURST_LENGTH}; 
 
-// 64ms/8192 rows = 7.8us -> 842 cycles@108MHz
-localparam RFRSH_CYCLES = 10'd842;
+// 64ms/8192 rows = 7.8us
+localparam RFRSH_CYCLES = 16'd78*MHZ/4'd10;
 
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------
@@ -144,18 +146,19 @@ localparam CMD_PRECHARGE       = 4'b0010;
 localparam CMD_AUTO_REFRESH    = 4'b0001;
 localparam CMD_LOAD_MODE       = 4'b0000;
 
-reg [3:0]  sd_cmd;   // current command sent to sd ram
-reg [15:0] sd_din;
+reg  [3:0] sd_cmd;   // current command sent to sd ram
+reg [15:0] sd_din;   // Fast Input register latching incoming SDRAM data
+
 // drive control signals according to current command
 assign SDRAM_nCS  = sd_cmd[3];
 assign SDRAM_nRAS = sd_cmd[2];
 assign SDRAM_nCAS = sd_cmd[1];
 assign SDRAM_nWE  = sd_cmd[0];
 
-reg [24:1] addr_latch[3];
+reg [24:1] addr_latch[2];
 reg [24:1] addr_latch_next[2];
-reg [16:1] addr_last[4];
-reg [16:2] addr_last2[2];
+reg [19:1] addr_last[3:1];
+reg [17:2] addr_last2[2];
 reg [15:0] din_latch[2];
 reg  [1:0] oe_latch;
 reg  [1:0] we_latch;
@@ -175,26 +178,26 @@ reg  [2:0] next_port[2];
 reg  [2:0] port[2];
 
 reg        refresh;
-reg [10:0] refresh_cnt;
-wire       need_refresh = (refresh_cnt >= RFRSH_CYCLES);
+reg [11:0] refresh_cnt;
+reg        need_refresh;
 
 // PORT1: bank 0,1
 always @(*) begin
 	if (refresh) begin
 		next_port[0] = PORT_NONE;
-		addr_latch_next[0] = addr_latch[0];
+		addr_latch_next[0] = addr_latch[1];
 	end else if (port1_req ^ port1_state) begin
 		next_port[0] = PORT_REQ;
 		addr_latch_next[0] = { 1'b0, port1_a };
 	end else if (cpu1_addr != addr_last[PORT_CPU1]) begin
 		next_port[0] = PORT_CPU1;
-		addr_latch_next[0] = { 8'd0, cpu1_addr };
+		addr_latch_next[0] = { 5'd0, cpu1_addr };
 	end else if (cpu2_addr != addr_last[PORT_CPU2]) begin
 		next_port[0] = PORT_CPU2;
-		addr_latch_next[0] = { 8'd0, cpu2_addr };
+		addr_latch_next[0] = { 5'd0, cpu2_addr };
 	end else if (cpu3_addr != addr_last[PORT_CPU3]) begin
 		next_port[0] = PORT_CPU3;
-		addr_latch_next[0] = { 8'd0, cpu3_addr };
+		addr_latch_next[0] = { 5'd0, cpu3_addr };
 	end else begin
 		next_port[0] = PORT_NONE;
 		addr_latch_next[0] = addr_latch[0];
@@ -208,7 +211,7 @@ always @(*) begin
 		addr_latch_next[1] = { 1'b1, port2_a };
 	end else if (sp_addr != addr_last2[PORT_SP]) begin
 		next_port[1] = PORT_SP;
-		addr_latch_next[1] = { 1'b1, 7'd0, sp_addr, 1'b0 };
+		addr_latch_next[1] = { 1'b1, 6'd0, sp_addr, 1'b0 };
 	end else begin
 		next_port[1] = PORT_NONE;
 		addr_latch_next[1] = addr_latch[1];
@@ -223,6 +226,7 @@ always @(posedge clk) begin
 	{ SDRAM_DQMH, SDRAM_DQML } <= 2'b11;
 	sd_cmd <= CMD_NOP;  // default: idle
 	refresh_cnt <= refresh_cnt + 1'd1;
+	need_refresh <= (refresh_cnt >= RFRSH_CYCLES);
 
 	if(init) begin
 		// initialization takes place at the end of the reset phase
@@ -255,7 +259,7 @@ always @(posedge clk) begin
 				sd_cmd <= CMD_ACTIVE;
 				SDRAM_A <= addr_latch_next[0][22:10];
 				SDRAM_BA <= addr_latch_next[0][24:23];
-				addr_last[next_port[0]] <= addr_latch_next[0][16:1];
+				addr_last[next_port[0]] <= addr_latch_next[0][19:1];
 				if (next_port[0] == PORT_REQ) begin
 					{ oe_latch[0], we_latch[0] } <= { ~port1_we, port1_we };
 					ds[0] <= port1_ds;
@@ -270,7 +274,7 @@ always @(posedge clk) begin
 
 		// bank 2,3
 		if(t == STATE_RAS1) begin
-			refresh <= 1'b0;
+			refresh <= 0;
 			addr_latch[1] <= addr_latch_next[1];
 			{ oe_latch[1], we_latch[1] } <= 2'b00;
 			port[1] <= next_port[1];
@@ -289,10 +293,8 @@ always @(posedge clk) begin
 					{ oe_latch[1], we_latch[1] } <= 2'b10;
 					ds[1] <= 2'b11;
 				end
-			end
-
-			if (next_port[1] == PORT_NONE && need_refresh && !we_latch[0] && !oe_latch[0]) begin
-				refresh <= 1'b1;
+			end else if (need_refresh && !oe_latch[0] & !we_latch[0]) begin
+				refresh <= 1;
 				refresh_cnt <= 0;
 				sd_cmd <= CMD_AUTO_REFRESH;
 			end
@@ -340,6 +342,7 @@ always @(posedge clk) begin
 			endcase;
 		end
 
+		//set DQM two cycles before the 2nd word in the burst
 		if(t == STATE_DS1b && oe_latch[1]) { SDRAM_DQMH, SDRAM_DQML } <= ~ds[1];
 
 		if(t == STATE_READ1b && oe_latch[1]) begin
