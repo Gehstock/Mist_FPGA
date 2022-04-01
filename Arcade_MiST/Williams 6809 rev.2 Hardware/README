@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- Turkey shoot by Dar (darfpga@aol.fr) (05 March 2022)
+-- Inferno by Dar (darfpga@aol.fr) (13 March 2022)
 -- http://darfpga.blogspot.fr
 -- https://sourceforge.net/projects/darfpga/files
 -- github.com/darfpga
@@ -38,7 +38,7 @@
 --            17,18  -  gnd   -  8,10 
 --
 -------------------------------------------------------------------------------
--- Version 0.0 -- 05/03/2022 -- 
+-- Version 0.0 -- 13/03/2022 -- 
 --	initial version 
 -------------------------------------------------------------------------------
 --
@@ -57,12 +57,12 @@
 --   F2 : Start 2 players
 --   F1 : Start 1 player
 --   SPACE       : Fire  
---   RIGHT arrow : Move gun right
---   LEFT  arrow : Move gun left
---   UP    arrow : Move gun up 
---   DOWN  arrow : Move gun down
---   CTRL        : Gobble
---   W(Z)        : Grenade
+--   RIGHT arrow : run/aim -- must use separate controls
+--   LEFT  arrow : run/aim -- must use separate controls
+--   UP    arrow : run/aim -- must use separate controls 
+--   DOWN  arrow : run/aim -- must use separate controls
+--   CTRL        : NU
+--   W(Z)        : NU
 --
 -- Keyboard Service inputs French(english) :
 --
@@ -73,61 +73,57 @@
 -- To enter service mode press 'advance' key while in game over screen
 -- Enter service mode to tune game parameters (difficulty ...)
 -- Tuning are lost at power OFF, for permanent tuning edit/set parameters
---   within tshoot_cmos_ram.vhd and recompile.
+--   within inferno_cmos_ram.vhd and recompile.
 --
 -------------------------------------------------------------------------------
--- Use make_tshoot_proms.bat to build vhd file and bin from binaries
+-- Use make_inferno_proms.bat to build vhd file and bin from binaries
 -- Load sdram with external rom bank -> use sdram_loader_de10_lite.sof + key(0)
 -------------------------------------------------------------------------------
--- Program sdram content with this turkey shoot rom bank loader before 
--- programming turkey shoot game core :
+-- Program sdram content with this  inferno rom bank loader before 
+-- programming inferno game core :
 --
--- 1) program DE10_lite with tshoot sdram loader
+-- 1) program DE10_lite with inferno sdram loader
 -- 2) press key(0) at least once (digit blinks during programming)
--- 3) program DE10_lite with tshoot core without switching DE10_lite OFF
+-- 3) program DE10_lite with inferno core without switching DE10_lite OFF
 -------------------------------------------------------------------------------
--- Used ROMs by make_tshoot_proms.bat
+-- Used ROMs by make_inferno_proms.bat
 
-> turkey_shoot_prog1
-   rom18.ic55 CRC(effc33f1)
+> inferno_prog2
+   ic9.inf  CRC(1a013185)
+   ic10.inf CRC(dbf64a36)
 
-> turkey_shoot_prog2
-   rom2.ic9"  CRC(fd982687)
-   rom3.ic10" CRC(9617054d)
+> inferno_bank_a
+  None  
 
-> turkey_shoot_bank_a
-   rom17.ic26 CRC(b02d1ccd)
-   rom15.ic24 CRC(11709935)
+> inferno_bank_b
+   ic25.inf CRC(103a5951)
+   ic23.inf CRC(c04749a0)
+   ic21.inf CRC(c405f853)
+   ic19.inf CRC(ade7645a)   
 
-> turkey_shoot_bank_b
-   rom16.ic25 CRC(69ce38f8)
-   rom14.ic23 CRC(769a4ae5)
-   rom13.ic21 CRC(ec016c9b)
-   rom12.ic19 CRC(98ae7afa)   
+> inferno_bank_c
+   ic18.inf CRC(95bcf7b1)
+   ic16.inf CRC(8bc4f935)
+   ic14.inf CRC(a70508a7)
+   ic12.inf CRC(7ffb87f9)
 
-> turkey_shoot_bank_c
-   rom11.ic18 CRC(60d5fab8)
-   rom9.ic16  CRC(a4dd4a0e)
-   rom7.ic14  CRC(f25505e6)
-   rom5.ic12  CRC(94a7c0ed)
+> inferno_bank_d
+   ic17.inf CRC(b4684139)
+   ic15.inf CRC(128a6ad6)
+   ic13.inf CRC(83a9e4d6)
+   ic11.inf CRC(c2e9c909)
 
-> turkey_shoot_bank_d
-   rom10.ic17 CRC(0f32bad8)
-   rom8.ic15  CRC(e9b6cbf7)
-   rom6.ic13  CRC(a49f617f)
-   rom4.ic11  CRC(b026dc00)
+> inferno_sound
+   ic8.inf  CRC(4e3123b8)
 
-> turkey_shoot_sound
-   rom1.ic8   CRC(011a94a7)
+> inferno_graph1
+   ic57.inf CRC(65a4ef79)
 
-> turkey_shoot_graph1
-   rom20.ic57 CRC(c6e1d253)
+> inferno_graph2
+   ic58.inf CRC(4bb1c2a0)
 
-> turkey_shoot_graph2
-   rom21.ic58 CRC(9874e90f)
-
-> turkey_shoot_graph3
-   rom19.ic41 CRC(b9ce4d2a)
+> inferno_graph3
+   ic41.inf CRC(f3f7238f)
 
 -------------------------------------------------------------------------------
 -- Misc. info

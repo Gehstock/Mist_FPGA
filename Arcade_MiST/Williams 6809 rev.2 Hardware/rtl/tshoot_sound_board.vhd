@@ -38,11 +38,9 @@ port(
  sound_trig   : in std_logic;
  sound_ack    : out std_logic;
  audio_out    : out std_logic_vector( 7 downto 0);
- 
- snd_rom_addr : out std_logic_vector(12 downto 0);
- snd_rom_do : in std_logic_vector(7 downto 0);
- 
- dbg_cpu_addr : out std_logic_vector(15 downto 0)
+
+ snd_rom_addr : buffer std_logic_vector(12 downto 0);
+ snd_rom_do   : in  std_logic_vector( 7 downto 0)
 );
 end tshoot_sound_board;
 
@@ -65,6 +63,8 @@ architecture struct of tshoot_sound_board is
  signal rom_cs    : std_logic;
  signal rom_do    : std_logic_vector( 7 downto 0);
 
+ signal snd_rom_addr_r : std_logic_vector(12 downto 0);
+
 -- pia port a
 --      bit 0-7 audio output
 
@@ -85,8 +85,6 @@ architecture struct of tshoot_sound_board is
  signal pia_do     : std_logic_vector( 7 downto 0);
 
 begin
-
-dbg_cpu_addr <= cpu_addr;
 
 -- clock divider
 process (reset, clock_12)
@@ -116,7 +114,16 @@ end process;
 wram_cs <= '1' when cpu_addr(15 downto 13) = "000" else '0';
 pia_cs  <= '1' when cpu_addr(15 downto 13) = "001" else '0';
 rom_cs  <= '1' when cpu_addr(15 downto 13) = "111" else '0';
-	
+
+snd_rom_addr <= cpu_addr(12 downto 0) when rom_cs = '1' else snd_rom_addr_r;
+
+process (reset, clock_12)
+begin
+	if rising_edge(clock_12) then
+		snd_rom_addr_r <= snd_rom_addr;
+	end if;
+end process;
+
 -- write enables
 wram_we <=    '1' when cpu_rw_n = '0' and cpu_clock = '1' and wram_cs = '1' else '0';
 pia_rw_n <=   '0' when cpu_rw_n = '0' and pia_cs = '1' else '1'; 
@@ -155,8 +162,6 @@ port map(
 -- addr => cpu_addr(12 downto 0),
 -- data => rom_do
 --);
-
-snd_rom_addr <= cpu_addr(12 downto 0);
 rom_do <= snd_rom_do;
 
 -- cpu wram 
