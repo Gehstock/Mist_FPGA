@@ -108,6 +108,7 @@ architecture RTL of PACMAN_VIDEO is
 	signal cntr_ld            : std_logic;
 	signal sprite_ram_ip      : std_logic_vector(3 downto 0);
 	signal sprite_ram_op      : std_logic_vector(3 downto 0);
+	signal sprite_ram_q       : std_logic_vector(3 downto 0);
 	signal ra                 : std_logic_vector(7 downto 0);
 	signal ra_t1              : std_logic_vector(7 downto 0);
 
@@ -312,11 +313,19 @@ begin
 
 		clk_b_i  => CLK,
 		addr_b_i => ra,
-		data_b_o => sprite_ram_op
+		data_b_o => sprite_ram_q
 	);
 
 	sprite_ram_reg <= sprite_ram_op when vout_obj_on_t1 = '1' else "0000";
 	video_op_sel <= '1' when not (sprite_ram_reg = "0000") else '0';
+
+	p_sprite_ram_latch : process
+	begin
+		wait until rising_edge (CLK);
+		if (ENA_6 = '1') then
+			sprite_ram_op <= sprite_ram_q;
+		end if;
+	end process;
 
 	p_sprite_ram_ip_reg : process
 	begin
