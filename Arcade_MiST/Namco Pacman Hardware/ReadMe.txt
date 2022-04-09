@@ -7,4 +7,3 @@ Vanguard
 Zarzon
 Piranha
 Titan
-The Glob/Beastie
