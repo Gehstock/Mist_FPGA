@@ -235,7 +235,8 @@ reg [21:0] rom_mask = 19'h7FFFF;
 
 assign ioctl_wait = cart_busy & rom_download;
 
-logic [127:0] user_palette = 128'hF7BEF7E7_86867733_E72C2C96_2020_2020;   
+//logic [127:0] user_palette = 128'hF7BEF7E7_86867733_E72C2C96_2020_2020;   
+logic [127:0] user_palette = 	128'hF7BEF7_E78686_7733E7_2C2C96_2020_2020;   
 wire [127:0] default_palette = 128'h828214_517356_305A5F_1A3B49_0000_0000;
 
 logic [2:0][7:0] palette[4];
