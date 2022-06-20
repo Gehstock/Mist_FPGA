@@ -1,0 +1,7 @@
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) core.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) fsm_execution_unit.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) fsm_intnmi.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) r65c02_tc.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) reg_pc.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) reg_sp.vhd]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) regbank_axy.vhd]
