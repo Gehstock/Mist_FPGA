@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 21:20:48  December 16, 2020
+# Date created = 18:42:19  June 20, 2022
 #
 # -------------------------------------------------------------------------- #
 #
@@ -39,13 +39,20 @@
 
 # Project-Wide Assignments
 # ========================
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Supervision_MiST.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sv_top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/lcd.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/audio.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/dma.sv
+set_global_assignment -name VHDL_FILE rtl/bram.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name QIP_FILE "D:/GitHub/Mist_FPGA/common/mist/mist.qip"
+set_global_assignment -name QIP_FILE "D:/GitHub/Mist_FPGA/common/CPU/65C02/r65c02.qip"
 
 # Pin & Location Assignments
 # ==========================
@@ -124,21 +131,17 @@ set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
 
 # Analysis & Synthesis Assignments
 # ================================
 set_global_assignment -name FAMILY "Cyclone III"
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name SAVE_DISK_SPACE OFF
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
 set_global_assignment -name TOP_LEVEL_ENTITY Supervision_MiST
 
 # Fitter Assignments
 # ==================
-set_global_assignment -name OPTIMIZE_POWER_DURING_FITTING OFF
-set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
-set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 set_global_assignment -name DEVICE EP3C25E144C8
 set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
 set_global_assignment -name ENABLE_NCE_PIN OFF
@@ -157,6 +160,11 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 # =====================
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+
+# SignalTap II Assignments
+# ========================
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/zaxx.stp
 
 # Power Estimation Assignments
 # ============================
@@ -224,17 +232,4 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(Supervision_MiST)
 # ----------------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Supervision_MiST.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/Supervision_Top.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/audio.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/dma.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ram88.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/video.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
-set_global_assignment -name QIP_FILE "D:/GitHub/Mist_FPGA/common/mist/mist.qip"
-set_global_assignment -name VERILOG_FILE rtl/65c02/cpu_65c02.v
-set_global_assignment -name VERILOG_FILE rtl/65c02/cpu.v
-set_global_assignment -name VERILOG_FILE rtl/65c02/ALU.v
-set_global_assignment -name VERILOG_FILE rtl/pll1.v
-set_global_assignment -name VERILOG_FILE rtl/pll2.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -1,4 +1,11 @@
-# Gamate Handheld System for MiSTer
+# Gamate Handheld System for MiST
+
+Usage
+
+Start = ESC
+Select = TAB
+A = Control
+B = LALT
 
 ## General description
 This is an FPGA implementation of the Gamate handheld system by Jamie Blanks. This was a Gameboy clone from the early 2000's from the Bit Corp, later to be part of UMC. There's not much to say about it.
