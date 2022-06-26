@@ -10,8 +10,6 @@ B = LALT
 ## General description
 This is an FPGA implementation of the Gamate handheld system by Jamie Blanks. This was a Gameboy clone from the early 2000's from the Bit Corp, later to be part of UMC. There's not much to say about it.
 
-This core is compatible with Gameboy *.gbp palette files which can be found with the Gameboy core.
-
 You may copy a game to boot1.rom in order to have it boot to that game when the core loads.
 
 ## Special Thanks
