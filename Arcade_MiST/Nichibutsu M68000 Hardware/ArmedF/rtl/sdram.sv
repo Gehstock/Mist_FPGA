@@ -93,9 +93,9 @@ module sdram (
 	output reg [31:0] gfx3_q,
 
 	input      [20:2] sp_addr,
-	input             sp_cs,
-	output reg [31:0] sp_q,
-	output reg        sp_valid
+	input             sp_req,
+	output reg        sp_ack,
+	output reg [31:0] sp_q
 );
 
 parameter  MHZ = 16'd80; // 80 MHz default clock, set it to proper value to calculate refresh rate
@@ -282,7 +282,7 @@ always @(*) begin
 	end else if (gfx3_addr != addr_last2[PORT_GFX3]) begin
 		next_port[1] = PORT_GFX3;
 		addr_latch_next[1] = { 1'b1, 3'd0, gfx3_addr, 1'b0 };
-	end else if (sp_cs && !sp_valid) begin
+	end else if (sp_req ^ sp_ack) begin
 		next_port[1] = PORT_SP;
 		addr_latch_next[1] = { 1'b1, 3'd0, sp_addr, 1'b0 };
 	end else begin
@@ -301,7 +301,6 @@ always @(posedge clk) begin
 	refresh_cnt <= refresh_cnt + 1'd1;
 
 	if(init) begin
-		sp_valid <= 0;
 		{ cpu1_rom_valid, cpu2_valid, cpu3_valid, cpu4_valid } <= 0;
 		// initialization takes place at the end of the reset phase
 		if(t == STATE_RAS0) begin
@@ -322,7 +321,6 @@ always @(posedge clk) begin
 			end
 		end
 	end else begin
-		if (!sp_cs) sp_valid <= 0;
 		if (!cpu1_rom_cs) cpu1_rom_valid <= 0;
 		if (cpu2_addr != addr_last[PORT_CPU2] && cpu2_rom_cs) cpu2_valid <= 0;
 		if (cpu3_addr != addr_last[PORT_CPU3] && cpu3_rom_cs) cpu3_valid <= 0;
@@ -438,7 +436,7 @@ always @(posedge clk) begin
 				PORT_GFX1 : begin  gfx1_q[31:16] <= sd_din; end
 				PORT_GFX2 : begin  gfx2_q[31:16] <= sd_din; end
 				PORT_GFX3 : begin  gfx3_q[31:16] <= sd_din; end
-				PORT_SP   : begin    sp_q[31:16] <= sd_din; sp_valid <= 1; end
+				PORT_SP   : begin    sp_q[31:16] <= sd_din; sp_ack <= sp_req; end
 				default: ;
 			endcase;
 		end

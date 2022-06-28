@@ -21,7 +21,7 @@
 module armedf
 (
     input         pll_locked,
-    input         clk_96M,
+    input         clk_96M, // only for SDRAM and ROM download
     input         clk_24M,
     input         reset,
     input         pause_cpu,
@@ -129,8 +129,6 @@ video_timing video_timing (
 
 
 //// SPRITE MACHINE
-reg         curr_line;
-
 wire  [9:0] sprite_y_adj = ( pcb == 4 || pcb == 5 || pcb == 6 || pcb == 7) ? 10'd0 : 10'd128 ;
 
 // armedf (2), cclimbr2 (4), legion (5,6,7)
@@ -141,7 +139,6 @@ reg   [9:0] sprite_count;
 wire  [8:0] sprite_y_pos_final = sprite_y_adj + y_adj + 8'd239 - sprite_y_pos;
 
 reg   [5:0] spr_pal_idx;
-reg  [31:0] sprite_data;
 
 wire  [3:0] sprite_y_ofs = vc - sprite_y_pos_final;
 
@@ -152,7 +149,7 @@ reg  [10:0] sprite_shared_addr;
 wire [15:0] sprite_shared_ram_dout;
 
 reg   [3:0] copy_sprite_state;
-reg   [3:0] draw_sprite_state;
+reg   [2:0] draw_sprite_state;
 
 reg   [1:0] sprite_pri;
 reg   [8:0] sprite_x_ofs;
@@ -161,14 +158,30 @@ reg  [11:0] sprite_tile ;
 reg   [8:0] sprite_y_pos;
 reg   [8:0] sprite_x_pos;
 reg   [4:0] sprite_colour;
-reg   [6:0] sprite_spr_lut;
-
 reg         sprite_x_256;
 reg         sprite_flip_x;
 reg         sprite_flip_y;
+reg   [6:0] sprite_spr_lut;
+reg  [31:0] sprite_data;
 
-always @ (posedge clk_96M) begin
-    //   copy sprite list to dedicated sprite list ram
+reg   [3:0] spr_pix;
+always @ (*) begin
+    case ( flipped_x[2:0] )
+        3'b000: spr_pix = sprite_data[ 3: 0];
+        3'b001: spr_pix = sprite_data[ 7: 4];
+        3'b010: spr_pix = sprite_data[11: 8];
+        3'b011: spr_pix = sprite_data[15:12];
+        3'b100: spr_pix = sprite_data[19:16];
+        3'b101: spr_pix = sprite_data[23:20];
+        3'b110: spr_pix = sprite_data[27:24];
+        3'b111: spr_pix = sprite_data[31:28];
+    endcase
+end
+
+wire [10:0] spr_pal_addr = { sprite_spr_lut, spr_pix };  // [10:0]
+
+always @ (posedge clk_24M) begin
+    // copy sprite list to dedicated sprite list ram
     // start state machine for copy
     if ( copy_sprite_state == 0 && vbl_sr == 2'b01 ) begin
         copy_sprite_state <= 1;
@@ -230,120 +243,66 @@ always @ (posedge clk_96M) begin
         end else begin
             // we are done, go idle.
             copy_sprite_state <= 0;
+            sprite_buffer_addr <= 0;
         end
-    // don't try to draw sprites while copying the buffer.
-    end else if ( draw_sprite_state == 0 && hc >= 355 ) begin // off by one
+    end
 
-        curr_line <= vc[0];
-        // clear sprite buffer
-        sprite_x_ofs <= 0;
-        draw_sprite_state <= 1;
-        sprite_buffer_addr <= 0;
-
-        // enable writing
-        sprite_fb_w <= 1;
-        sprite_fb_addr_w <= { ~vc[0], 9'b0 };
-        // set default to transparent value
-        sprite_fb_din <= 15;
-
-    end else if (draw_sprite_state == 1) begin
-
-        sprite_fb_addr_w <= { ~vc[0], sprite_x_ofs }; 
-
-        if ( sprite_x_ofs < 353 ) begin
-            sprite_x_ofs <= sprite_x_ofs + 1'd1;
-        end else begin
-            // done writing.  wait for start of next line
-            sprite_fb_w <= 0;
-            if ( curr_line != vc[0] ) begin
-                // sprite buffer now blank
-                draw_sprite_state <= 2;
-            end
+    // Rendering into dual line-buffers
+    sprite_fb_w <= 0;
+    case (draw_sprite_state)
+    0:  if ( copy_sprite_state == 0 && hc == 2 ) begin
+            // don't try to draw sprites while copying the buffer.
+            sprite_x_ofs <= 0;
+            sprite_buffer_addr <= 0;
+            draw_sprite_state <= 1;
         end
-    end else if (draw_sprite_state == 2) begin
-        // get current sprite attributes
-        {sprite_tile,sprite_x_pos,sprite_y_pos,sprite_colour,sprite_spr_lut,sprite_flip_x,sprite_flip_y,sprite_pri} <= sprite_buffer_dout;
-        draw_sprite_state <= 3;
-        sprite_x_ofs <= 0;
-    end else if (draw_sprite_state == 3) begin  
-        sprite_fb_w <= 0;
-        if ( sprite_pri != 3 && sprite_y_pos != 0 && vc >= sprite_y_pos_final && vc < ( sprite_y_pos_final + 16 ) ) begin
-            if ( sprite_x_ofs[2:0] == 0 ) begin  
-                // fetch sprite bitmap 
-                sprite_rom_addr <= { sprite_tile, flipped_y[3:0], flipped_x[3] };  
-                sprite_rom_cs <= 1;
-
-                draw_sprite_state <= 4;
-            end else begin
-                draw_sprite_state <= 5;
-            end
-        end else begin
-            draw_sprite_state <= 7;
-        end
-    end else if (draw_sprite_state == 4) begin
-        // wait for bitmap read to complete
-        if ( sprite_rom_valid == 1 ) begin
-            // bitmap is only valid for one clock.  latch it.
-            sprite_data <= sprite_rom_data;
-            sprite_rom_cs <= 0;
-
-            draw_sprite_state <= 5;
-        end
-    end else if (draw_sprite_state == 5) begin
-        // need a clock cycle to read the sprite palette lut
-        draw_sprite_state <= 6;
-    end else if (draw_sprite_state == 6) begin
-        draw_sprite_state <= 3;
-        sprite_fb_w <= 0;
-
-        if ( spr_pal_dout[3:0] != 15 && sprite_x_pos[8:0] < 353 ) begin // spr_pix
-
-            sprite_fb_w <= 1;
-            // 0-511 = even line / 512-1023 = odd line
-            sprite_fb_addr_w <= { vc[0], sprite_x_pos[8:0] } ;
-            sprite_fb_din    <= { sprite_colour[4:0],spr_pal_dout[3:0],sprite_pri[1:0] }; 
-
-        end
-
-        if ( sprite_x_ofs < 15 ) begin
-            sprite_x_pos <= sprite_x_pos + 1'd1;
-            sprite_x_ofs <= sprite_x_ofs + 1'd1;
-        end else begin
-            draw_sprite_state <= 7;
-        end
-    end else if (draw_sprite_state == 7) begin
-        // done. next sprite
-        if ( sprite_buffer_addr < sprite_count ) begin
+    1:  if (sprite_buffer_addr < max_sprites) begin
+            // get current sprite attributes
+            {sprite_tile,sprite_x_pos,sprite_y_pos,sprite_colour,sprite_spr_lut,sprite_flip_x,sprite_flip_y,sprite_pri} <= sprite_buffer_dout;
             sprite_buffer_addr <= sprite_buffer_addr + 1'd1;
             draw_sprite_state <= 2;
+            sprite_x_ofs <= 0;
         end else begin
-            // all sprites done
-            draw_sprite_state <= 8;
-        end
-    end else if (draw_sprite_state == 8) begin
-        // we are done. wait for end of line
-//        if ( hc == 0 ) begin
+            // all done!
             draw_sprite_state <= 0;
-//        end
-    end
-end
+            sprite_buffer_addr <= 0;
+        end
+    2:  if ( sprite_pri != 3 && sprite_y_pos != 0 && vc >= sprite_y_pos_final && vc < ( sprite_y_pos_final + 16 ) ) begin
+            sprite_rom_addr <= { sprite_tile, flipped_y[3:0], flipped_x[3] };  
+            sprite_rom_req <= ~sprite_rom_req;
+            draw_sprite_state <= 3;
+        end else begin
+            draw_sprite_state <= 1;
+        end
+    3:  if ( sprite_rom_req == sprite_rom_ack ) begin
+            // wait for bitmap read to complete
+            sprite_data <= sprite_rom_data;
+            draw_sprite_state <= 4;
+        end
+    4:  begin
+            if ( spr_pal_dout[3:0] != 15 && sprite_x_pos[8:0] < 353 ) begin // spr_pix
 
-wire [10:0] spr_pal_addr = { sprite_spr_lut, spr_pix };  // [10:0]
+                sprite_fb_w <= 1;
+                // 0-511 = even line / 512-1023 = odd line
+                sprite_fb_addr_w <= { vc[0], sprite_x_pos[8:0] } ;
+                sprite_fb_din    <= { sprite_colour[4:0],spr_pal_dout[3:0],sprite_pri[1:0] }; 
 
-wire [3:0] spr_pix;
-always @ (*) begin
-    case ( flipped_x[2:0] )
-            3'b000: spr_pix <= sprite_data[ 3: 0];
-            3'b001: spr_pix <= sprite_data[ 7: 4];
-            3'b010: spr_pix <= sprite_data[11: 8];
-            3'b011: spr_pix <= sprite_data[15:12];
-            3'b100: spr_pix <= sprite_data[19:16];
-            3'b101: spr_pix <= sprite_data[23:20];
-            3'b110: spr_pix <= sprite_data[27:24];
-            3'b111: spr_pix <= sprite_data[31:28];
+            end
+
+            if ( sprite_x_ofs < 15 ) begin
+                sprite_x_pos <= sprite_x_pos + 1'd1;
+                sprite_x_ofs <= sprite_x_ofs + 1'd1;
+                if (sprite_x_ofs[2:0] == 3'b111) draw_sprite_state <= 2;
+            end else begin
+                draw_sprite_state <= 1;
+            end
+        end
     endcase
+    // For safety, if the sprite buffer is not scanned fully at the line end.
+    // Should be safe, as the maximum number of visible sprites/scanline most probably surpassed already
+    // (TODO: investigate this limit on the original HW, and stop scanning when it's reached)
+    if (hc == 0) draw_sprite_state <= 0;
 end
-
 
 ////// TILEMAP LAYERS
 reg        bg_enable;
@@ -393,14 +352,10 @@ reg  [10:0] bg_pal_addr ;
 reg  [10:0] fg_pal_addr ;
 reg  [10:0] tx_pal_addr ;
 
-reg  [10:0] sprite_pal_ofs = 11'h200;
-
 always @ (posedge clk_24M) begin
     if ( reset == 1 ) begin
 
     end else if (clk6_en) begin
-
-        sprite_fb_addr_r <= { ~vc[0], hc[8:0] } ;
 
 // background 0x3ff
 
@@ -464,10 +419,14 @@ end
 
 // Layer mux
 reg draw_pix;
+reg  [10:0] sprite_pal_ofs = 11'h200;
+assign      sprite_fb_addr_r = { ~vc[0], hc[8:0] };
+reg  [15:0] sprite_fb_out_r;
 
 always @ (posedge clk_24M) begin
     if (clk6_en) begin
         draw_pix <= 0;
+        sprite_fb_out_r <= sprite_fb_out;
 
         // 15 == transparent
         // lowest priority
@@ -483,8 +442,8 @@ always @ (posedge clk_24M) begin
         end
 
         // sprite priority 2
-        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out[1:0] == 2 ) begin  
-            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out[10:2] ) ;
+        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out_r[1:0] == 2 ) begin  
+            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out_r[10:2] ) ;
             draw_pix <= 1;
         end
 
@@ -494,8 +453,8 @@ always @ (posedge clk_24M) begin
         end
 
         // sprite priority 1
-        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out[1:0] == 1 ) begin 
-            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out[10:2] ) ;
+        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out_r[1:0] == 1 ) begin 
+            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out_r[10:2] ) ;
             draw_pix <= 1;
         end
 
@@ -506,8 +465,8 @@ always @ (posedge clk_24M) begin
         end
 
         // sprite priority 0
-        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out[1:0] == 0 ) begin 
-            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out[10:2] ) ;
+        if ( gfx4_en == 1 && sp_enable == 1 && sprite_fb_out_r[1:0] == 0 ) begin 
+            tile_pal_addr <= ( sprite_pal_ofs + sprite_fb_out_r[10:2] ) ;
             draw_pix <= 1;
         end
 
@@ -1716,7 +1675,7 @@ dual_port_ram #(.LEN(2048)) sprite_ram_H (
     .data_a ( m68k_dout[15:8]  ),
     .q_a (  ram68k_sprite_dout[15:8] ),
 
-    .clock_b ( clk_96M ),
+    .clock_b ( clk_24M ),
     .address_b ( sprite_shared_addr ),
     .wren_b ( 1'b0 ),
     .data_b ( ),
@@ -1732,7 +1691,7 @@ dual_port_ram #(.LEN(2048)) sprite_ram_L (
     .data_a ( m68k_dout[7:0]  ),
     .q_a ( ram68k_sprite_dout[7:0] ),
 
-    .clock_b ( clk_96M ),
+    .clock_b ( clk_24M ),
     .address_b ( sprite_shared_addr ),
     .wren_b ( 1'b0 ),
     .data_b ( ),
@@ -1857,7 +1816,7 @@ dual_port_ram #(.LEN(2048)) spr_pal_h (
     .data_a ( m68k_dout[15:8]  ),
     .q_a ( m68k_spr_pal_dout[15:8] ),
 
-    .clock_b ( clk_96M ),
+    .clock_b ( ~clk_24M ),
     .address_b ( spr_pal_addr ),
     .wren_b ( 1'b0 ),
     .data_b ( ),
@@ -1873,7 +1832,7 @@ dual_port_ram #(.LEN(2048)) spr_pal_L (
     .data_a ( m68k_dout[7:0]  ),
     .q_a (m68k_spr_pal_dout[7:0]),
 
-    .clock_b ( clk_96M ),
+    .clock_b ( ~clk_24M ),
     .address_b ( spr_pal_addr ),
     .wren_b ( 1'b0 ),
     .data_b ( ),
@@ -1886,13 +1845,13 @@ wire [63:0] sprite_buffer_dout;
 reg  sprite_buffer_w;
 
 dual_port_ram #(.LEN(512), .DATA_WIDTH(64)) sprite_buffer (
-    .clock_a ( clk_96M ),
+    .clock_a ( clk_24M ),
     .address_a ( sprite_buffer_addr ),
     .wren_a ( 1'b0 ),
     .data_a ( ),
     .q_a ( sprite_buffer_dout ),
 
-    .clock_b ( clk_96M ),
+    .clock_b ( clk_24M ),
     .address_b ( sprite_buffer_addr ),
     .wren_b ( sprite_buffer_w ),
     .data_b ( sprite_buffer_din  ),
@@ -1901,14 +1860,14 @@ dual_port_ram #(.LEN(512), .DATA_WIDTH(64)) sprite_buffer (
     );
 
 reg          sprite_fb_w;
-reg   [9:0]  sprite_fb_addr_w;
+wire  [9:0]  sprite_fb_addr_w;
 reg  [15:0]  sprite_fb_din;
 wire [15:0]  sprite_fb_out;
-reg   [9:0]  sprite_fb_addr_r ; 
+wire  [9:0]  sprite_fb_addr_r;
 
 // two line buffer for sprite rendering
 dual_port_ram #(.LEN(1024), .DATA_WIDTH(16)) sprite_line_buffer_ram (
-    .clock_a ( clk_96M ),
+    .clock_a ( clk_24M ),
     .address_a ( sprite_fb_addr_w ),
     .wren_a ( sprite_fb_w ),
     .data_a ( sprite_fb_din ),
@@ -1916,8 +1875,8 @@ dual_port_ram #(.LEN(1024), .DATA_WIDTH(16)) sprite_line_buffer_ram (
 
     .clock_b ( clk_24M ),
     .address_b ( sprite_fb_addr_r ),
-    .wren_b ( 0 ),
-//    .data_b ( ),
+    .wren_b ( clk6_en ), // clear the buffer after read with
+    .data_b ( 16'd15 ),  // transparent color
     .q_b ( sprite_fb_out )
     );
 
@@ -1979,8 +1938,8 @@ wire m68k_rom_valid;
 
 reg  [17:2] sprite_rom_addr;
 wire [31:0] sprite_rom_data;
-reg sprite_rom_cs;
-wire sprite_rom_valid;
+reg sprite_rom_req;
+wire sprite_rom_ack;
 
 reg port1_req, port2_req;
 always @(posedge clk_96M) begin
@@ -2074,9 +2033,9 @@ sdram #(CLKSYS) sdram
   .gfx3_q        ( gfx3_q ),
 
   .sp_addr       ( {3'b100, sprite_rom_addr} ),      // (ioctl_addr >= 24'h100000) & (ioctl_addr < 24'h140000)
-  .sp_cs         ( sprite_rom_cs    ),
-  .sp_q          ( sprite_rom_data  ),
-  .sp_valid      ( sprite_rom_valid )
+  .sp_req        ( sprite_rom_req   ),
+  .sp_ack        ( sprite_rom_ack   ),
+  .sp_q          ( sprite_rom_data  )
 );
 
 always @(posedge clk_24M) begin
