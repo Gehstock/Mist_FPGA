@@ -227,9 +227,13 @@ reg  [63:0] sprite_buffer_din;
 wire [63:0] sprite_buffer_dout;
 reg         sprite_buffer_w;
 
+reg   [3:0] sprite_x_ofs;
+wire  [3:0] sprite_x_new_ofs = {sprite_x_ofs[2:1], sprite_x_ofs[3],sprite_x_ofs[0]};
+
 reg   [9:0] sprite_tile ;  // terra cresta has 512 tiles ,  HORE HORE Kid has 1024
 reg   [7:0] sprite_y_pos;
 reg   [8:0] sprite_x_pos;
+wire  [8:0] sprite_x_new_pos = sprite_x_pos + sprite_x_new_ofs;
 reg   [3:0] sprite_colour;
 reg         sprite_x_256;
 reg         sprite_flip_x;
@@ -333,13 +337,12 @@ always @ (posedge clk_24M) begin
     end else if (draw_sprite_state == 4) begin                
         if ( vc >= sprite_y_pos && vc < ( sprite_y_pos + 16 ) ) begin
             // fetch bitmap 
-            if ( p[3:0] != sprite_trans_pen && ~sprite_x_pos[8]) begin
-                sprite_line_buffer[{~vc[0], sprite_x_pos[7:0]}] <= p;
+            if ( p[3:0] != sprite_trans_pen && ~sprite_x_new_pos[8]) begin
+                sprite_line_buffer[{~vc[0], sprite_x_new_pos[7:0]}] <= p;
             end
             if ( sprite_x_ofs < 15 ) begin
-                sprite_x_pos <= sprite_x_pos + 1'd1;
                 sprite_x_ofs <= sprite_x_ofs + 1'd1;
-                if (sprite_x_ofs[0]) begin
+                if (sprite_x_ofs == 7) begin
                     draw_sprite_state <= 3;
                     sprite_rom_req <= ~sprite_rom_req;
                 end
@@ -364,7 +367,7 @@ end
 
 wire    [3:0] sprite_y_ofs = vc - sprite_y_pos ;
 
-wire    [3:0] flipped_x = ( sprite_flip_x == 0 ) ? sprite_x_ofs : 4'd15 - sprite_x_ofs;
+wire    [3:0] flipped_x = ( sprite_flip_x == 0 ) ? sprite_x_new_ofs : 4'd15 - sprite_x_new_ofs;
 wire    [3:0] flipped_y = ( sprite_flip_y == 0 ) ? sprite_y_ofs : 4'd15 - sprite_y_ofs;
 
 //wire    [3:0] gfx3_pix = (sprite_x_ofs[0] == 1 ) ? gfx3_dout[7:4] : gfx3_dout[3:0];
@@ -432,8 +435,6 @@ end
 //			if( attrs&0x02 ) tile|= 0x100;
 //			color += 16 * (spritepalettebank[(tile>>1)&0xff] & 0x0f);
 //		}
-
-reg     [7:0] sprite_x_ofs;
 
 reg    [11:0] sprite_line_buffer[512];
 
