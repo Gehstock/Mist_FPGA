@@ -189,6 +189,7 @@ package T80_Pack is
 		ExchangeRp              : out std_logic;
 		ExchangeAF              : out std_logic;
 		ExchangeRS              : out std_logic;
+		ExchangeWH              : out std_logic;
 		I_DJNZ                  : out std_logic;
 		I_CPL                   : out std_logic;
 		I_CCF                   : out std_logic;

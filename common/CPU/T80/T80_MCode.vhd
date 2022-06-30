@@ -130,6 +130,7 @@ entity T80_MCode is
       ExchangeRp  : out std_logic;
       ExchangeAF  : out std_logic;
       ExchangeRS  : out std_logic;
+      ExchangeWH  : out std_logic;
       I_DJNZ      : out std_logic;
       I_CPL       : out std_logic;
       I_CCF       : out std_logic;
@@ -237,6 +238,7 @@ begin
 		ExchangeRp <= '0';
 		ExchangeAF <= '0';
 		ExchangeRS <= '0';
+		ExchangeWH <= '0';
 		I_DJNZ <= '0';
 		I_CPL <= '0';
 		I_CCF <= '0';
@@ -687,24 +689,21 @@ begin
 				when 1 =>
 					Set_Addr_To <= aSP;
 				when 2 =>
-					Read_To_Reg <= '1';
-					Set_BusA_To <= "0101";
-					Set_BusB_To <= "0101";
 					Set_Addr_To <= aSP;
 					LDZ <= '1';
+					IncDec_16 <= "0111"; -- SP <= SP+1
 				when 3 =>
-					IncDec_16 <= "0111";
-					Set_Addr_To <= aSP;
 					TStates <= "100";
-					Write <= '1';
-				when 4 =>
-					Read_To_Reg <= '1';
-					Set_BusA_To <= "0100";
 					Set_BusB_To <= "0100";
 					Set_Addr_To <= aSP;
 					LDW <= '1';
+				when 4 =>
+					Set_BusB_To <= "0101";
+					Write <= '1';
+					IncDec_16 <= "1111"; -- SP <= SP-1
+					Set_Addr_To <= aSP;
 				when 5 =>
-					IncDec_16 <= "1111";
+					ExchangeWH <= '1'; -- save WZ to HL
 					TStates <= "101";
 					Write <= '1';
 				when others => null;
@@ -884,7 +883,6 @@ begin
 					MCycles <= "101";
 					case to_integer(unsigned(MCycle)) is
 					when 1 =>
-						LDZ <= '1';
 						TStates <= "101";
 						IncDec_16 <= "1111";
 						Set_Addr_To <= aSP;

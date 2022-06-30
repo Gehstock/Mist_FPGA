@@ -67,10 +67,11 @@
 --
 --      0247 : Fixed bus req/ack cycle
 --
---      0247a: 7th of September, 2003 by Kazuhiro Tsujikawa (tujikawa@hat.hi-ho.ne.jp)
---             Fixed IORQ_n, RD_n, WR_n bus timing
---
 --      0250 : Added R800 Multiplier by TobiFlex 2017.10.15
+--
+-- Bus signal logic changes from the ZX Spectrum Next were made by:
+--
+-- Fabio Belavenuto, Charlie Ingley
 --
 
 library IEEE;
@@ -113,15 +114,20 @@ architecture rtl of T80a is
 	signal NoRead               : std_logic;
 	signal Write                : std_logic;
 	signal MREQ                 : std_logic;
-	signal MReq_Inhibit : std_logic;
-	signal IReq_Inhibit : std_logic;        -- 0247a
-	signal Req_Inhibit  : std_logic;
-	signal RD                   : std_logic;
-	signal MREQ_n_i             : std_logic;
-	signal IORQ_n_i             : std_logic;
-	signal RD_n_i               : std_logic;
-	signal WR_n_i               : std_logic;
-	signal WR_n_j               : std_logic; -- 0247a
+	signal MReq_Inhibit     : std_logic;
+	signal Req_Inhibit      : std_logic;
+	signal RD            : std_logic;
+	signal MREQ_n_i         : std_logic;
+	signal MREQ_rw       : std_logic;   -- 30/10/19 Charlie Ingley-- add MREQ control
+	signal IORQ_n_i         : std_logic;
+	signal IORQ_t1          : std_logic;   -- 30/10/19 Charlie Ingley-- add IORQ control
+	signal IORQ_t2          : std_logic;   -- 30/10/19 Charlie Ingley-- add IORQ control
+	signal IORQ_rw       : std_logic;   -- 30/10/19 Charlie Ingley-- add IORQ control
+	signal IORQ_int         : std_logic;   -- 30/10/19 Charlie Ingley-- add IORQ interrupt control
+	signal IORQ_int_inhibit : std_logic_vector(2 downto 0);
+	signal RD_n_i        : std_logic;
+	signal WR_n_i        : std_logic;
+	signal WR_t2         : std_logic;   -- 30/10/19 Charlie Ingley-- add WR control
 	signal RFSH_n_i             : std_logic;
 	signal BUSAK_n_i    : std_logic;
 	signal A_i                  : std_logic_vector(15 downto 0);
@@ -135,15 +141,18 @@ begin
 
 	CEN <= '1';
 
-	BUSAK_n <= BUSAK_n_i;
-	MREQ_n_i <= not MREQ or (Req_Inhibit and MReq_Inhibit);
-	RD_n_i <= not RD or Req_Inhibit;
-	WR_n_j <= WR_n_i;                                                   -- 0247a
+	BUSAK_n <= BUSAK_n_i;                                                -- 30/10/19 Charlie Ingley - IORQ/RD/WR changes
+	MREQ_rw <= MREQ and (Req_Inhibit or MReq_Inhibit);                   -- added MREQ timing control
+	MREQ_n_i <= not MREQ_rw;                                             -- changed MREQ generation 
+	IORQ_rw <= IORQ and not (IORQ_t1 or IORQ_t2);                        -- added IORQ generation timing control
+	IORQ_n_i <= not ((IORQ_int and not IORQ_int_inhibit(2)) or IORQ_rw); -- changed IORQ generation
+	RD_n_i <= not (RD and (MREQ_rw or IORQ_rw));                         -- changed RD/IORQ generation
+	WR_n_i <= not (Write and ((WR_t2 and MREQ_rw) or IORQ_rw));          -- added WR/IORQ timing control
 
 	MREQ_n <= MREQ_n_i when BUSAK_n_i = '1' else 'Z';
-	IORQ_n <= IORQ_n_i or IReq_Inhibit when BUSAK_n_i = '1' else 'Z';   -- 0247a
+	IORQ_n <= IORQ_n_i when BUSAK_n_i = '1' else 'Z';
 	RD_n <= RD_n_i when BUSAK_n_i = '1' else 'Z';
-	WR_n <= WR_n_j when BUSAK_n_i = '1' else 'Z';                       -- 0247a
+	WR_n <= WR_n_i when BUSAK_n_i = '1' else 'Z';
 	RFSH_n <= RFSH_n_i when BUSAK_n_i = '1' else 'Z';
 	A <= A_i when BUSAK_n_i = '1' else (others => 'Z');
 	D <= DO when Write = '1' and BUSAK_n_i = '1' else (others => 'Z');
@@ -195,99 +204,139 @@ begin
 		end if;
 	end process;
 
-	process (CLK_n)                         -- 0247a
-	begin
-		if CLK_n'event and CLK_n = '1' then
-			IReq_Inhibit <= not IORQ;
-		end if;
-	end process;
+-- 30/10/19 Charlie Ingley - Generate WR_t2 to correct MREQ/WR timing
+   process (Reset_s,CLK_n)
+   begin
+      if Reset_s = '0' then
+         WR_t2 <= '0';
+      elsif CLK_n'event and CLK_n = '0' then
+         if MCycle /= "001" then
+               if TState = "010" then  -- WR starts on falling edge of T2 for MREQ
+                  WR_t2 <=  Write;
+               end if;
+         end if;
+         if TState = "011" then        -- end WR
+            WR_t2 <= '0';
+         end if;
+      end if;
+   end process;
 
-	process (Reset_s,CLK_n)                 -- 0247a
-	begin
-		if Reset_s = '0' then
-			WR_n_i <= '1';
-		elsif CLK_n'event and CLK_n = '0' then
-			if (IORQ = '0') then
-				if TState = "010" then
-					WR_n_i <= not Write;
-				elsif Tstate = "011" then
-					WR_n_i <= '1';
-				end if;
-			else
-				if TState = "001" and IORQ_n_i = '0' then
-					WR_n_i <= not Write;
-				elsif Tstate = "011" then
-					WR_n_i <= '1';
-				end if;
-			end if;
-		end if;
-	end process;
+-- Generate Req_Inhibit
+   process (Reset_s,CLK_n)
+   begin
+      if Reset_s = '0' then
+         Req_Inhibit <= '1';  -- Charlie Ingley 30/10/19 - changed Req_Inhibit polarity
+      elsif CLK_n'event and CLK_n = '1' then
+         if MCycle = "001" and TState = "010" and WAIT_n = '1' then  -- by Fabio Belavenuto - fix behavior of Wait_n
+            Req_Inhibit <= '0';
+         else
+            Req_Inhibit <= '1';
+         end if;
+      end if;
+   end process;
 
-	process (Reset_s,CLK_n)                 -- 0247a
-	begin
-		if Reset_s = '0' then
-			Req_Inhibit <= '0';
-		elsif CLK_n'event and CLK_n = '1' then
-			if MCycle = "001" and TState = "010" and wait_s = '1' then
-				Req_Inhibit <= '1';
-			else
-				Req_Inhibit <= '0';
-			end if;
-		end if;
-	end process;
+-- Generate MReq_Inhibit
+   process (Reset_s, CLK_n)
+   begin
+      if Reset_s = '0' then
+         MReq_Inhibit <= '1'; -- Charlie Ingley 30/10/19 - changed Req_Inhibit polarity
+      elsif CLK_n'event and CLK_n = '0' then
+         if MCycle = "001" and TState = "010" and WAIT_n = '1' then  -- by Fabio Belavenuto - fix behavior of Wait_n
+            MReq_Inhibit <= '0';
+         else
+            MReq_Inhibit <= '1';
+         end if;
+      end if;
+   end process;
 
-	process (Reset_s,CLK_n)
-	begin
-		if Reset_s = '0' then
-			MReq_Inhibit <= '0';
-		elsif CLK_n'event and CLK_n = '0' then
-			if MCycle = "001" and TState = "010" then
-				MReq_Inhibit <= '1';
-			else
-				MReq_Inhibit <= '0';
-			end if;
-		end if;
-	end process;
+-- Generate RD for MREQ
+   process(Reset_s,CLK_n)
+   begin
+      if Reset_s = '0' then
+         RD <= '0';
+         MREQ <= '0';
+      elsif CLK_n'event and CLK_n = '0' then
+         if MCycle = "001" then
+            if TState = "001" then
+               RD <= IntCycle_n;
+               MREQ <= IntCycle_n;
+            end if;
+            if TState = "011" then
+               RD <= '0';
+               MREQ <= '1';
+            end if;
+            if TState = "100" then
+               MREQ <= '0';
+            end if;
+         else
+            if TState = "001" and NoRead = '0' then
+               RD <= not Write;
+               MREQ <= not IORQ;
+            end if;
+            if TState = "011" then
+               RD <= '0';
+               MREQ <= '0';
+            end if;
+         end if;
+      end if;
+   end process;
 
-	process(Reset_s,CLK_n)
-	begin
-		if Reset_s = '0' then
-			RD <= '0';
-			IORQ_n_i <= '1';
-			MREQ <= '0';
-		elsif CLK_n'event and CLK_n = '0' then
+ -- 30/10/19 Charlie Ingley - Generate IORQ_int for IORQ interrupt timing control
+   process(Reset_s,CLK_n)
+   begin
+      if Reset_s = '0' then
+         IORQ_int <= '0';
+      elsif CLK_n'event and CLK_n = '1' then
+         if MCycle = "001" then
+            if TState = "001" then
+               IORQ_int <= not IntCycle_n;
+            end if;
+            if TState = "010" then
+               IORQ_int <= '0';
+            end if;
+         end if;
+      end if;
+   end process;
 
-			if MCycle = "001" then
-				if TState = "001" then
-					RD <= IntCycle_n;
-					MREQ <= IntCycle_n;
-					IORQ_n_i <= IntCycle_n;
-				end if;
-				if TState = "011" then
-					RD <= '0';
-					IORQ_n_i <= '1';
-					MREQ <= '1';
-				end if;
-				if TState = "100" then
-					MREQ <= '0';
-				end if;
-			else
-				if TState = "001" and NoRead = '0' then
-					IORQ_n_i <= not IORQ;
-					MREQ <= not IORQ;
-					if IORQ = '0' then
-						RD <= not Write;
-					elsif IORQ_n_i = '0' then
-						RD <= not Write;
-					end if;
-				end if;
-				if TState = "011" then
-					RD <= '0';
-					IORQ_n_i <= '1';
-					MREQ <= '0';
-				end if;
-			end if;
-		end if;
-	end process;
+   process(Reset_s,CLK_n)
+   begin
+      if Reset_s = '0' then
+         IORQ_int_inhibit <= "111";
+      elsif CLK_n'event and CLK_n = '0' then
+         if IntCycle_n = '0' then
+            if MCycle = "001" then
+               IORQ_int_inhibit <= IORQ_int_inhibit(1 downto 0) & '0';
+            end if;
+            if MCycle = "010" then
+               IORQ_int_inhibit <= "111";
+            end if;
+         end if;
+      end if;
+   end process;
+
+-- 30/10/19 Charlie Ingley - Generate IORQ_t1 for IORQ timing control
+   process(Reset_s, CLK_n)
+   begin
+      if Reset_s = '0' then
+         IORQ_t1 <= '1';
+      elsif CLK_n'event and CLK_n = '0' then
+         if TState = "001" then
+            IORQ_t1 <= not IntCycle_n;
+         end if;
+         if TState = "011" then
+            IORQ_t1 <= '1';
+         end if;
+      end if;
+   end process;
+
+-- 30/10/19 Charlie Ingley - Generate IORQ_t2 for IORQ timing control
+   process (RESET_n, CLK_n)
+   begin
+      if RESET_n = '0' then
+         IORQ_t2 <= '1';
+      elsif CLK_n'event and CLK_n = '1' then
+         IORQ_t2 <= IORQ_t1;
+      end if;
+   end process;
 
 end;
