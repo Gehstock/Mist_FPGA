@@ -15,14 +15,14 @@ PACKAGE base_pack IS
   --------------------------------------
   SUBTYPE uv     IS unsigned;
   SUBTYPE sv     IS signed;
-  
+
   SUBTYPE uv1_0  IS unsigned(1  DOWNTO 0);
   SUBTYPE uv0_1  IS unsigned(0  TO     1);
   SUBTYPE uv3_0  IS unsigned(3  DOWNTO 0);
   SUBTYPE uv0_3  IS unsigned(0  TO     3);
   SUBTYPE uv7_0  IS unsigned(7  DOWNTO 0);
   SUBTYPE uv0_7  IS unsigned(0  TO     7);
-  
+
   SUBTYPE uv2    IS unsigned(1   DOWNTO 0);
   SUBTYPE uv3    IS unsigned(2   DOWNTO 0);
   SUBTYPE uv4    IS unsigned(3   DOWNTO 0);
@@ -56,7 +56,7 @@ PACKAGE base_pack IS
   SUBTYPE uv32   IS unsigned(31  DOWNTO 0);
   SUBTYPE uv64   IS unsigned(63  DOWNTO 0);
   SUBTYPE uv128  IS unsigned(127 DOWNTO 0);
-  
+
   SUBTYPE sv2    IS signed(1   DOWNTO 0);
   SUBTYPE sv4    IS signed(3   DOWNTO 0);
   SUBTYPE sv8    IS signed(7   DOWNTO 0);
@@ -64,10 +64,10 @@ PACKAGE base_pack IS
   SUBTYPE sv32   IS signed(31  DOWNTO 0);
   SUBTYPE sv64   IS signed(63  DOWNTO 0);
   SUBTYPE sv128  IS signed(127 DOWNTO 0);
-  
+
   TYPE arr_uv0_3 IS ARRAY(natural RANGE <>) OF uv0_3;
   TYPE arr_uv0_7 IS ARRAY(natural RANGE <>) OF uv0_7;
-  
+
   TYPE arr_uv4   IS ARRAY(natural RANGE <>) OF uv4;
   TYPE arr_uv8   IS ARRAY(natural RANGE <>) OF uv8;
   TYPE arr_uv16  IS ARRAY(natural RANGE <>) OF uv16;
@@ -108,14 +108,14 @@ PACKAGE base_pack IS
   SUBTYPE int15 IS integer RANGE -16384 TO 16383;
   SUBTYPE int16 IS integer RANGE -32768 TO 32767;
   SUBTYPE int17 IS integer RANGE -65536 TO 65535;
-  
-  
+
+
   -------------------------------------------------------------
   FUNCTION v_or  (CONSTANT v : unsigned) RETURN std_logic;
   FUNCTION v_and (CONSTANT v : unsigned) RETURN std_logic;
   FUNCTION vv    (CONSTANT s : std_logic;
                   CONSTANT N : natural) RETURN unsigned;
-  
+
   --------------------------------------
   FUNCTION to_std_logic (a : boolean) RETURN std_logic;
   --------------------------------------
@@ -190,9 +190,9 @@ PACKAGE base_pack IS
   FUNCTION To_Upper (s : string) RETURN string;
   FUNCTION To_String  (i : natural; b : integer) RETURN string;
   FUNCTION To_Natural (s : string; b : integer) RETURN natural;
-  
+
   FUNCTION ilog2 (CONSTANT v : natural) RETURN natural;
-  
+
 END PACKAGE base_pack;
 
 --------------------------------------------------------------------------------
@@ -207,7 +207,7 @@ PACKAGE BODY base_pack IS
     v:=(OTHERS => s);
     RETURN v;
   END FUNCTION vv;
-  
+
   -------------------------------------------------------------
   -- Vector OR (reduce)
   FUNCTION v_or (CONSTANT v : unsigned) RETURN std_logic IS
@@ -231,7 +231,7 @@ PACKAGE BODY base_pack IS
     END IF;
 --pragma synthesis_on    
   END FUNCTION v_or;
-  
+
   -------------------------------------------------------------
   -- Vector AND (reduce)
   FUNCTION v_and (CONSTANT v : unsigned) RETURN std_logic IS
@@ -255,7 +255,7 @@ PACKAGE BODY base_pack IS
     END IF;
 --pragma synthesis_on
   END FUNCTION v_and;
-  
+
   --------------------------------------
   FUNCTION to_std_logic (a : boolean) RETURN std_logic IS
   BEGIN
@@ -263,7 +263,7 @@ PACKAGE BODY base_pack IS
          ELSE RETURN '0';
     END IF;
   END FUNCTION to_std_logic;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=1:a, s=0:b
   FUNCTION mux (
@@ -282,7 +282,7 @@ PACKAGE BODY base_pack IS
       RETURN x;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=true:a, s=false:b
   FUNCTION mux (
@@ -298,7 +298,7 @@ PACKAGE BODY base_pack IS
       RETURN b;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=1:a, s=0:b
   FUNCTION mux (
@@ -309,7 +309,7 @@ PACKAGE BODY base_pack IS
   BEGIN
     RETURN (S AND A) OR (NOT S AND B);
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=true:a, s=false:b
   FUNCTION mux (
@@ -324,7 +324,7 @@ PACKAGE BODY base_pack IS
       RETURN b;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=true:a, s=false:b
   FUNCTION mux (
@@ -339,7 +339,7 @@ PACKAGE BODY base_pack IS
       RETURN b;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=1:a, s=0:b
   FUNCTION mux (
@@ -369,7 +369,7 @@ PACKAGE BODY base_pack IS
       RETURN b;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Sélection/Multiplexage  s=true:a, s=false:b
   FUNCTION mux (
@@ -384,7 +384,7 @@ PACKAGE BODY base_pack IS
       RETURN b;
     END IF;
   END FUNCTION mux;
-  
+
   --------------------------------------
   -- Étend un vecteur avec extension de signe
   FUNCTION sext (
@@ -397,7 +397,7 @@ PACKAGE BODY base_pack IS
     t(e'length-1 DOWNTO 0):=e;
     RETURN t;
   END FUNCTION sext;
-  
+
   --------------------------------------
   -- Étend un vecteur avec extension de signe
   FUNCTION sext (
@@ -409,7 +409,7 @@ PACKAGE BODY base_pack IS
     t:=(OTHERS => e);
     RETURN t;
   END FUNCTION sext;
-  
+
    --------------------------------------
   -- Étend un vecteur sans extension de signe
   FUNCTION uext (
@@ -422,7 +422,7 @@ PACKAGE BODY base_pack IS
     t(e'length-1 DOWNTO 0):=e;
     RETURN t;
   END FUNCTION uext;
-  
+
   --------------------------------------
   -- Étend un vecteur sans extension de signe 
   FUNCTION uext (
@@ -435,7 +435,7 @@ PACKAGE BODY base_pack IS
     t(0):=e;
     RETURN t;
   END FUNCTION uext;
-  
+
   --------------------------------------
   -- Wait Until Rising Edge
   PROCEDURE wure(
@@ -460,7 +460,7 @@ PACKAGE BODY base_pack IS
 
   --------------------------------------
   CONSTANT HexString : string(1 TO 16):="0123456789ABCDEF";
-  
+
   -- Conversion unsigned -> Chaîne hexadécimale
   FUNCTION To_HString(v : unsigned) RETURN string IS
     VARIABLE r : string(1 TO ((v'length)+3)/4);
@@ -563,7 +563,7 @@ PACKAGE BODY base_pack IS
     END LOOP;
     RETURN r;
   END To_Upper;
-  
+
   --------------------------------------
   -- Conversion entier -> chaîne
   FUNCTION To_String(i: natural; b: integer) RETURN string IS
@@ -581,7 +581,7 @@ PACKAGE BODY base_pack IS
 
     RETURN r(k TO 10);
   END FUNCTION To_String;
-  
+
   --------------------------------------
   -- Conversion chaîne -> entier
   FUNCTION To_Natural (s : string; b : integer) RETURN natural IS
@@ -627,5 +627,5 @@ PACKAGE BODY base_pack IS
     END LOOP;
     RETURN n;
   END FUNCTION ilog2;
-  
+
 END PACKAGE BODY base_pack;

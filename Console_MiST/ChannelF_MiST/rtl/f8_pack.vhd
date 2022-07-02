@@ -40,7 +40,7 @@ PACKAGE f8_pack IS
                   dstm : OUT std_logic; -- Modified result reg
                   iozcs_o : OUT uv5; -- Flags after
                   test : OUT std_logic); -- Contitional branch test result
-  
+
   --------------------------------------
   CONSTANT R0     : uint5 := 0;
   CONSTANT R1     : uint5 := 1;
@@ -656,7 +656,7 @@ PACKAGE f8_pack IS
     "AND R4      ", "AND R5      ", "AND R6      ", "AND R7      ",
     "AND R8      ", "AND R9      ", "AND R10     ", "AND R11     ",
     "AND (ISAR)  ", "AND (ISAR+) ", "AND (ISAR-) ", "Invalid     ");
-  
+
   TYPE arr_ilen IS ARRAY(natural RANGE <>) OF uint3;
   CONSTANT ILEN : arr_ilen(0 TO 255) :=(
     1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,1,  --00
@@ -675,7 +675,7 @@ PACKAGE f8_pack IS
     1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --D0
     1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0,  --E0
     1,1,1,1,    1,1,1,1,    1,1,1,1,    1,1,1,0); --F0
-  
+
 END PACKAGE;
 
 --##############################################################################
@@ -831,7 +831,7 @@ PACKAGE BODY f8_pack IS
         iozcs_o(3):=(src1(7) XOR dst9_v(7)) AND (NOT dst9_v(7));
         dstm:='1';
         dst_v:=dst9_v(7 DOWNTO 0);
-        
+
       WHEN OP_SL1 => -- SHIFT LEFT  1
         dst_v:=src1(6 DOWNTO 0) & '0';
         iozcs_o(0):=NOT dst_v(7);

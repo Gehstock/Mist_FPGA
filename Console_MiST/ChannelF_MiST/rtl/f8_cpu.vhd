@@ -20,7 +20,7 @@ ENTITY f8_cpu IS
     dr     : IN  uv8; -- Data Read
     dw     : OUT uv8; -- Data Write / Address
     dv     : OUT std_logic;
-    
+
     romc   : OUT uv5;
     tick   : OUT std_logic;  -- 1/4 or 1/6 cycle lenght
     phase  : OUT uint4;
@@ -29,7 +29,7 @@ ENTITY f8_cpu IS
     pi_a   : IN  uv8;
     po_b   : OUT uv8;
     pi_b   : IN  uv8;
-    
+
     clk      : IN std_logic;
     ce       : IN std_logic;
     reset_na : IN std_logic;
@@ -49,40 +49,40 @@ ARCHITECTURE rtl OF f8_cpu IS
   SIGNAL acc : uv8;
   SIGNAL visar : uv6;
   ALIAS visarl : uv3 IS visar(2 DOWNTO 0);
-  
+
   SIGNAL rs,rd : uint6;
   SIGNAL scratch_regs : arr_uv8(0 TO 63); -- Scratch regs
   SIGNAL sreg_ra,sreg_wa : uint6;
   SIGNAL sreg_rd,sreg_wd : uv8;
   SIGNAL sreg_wr : std_logic;
-  
+
   SIGNAL iozcs : uv5;
-  
+
   SIGNAL op : enum_op;
-  
+
   SIGNAL poa_l,pob_l : uv8;
   SIGNAL alu : uv8;
   SIGNAL test,bcc,testp,bccp,dstm : std_logic;
 
   SIGNAL txt : string(1 TO 12);
-  
+
 BEGIN
 
   phase<=phase_l;
   po_a<=poa_l;
   po_b<=pob_l;
-  
+
   ----------------------------------------------------------
   romc<=ROMC_01 WHEN (bcc='1' AND test='1') OR
          (opcode=x"8F" AND isarl/=7 AND mop.romc=ROMC_03) ELSE
         ROMC_03 WHEN (bcc='1' AND test='0') OR
          (opcode=x"8F" AND isarl=7 AND mop.romc=ROMC_03) ELSE
          mop.romc;
-  
+
   sreg_ra<=mop.rs WHEN mop.rs<16 ELSE
            mop.rd WHEN mop.rd<16 ELSE
            to_integer(visar);
-  
+
   sreg_rd<=scratch_regs(sreg_ra) WHEN rising_edge(clk);
 
   PROCESS(clk) IS
@@ -93,7 +93,7 @@ BEGIN
       END IF;
     END IF;
   END PROCESS;
-  
+
   ----------------------------------------------------------
   PROCESS(clk,reset_na) IS
     VARIABLE len_v : enum_len;
@@ -105,7 +105,7 @@ BEGIN
       IF ce='1' THEN
         mop<=MICROCODE(madrs);
         sreg_wr<='0';
-        
+
         -----------------------------------------
         len_v:=mop.len;
         IF (bcc='1' AND test='1') OR (opcode=x"8F" AND visarl=7) THEN
@@ -115,7 +115,7 @@ BEGIN
         ELSE
           len_v:=mop.len;
         END IF;
-        
+
         IF phase_l=7 AND len_v=S THEN
           phase_l<=0;
         ELSIF phase_l=11 AND len_v=L THEN
@@ -123,18 +123,18 @@ BEGIN
         ELSE
           phase_l<=phase_l+1;
         END IF;
-        
+
         -----------------------------------------
         CASE phase_l IS
           WHEN 0 =>
             test<=testp;
             bcc<=bccp;
-            
+
           WHEN 1 =>
             NULL;
           WHEN 2 =>
             NULL;  -- <dw :=> <AVOIR>
-            
+
           WHEN 3 =>
             CASE mop.rd IS
               WHEN RACC => rs1_v:=acc;
@@ -166,14 +166,14 @@ BEGIN
               WHEN OTHERS =>
                 rs2_v:=acc;
             END CASE;
-            
+
             aluop(mop.op,opcode,rs1_v,rs2_v,iozcs,rd_v,dstm_v,iozcs_v,test_v);
             dstm<=dstm_v;
             iozcs<=iozcs_v;
             alu<=rd_v;
             testp<=test_v;
             bccp <=to_std_logic(mop.op=OP_TST8 OR mop.op=OP_TST9);
-            
+
           WHEN 4 =>
             dv<='0';
             IF dstm='1' THEN
@@ -200,7 +200,7 @@ BEGIN
                 WHEN OTHERS => NULL;
               END CASE;
             END IF;
-            
+
           WHEN 5 =>
             IF mop.rs=RISARP OR mop.rd=RISARP THEN
               visar(2 DOWNTO 0)<=visar(2 DOWNTO 0)+1;
@@ -208,7 +208,7 @@ BEGIN
             IF mop.rs=RISARM OR mop.rd=RISARM THEN
               visar(2 DOWNTO 0)<=visar(2 DOWNTO 0)-1;
             END IF;
-            
+
           WHEN 7 =>
             IF len_v=S THEN
               IF mop.romc=ROMC_00 THEN -- IFETCH
@@ -219,7 +219,7 @@ BEGIN
                 madrs<=madrs+1;
               END IF;
             END IF;
-            
+
           WHEN 11 =>
             IF len_v=L THEN
               IF mop.romc=ROMC_00 THEN -- IFETCH
@@ -230,12 +230,12 @@ BEGIN
                 madrs<=madrs+1;
               END IF;
             END IF;
-            
+
           WHEN OTHERS =>
             NULL;
 
         END CASE;
-        
+
         IF reset_na='0' THEN
           opcode<=OP_RESET;
           txt<=OPTXT(to_integer(OP_RESET));
@@ -243,7 +243,7 @@ BEGIN
           phase_l<=0;
           iozcs<="00000";
         END IF;
-        
+
       END IF;
 
     END IF;
@@ -252,6 +252,5 @@ BEGIN
   acco<=acc;
   visaro<=visar;
   iozcso<=iozcs;
-  
-END ARCHITECTURE rtl;
 
+END ARCHITECTURE rtl;

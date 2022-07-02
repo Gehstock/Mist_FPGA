@@ -19,10 +19,9 @@ module ChannelF_MiST(
 `include "rtl\build_id.v" 
 
 localparam CONF_STR = {
-	"ChannelF;BINCHF;",
+	"ChannelF;BINCHFROM;",
 	"O1,Swap Joystick,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
-//	"O6,Blending,Off,On;",
 	"T0,Reset;",
 	"V,v1.00.",`BUILD_DATE
 };
@@ -37,9 +36,11 @@ pll pll(
 	.c1					( clk3p579			)//3.579545
 	);
 
-channel_f channel_f(
+
+chf_core chf_core(
 	.clk					( clk3p579			),
-   .reset				( status[0] | buttons[1]),
+   .reset				( status[0] | buttons[1] | ioctl_downl),
+	.pal					(),
 	.pll_locked			( pll_locked		),
    .vga_r				( r					),
    .vga_g				( g					),
@@ -47,22 +48,20 @@ channel_f channel_f(
    .vga_hs				( hs					),
    .vga_vs				( vs					),
    .vga_de				( blankn				),
-	.Keys					( {m_four_players, m_three_players, m_two_players, m_one_player}),
-   .joystick_0			( {m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right}),
-   .joystick_1			( {m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2}),
+   .joystick_0			( {m_fireD, m_fireC, m_fireB, m_fireA, 			m_four_players, m_three_players, m_two_players, m_one_player, 					m_up, m_down, m_left, m_right}),
+   .joystick_1			( {m_fire2D, m_fire2C, m_fire2B, m_fire2A, 		m_four_players, m_three_players, m_two_players, m_one_player, 					m_up2, m_down2, m_left2, m_right2}),
    .ioctl_download	( ioctl_downl		),
    .ioctl_index		( ioctl_index		),
-   .ioctl_wr			( ~ioctl_wr			),//todo
+   .ioctl_wr			( ~ioctl_wr			),//?
    .ioctl_addr			( ioctl_addr		),
    .ioctl_dout			( ioctl_dout		),
-   .ioctl_wait			( ioctl_wait		),//todo
-   .audio				( audio				)
+   .ioctl_wait			( ),
+   .audio_l				( audio				)
 );
-  
+
 wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
-wire        ioctl_wait;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;	
 
@@ -146,8 +145,8 @@ dac(
 	.dac_o				( AUDIO_L			)
 	);	
 
-wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
-wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF, m_fireG, m_fireH;
+wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F, m_fire2G, m_fire2H;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
 arcade_inputs inputs (
@@ -157,12 +156,12 @@ arcade_inputs inputs (
 	.key_code    		( key_code    		),
 	.joystick_0  		( joystick_0  		),
 	.joystick_1  		( joystick_1  		),
-	.rotate      		( 0      			),
-	.orientation 		( 2'b00       		),
+//	.rotate      		( 0      			),
+//	.orientation 		( 2'b00       		),
 	.joyswap     		( status[1]   		),
 	.oneplayer   		( 1'b0        		),
 	.controls    		( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
-	.player1     		( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-	.player2     		( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+	.player1     		( {m_fireH, m_fireG, m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
+	.player2     		( {m_fire2H, m_fire2G, m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
 );
 endmodule 
