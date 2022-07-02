@@ -1,4 +1,4 @@
-# Emerson Arcadia 2001 game console
+# Emerson Arcadia 2001 game console  by Grabulosaure
 
 ## General description
 This core implements a game console with Signetics 2650 CPU and 2637 Video controller.
