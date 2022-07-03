@@ -59,19 +59,9 @@ entity invaderst is
 		Rst_n           : in  std_logic;
 		Clk             : in  std_logic;
 		ENA             : out  std_logic;
-		Coin            : in  std_logic;
-		Sel1Player      : in  std_logic;
-		Sel2Player      : in  std_logic;
-		Fire            : in  std_logic;
-		MoveLeft1        : in  std_logic;
-		MoveRight1       : in  std_logic;
-		MoveUp1        	 : in  std_logic;
-		MoveDown1        : in  std_logic;
-		MoveLeft2        : in  std_logic;
-		MoveRight2       : in  std_logic;
-		MoveUp2        	 : in  std_logic;
-		MoveDown2        : in  std_logic;
-		DIP             : in  std_logic_vector(8 downto 1);
+		GDB0            : in  std_logic_vector(7 downto 0);
+		GDB1            : in  std_logic_vector(7 downto 0);
+		GDB2            : in  std_logic_vector(7 downto 0);
 		RDB             : in  std_logic_vector(7 downto 0);
 		IB              : in  std_logic_vector(7 downto 0);
 		RWD             : out std_logic_vector(7 downto 0);
@@ -83,7 +73,11 @@ entity invaderst is
 		RWE_n           : out std_logic;
 		Video           : out std_logic;
 		HSync           : out std_logic;
-		VSync           : out std_logic
+		VSync           : out std_logic;
+		VBlank          : out std_logic;
+		HBlank          : out std_logic;
+		VShift		    : in  std_logic_vector(3 downto 0);
+		HShift		    : in  std_logic_vector(3 downto 0)
 		);
 end invaderst;
 
@@ -115,12 +109,17 @@ architecture rtl of invaderst is
 		Wr              : out std_logic;
 		Video           : out std_logic;
 		HSync           : out std_logic;
-		VSync           : out std_logic);
+		VSync           : out std_logic;
+		VBlank          : out std_logic;
+		HBlank          : out std_logic;
+		VShift		    : in  std_logic_vector(3 downto 0);
+		HShift		    : in  std_logic_vector(3 downto 0)
+		);
 	end component;
 
-	signal GDB0         : std_logic_vector(7 downto 0);
-	signal GDB1         : std_logic_vector(7 downto 0);
-	signal GDB2         : std_logic_vector(7 downto 0);
+--	signal GDB0         : std_logic_vector(7 downto 0);
+--	signal GDB1         : std_logic_vector(7 downto 0);
+--	signal GDB2         : std_logic_vector(7 downto 0);
 	signal S            : std_logic_vector(7 downto 0);
 	signal GDB          : std_logic_vector(7 downto 0);
 	signal DB           : std_logic_vector(7 downto 0);
@@ -172,7 +171,7 @@ begin
 
 	u_mw8080: mw8080
 		port map(
-			Rst_n => Rst_n,--Rst_n_s_i,
+			Rst_n => Rst_n_s_i,
 			Clk => Clk,
 			ENA => ENA,
 			RWE_n => RWE_n,
@@ -196,7 +195,12 @@ begin
 			Wr => open,
 			Video => Video,
 			HSync => HSync,
-			VSync => VSync);
+			VSync => VSync,
+			VBlank => VBlank,
+			HBlank => HBlank,
+			VShift => VShift,
+			HShift => HShift
+			);
 
 	with AD_i(9 downto 8) select
 		GDB <= GDB0 when "00",
@@ -204,32 +208,7 @@ begin
 				GDB2 when "10",
 				S when others;
 
-	GDB0(0) <= '0';
-	GDB0(1) <= '0';
-	GDB0(2) <= '0';
-	GDB0(3) <= '0';
-	GDB0(4) <= '0';
-	GDB0(5) <= '0';
-	GDB0(6) <= '0';
-	GDB0(7) <= '0';
 
-	GDB1(0) <= not MoveRight1;
-	GDB1(1) <= not MoveLeft1;
-	GDB1(2) <= not MoveUp1;
-	GDB1(3) <= not MoveDown1;
-	GDB1(4) <= not MoveRight2;
-	GDB1(5) <= not MoveLeft2;
-	GDB1(6) <= not MoveUp2;
-	GDB1(7) <= not MoveDown2;
-
-	GDB2(0) <= not Fire;
-	GDB2(1) <= not Fire;
-	GDB2(2) <= not Sel1Player;
-	GDB2(3) <= not Sel2Player;
-	GDB2(4) <= '1';--Lives
-	GDB2(5) <= '1';--Cabinet
-	GDB2(6) <= '1';--unused
-	GDB2(7) <= not Coin;
 
 	PortWr(2) <= '1' when AD_i(10 downto 8) = "010" and Sample = '1' else '0';
 	PortWr(3) <= '1' when AD_i(10 downto 8) = "011" and Sample = '1' else '0';

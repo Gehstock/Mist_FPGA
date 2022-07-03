@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------
 -- 
--- Arcade: Shuffleboard port to MiST by Gehstock 
--- 05 June 2019
+-- Arcade: Astropal port to MiST by Gehstock 
+-- 03 July 2022
 -- 
 ---------------------------------------------------------------------------------
 -- 
@@ -9,18 +9,11 @@
 -- Audio based on work by Paul Walsh.
 -- Audio and scan converter by MikeJ.
 ---------------------------------------------------------------------------------
--- 
--- 
--- Keyboard inputs :
---
---   F1          : Start
---   SPACE       : Fire
---   RIGHT/LEFT  : Movement
---
--- Joystick support.
--- 
--- 
+
+Thrust	-	Up
+Fire	-	CTRL or Firebutton
+Shild	-	ALT
 ---------------------------------------------------------------------------------
-ToDo: Color Prom
-      Controls + DIP
+
+ToDo: wrong Audio
 

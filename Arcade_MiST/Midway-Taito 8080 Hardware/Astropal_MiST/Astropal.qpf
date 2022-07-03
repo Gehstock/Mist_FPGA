@@ -17,15 +17,14 @@
 # -------------------------------------------------------------------------- #
 #
 # Quartus II 64-Bit
-# Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 18:00:31  July 15, 2019
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 09:07:26  July 03, 2022
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "13.1"
-DATE = "18:00:31  July 15, 2019"
+DATE = "09:07:26  July 03, 2022"
 
 # Revisions
 
-PROJECT_REVISION = "WesternGunPtII"
-PROJECT_REVISION = "SpaceInvaders"
+PROJECT_REVISION = "Astropal"

@@ -80,7 +80,12 @@ entity mw8080 is
 		Wr              : out std_logic;
 		Video           : out std_logic;
 		HSync           : out std_logic;
-		VSync           : out std_logic);
+		VSync           : out std_logic;
+		VBlank          : out std_logic;
+		HBlank          : out std_logic;
+		VShift		    : in  std_logic_vector(3 downto 0);
+		HShift		    : in  std_logic_vector(3 downto 0)
+		);
 end mw8080;
 
 architecture struct of mw8080 is
@@ -130,7 +135,10 @@ architecture struct of mw8080 is
 	signal CntE6        : unsigned(3 downto 0); -- Vertical counter / 262
 	signal CntE7        : unsigned(4 downto 0); -- Vertical counter 2
 	signal Shift        : std_logic_vector(7 downto 0);
-
+	signal HSync_Start  :  std_logic_vector(8 downto 0);
+	signal HSync_End    :  std_logic_vector(8 downto 0);
+	signal VSync_Start  :  std_logic_vector(8 downto 0);
+	signal VSync_End    :  std_logic_vector(8 downto 0);
 begin
 	ENA <= ClkEnCnt(2);
 	Status <= Status_i;
@@ -152,6 +160,7 @@ begin
 	Sounds(5) <= CntE6(2);
 	Sounds(6) <= CntE6(1);
 	Sounds(7) <= CntE6(0);
+
 	IntTrig <= (not CntE7(2) nand CntE7(3)) nand not CntE7(4);
 
 	ISel(0) <= Status_i(0) nor (Status_i(6) nor A(13));
@@ -311,25 +320,65 @@ begin
 	end process;
 
 	-- Sync
+	
+	process (HShift, VShift, Rst_n)
+	begin
+		-- Defaults are centred on my CRT
+		HSync_Start <= std_logic_vector(469 + resize(signed(HShift),9));
+		HSync_End   <= std_logic_vector(485 + resize(signed(HShift),9));
+		VSync_Start <= std_logic_vector(484 + resize(signed(VShift),9));
+		VSync_End   <= std_logic_vector(488 + resize(signed(VShift),9));	
+	end process;
+	
 	process (Rst_n, Clk)
+		variable TimeH, TimeV : std_logic_vector(8 downto 0);
 	begin
 		if Rst_n = '0' then
+
 			HSync <= '1';
 			VSync <= '1';
+			HBlank <='1';
+			VBlank <='1';
+
 		elsif Clk'event and Clk = '1' then
+		
 			if VidEn = '1' then
-				if CntE5(4) = '1' and CntE5(1 downto 0) = "10" then
+			
+				-- Convert SI counters into single fields to make comparisons easier
+				
+				TimeH := std_logic_vector(CntE5(4 downto 0)) & std_logic_vector(CntD5(3 downto 0));
+				TimeV := std_logic_vector(CntE7(4 downto 0)) & std_logic_vector(CntE6(3 downto 0));
+				
+				-- Syncs
+				
+				if (TimeH = HSync_Start) then
 					HSync <= '0';
-				else
+				elsif (TimeH = HSync_End) then
 					HSync <= '1';
 				end if;
-				if CntE7(4) = '1' and CntE7(0) = '0' and CntE6(3 downto 2) = "11" then
+
+				if (TimeV = VSync_Start) then
 					VSync <= '0';
-				else
+				elsif (TimeV = VSync_End) then
 					VSync <= '1';
 				end if;
-			end if;
-		end if;
-	end process;
 
+				-- Blanks
+				
+				if (TimeH = 	"000000101") then
+					HBlank <= '0';
+				elsif (TimeH = "111001001") then
+					HBlank <= '1';
+				end if;
+
+				if (TimeV = 	"011111111") then
+					VBlank <= '1';
+				elsif (TimeV = "111111111") then
+					VBlank <= '0';
+				end if;
+				
+			end if;
+
+		end if;
+end process;
 end;
