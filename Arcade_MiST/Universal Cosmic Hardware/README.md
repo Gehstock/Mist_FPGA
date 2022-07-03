@@ -1,7 +1,7 @@
 # [Arcade: Universal Cosmic](https://www.arcade-museum.com/game_detail.php?game_id=7398) games (Z80-based) originally for [MiSTer](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
-By [Mike Coates](https://github.com/macrofpga)  
-Current Version - 0.9 - 08/07/2021
+By [Mike Coates](https://github.com/macrofpga)
+Current Version - 1.00 - 03/07/2022
 
 ## Description
 
@@ -16,7 +16,9 @@ Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons)
 ## Games currently supported
 
 * [Cosmic Alien](https://www.arcade-museum.com/game_detail.php?game_id=7398)
+* [Devil Zone](https://www.arcade-museum.com/game_detail.php?game_id=7576)
 * [Magical Spot](https://www.arcade-museum.com/game_detail.php?game_id=8505)
+* [No Mans Land](https://www.arcade-museum.com/game_detail.php?game_id=19281)
 * [Space Panic](https://www.arcade-museum.com/game_detail.php?game_id=9676)
 
 ## Known differences/problems
@@ -24,10 +26,6 @@ Up, Down, Left, Right, Fire 1, Fire 2 (not all games use all buttons)
 Sound effects are all implemented using samples (other than the DAC).
 
 I have added a screen flip option to the sprite code, sprites are flipped by the software on the real hardware, but everything else does have a flip signal. It is implemented as a fake dip switch.
-
-No Man's Land needs the background video lined up properly in all flip modes.
-
-Devil Zone and No Man's Land need sound samples sourced and connected up.
 
 ## ROM Files Instructions
 

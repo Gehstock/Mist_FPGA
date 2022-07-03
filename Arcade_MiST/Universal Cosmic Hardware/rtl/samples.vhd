@@ -27,6 +27,9 @@ port(
 	 dl_download	 : in  std_logic;
 	 samples_ok     : out std_logic;
 	 
+	 -- No Mans Land special
+	 NML_Speed      : in  std_logic_vector( 1 downto 0);
+	 
 	 -- Clocks and things
 	 CLK_SYS        : in  std_logic; -- (for loading table)
 	 clock          : in  std_logic; -- 43.264 Mhz (this drives the rest)  
@@ -42,8 +45,8 @@ architecture struct of samples is
  signal wav_freq_lst : std_logic_vector(1 downto 0);  -- for rising edge checks
  
  -- wave info (aka Table)
- type addr_t is array (0 to 15) of std_logic_vector(23 downto 0);
- type mode_t is array (0 to 15) of std_logic_vector(15 downto 0);
+ type addr_t is array (0 to 23) of std_logic_vector(23 downto 0);
+ type mode_t is array (0 to 23) of std_logic_vector(15 downto 0);
   
  signal wav_addr_start : addr_t;
  signal wav_addr_end   : addr_t;
@@ -63,6 +66,7 @@ architecture struct of samples is
  signal next_ports     : std_logic_vector(15 downto 0); 
  signal this_stop      : std_logic_vector(15 downto 0); 
  signal next_stop      : std_logic_vector(15 downto 0); 
+ signal next_audio_in  : std_logic_vector(15 downto 0); 
  
  -- Audio variables
  signal audio_sum_l    : signed(19 downto 0);
@@ -70,6 +74,10 @@ architecture struct of samples is
  signal audio_l        : signed(19 downto 0);
  signal audio_r        : signed(19 downto 0);
 
+ -- No Mans Land background noise specific (set port to play sample 15, and it does no mans land background instead)
+ signal NML_ID		     : integer;			-- Sample actually playing (8 - 23)
+ signal NML_Count      : integer := 0;		-- Next bar to play
+ 
  begin
 
 ----------------
@@ -98,7 +106,8 @@ begin
 	
 		if dl_download='1' and dl_wr='1' then
 		
-			ID := to_integer(unsigned(dl_addr(6 downto 3)));
+		   -- routine only plays 15 samples, but No Mans Land has 16 to choose from for background tune (8 - 23)
+			ID := to_integer(unsigned(dl_addr(7 downto 3)));
 			
 			case dl_addr(2 downto 0) is
 				when "000" => -- Wave mode
@@ -138,6 +147,7 @@ samples_ok <= table_loaded;
 
 -- wave player
 process (clock, reset, table_loaded)
+variable NewID : integer;
 begin
 	if table_loaded='1' then
 		if reset='1' then
@@ -155,11 +165,22 @@ begin
 				next_ports <= next_ports or ports;
 				next_stop  <= next_stop or audio_stop;
 				
+				-- Devil Zone only sets this for a few cycles, so it needs to be kept until the next active audio cycle
+				next_audio_in <= next_audio_in or audio_in;
+				
 				if snd_id <= 15 then
 					if snd_addr_play(snd_id)=x"FFFFFF" then
 						-- All Start play on 0 to 1 transition
 						if (last_ports(snd_id)='0' and this_ports(snd_id)='1') then
-							snd_addr_play(snd_id) <= wav_addr_start(snd_id);
+							if snd_id < 15 then
+								snd_addr_play(snd_id) <= wav_addr_start(snd_id);
+							else
+								-- No Mans Land special
+								NML_Count <= 1;  											-- Start at first bar, but set count for next one
+								NewID := 8 + to_integer(unsigned(NML_Speed));	-- (which is sample 8 + speed setting)
+								snd_addr_play(snd_id) <= wav_addr_start(NewID); -- Start address
+								NML_ID <= NewID;											-- Save ID
+							end if;
 						end if;
 					else
 						-- cut out when signal zero
@@ -196,8 +217,10 @@ begin
 					-- latch final audio / reset sum
 					audio_r <= audio_sum_r;
 					audio_l <= audio_sum_l;
-					audio_sum_r <= resize(signed(audio_in), 20);
-					audio_sum_l <= resize(signed(audio_in), 20);
+					audio_sum_r <= resize(signed(next_audio_in), 20);
+					audio_sum_l <= resize(signed(next_audio_in), 20);
+					
+					next_audio_in <= audio_in;
 				else
 					wav_clk_cnt <= wav_clk_cnt + 1;
 				end if;
@@ -290,7 +313,6 @@ begin
 								-- Right channel
 								if wav_mode(snd_id)(13)='1' then
 									audio_sum_r <= audio_sum_r + to_integer(signed(wave_right));
-									--audio_sum_r <= audio_sum_r + to_integer(signed(samp_data));
 								end if;
 						
 								--wave_left  <= x"0000";
@@ -318,18 +340,41 @@ begin
 							end if;
 							
 							if wav_clk_cnt(4 downto 0) = "01111" then -- "111111" then
-								-- End of Wave data ?
-								if snd_addr_play(snd_id) > wav_addr_end(snd_id) then 	
-									-- Restart ?
-									if (wav_mode(snd_id)(8)='0' and this_ports(snd_id)='1') then
-										-- Loop back to the start
-										snd_addr_play(snd_id) <= wav_addr_start(snd_id);
-									else
-										-- Stop
-										snd_addr_play(snd_id) <= x"FFFFFF";
-									end if;									
-								end if;
-							end if;
+								-- End of Wave data ? 
+								if (snd_id < 15) then
+									if (snd_addr_play(snd_id) > wav_addr_end(snd_id)) then 	
+										-- Restart ?
+										if (wav_mode(snd_id)(8)='0' and this_ports(snd_id)='1') then
+											-- Loop back to the start
+											snd_addr_play(snd_id) <= wav_addr_start(snd_id);
+										else
+											-- Stop
+											snd_addr_play(snd_id) <= x"FFFFFF";
+										end if;
+									end if;
+								else
+									if (snd_addr_play(snd_id) > wav_addr_end(NML_ID)) then
+											-- No Mans Land special (based on number of bits set in counter)
+											case NML_Count is
+												when 0 => 					NewID := 8;
+												when 1|2|4|8 =>			NewID := 12;
+												when 7|11|13 =>        	NewID := 20;
+												when others => 			NewID := 16;
+											end case;
+											
+											NewID := NewID + to_integer(unsigned(NML_Speed)); -- Offset for speed									
+											snd_addr_play(snd_id) <= wav_addr_start(NewID);   -- Get next start address
+											NML_ID <= NewID;											  -- Save ID
+											
+											if (NML_Count = 13) then	
+												NML_Count <= 0;										  -- Loop to beginning
+											else
+												NML_Count <= NML_Count + 1; 
+											end if;
+											
+										end if;
+									end if;
+							end if;  -- Wave "01111"
 							
 						end if; -- Playing
 
