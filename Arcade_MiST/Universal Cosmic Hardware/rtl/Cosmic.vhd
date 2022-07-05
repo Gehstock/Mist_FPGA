@@ -27,6 +27,7 @@ port
 	O_SoundStop : out std_logic_vector(15 downto 0);
 	O_Sound_EN : out std_logic;
 	O_AUDIO    : out std_logic;
+	O_NML_Speed : out std_logic_vector(1 downto 0);	
 	--
 	dipsw1     : in  std_logic_vector(7 downto 0);
 	dipsw2     : in  std_logic_vector(7 downto 0);
@@ -132,6 +133,7 @@ architecture RTL of cosmic is
 	-- Sound
 	signal Sound_EN		   : std_logic := '0';
 	signal Bomb_Select	   : std_logic_vector(2 downto 0);
+	signal BGM              : std_logic_vector(1 downto 0) := "00";
 	
 	-- Hiscore system
 	signal vid_a_addr			: std_logic_vector(12 downto 0);
@@ -471,8 +473,14 @@ MMR_Write : process (CLK)
 variable address : natural range 0 to 2**15 - 1;
 begin
 	if rising_edge(CLK) then
-		if (CPU_ENA='1' and mmr_wr='1') then
 
+		-- If game resets then software flip can be left incorrectly set
+		if reset='1' then
+			Screen_Flip <= '0';
+		end if;
+
+		if (CPU_ENA='1' and mmr_wr='1') then
+		
 			address := to_integer(unsigned(cpu_addr));
 
 			case address is
@@ -560,7 +568,7 @@ begin
 							when 16#7801# => O_SoundPort(3) <= SoundBit;
 							when others => null;
 						end case;
-					elsif (GAME = 2 or GAME = 4 or GAME = 5) then
+					elsif (GAME = 2) then
 						-- Magic Spot sound registers
 						case address is
 							when 16#4800# => O_AUDIO <= cpu_data_out(7); -- 1 bit DAC
@@ -622,6 +630,50 @@ begin
 												  end if;					
 							when others => null;
 						end case;
+					elsif (GAME = 4) then
+						-- Devil Zone sound registers
+						case address is
+							when 16#4800# => O_AUDIO <= cpu_data_out(7); -- 1 bit DAC
+							when 16#4801# => O_SoundPort(1) <= SoundBit; -- High Score
+							when 16#4803# => O_SoundPort(2) <= SoundBit; -- Explosion
+							when 16#4804# => O_SoundPort(3) <= SoundBit; -- Fire
+							when 16#4805# => O_SoundPort(4) <= SoundBit; -- Hit
+							when 16#4806# => O_SoundPort(5) <= SoundBit; -- Holding noise
+							when 16#4809# => O_SoundPort(6) <= SoundBit; -- Swoop
+							when 16#480A# => O_SoundPort(7) <= SoundBit; -- Appear
+							when 16#480B# => Sound_EN <= cpu_data_out(7);
+								if (cpu_data_out(7)='0' and Sound_EN='1') then
+									-- Stop all sounds as well if turning off
+									O_SoundPort <= "0000000000000000";
+									O_AUDIO     <= '0';
+									O_SoundStop <= "1111111111111110";
+								end if;
+							-- sort rest
+							when others => null;
+							end case;
+					elsif (GAME = 5) then
+						-- No Mans Land sound registers
+						case address is
+							when 16#4800# => O_SoundPort(15) <= SoundBit; -- March (Special support in Samples module)
+							when 16#4801# => BGM(0) <= SoundBit; 			 -- March Speed Low
+							when 16#4802# => BGM(1) <= SoundBit; 			 -- March Speed High
+							when 16#4803# => O_SoundPort(1) <= SoundBit;  -- Tank Drive
+							when 16#4804# => O_SoundPort(2) <= SoundBit;  -- Enemy Supplement
+							when 16#4805# => O_SoundPort(3) <= SoundBit;  -- Round Clear
+							when 16#4806# => O_SoundPort(4) <= SoundBit;  -- Fire
+							when 16#4808# => O_SoundPort(5) <= SoundBit;  -- Hit
+							when 16#4809# => O_SoundPort(6) <= SoundBit;  -- Dead
+							when 16#480A# => O_AUDIO <= cpu_data_out(7); -- 1 bit DAC
+							when 16#480B# => Sound_EN <= cpu_data_out(7);
+												  if (cpu_data_out(7)='0' and Sound_EN='1') then
+														-- Stop all sounds as well if turning off
+														O_SoundPort <= "0000000000000000";
+														O_AUDIO     <= '0';
+														O_SoundStop <= "1111111111111110";
+												  end if;
+							-- sort rest
+							when others => null;
+						end case;
 					end if;
 				end if;
 			end if;
@@ -629,8 +681,8 @@ begin
 	end if;
 end process;
 
-O_Sound_EN <= Sound_EN;
-
+O_Sound_EN  <= Sound_EN;
+O_NML_Speed <= BGM;
 --
 -- video subsystem
 --

@@ -134,10 +134,13 @@ wire  [7:0] MagSpot_P4 = {~m_one_player,~m_two_players,dip[5:0]};
 wire  [7:0] Alien_P1 = {5'd31,~m_left,~m_right,~m_fireA};
 wire  [7:0] Alien_P2 = {5'd31,~m_left2,~m_right2,~m_fire2A};
 wire  [7:0] Alien_P3 = {2'd0,VCount[7:2]};
+// No Mans Land
+wire  [7:0] NML_P1 = m_fireA  ? 8'hFF : (m_up  && m_left ) ? 8'hFE : (m_down  && m_left ) ? 8'hFB : (m_down  && m_right ) ? 8'hEF : (m_up  && m_right ) ? 8'hBF : {~m_up ,1'd1,~m_right ,1'd1,~m_down ,1'd1,~m_left ,1'd1};
+wire  [7:0] NML_P2 = m_fire2A ? 8'hFF : (m_up2 && m_left2) ? 8'hFE : (m_down2 && m_left2) ? 8'hFB : (m_down2 && m_right2) ? 8'hEF : (m_up2 && m_right2) ? 8'hBF : {~m_up2,1'd1,~m_right2,1'd1,~m_down2,1'd1,~m_left2,1'd1};
 
 // Select correct inputs
-wire  [7:0] IN0 = (core_mod==1)? Panic_P1 : (core_mod==2 || core_mod==4 || core_mod==5)? MagSpot_P1 : Alien_P1;
-wire  [7:0] IN1 = (core_mod==1)? Panic_P2 : (core_mod==2 || core_mod==4 || core_mod==5)? MagSpot_P2 : Alien_P2;
+wire  [7:0] IN0 = (core_mod==1)? Panic_P1 : (core_mod==2 || core_mod==4) ? MagSpot_P1 : (core_mod==5) ? NML_P1 : Alien_P1;
+wire  [7:0] IN1 = (core_mod==1)? Panic_P2 : (core_mod==2 || core_mod==4) ? MagSpot_P2 : (core_mod==5) ? NML_P2 : Alien_P2;
 wire  [7:0] IN2 = (core_mod==1)? Panic_P3 : (core_mod==2 || core_mod==4 || core_mod==5)? MagSpot_P3 : Alien_P3;
 wire  [7:0] DIP = (core_mod==1)? dip[7:0] : MagSpot_P4;
 
@@ -227,6 +230,7 @@ wire        hs, vs;
 wire  [3:0] r,g,b;
 wire  [8:0] VCount;
 wire        blank = hblank | vblank;
+reg   [1:0] BackSpeed;
 
 COSMIC COSMIC
 (
@@ -251,6 +255,7 @@ COSMIC COSMIC
 	.O_SoundStop(SoundStop),
 	.O_AUDIO(audio),
 	.O_Sound_EN(),
+	.O_NML_Speed(BackSpeed),
 
 	.dipsw1(DIP),
 	.dipsw2(dip[15:8]),
@@ -300,8 +305,8 @@ mist_video #(.COLOR_DEPTH(4), .SD_HCNT_WIDTH(11)) mist_video(
 
 // Samples
 
-wire [24:0] table_offset = core_mod == 3 ? 24'd29696 : 24'd26656;
-wire [24:0] wav_offset = table_offset + 8'd128;
+wire [24:0] table_offset = core_mod == 5 ? 24'd30720 : core_mod == 4 ? 24'd30752 : core_mod == 3 ? 24'd29696 : 24'd26656;
+wire [24:0] wav_offset = table_offset + (core_mod == 5 ? 8'd192 : 8'd128);
 
 wire        wav_download = ioctl_downl && (ioctl_index == 0) && ioctl_addr >= wav_offset;
 reg  [24:0] wav_addr;
@@ -351,11 +356,13 @@ samples samples
 	.dl_data(ioctl_dout),
 	.dl_download(samples_download),
 
+	.NML_Speed(BackSpeed),
+
 	.CLK_SYS(clk_sys),
 	.clock(clk_vid),
 	.reset(reset),
 
-	.audio_in({2'b00, audio, 13'd0}),
+	.audio_in({1'b0, {11{audio}}, 3'd0}),
 	.audio_out_L(samples_left),
 	.audio_out_R(samples_right)
 );
