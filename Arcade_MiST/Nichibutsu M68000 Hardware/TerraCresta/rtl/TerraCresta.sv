@@ -1,5 +1,9 @@
 //============================================================================
 //
+//  (c) 2022 Darren Olafson
+//
+//  Enhancements/fixes/SDRAM handling (c) 2022 Gyorgy Szombathelyi
+//
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
 //  Software Foundation; either version 2 of the License, or (at your option)
@@ -115,14 +119,11 @@ assign     flipped = flip;
 wire [8:0] hc;
 wire [8:0] vc;
 
-wire [8:0] vc_raw;
-assign vc = vc_raw + 8'd16;
-
 video_timing video_timing (
     .clk(clk_24M),
     .clk_pix_en(clk6_en),
     .hc(hc),
-    .vc(vc_raw),
+    .vc(vc),
     .hs_offset(hs_offset),
     .vs_offset(vs_offset),
     .hbl(hbl),
@@ -183,7 +184,6 @@ reg   [1:0] gfx2_pal_l_r;
 always @ (posedge clk_24M) begin
     if (clk6_en) begin
     // 0
-        //gfx1_addr <= { ( (pcb == 0 ) ? 1'b0 : fg_ram_dout[8] ) , fg_ram_dout[7:0],   vc[2:0],   hc[2:1] } ;  // tile #.  set of 256 tiles -- fg_ram_dout[7:0]
         if (hc_x[0])
             gfx1_addr <= { 1'b0 , fg_ram_dout[7:0],   vc_x[2:0],   hc_x[2:1] } ;  // tile #.  set of 256 tiles -- fg_ram_dout[7:0]
 
@@ -260,7 +260,7 @@ always @ (posedge clk_24M) begin
         copy_sprite_state <= 3; 
     end else if ( copy_sprite_state == 3 ) begin        
        // address 0 result
-        sprite_y_pos <= flip ? sprite_shared_ram_dout : 8'd239 - sprite_shared_ram_dout;
+        sprite_y_pos <= flip ? sprite_shared_ram_dout - 1'd1 : 8'd239 - sprite_shared_ram_dout;
 
         sprite_shared_addr <= sprite_shared_addr + 1'd1 ;
         copy_sprite_state <= 4; 
@@ -278,8 +278,6 @@ always @ (posedge clk_24M) begin
         if ( pcb == 0 || pcb == 1 || pcb == 3 ) begin
             sprite_tile[9:8] <= { 1'b0, sprite_shared_ram_dout[1] };
         end else begin
-//			if( attrs&0x10 ) tile |= 0x100;
-//			if( attrs&0x02 ) tile |= 0x200;
             sprite_tile[9:8] <= { sprite_shared_ram_dout[1], sprite_shared_ram_dout[4] };
         end
 
@@ -318,7 +316,6 @@ always @ (posedge clk_24M) begin
     end
 
     if ( draw_sprite_state == 0 && copy_sprite_state == 0 && hc == 2 ) begin // 0xe0
-        // clear sprite buffer
         sprite_x_ofs <= 0;
         draw_sprite_state <= 1;
         sprite_buffer_addr <= 0;
@@ -370,11 +367,8 @@ wire    [3:0] sprite_y_ofs = vc - sprite_y_pos ;
 wire    [3:0] flipped_x = ( sprite_flip_x == 0 ) ? sprite_x_new_ofs : 4'd15 - sprite_x_new_ofs;
 wire    [3:0] flipped_y = ( sprite_flip_y == 0 ) ? sprite_y_ofs : 4'd15 - sprite_y_ofs;
 
-//wire    [3:0] gfx3_pix = (sprite_x_ofs[0] == 1 ) ? gfx3_dout[7:4] : gfx3_dout[3:0];
 wire    [3:0] gfx3_pix = (flipped_x[0] == 1 ) ? gfx3_dout[7:4] : gfx3_dout[3:0];
 
-// int spr_col = (u[t>>1]<<8) + (c<<4) + pen ;
-// prom_u = palette bank lookup
 wire   [11:0] p ;
 wire   [16:0] gfx3_addr ;
 
@@ -396,45 +390,13 @@ always @ (*) begin
         gfx3_addr = { 1'b0, flipped_x[1], sprite_tile[8:0], flipped_y[3:0], flipped_x[3:2] };
         
         p = { prom_u_dout, sprite_colour, gfx3_pix};
-        //p = { prom_u[sprite_tile[8:1]][3:0], sprite_colour, gfx3_pix};
     end else begin
         // hori
         gfx3_addr = { flipped_x[1],       sprite_tile[9:0], flipped_y[3:0], flipped_x[3:2] };
 
         p = { prom_u_dout, sprite_colour[3:1], 1'b0, gfx3_pix};
-        //p = { prom_u[{sprite_tile[9],sprite_tile[7:2],sprite_tile[8]}][3:0], sprite_colour[3:1], 1'b0, gfx3_pix};
     end
 end
-
-// sprite_tile[9:8] <= { sprite_shared_ram_dout[1], sprite_shared_ram_dout[4] };
-
-//		int tile = pSource[1]&0xff;
-//		int attrs = pSource[2];
-//		int flipx = attrs&0x04;
-//		int flipy = attrs&0x08;
-//		int color = (attrs&0xf0)>>4;
-//		int sx = (pSource[3] & 0xff) - 0x80 + 256 * (attrs & 1);
-//		int sy = 240 - (pSource[0] & 0xff);
-//
-//		if( transparent_pen )
-//		{
-//			int bank;
-//
-//			if( attrs&0x02 ) tile |= 0x200; // sprite_shared_ram_dout[1]
-//			if( attrs&0x10 ) tile |= 0x100; // sprite_shared_ram_dout[4] 
-//
-//			bank = (tile&0xfc)>>1;
-//			if( tile&0x200 ) bank |= 0x80; // sprite_shared_ram_dout[1]
-//			if( tile&0x100 ) bank |= 0x01; // sprite_shared_ram_dout[4] 
-//
-//			color &= 0xe;
-//			color += 16*(spritepalettebank[bank]&0xf);
-//		}
-//		else
-//		{
-//			if( attrs&0x02 ) tile|= 0x100;
-//			color += 16 * (spritepalettebank[(tile>>1)&0xff] & 0x0f);
-//		}
 
 reg    [11:0] sprite_line_buffer[512];
 
@@ -616,7 +578,7 @@ end
 // always ack when it's not program rom
 assign m68k_dtack_n = 0; 
 
-        // select cpu data input based on what is active 
+// select cpu data input based on what is active
 assign m68k_din =  prog_rom_cs  ? prog_rom_data :
                    m68k_ram_cs  ? ram68k_dout :
                    m68k_ram1_cs ? m68k_ram1_dout :
