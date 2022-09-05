@@ -337,7 +337,9 @@ begin
     else
       -- begin of starting the interrupt procedure
                                                       -- saving the old adress
-      if intblock_i = '0' and
+      -- MJD 20220823, check for IC_RETI here since intblock_i does not get set
+      -- early enough, which causes incorrect PC restoration.
+      if intblock_i = '0' and s_instr_category /= IC_RETI and
          ((s_intpre='1' and state=FETCH) or s_intpre2='1') then
         if state=FETCH then
           s_intpre2_en <= '1';

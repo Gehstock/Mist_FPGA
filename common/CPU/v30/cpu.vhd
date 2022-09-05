@@ -2,9 +2,35 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-use work.pexport.all;
+package whatever is
+   type cpu_export_type is record
+      reg_ax           : unsigned(15 downto 0);
+      reg_cx           : unsigned(15 downto 0);
+      reg_dx           : unsigned(15 downto 0);
+      reg_bx           : unsigned(15 downto 0);
+      reg_sp           : unsigned(15 downto 0);
+      reg_bp           : unsigned(15 downto 0);
+      reg_si           : unsigned(15 downto 0);
+      reg_di           : unsigned(15 downto 0);
+      reg_es           : unsigned(15 downto 0);
+      reg_cs           : unsigned(15 downto 0);
+      reg_ss           : unsigned(15 downto 0);
+      reg_ds           : unsigned(15 downto 0);
+      reg_ip           : unsigned(15 downto 0);
+      reg_f            : unsigned(15 downto 0);
+      opcodebyte_last  : std_logic_vector(7 downto 0);
+   end record;
+end package;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+-- use work.pexport.all;
 use work.pBus_savestates.all;
 use work.pReg_savestates.all;
+
+use work.whatever.all;
 
 entity cpu is
    port
@@ -38,7 +64,10 @@ entity cpu is
       load_savestate    : in  std_logic;
             
       cpu_done          : out std_logic := '0'; 
-      cpu_export        : out cpu_export_type;
+      cpu_export_opcode : out std_logic_vector(7 downto 0);
+		cpu_export_reg_cs : out unsigned(15 downto 0);
+		cpu_export_reg_ip : out unsigned(15 downto 0);
+		
          
       -- register 
       RegBus_Din        : out std_logic_vector(7 downto 0) := (others => '0');
@@ -236,6 +265,12 @@ architecture arch of cpu is
       ALU_OP_SXT,
       ALU_OP_DECADJUST,
       ALU_OP_ASCIIADJUST,
+      ALU_OP_SET1,
+      ALU_OP_CLR1,
+      ALU_OP_NOT1,
+      ALU_OP_TEST1,
+      ALU_OP_ROR4,
+      ALU_OP_ROL4,
       ALU_OP_NOTHING
    );
 
@@ -761,15 +796,25 @@ begin
                            consumePrefetch <= 1;
                            case (prefetchBuffer(15 downto 8)) is
                               -- TEST1
-                              when x"10" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"10" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 1; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
+                              when x"11" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 2; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
+                              when x"18" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 1; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
+                              when x"19" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 2; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
                               -- CLR1
-                              when x"12" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"12" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"13" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1a" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1b" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- SET1
-                              when x"15" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"14" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"15" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1c" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1d" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- NOT1
-                              when x"16" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
-                              -- NOT1
-                              when x"17" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"16" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"17" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1e" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1f" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- ADD4S
                               when x"20" => cpustage <= CPUSTAGE_EXECUTE; opcode <= OP_BCDSTRING; bcdOp <= BCD_OP_ADD; bcdOffset <= (others => '0'); regs.FlagCar <= '0'; regs.FlagZer <= '1';
                               -- SUB4S
@@ -777,9 +822,9 @@ begin
                               -- CMP4S
                               when x"26" => cpustage <= CPUSTAGE_EXECUTE; opcode <= OP_BCDSTRING; bcdOp <= BCD_OP_CMP; bcdOffset <= (others => '0'); regs.FlagCar <= '0'; regs.FlagZer <= '1';
                               -- ROL4
-                              when x"28" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"28" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROL4; opsize <= 1; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- ROR4
-                              when x"2a" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              when x"2a" =>  cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROR4; opsize <= 1; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- INS
                               when x"31" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               -- EXT
@@ -844,7 +889,7 @@ begin
 
                         when x"36" => prefixSegmentSS <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
       
-                        when x"37" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 1;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
+                        when x"37" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 2;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
       
                         when x"38" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 1;                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
                         when x"39" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 2;                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
@@ -855,7 +900,7 @@ begin
 
                         when x"3E" => prefixSegmentDS <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
 
-                        when x"3F" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 1;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
+                        when x"3F" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 2;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
 
                         when x"40" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_ax; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1'; 
                         when x"41" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_cx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_cx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
@@ -1133,313 +1178,300 @@ begin
 -- ####################################################################################
                      
                   when CPUSTAGE_MODRM =>
-                  
-                     regs.reg_ip     <= regs.reg_ip + 1;
-                     consumePrefetch <= 1;
-                     MODRM_mem := unsigned(prefetchBuffer(2 downto 0));
-                     MODRM_reg := unsigned(prefetchBuffer(5 downto 3));
-                     MODRM_mod := unsigned(prefetchBuffer(7 downto 6));
-                     
-                     if (opcodebyte = x"8E" and MODRM_reg = 3) then irqBlocked <= '1'; end if;
-                     
-                     newModDelay := delay;
-                     
-                     if (MODRM_mod = 0 and MODRM_mem = 6) then
-                        if (SLOWTIMING = '1') then newModDelay := newModDelay + 1; end if;
-                        consumePrefetch <= 3;
-                        regs.reg_ip     <= regs.reg_ip + 3;
-                        memAddr         <= unsigned(prefetchBuffer(23 downto 8));
-                     else 
-                        varmemaddr := x"0000";
-                        case (to_integer(MODRM_mem)) is
-                           when 0 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx + regs.reg_si;
-                           when 1 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx + regs.reg_di;
-                           when 2 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp + regs.reg_si;
-                           when 3 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp + regs.reg_di;
-                           when 4 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_si;
-                           when 5 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_di;
-                           when 6 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp;
-                           when 7 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx;
-                           when others => null;
-                        end case;
-                        if (MODRM_mod = 1) then
-                           if (SLOWTIMING = '1') then newModDelay := newModDelay + 1; end if;
-                           consumePrefetch <= 2;
-                           regs.reg_ip     <= regs.reg_ip + 2;
-                           varmemaddr      := to_unsigned(to_integer(varmemaddr) + to_integer(signed(prefetchBuffer(15 downto 8))), 16);
-                        elsif (MODRM_mod = 2) then
+                     if (consumePrefetch = 0) then
+                        regs.reg_ip     <= regs.reg_ip + 1;
+                        consumePrefetch <= 1;
+                        MODRM_mem := unsigned(prefetchBuffer(2 downto 0));
+                        MODRM_reg := unsigned(prefetchBuffer(5 downto 3));
+                        MODRM_mod := unsigned(prefetchBuffer(7 downto 6));
+                        
+                        if (opcodebyte = x"8E" and MODRM_reg = 3) then irqBlocked <= '1'; end if;
+                        
+                        newModDelay := delay;
+                        
+                        if (MODRM_mod = 0 and MODRM_mem = 6) then
                            if (SLOWTIMING = '1') then newModDelay := newModDelay + 1; end if;
                            consumePrefetch <= 3;
                            regs.reg_ip     <= regs.reg_ip + 3;
-                           varmemaddr      := varmemaddr + unsigned(prefetchBuffer(23 downto 8));
-                        end if;
-                        memaddr <= varmemaddr;
-                     end if;
-                     
-                     -- set target reg
-                     varoptarget   := optarget;
-                     varsource1    := source1;
-                     varsource2    := source2;
-                     vartarget_reg := CPU_REG_NONE; 
-                     varpushlist   := pushlist;
-                     if (segmentaccess = '1') then
-                        case (to_integer(MODRM_reg(1 downto 0))) is
-                           when 0 => vartarget_reg := CPU_REG_es;
-                           when 1 => vartarget_reg := CPU_REG_cs;
-                           when 2 => vartarget_reg := CPU_REG_ss;
-                           when 3 => vartarget_reg := CPU_REG_ds;
-                           when others => null;
-                        end case;
-                     else
-                        if (opsize = 1) then
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => vartarget_reg := CPU_REG_al;
-                              when 1 => vartarget_reg := CPU_REG_cl;
-                              when 2 => vartarget_reg := CPU_REG_dl;
-                              when 3 => vartarget_reg := CPU_REG_bl;
-                              when 4 => vartarget_reg := CPU_REG_ah;
-                              when 5 => vartarget_reg := CPU_REG_ch;
-                              when 6 => vartarget_reg := CPU_REG_dh;
-                              when 7 => vartarget_reg := CPU_REG_bh;
-                              when others => null;
-                           end case;
-                        elsif (opsize = 2) then
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => vartarget_reg := CPU_REG_ax;
-                              when 1 => vartarget_reg := CPU_REG_cx;
-                              when 2 => vartarget_reg := CPU_REG_dx;
-                              when 3 => vartarget_reg := CPU_REG_bx;
-                              when 4 => vartarget_reg := CPU_REG_sp;
-                              when 5 => vartarget_reg := CPU_REG_bp;
-                              when 6 => vartarget_reg := CPU_REG_si;
-                              when 7 => vartarget_reg := CPU_REG_di;
-                              when others => null;
-                           end case;
-                        end if;
-                     end if;
-                     target_reg <= vartarget_reg;
-                     
-                     -- get reg
-                     if (segmentaccess = '1') then
-                        case (to_integer(MODRM_reg(1 downto 0))) is
-                           when 0 => MODRM_value_reg <= regs.reg_es;
-                           when 1 => MODRM_value_reg <= regs.reg_cs;
-                           when 2 => MODRM_value_reg <= regs.reg_ss;
-                           when 3 => MODRM_value_reg <= regs.reg_ds;
-                           when others => null;
-                        end case;
-                     else
-                        if (opsize = 1) then
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => MODRM_value_reg <= x"00" & regs.reg_ax( 7 downto 0);
-                              when 1 => MODRM_value_reg <= x"00" & regs.reg_cx( 7 downto 0);
-                              when 2 => MODRM_value_reg <= x"00" & regs.reg_dx( 7 downto 0);
-                              when 3 => MODRM_value_reg <= x"00" & regs.reg_bx( 7 downto 0);
-                              when 4 => MODRM_value_reg <= x"00" & regs.reg_ax(15 downto 8);
-                              when 5 => MODRM_value_reg <= x"00" & regs.reg_cx(15 downto 8);
-                              when 6 => MODRM_value_reg <= x"00" & regs.reg_dx(15 downto 8);
-                              when 7 => MODRM_value_reg <= x"00" & regs.reg_bx(15 downto 8);
-                              when others => null;
-                           end case;
-                        elsif (opsize = 2) then
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => MODRM_value_reg <= regs.reg_ax;
-                              when 1 => MODRM_value_reg <= regs.reg_cx;
-                              when 2 => MODRM_value_reg <= regs.reg_dx;
-                              when 3 => MODRM_value_reg <= regs.reg_bx;
-                              when 4 => MODRM_value_reg <= regs.reg_sp;
-                              when 5 => MODRM_value_reg <= regs.reg_bp;
-                              when 6 => MODRM_value_reg <= regs.reg_si;
-                              when 7 => MODRM_value_reg <= regs.reg_di;
-                              when others => null;
-                           end case;
-                        end if;
-                     end if;
-                     
-                     -- second decode
-                     case (opcode) is
-                        when OP_MEMIMM1 =>
-                           opcode <= OP_MOVMEM;
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => aluop <= ALU_OP_ADD;
-                              when 1 => aluop <= ALU_OP_OR; 
-                              when 2 => aluop <= ALU_OP_ADC;
-                              when 3 => aluop <= ALU_OP_SBB;
-                              when 4 => aluop <= ALU_OP_AND;
-                              when 5 => aluop <= ALU_OP_SUB;
-                              when 6 => aluop <= ALU_OP_XOR;
-                              when 7 => aluop <= ALU_OP_CMP; opcode <= OP_NOP;
-                              when others => null;
-                           end case;
-                        
-                        when OP_MEMIMM2 =>
-                           opcode <= OP_MOVMEM;
-                           case (to_integer(MODRM_reg)) is
-                              when 0 => aluop <= ALU_OP_ROL;
-                              when 1 => aluop <= ALU_OP_ROR;
-                              when 2 => aluop <= ALU_OP_RCL;
-                              when 3 => aluop <= ALU_OP_RCR;
-                              when 4 => aluop <= ALU_OP_SHL;
-                              when 5 => aluop <= ALU_OP_SHR;
-                              when 6 => aluop <= ALU_OP_SAL;
-                              when 7 => aluop <= ALU_OP_SAR;
-                              when others => null;
-                           end case;
-                        
-                        when OP_MEMIMM3 =>
-                           case (to_integer(MODRM_reg)) is
-                              when 0 | 1 =>
-                                 opcode <= OP_NOP; aluop <= ALU_OP_TST;
-                                 if (opsize = 2) then varsource2 := OPSOURCE_FETCHVALUE16; else varsource2 := OPSOURCE_FETCHVALUE8; end if;
-                                 dbuf <= dbuf + 1;
-                              when 2 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NOT; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
-                              when 3 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NEG; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
-                              when 4 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MUL;  useAluResult <= '1'; newModDelay := newModDelay + 2;
-                              when 5 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MULI; useAluResult <= '1'; newModDelay := newModDelay + 2;
-                              when 6 => opcode <= OP_DIV; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
-                                 if (opsize = 1) then newModDelay := newModDelay + 2; else newModDelay := newModDelay + 11; end if;
-                              when 7 => opcode <= OP_DIVI; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
-                                 if (opsize = 1) then newModDelay := newModDelay + 4; else newModDelay := newModDelay + 12; end if;
-                              when others => null;
-                           end case;
-                        
-                        when OP_MEMIMM4 =>
-                           case (to_integer(MODRM_reg)) is
-                              when 0     => opcode <= OP_MOVMEM;  varoptarget := OPTARGET_MEM; aluop <= ALU_OP_INC; varsource2 := OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
-                              when 1     => opcode <= OP_MOVMEM;  varoptarget := OPTARGET_MEM; aluop <= ALU_OP_DEC; varsource2 := OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
-                              when 2     => opcode <= OP_JUMPABS; newModDelay := newModDelay + 1; varpushlist := REGPOS_ip;
-                              when 3     => opcode <= OP_JUMPFAR; varsource2 := OPSOURCE_MEM; varpushlist := REGPOS_cs or REGPOS_ip; newModDelay := newModDelay + 6;
-                              when 4     => opcode <= OP_JUMPABS; newModDelay := newModDelay + 1;
-                              when 5     => opcode <= OP_JUMPFAR; varsource2 := OPSOURCE_MEM; newModDelay := newModDelay + 6;
-                              when 6 | 7 => opcode <= OP_NOP; varpushlist := REGPOS_mem; dbuf <= dbuf + 1;
-                              when others => null;
-                           end case;
-                        
-                           when others => null;
-                     
-                     end case;
-                     
-                     varfetchedSource1 := fetchedSource1;
-                     varfetchedSource2 := fetchedSource2;
-                     
-                     --set target mem
-                     if (varoptarget = OPTARGET_MEM and MODRM_mod = 3) then
-                        target_reg2 <= vartarget_reg;
-                        varoptarget := OPTARGET_MODRM_REG;
-                        opcode      <= OP_MOVREG;
-                        if (opcodebyte = x"8F") then --special case: PopMem
-                           opcode <= OP_NOP;
-                        end if;
-                        if (opcode = OP_MEMIMM1 and to_integer(MODRM_reg) = 7) then -- special case: CMP
-                           opcode <= OP_NOP;
-                        end if;
-                        if (opsize = 1) then
+                           memAddr         <= unsigned(prefetchBuffer(23 downto 8));
+                        else 
+                           varmemaddr := x"0000";
                            case (to_integer(MODRM_mem)) is
-                              when 0 => target_reg <= CPU_REG_al;
-                              when 1 => target_reg <= CPU_REG_cl;
-                              when 2 => target_reg <= CPU_REG_dl;
-                              when 3 => target_reg <= CPU_REG_bl;
-                              when 4 => target_reg <= CPU_REG_ah;
-                              when 5 => target_reg <= CPU_REG_ch;
-                              when 6 => target_reg <= CPU_REG_dh;
-                              when 7 => target_reg <= CPU_REG_bh;
+                              when 0 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx + regs.reg_si;
+                              when 1 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx + regs.reg_di;
+                              when 2 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp + regs.reg_si;
+                              when 3 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp + regs.reg_di;
+                              when 4 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_si;
+                              when 5 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_di;
+                              when 6 => memSegment <= regs.reg_ss; varmemaddr := regs.reg_bp;
+                              when 7 => memSegment <= regs.reg_ds; varmemaddr := regs.reg_bx;
                               when others => null;
                            end case;
-                        elsif (opsize = 2) then
-                           case (to_integer(MODRM_mem)) is
-                              when 0 => target_reg <= CPU_REG_ax;
-                              when 1 => target_reg <= CPU_REG_cx;
-                              when 2 => target_reg <= CPU_REG_dx;
-                              when 3 => target_reg <= CPU_REG_bx;
-                              when 4 => target_reg <= CPU_REG_sp;
-                              when 5 => target_reg <= CPU_REG_bp;
-                              when 6 => target_reg <= CPU_REG_si;
-                              when 7 => target_reg <= CPU_REG_di;
-                              when others => null;
-                           end case;
-                        end if;
-                        
-                        if (opcode = OP_MEMIMM1) then
-                           varfetchedSource2 := '1';
-                           if (source2 = OPSOURCE_FETCHVALUE8) then
-                              if (opsign = '1') then 
-                                 fetch2Val <= unsigned(resize(signed(prefetchBuffer(15 downto 8)), 16));
-                              else                   
-                                 fetch2Val <= x"00" & unsigned(prefetchBuffer(15 downto 8)); 
-                              end if;
+                           if (MODRM_mod = 1) then
+                              if (SLOWTIMING = '1') then newModDelay := newModDelay + 1; end if;
                               consumePrefetch <= 2;
                               regs.reg_ip     <= regs.reg_ip + 2;
-                           else
-                              fetch2Val       <= unsigned(prefetchBuffer(23 downto 8));
+                              varmemaddr      := to_unsigned(to_integer(varmemaddr) + to_integer(signed(prefetchBuffer(15 downto 8))), 16);
+                           elsif (MODRM_mod = 2) then
+                              if (SLOWTIMING = '1') then newModDelay := newModDelay + 1; end if;
                               consumePrefetch <= 3;
                               regs.reg_ip     <= regs.reg_ip + 3;
+                              varmemaddr      := varmemaddr + unsigned(prefetchBuffer(23 downto 8));
+                           end if;
+                           memaddr <= varmemaddr;
+                        end if;
+                        
+                        -- set target reg
+                        varoptarget   := optarget;
+                        varsource1    := source1;
+                        varsource2    := source2;
+                        vartarget_reg := CPU_REG_NONE; 
+                        varpushlist   := pushlist;
+                        if (segmentaccess = '1') then
+                           case (to_integer(MODRM_reg(1 downto 0))) is
+                              when 0 => vartarget_reg := CPU_REG_es;
+                              when 1 => vartarget_reg := CPU_REG_cs;
+                              when 2 => vartarget_reg := CPU_REG_ss;
+                              when 3 => vartarget_reg := CPU_REG_ds;
+                              when others => null;
+                           end case;
+                        else
+                           if (opsize = 1) then
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => vartarget_reg := CPU_REG_al;
+                                 when 1 => vartarget_reg := CPU_REG_cl;
+                                 when 2 => vartarget_reg := CPU_REG_dl;
+                                 when 3 => vartarget_reg := CPU_REG_bl;
+                                 when 4 => vartarget_reg := CPU_REG_ah;
+                                 when 5 => vartarget_reg := CPU_REG_ch;
+                                 when 6 => vartarget_reg := CPU_REG_dh;
+                                 when 7 => vartarget_reg := CPU_REG_bh;
+                                 when others => null;
+                              end case;
+                           elsif (opsize = 2) then
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => vartarget_reg := CPU_REG_ax;
+                                 when 1 => vartarget_reg := CPU_REG_cx;
+                                 when 2 => vartarget_reg := CPU_REG_dx;
+                                 when 3 => vartarget_reg := CPU_REG_bx;
+                                 when 4 => vartarget_reg := CPU_REG_sp;
+                                 when 5 => vartarget_reg := CPU_REG_bp;
+                                 when 6 => vartarget_reg := CPU_REG_si;
+                                 when 7 => vartarget_reg := CPU_REG_di;
+                                 when others => null;
+                              end case;
+                           end if;
+                        end if;
+                        target_reg <= vartarget_reg;
+                        
+                        -- get reg
+                        if (segmentaccess = '1') then
+                           case (to_integer(MODRM_reg(1 downto 0))) is
+                              when 0 => MODRM_value_reg <= regs.reg_es;
+                              when 1 => MODRM_value_reg <= regs.reg_cs;
+                              when 2 => MODRM_value_reg <= regs.reg_ss;
+                              when 3 => MODRM_value_reg <= regs.reg_ds;
+                              when others => null;
+                           end case;
+                        else
+                           if (opsize = 1) then
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => MODRM_value_reg <= x"00" & regs.reg_ax( 7 downto 0);
+                                 when 1 => MODRM_value_reg <= x"00" & regs.reg_cx( 7 downto 0);
+                                 when 2 => MODRM_value_reg <= x"00" & regs.reg_dx( 7 downto 0);
+                                 when 3 => MODRM_value_reg <= x"00" & regs.reg_bx( 7 downto 0);
+                                 when 4 => MODRM_value_reg <= x"00" & regs.reg_ax(15 downto 8);
+                                 when 5 => MODRM_value_reg <= x"00" & regs.reg_cx(15 downto 8);
+                                 when 6 => MODRM_value_reg <= x"00" & regs.reg_dx(15 downto 8);
+                                 when 7 => MODRM_value_reg <= x"00" & regs.reg_bx(15 downto 8);
+                                 when others => null;
+                              end case;
+                           elsif (opsize = 2) then
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => MODRM_value_reg <= regs.reg_ax;
+                                 when 1 => MODRM_value_reg <= regs.reg_cx;
+                                 when 2 => MODRM_value_reg <= regs.reg_dx;
+                                 when 3 => MODRM_value_reg <= regs.reg_bx;
+                                 when 4 => MODRM_value_reg <= regs.reg_sp;
+                                 when 5 => MODRM_value_reg <= regs.reg_bp;
+                                 when 6 => MODRM_value_reg <= regs.reg_si;
+                                 when 7 => MODRM_value_reg <= regs.reg_di;
+                                 when others => null;
+                              end case;
                            end if;
                         end if;
                         
-                     end if;
-                     
-                     optarget <= varoptarget;
+                        -- second decode
+                        case (opcode) is
+                           when OP_MEMIMM1 =>
+                              opcode <= OP_MOVMEM;
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => aluop <= ALU_OP_ADD;
+                                 when 1 => aluop <= ALU_OP_OR; 
+                                 when 2 => aluop <= ALU_OP_ADC;
+                                 when 3 => aluop <= ALU_OP_SBB;
+                                 when 4 => aluop <= ALU_OP_AND;
+                                 when 5 => aluop <= ALU_OP_SUB;
+                                 when 6 => aluop <= ALU_OP_XOR;
+                                 when 7 => aluop <= ALU_OP_CMP; opcode <= OP_NOP;
+                                 when others => null;
+                              end case;
+                           
+                           when OP_MEMIMM2 =>
+                              opcode <= OP_MOVMEM;
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 => aluop <= ALU_OP_ROL;
+                                 when 1 => aluop <= ALU_OP_ROR;
+                                 when 2 => aluop <= ALU_OP_RCL;
+                                 when 3 => aluop <= ALU_OP_RCR;
+                                 when 4 => aluop <= ALU_OP_SHL;
+                                 when 5 => aluop <= ALU_OP_SHR;
+                                 when 6 => aluop <= ALU_OP_SAL;
+                                 when 7 => aluop <= ALU_OP_SAR;
+                                 when others => null;
+                              end case;
+                           
+                           when OP_MEMIMM3 =>
+                              case (to_integer(MODRM_reg)) is
+                                 when 0 | 1 =>
+                                    opcode <= OP_NOP; aluop <= ALU_OP_TST;
+                                    if (opsize = 2) then varsource2 := OPSOURCE_FETCHVALUE16; else varsource2 := OPSOURCE_FETCHVALUE8; end if;
+                                    dbuf <= dbuf + 1;
+                                 when 2 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NOT; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
+                                 when 3 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NEG; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
+                                 when 4 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MUL;  useAluResult <= '1'; newModDelay := newModDelay + 2;
+                                 when 5 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MULI; useAluResult <= '1'; newModDelay := newModDelay + 2;
+                                 when 6 => opcode <= OP_DIV; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
+                                    if (opsize = 1) then newModDelay := newModDelay + 2; else newModDelay := newModDelay + 11; end if;
+                                 when 7 => opcode <= OP_DIVI; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
+                                    if (opsize = 1) then newModDelay := newModDelay + 4; else newModDelay := newModDelay + 12; end if;
+                                 when others => null;
+                              end case;
+                           
+                           when OP_MEMIMM4 =>
+                              case (to_integer(MODRM_reg)) is
+                                 when 0     => opcode <= OP_MOVMEM;  varoptarget := OPTARGET_MEM; aluop <= ALU_OP_INC; varsource2 := OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
+                                 when 1     => opcode <= OP_MOVMEM;  varoptarget := OPTARGET_MEM; aluop <= ALU_OP_DEC; varsource2 := OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
+                                 when 2     => opcode <= OP_JUMPABS; newModDelay := newModDelay + 1; varpushlist := REGPOS_ip;
+                                 when 3     => opcode <= OP_JUMPFAR; varsource2 := OPSOURCE_MEM; varpushlist := REGPOS_cs or REGPOS_ip; newModDelay := newModDelay + 6;
+                                 when 4     => opcode <= OP_JUMPABS; newModDelay := newModDelay + 1;
+                                 when 5     => opcode <= OP_JUMPFAR; varsource2 := OPSOURCE_MEM; newModDelay := newModDelay + 6;
+                                 when 6 | 7 => opcode <= OP_NOP; varpushlist := REGPOS_mem; dbuf <= dbuf + 1;
+                                 when others => null;
+                              end case;
+                           
+                              when others => null;
                         
-                        
-                     -- instant fetching if memory access degrades to register access
-                     fetchedRMMODData := x"0000";
-                     if (opsize = 1) then
-                        case (to_integer(MODRM_mem)) is
-                           when 0 => fetchedRMMODData := x"00" & regs.reg_ax( 7 downto 0);
-                           when 1 => fetchedRMMODData := x"00" & regs.reg_cx( 7 downto 0);
-                           when 2 => fetchedRMMODData := x"00" & regs.reg_dx( 7 downto 0);
-                           when 3 => fetchedRMMODData := x"00" & regs.reg_bx( 7 downto 0);
-                           when 4 => fetchedRMMODData := x"00" & regs.reg_ax(15 downto 8);
-                           when 5 => fetchedRMMODData := x"00" & regs.reg_cx(15 downto 8);
-                           when 6 => fetchedRMMODData := x"00" & regs.reg_dx(15 downto 8);
-                           when 7 => fetchedRMMODData := x"00" & regs.reg_bx(15 downto 8);
-                           when others => null;
                         end case;
-                     elsif (opsize = 2) then
-                        case (to_integer(MODRM_mem)) is
-                           when 0 => fetchedRMMODData := regs.reg_ax;
-                           when 1 => fetchedRMMODData := regs.reg_cx;
-                           when 2 => fetchedRMMODData := regs.reg_dx;
-                           when 3 => fetchedRMMODData := regs.reg_bx;
-                           when 4 => fetchedRMMODData := regs.reg_sp;
-                           when 5 => fetchedRMMODData := regs.reg_bp;
-                           when 6 => fetchedRMMODData := regs.reg_si;
-                           when 7 => fetchedRMMODData := regs.reg_di;
-                           when others => null;
-                        end case;
-                     end if;
                         
-                     if (varsource1 = OPSOURCE_MEM and MODRM_mod = 3) then varfetchedSource1 := '1'; memFetchValue1 <= fetchedRMMODData; end if;
-                     if (varsource2 = OPSOURCE_MEM and MODRM_mod = 3) then varfetchedSource2 := '1'; memFetchValue2 <= fetchedRMMODData; end if;   
+                        varfetchedSource1 := fetchedSource1;
+                        varfetchedSource2 := fetchedSource2;
+                        
+                        --set target mem
+                        if (varoptarget = OPTARGET_MEM and MODRM_mod = 3) then
+                           target_reg2 <= vartarget_reg;
+                           varoptarget := OPTARGET_MODRM_REG;
+                           opcode      <= OP_MOVREG;
+                           if (opcodebyte = x"8F") then --special case: PopMem
+                              opcode <= OP_NOP;
+                           end if;
+                           if (opcode = OP_MEMIMM1 and to_integer(MODRM_reg) = 7) then -- special case: CMP
+                              opcode <= OP_NOP;
+                           end if;
+                           if (opsize = 1) then
+                              case (to_integer(MODRM_mem)) is
+                                 when 0 => target_reg <= CPU_REG_al;
+                                 when 1 => target_reg <= CPU_REG_cl;
+                                 when 2 => target_reg <= CPU_REG_dl;
+                                 when 3 => target_reg <= CPU_REG_bl;
+                                 when 4 => target_reg <= CPU_REG_ah;
+                                 when 5 => target_reg <= CPU_REG_ch;
+                                 when 6 => target_reg <= CPU_REG_dh;
+                                 when 7 => target_reg <= CPU_REG_bh;
+                                 when others => null;
+                              end case;
+                           elsif (opsize = 2) then
+                              case (to_integer(MODRM_mem)) is
+                                 when 0 => target_reg <= CPU_REG_ax;
+                                 when 1 => target_reg <= CPU_REG_cx;
+                                 when 2 => target_reg <= CPU_REG_dx;
+                                 when 3 => target_reg <= CPU_REG_bx;
+                                 when 4 => target_reg <= CPU_REG_sp;
+                                 when 5 => target_reg <= CPU_REG_bp;
+                                 when 6 => target_reg <= CPU_REG_si;
+                                 when 7 => target_reg <= CPU_REG_di;
+                                 when others => null;
+                              end case;
+                           end if;
+                           
+                           if (opcode = OP_MEMIMM1) then
+                              varfetchedSource2 := '1';
+                              if (source2 = OPSOURCE_FETCHVALUE8) then
+                                 if (opsign = '1') then 
+                                    fetch2Val <= unsigned(resize(signed(prefetchBuffer(15 downto 8)), 16));
+                                 else                   
+                                    fetch2Val <= x"00" & unsigned(prefetchBuffer(15 downto 8)); 
+                                 end if;
+                                 consumePrefetch <= 2;
+                                 regs.reg_ip     <= regs.reg_ip + 2;
+                              else
+                                 fetch2Val       <= unsigned(prefetchBuffer(23 downto 8));
+                                 consumePrefetch <= 3;
+                                 regs.reg_ip     <= regs.reg_ip + 3;
+                              end if;
+                           end if;
+                           
+                        end if;
+                        
+                        optarget <= varoptarget;
+                           
+                           
+                        -- instant fetching if memory access degrades to register access
+                        fetchedRMMODData := x"0000";
+                        if (opsize = 1) then
+                           case (to_integer(MODRM_mem)) is
+                              when 0 => fetchedRMMODData := x"00" & regs.reg_ax( 7 downto 0);
+                              when 1 => fetchedRMMODData := x"00" & regs.reg_cx( 7 downto 0);
+                              when 2 => fetchedRMMODData := x"00" & regs.reg_dx( 7 downto 0);
+                              when 3 => fetchedRMMODData := x"00" & regs.reg_bx( 7 downto 0);
+                              when 4 => fetchedRMMODData := x"00" & regs.reg_ax(15 downto 8);
+                              when 5 => fetchedRMMODData := x"00" & regs.reg_cx(15 downto 8);
+                              when 6 => fetchedRMMODData := x"00" & regs.reg_dx(15 downto 8);
+                              when 7 => fetchedRMMODData := x"00" & regs.reg_bx(15 downto 8);
+                              when others => null;
+                           end case;
+                        elsif (opsize = 2) then
+                           case (to_integer(MODRM_mem)) is
+                              when 0 => fetchedRMMODData := regs.reg_ax;
+                              when 1 => fetchedRMMODData := regs.reg_cx;
+                              when 2 => fetchedRMMODData := regs.reg_dx;
+                              when 3 => fetchedRMMODData := regs.reg_bx;
+                              when 4 => fetchedRMMODData := regs.reg_sp;
+                              when 5 => fetchedRMMODData := regs.reg_bp;
+                              when 6 => fetchedRMMODData := regs.reg_si;
+                              when 7 => fetchedRMMODData := regs.reg_di;
+                              when others => null;
+                           end case;
+                        end if;
+                           
+                        if (varsource1 = OPSOURCE_MEM and MODRM_mod = 3) then varfetchedSource1 := '1'; memFetchValue1 <= fetchedRMMODData; end if;
+                        if (varsource2 = OPSOURCE_MEM and MODRM_mod = 3) then varfetchedSource2 := '1'; memFetchValue2 <= fetchedRMMODData; end if;   
 
-                     source1 <= varsource1;
-                     source2 <= varsource2;
-                     
-                     fetchedSource1 <= varfetchedSource1;
-                     fetchedSource2 <= varfetchedSource2;
-                     
-                     pushlist <= varpushlist;
+                        source1 <= varsource1;
+                        source2 <= varsource2;
+                        
+                        fetchedSource1 <= varfetchedSource1;
+                        fetchedSource2 <= varfetchedSource2;
+                        
+                        pushlist <= varpushlist;
 
-                     delay <= newModDelay;
-                     
-                     if (turbo = '1') then
-                        delay <= 0;
-                     end if;
-                     
-                     -- same as CPUSTAGE_CHECKDATAREADY
-                     if    (varfetchedSource1 = '0' and varsource1 <= OPSOURCE_FETCHVALUE8 ) then cpustage <= CPUSTAGE_FETCHDATA1_8;
-                     elsif (varfetchedSource1 = '0' and varsource1 <= OPSOURCE_FETCHVALUE16) then cpustage <= CPUSTAGE_FETCHDATA1_16;                  
-                     elsif (varfetchedSource1 = '0' and varsource1 <= OPSOURCE_MEM         ) then cpustage <= CPUSTAGE_FETCHMEM_REQ;                  
-                     
-                     elsif (varfetchedSource2 = '0' and varsource2 <= OPSOURCE_FETCHVALUE8 ) then cpustage <= CPUSTAGE_FETCHDATA2_8;
-                     elsif (varfetchedSource2 = '0' and varsource2 <= OPSOURCE_FETCHVALUE16) then cpustage <= CPUSTAGE_FETCHDATA2_16;
-                     elsif (varfetchedSource2 = '0' and varsource2 <= OPSOURCE_MEM         ) then cpustage <= CPUSTAGE_FETCHMEM_REQ;
-                     
-                     elsif (varpushlist /= x"0000") then cpustage <= CPUSTAGE_PUSH;
-                     elsif (poplist  /= x"0000") then cpustage <= CPUSTAGE_POP_REQ;
-                     
-                     else  cpustage <= CPUSTAGE_EXECUTE;
-                     end if;
+                        delay <= newModDelay;
+                        
+                        if (turbo = '1') then
+                           delay <= 0;
+                        end if;
+                        cpustage <= CPUSTAGE_CHECKDATAREADY;
+                     end if; -- consumePrefetch = 0
                      
 -- ####################################################################################
 -- ############################## Source 1 + 2 ########################################
@@ -1888,6 +1920,7 @@ begin
                         when OPSOURCE_STRINGLOAD1  => source2Val := stringLoad;
                         when OPSOURCE_STRINGLOAD2  => source2Val := stringLoad2;
                         when OPSOURCE_IMMIDIATE    => source2Val := x"00" & immidiate8;
+                        when OPSOURCE_REG_cx       => source2Val := regs.reg_cx;
                         when others => null;
                      end case;
                      
@@ -1910,6 +1943,48 @@ begin
                      
                      if (aluop /= ALU_OP_NOTHING) then
                         case (aluop) is
+                           when ALU_OP_SET1 =>
+                              if (opsize = 1) then
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
+                              else
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
+                              end if;
+                              result := source1Val or op2value;
+
+                           when ALU_OP_CLR1 =>
+                              if (opsize = 1) then
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
+                              else
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
+                              end if;
+                              result := source1Val and (not op2value);
+
+                           when ALU_OP_TEST1 =>
+                              if (opsize = 1) then
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
+                              else
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
+                              end if;
+                              result := source1Val and op2value;
+                              regs.FlagCar <= '0'; regs.FlagOvf <= '0'; regs.FlagHaC <= '0';
+                              newZero := '1'; newParity := '1'; newSign := '1';
+
+                           when ALU_OP_NOT1 =>
+                              if (opsize = 1) then
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
+                              else
+                                 op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
+                              end if;
+                              result := source1Val xor op2value;
+
+                           when ALU_OP_ROR4 =>
+                              result := x"00" & regs.reg_ax(3 downto 0) & source1Val(7 downto 4);
+                              regs.reg_ax(7 downto 0) <= regs.reg_ax(7 downto 4) & source1Val(3 downto 0);
+
+                           when ALU_OP_ROL4 =>
+                              result := x"00" & source1Val(3 downto 0) & regs.reg_ax(3 downto 0);
+                              regs.reg_ax(7 downto 0) <= regs.reg_ax(7 downto 4) & source1Val(7 downto 4);
+
                            when ALU_OP_AND | ALU_OP_TST =>
                               result := source1Val and source2Val;
                               regs.FlagCar <= '0'; regs.FlagOvf <= '0'; regs.FlagHaC <= '0';
@@ -3042,21 +3117,9 @@ begin
       remainder => DIVremainder
    );
 
-   cpu_export.reg_ax <= regs.reg_ax;        
-   cpu_export.reg_cx <= regs.reg_cx;        
-   cpu_export.reg_dx <= regs.reg_dx;        
-   cpu_export.reg_bx <= regs.reg_bx;        
-   cpu_export.reg_sp <= regs.reg_sp;        
-   cpu_export.reg_bp <= regs.reg_bp;        
-   cpu_export.reg_si <= regs.reg_si;        
-   cpu_export.reg_di <= regs.reg_di;        
-   cpu_export.reg_es <= regs.reg_es;        
-   cpu_export.reg_cs <= regs.reg_cs;        
-   cpu_export.reg_ss <= regs.reg_ss;        
-   cpu_export.reg_ds <= regs.reg_ds;        
-   cpu_export.reg_ip <= regs.reg_ip;        
-   cpu_export.reg_f  <= reg_f ;        
-   cpu_export.opcodebyte_last  <= opcodebyte;        
+   cpu_export_reg_cs <= regs.reg_cs;        
+   cpu_export_reg_ip <= regs.reg_ip;        
+   cpu_export_opcode  <= opcodebyte;        
 
 end architecture;
 

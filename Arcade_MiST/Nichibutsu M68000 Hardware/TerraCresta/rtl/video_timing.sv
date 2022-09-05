@@ -25,10 +25,10 @@ wire [8:0] HS_START   = 9'd300;
 wire [8:0] HS_END     = 9'd332;
 wire [8:0] HTOTAL     = 9'd383;
 
-wire [8:0] VBL_START  = 9'd224;
-wire [8:0] VBL_END    = 9'd0;
-wire [8:0] VS_START   = 9'd235;
-wire [8:0] VS_END     = 9'd243;
+wire [8:0] VBL_START  = 9'd240;
+wire [8:0] VBL_END    = 9'd16;
+wire [8:0] VS_START   = 9'd251;
+wire [8:0] VS_END     = 9'd259;
 wire [8:0] VTOTAL     = 9'd263;
 
 reg [8:0] v;
