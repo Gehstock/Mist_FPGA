@@ -10,7 +10,7 @@
     <joystick>8-way</joystick>
     <num_buttons>2</num_buttons>
     <buttons default="B,A,R,L" names="Fire,Pod Control,-,-,Start,Coin,P2 Start,Pause"></buttons>
-    <switches default="0c 0a" base="16" page_id="1" page_name="Switches">
+    <switches default="0c,02" base="16" page_id="1" page_name="Switches">
         <dip bits="0,1" ids="3,2,4,5" name="Crafts"></dip>
         <dip bits="2" ids="Off,On" name="Demo Sounds"></dip>
         <dip bits="3" ids="100K,50K" name="Bonus Life"></dip>
