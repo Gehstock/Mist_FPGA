@@ -40,7 +40,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 06 00 00</part>
+        <part>01 06 00 00</part>
         <interleave output="32">
             <part name="rt_r-00.1h" crc="dad53bc0" map="0001" />
             <part name="rt_r-10.1k" crc="d6a66298" map="0010" />
@@ -56,7 +56,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 02 00 00</part>
+        <part>02 02 00 00</part>
         <interleave output="32">
             <part name="rt_b-a0.3c" crc="4e212fb0" map="0001" />
             <part name="rt_b-a1.3d" crc="8a65bdff" map="0010" />
@@ -65,7 +65,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 02 00 00</part>
+        <part>03 02 00 00</part>
         <interleave output="32">
             <part name="rt_b-b0.3j" crc="a7b17491" map="0001" />
             <part name="rt_b-b1.3k" crc="b9709686" map="0010" />

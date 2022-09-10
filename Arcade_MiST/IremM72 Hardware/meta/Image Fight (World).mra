@@ -44,7 +44,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="if-c-00.ic53" crc="745e6638" map="0001" />
             <part name="if-c-10.ic51" crc="b7108449" map="0010" />
@@ -53,7 +53,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 04 00 00</part>
+        <part>02 04 00 00</part>
         <interleave output="32">
             <part name="if-a-a0.ic21" crc="34ee2d77" map="0001" />
             <part name="if-a-a1.ic22" crc="6bd2845b" map="0010" />
@@ -62,7 +62,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 04 00 00</part>
+        <part>03 04 00 00</part>
         <interleave output="32">
             <part name="if-a-b0.ic26" crc="b425c829" map="0001" />
             <part name="if-a-b1.ic27" crc="e9bfe23e" map="0010" />
@@ -71,11 +71,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="if_c-pr-a.ic1" crc="55f10458" />
 
         <!-- samples -->
-        <part>00 02 00 00</part>
+        <part>05 02 00 00</part>
         <part name="if-c-v0.ic44" crc="cb64a194" />
         <part name="if-c-v1.ic45" crc="45b68bf5" />
     </rom>

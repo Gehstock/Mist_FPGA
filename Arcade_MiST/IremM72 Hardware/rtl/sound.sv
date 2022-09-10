@@ -29,12 +29,20 @@ module sound (
     output [7:0] snd_io_data,
     output snd_io_req,
 
-    input SOUND,
+    output reg sample_inc,
+    output [7:0] sample_addr,
+    output reg [1:0] sample_addr_wr,
+    output reg [7:0] sample_out,
+    input [7:0] sample_in,
+    input sample_ready,
+
     input SND,
     input SND2,
     input BRQ,
 
     input pause,
+
+    input m84,
 
     output [15:0] ym_audio_l,
     output [15:0] ym_audio_r,
@@ -58,14 +66,15 @@ jtframe_frac_cen #(2) jt51_cen
     .cen({CE_AUDIO_P1, CE_AUDIO})
 );
 
+wire ram_region = m84 ? &ram_addr[15:12] : 1'b1;
 assign ram_cs = ~z80_MREQ_n & z80_IORQ_n & z80_RFSH_n;
-assign ram_we = ~z80_WR_n;
+assign ram_we = ~z80_WR_n & ram_region;
 
 wire [7:0] SD_IN = z80_dout;
 wire [7:0] SD_OUT;
 
 wire SA0 = z80_addr[0];
-wire SCS = ~z80_IORQ_n && (z80_addr[2:1] == 2'b00);
+wire SCS = ~z80_IORQ_n & ~|z80_addr[7:1];
 wire SIRQ_N;
 wire SRESET;
 wire SWR_N = z80_WR_n;
@@ -74,14 +83,37 @@ wire M1_n;
 wire [15:0] z80_addr;
 wire z80_IORQ_n, z80_RD_n, z80_WR_n, z80_MREQ_n, z80_M1_n, z80_RFSH_n;
 
-assign ram_addr = {REGION_CPU2_RAM.base_addr[24:16], z80_addr};
+assign ram_addr = {REGION_SOUND.base_addr[24:16], z80_addr};
 assign ram_data = z80_dout;
-wire [7:0] z80_din = ( ~z80_M1_n & ~z80_IORQ_n ) ? {2'b11, ~snd_latch1_ready, SIRQ_N, 4'b1111} :
-                     ( ~z80_RD_n & ~z80_IORQ_n & (z80_addr[2:1] == 2'b01)) ? snd_latch1 :
-                     ( ~z80_RD_n & ~z80_IORQ_n & (z80_addr[2:1] == 2'b10)) ? snd_latch2 :
-                     ( ~z80_RD_n & SCS ) ? SD_OUT :
-                     ( ~z80_RD_n ) ? ram_dout : 8'hff;
+reg  [7:0] z80_din;
 wire [7:0] z80_dout;
+
+always_comb begin
+    z80_din = 8'hff;
+    if ( ~z80_M1_n & ~z80_IORQ_n ) begin
+        z80_din = {2'b11, ~snd_latch1_ready, SIRQ_N, 4'b1111};
+    end else if ( ~z80_RD_n ) begin
+        if (SCS) begin
+            z80_din = SD_OUT;
+        end else if (~z80_IORQ_n) begin
+            if (m84) begin
+                casex (z80_addr[7:0])
+                8'h80: z80_din = snd_latch1;
+                8'h84: z80_din = sample_in;
+                default: z80_din = 8'hff;
+                endcase
+            end else begin
+                casex (z80_addr[7:0])
+                8'bxxxx_x01x: z80_din = snd_latch1;
+                8'bxxxx_x10x: z80_din = snd_latch2;
+                default: z80_din = 8'hff;
+                endcase
+            end
+        end else begin
+            z80_din = ram_dout;
+        end
+    end
+end
 
 assign snd_io_addr = z80_addr[7:0];
 assign snd_io_req = ~z80_IORQ_n;
@@ -90,7 +122,7 @@ assign snd_io_data = z80_dout;
 T80s z80(
     .RESET_n(~BRQ & reset_n),
     .CLK(CLK_32M),
-    .CEN(CE_AUDIO & ~pause & ~(ram_cs & ~ram_valid)),
+    .CEN(CE_AUDIO & ~pause & ~(ram_cs & ~ram_valid) & sample_ready),
     .INT_n(~(~SIRQ_N | snd_latch1_ready)),
     .BUSRQ_n(~BRQ),
     .M1_n(z80_M1_n),
@@ -102,7 +134,7 @@ T80s z80(
     .A(z80_addr),
     .DI(z80_din),
     .DO(z80_dout),
-    .NMI_n(~snd_latch2_ready)
+    .NMI_n(m84 ? ~m84_nmi : ~snd_latch2_ready)
 );
 
 jt51 ym2151(
@@ -126,11 +158,23 @@ reg snd_latch1_ready = 0;
 reg [7:0] snd_latch2;
 reg snd_latch2_ready = 0;
 
+reg [11:0] nmi_counter = 0;
+reg m84_nmi = 0;
+reg z80_IORQ_n_old;
+assign sample_addr = z80_dout;
+
 always @(posedge CLK_32M) begin
+    sample_inc <= 0;
+    sample_addr_wr <= 2'b00;
+
     if (~reset_n) begin
-        snd_latch1_ready <= 0;
-        snd_latch2_ready <= 0;
-    end else begin
+        m84_nmi <= 0;
+        nmi_counter <= 0;
+    end else if (~pause) begin
+
+        nmi_counter <= nmi_counter + 12'd1;
+        if (&nmi_counter) m84_nmi <= 1;
+
         if (SND & ~IO_A[0]) begin
             snd_latch1 <= IO_DIN[7:0];
             snd_latch1_ready <= 1;
@@ -141,10 +185,33 @@ always @(posedge CLK_32M) begin
             snd_latch2_ready <= 1;
         end
 
-        if (~z80_IORQ_n & ~z80_WR_n & z80_addr[2:1] == 2'b11) snd_latch1_ready <= 0;
-        if (~z80_IORQ_n & ~z80_RD_n & (z80_addr[2:1] == 2'b10)) snd_latch2_ready <= 0;
-    end
+        if (~z80_M1_n && ~z80_MREQ_n && z80_addr == 16'h0066)
+            m84_nmi <= 0;
 
+        z80_IORQ_n_old <= z80_IORQ_n;
+        if (z80_IORQ_n_old & ~z80_IORQ_n) begin
+
+            if (m84) begin
+                if (~z80_WR_n & z80_addr[7:0] == 8'h80) begin
+                    sample_addr_wr <= 2'b01;
+                end
+
+                if (~z80_WR_n & z80_addr[7:0] == 8'h81) begin
+                    sample_addr_wr <= 2'b10;
+                end
+
+                if (~z80_WR_n & z80_addr[7:0] == 8'h82) begin
+                    sample_out <= z80_dout;
+                    sample_inc <= 1;
+                end
+
+                if (~z80_WR_n & z80_addr[7:0] == 8'h83) snd_latch1_ready <= 0;
+            end else begin
+                if (~z80_WR_n & z80_addr[2:1] == 2'b11) snd_latch1_ready <= 0;
+                if (~z80_RD_n & (z80_addr[2:1] == 2'b10)) snd_latch2_ready <= 0;
+            end
+        end
+    end
 end
 
 endmodule

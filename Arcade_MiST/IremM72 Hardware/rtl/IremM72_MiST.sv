@@ -33,7 +33,10 @@ module IremM72_MiST(
 
 `include "rtl/build_id.v" 
 
-`define CORE_NAME "LOHTJ"
+`define CORE_NAME "RTYPE2"
+//`define CORE_NAME "HHARRYU"
+//`define CORE_NAME "GALLOP"
+//`define CORE_NAME "LOHTJ"
 //`define CORE_NAME "MRHELI"
 //`define CORE_NAME "AIRDUM72"
 //`define CORE_NAME "RTYPE"
@@ -166,19 +169,19 @@ wire [24:1] sdr_sprite_addr;
 wire sdr_sprite_req, sdr_sprite_ack;
     
 wire [31:0] sdr_bg_data_a;
-wire [24:1] sdr_bg_addr_a;
+wire [24:0] sdr_bg_addr_a;
 wire sdr_bg_req_a, sdr_bg_ack_a;
 
 wire [31:0] sdr_bg_data_b;
-wire [24:1] sdr_bg_addr_b;
+wire [24:0] sdr_bg_addr_b;
 wire sdr_bg_req_b, sdr_bg_ack_b;
 
 wire [15:0] sdr_cpu_dout, sdr_cpu_din;
-wire [24:1] sdr_cpu_addr;
+wire [24:0] sdr_cpu_addr;
 wire        sdr_cpu_req, sdr_cpu_ack;
 wire  [1:0] sdr_cpu_wr_sel;
             
-wire [24:1] sdr_rom_addr;
+wire [24:0] sdr_rom_addr;
 wire [15:0] sdr_rom_data;
 wire  [1:0] sdr_rom_be;
 wire        sdr_rom_req;
@@ -193,7 +196,7 @@ wire        sdr_z80_ram_cs;
 wire        sdr_z80_ram_valid;
 
 wire [24:0] sample_rom_addr;
-wire [63:0] sample_rom_data;
+wire [63:0] sample_rom_dout;
 wire        sample_rom_req;
 wire        sample_rom_ack;
 
@@ -201,7 +204,7 @@ wire sdr_rom_write = ioctl_downl && (ioctl_index == 0);
 
 wire [19:0] bram_addr;
 wire [7:0] bram_data;
-wire [1:0] bram_cs;
+wire [3:0] bram_cs;
 wire bram_wr;
 
 board_cfg_t board_cfg;
@@ -212,7 +215,7 @@ sdram_4w #(96) sdram
   .clk           ( CLK_96M       ),
 
   // Bank 0-1 ops
-  .port1_a       ( sdr_rom_addr  ),
+  .port1_a       ( sdr_rom_addr[24:1] ),
   .port1_req     ( sdr_rom_req   ),
   .port1_ack     ( sdr_rom_ack   ),
   .port1_we      ( sdr_rom_write ),
@@ -228,7 +231,7 @@ sdram_4w #(96) sdram
 
   .cpu1_ram_req  ( sdr_cpu_req   ),
   .cpu1_ram_ack  ( sdr_cpu_ack   ),
-  .cpu1_ram_addr ( sdr_cpu_addr  ),
+  .cpu1_ram_addr ( sdr_cpu_addr[24:1] ),
   .cpu1_ram_we   ( |sdr_cpu_wr_sel ),
   .cpu1_ram_d    ( sdr_cpu_din   ),
   .cpu1_ram_q    ( sdr_cpu_dout  ),
@@ -250,7 +253,7 @@ sdram_4w #(96) sdram
   .cpu3_ack      (  ),
 
   // Bank 2-3 ops
-  .port2_a       ( sdr_rom_addr    ),
+  .port2_a       ( sdr_rom_addr[24:1] ),
   .port2_req     ( sdr_rom_req     ),
   .port2_ack     ( sdr_rom_ack     ),
   .port2_we      ( sdr_rom_write   ),
@@ -260,16 +263,16 @@ sdram_4w #(96) sdram
 
   .gfx1_req      ( sdr_bg_req_a    ),
   .gfx1_ack      ( sdr_bg_ack_a    ),
-  .gfx1_addr     ( sdr_bg_addr_a   ),
+  .gfx1_addr     ( sdr_bg_addr_a[24:1] ),
   .gfx1_q        ( sdr_bg_data_a   ),
   
   .gfx2_req      ( sdr_bg_req_b    ),
   .gfx2_ack      ( sdr_bg_ack_b    ),
-  .gfx2_addr     ( sdr_bg_addr_b   ),
+  .gfx2_addr     ( sdr_bg_addr_b[24:1] ),
   .gfx2_q        ( sdr_bg_data_b   ),
 
   .sample_addr   ( {sample_rom_addr[22:3], 2'b00} ),
-  .sample_data   ( sample_rom_data ),
+  .sample_q      ( sample_rom_dout ),
   .sample_req    ( sample_rom_req  ),
   .sample_ack    ( sample_rom_ack  ),
 
@@ -368,7 +371,7 @@ m72 m72(
     .sdr_z80_ram_valid(sdr_z80_ram_valid),
 
     .sample_rom_addr(sample_rom_addr),
-    .sample_rom_data(sample_rom_data),
+    .sample_rom_dout(sample_rom_dout),
     .sample_rom_req(sample_rom_req),
     .sample_rom_ack(sample_rom_ack),
 

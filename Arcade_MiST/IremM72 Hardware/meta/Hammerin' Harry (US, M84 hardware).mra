@@ -1,0 +1,75 @@
+<misterromdescription>
+    <name>Hammerin' Harry (US, M84 hardware)</name>
+    <mameversion>0247</mameversion>
+    <setname>hharryu</setname>
+    <year>1989</year>
+    <manufacturer>Irem</manufacturer>
+    <category>Platformer</category>
+    <rbf>IremM72</rbf>
+    <rotation>horizontal</rotation>
+
+    <joystick>8-way</joystick>
+    <num_buttons>2</num_buttons>
+    <buttons default="B,A,R,L" names="Fire,Pod Control,-,-,Start,Coin,P2 Start,Pause"></buttons>
+    <switches default="00,00" base="16" page_id="1" page_name="Switches">
+        <dip name="Lives" bits="0,1" ids="3,2,4,5"/>
+        <dip name="Difficulty" bits="2,3" ids="Normal,Easy,Hard,Very Easy"/>
+        <dip name="Continue Limit" bits="4" ids="Yes,No"/>
+        <dip name="Allow Continue" bits="5" ids="Yes,No"/>
+        <dip name="Demo Sounds" bits="6" ids="Off,On"/>
+        <dip name="Service Mode" bits="7" ids="Off,On"/>
+        <dip name="Flip Screen" bits="8" ids="Off,On"/>
+        <dip name="Cabinet" bits="9,10" ids="Cocktail,Upright,Upright"/>
+        <dip name="Coin Mode" bits="11" ids="Mode 1,Mode 2"/>
+        <dip name="Coin A" bits="12,13" ids="1/1,2/1,3/1,5/1"/>
+        <dip name="Coin B" bits="14,15" ids="1/2,1/3,1/5,1/6"/>
+        <!-- dip name="Coinage" bits="12,15" ids="Free Play,2 to Start/1 to Continue,4/3,3/2,2/3,1/6,1/5,1/4,1/3,1/2,6/1,5/1,4/1,3/1,2/1,1/1"/-->
+    </switches>
+
+    <rom index="0" zip="hharry.zip" md5="None">
+        <!-- board type -->
+        <part>14</part>
+        <!-- maincpu -->
+        <part>00 08 00 00</part>
+        <interleave output="16">
+            <part name ="a-ho-u.8d" crc="ede7f755" map="10"/>
+            <part name ="a-lo-u.9d" crc="df0726ae" map="01"/>
+        </interleave>
+
+        <interleave output="16">
+            <part name="a-l1-f.9b" crc="b23e966c" map="01"/>
+            <part name="a-h1-f.8b" crc="31b741c5" map="10"/>
+        </interleave>
+        <interleave output="16">
+            <part name="a-l1-f.9b" crc="b23e966c" map="01"/>
+            <part name="a-h1-f.8b" crc="31b741c5" map="10"/>
+        </interleave>
+
+        <!-- sprites -->
+        <part>01 08 00 00</part>
+        <interleave output="32">
+            <part name ="hh_00.rom" crc="ec5127ef" map="0001" />
+            <part name ="hh_10.rom" crc="def65294" map="0010" />
+            <part name ="hh_20.rom" crc="bb0d6ad4" map="0100" />
+            <part name ="hh_30.rom" crc="4351044e" map="1000" />
+        </interleave>
+
+        <!-- gfx2 -->
+        <part>02 08 00 00</part>
+        <interleave output="32">
+            <part name ="hh_a0.rom" crc="c577ba5f" map="0001" />
+            <part name ="hh_a1.rom" crc="429d12ab" map="0010" />
+            <part name ="hh_a2.rom" crc="b5b163b0" map="0100" />
+            <part name ="hh_a3.rom" crc="8ef566a1" map="1000" />
+        </interleave>
+
+        <!-- samples -->
+        <part>05 02 00 00</part>
+        <part name ="a-v0-0.rom" crc="faaacaff" />
+
+        <!-- sound rom -->
+        <part>08 01 00 00</part>
+        <part name ="a-sp-0.rom" crc="80e210e7" />
+
+    </rom>
+</misterromdescription>

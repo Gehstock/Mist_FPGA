@@ -37,8 +37,9 @@ module board_b_d (
     input MWR,
     input IORD,
     input IOWR,
-    input CHARA,
-    input CHARA_P,
+    input a_memrq,
+    input b_memrq,
+    input palette_memrq,
     input NL,
 
     input [8:0] VE,
@@ -50,12 +51,12 @@ module board_b_d (
     output P1L,
 
     input [31:0] sdr_data_a,
-    output [24:1] sdr_addr_a,
+    output [24:0] sdr_addr_a,
     output sdr_req_a,
     input sdr_ack_a,
 
     input [31:0] sdr_data_b,
-    output [24:1] sdr_addr_b,
+    output [24:0] sdr_addr_b,
     output sdr_req_b,
     input sdr_ack_b,
 
@@ -63,15 +64,17 @@ module board_b_d (
     
     input en_layer_a,
     input en_layer_b,
-    input en_palette
+    input en_palette,
+
+    input m84
 );
 
 // M72-B-D 1/8
 // Didn't implement WAIT signal
-wire WRA = MWR & CHARA & ~A[15];
-wire WRB = MWR & CHARA & A[15];
-wire RDA = MRD & CHARA & ~A[15];
-wire RDB = MRD & CHARA & A[15];
+wire WRA = MWR & a_memrq;
+wire WRB = MWR & b_memrq;
+wire RDA = MRD & a_memrq;
+wire RDB = MRD & b_memrq;
 
 wire VSCKA = IOWR & (IO_A[7:6] == 2'b10) & (IO_A[3:1] == 3'b000);
 wire HSCKA = IOWR & (IO_A[7:6] == 2'b10) & (IO_A[3:1] == 3'b001);
@@ -89,9 +92,9 @@ wire [15:0] DOUT_A, DOUT_B;
 assign DOUT = pal_dout_valid ? pal_dout : RDA ? DOUT_A : DOUT_B;
 assign DOUT_VALID = RDA | RDB | pal_dout_valid;
 
-wire [17:0] addr_a, addr_b;
-assign sdr_addr_a = { REGION_BG_A.base_addr[24:19], addr_a };
-assign sdr_addr_b = { REGION_BG_B.base_addr[24:19], addr_b };
+wire [20:0] addr_a, addr_b;
+assign sdr_addr_a = { REGION_BG_A.base_addr[24:21], addr_a };
+assign sdr_addr_b = { m84 ? REGION_BG_A.base_addr[24:21] : REGION_BG_B.base_addr[24:21], addr_b };
 
 board_b_d_layer layer_a(
     .CLK_32M(CLK_32M),
@@ -125,7 +128,9 @@ board_b_d_layer layer_a(
     .sdr_ack(sdr_ack_a),
 
     .enabled(en_layer_a),
-    .paused(paused)
+    .paused(paused),
+
+    .m84(m84)
 );
 
 board_b_d_layer layer_b(
@@ -160,7 +165,9 @@ board_b_d_layer layer_b(
     .sdr_ack(sdr_ack_b),
 
     .enabled(en_layer_b),
-    .paused(paused)
+    .paused(paused),
+
+    .m84(m84)
 );
 
 wire [4:0] r_out, g_out, b_out;
@@ -176,8 +183,9 @@ assign P1L = ~(CP15A & a_opaque) & ~(CP15B & b_opaque) & ~(CP8A & BITA[3]) & ~(C
 
 kna91h014 kna91h014(
     .CLK_32M(CLK_32M),
+    .CE_PIX(CE_PIX),
 
-    .G(CHARA_P),
+    .G(palette_memrq),
     .SELECT(S),
     .CA({COLA, BITA}),
     .CB({COLB, BITB}),

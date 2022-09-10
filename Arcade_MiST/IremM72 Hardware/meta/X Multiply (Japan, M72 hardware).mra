@@ -12,7 +12,7 @@
     <joystick>8-way</joystick>
     <num_buttons>1</num_buttons>
     <buttons default="B,R,L" names="Fire,-,-,-,Start,Coin,P2 Start,Pause"></buttons>
-    <switches default="00 02" base="16" page_id="1" page_name="Switches">
+    <switches default="00,02" base="16" page_id="1" page_name="Switches">
         <dip bits="0,1" ids="Normal,Very Easy,Easy,Hard" name="Difficulty"></dip>
         <dip bits="2,3" ids="3,1,2,4" name="Lives"></dip>
         <dip bits="4,7" ids="1C/1P,2C/1P,3C/1P,4C/1P,5C/1P,6C/1P,1C/2P,1C/3P,1C/4P,1C/5P,1C/6P,2C/3P,4C/2P,5C/3P,8C/3P,Free Play" name="Coin Mode"></dip>
@@ -43,7 +43,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 10 00 00</part>
+        <part>01 10 00 00</part>
         <interleave output="32">
             <part name="t44.00.ic53" crc="db45186e" map="0001" />
             <part name="t46.10.ic51" crc="f0c465a4" map="0010" />
@@ -58,7 +58,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 08 00 00</part>
+        <part>02 08 00 00</part>
         <interleave output="32">
             <part name="t53.a0" crc="1a082494" map="0001"/>
             <part name="t54.a1" crc="076c16c5" map="0010"/>
@@ -67,7 +67,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 08 00 00</part>
+        <part>03 08 00 00</part>
         <interleave output="32">
             <part name="t57.b0" crc="0a84e0c7" map="0001"/>
             <part name="t58.b1" crc="a874121d" map="0010"/>
@@ -76,11 +76,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="xm_c-pr-.ic1" crc="c8ceb3cd"/>
 
         <!-- samples -->
-        <part>00 02 00 00</part>
+        <part>05 02 00 00</part>
         <part name="t52.v0.ic44" crc="2db1bd80"/>
     </rom>
 </misterromdescription>

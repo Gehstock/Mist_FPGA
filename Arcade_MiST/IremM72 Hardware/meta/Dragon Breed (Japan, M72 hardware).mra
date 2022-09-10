@@ -43,7 +43,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="db_k800m.00" crc="c027a8cf" map="0001" />
             <part name="db_k801m.10" crc="093faf33" map="0010" />
@@ -52,7 +52,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 08 00 00</part>
+        <part>02 08 00 00</part>
         <interleave output="32">
             <part name="db_k804m.a0" crc="4c83e92e" map="0001"/>
             <part name="db_k805m.a1" crc="835ef268" map="0010"/>
@@ -61,7 +61,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 08 00 00</part>
+        <part>03 08 00 00</part>
         <interleave output="32">
             <part name="db_k804m.b0" crc="4c83e92e" map="0001"/>
             <part name="db_k805m.b1" crc="835ef268" map="0010"/>
@@ -70,11 +70,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="db_c-pr-.ic1" crc="8bf2910c"/>
 
         <!-- samples -->
-        <part>00 02 00 00</part>
+        <part>05 02 00 00</part>
         <part name="db_c-v0.ic44" crc="312f7282"/>
     </rom>
 </misterromdescription>

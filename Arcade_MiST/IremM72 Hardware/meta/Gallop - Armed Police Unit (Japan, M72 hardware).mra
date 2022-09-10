@@ -39,7 +39,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="cc-c-00.ic53" crc="9d99deaa" map="0001" />
             <part name="cc-c-10.ic51" crc="7eb083ed" map="0010" />
@@ -48,7 +48,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 04 00 00</part>
+        <part>02 04 00 00</part>
         <interleave output="32">
             <part name="cc-b-a0.ic21" crc="a33472bd" map="0001" />
             <part name="cc-b-a1.ic22" crc="118b1f2d" map="0010" />
@@ -57,12 +57,13 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 04 00 00</part>
+        <part>03 04 00 00</part>
         <interleave output="32">
             <part name="cc-b-b0.ic26" crc="0df5b439" map="0001" />
             <part name="cc-b-b1.ic27" crc="010b778f" map="0010" />
             <part name="cc-b-b2.ic25" crc="bda9f6fb" map="0100" />
             <part name="cc-b-b3.ic24" crc="d361ba3f" map="1000" />
         </interleave>
+
     </rom>
 </misterromdescription>

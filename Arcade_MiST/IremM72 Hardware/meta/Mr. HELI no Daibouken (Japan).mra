@@ -50,7 +50,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="mh_c-00.ic53" crc="dec4e121" map="0001"/>
             <part name="mh_c-10.ic51" crc="7aaa151e" map="0010"/>
@@ -59,7 +59,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 04 00 00</part>
+        <part>02 04 00 00</part>
         <interleave output="32">
             <part name="mh_b-a0.ic21" crc="6a0db256" map="0001"/>
             <part name="mh_b-a1.ic22" crc="14ec9795" map="0010"/>
@@ -68,7 +68,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 04 00 00</part>
+        <part>03 04 00 00</part>
         <interleave output="32">
             <part name="mh_b-b0-.ic26" crc="b5b95776" map="0001"/>
             <part name="mh_b-b1-.ic27" crc="74ca16ee" map="0010"/>
@@ -77,11 +77,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="mh_c-pr-.ic1" crc="897dc4ee"/>
 
         <!-- samples -->
-        <part>00 01 00 00</part>
+        <part>05 01 00 00</part>
         <part name="mh_c-v0-b.ic44" crc="d0c27e58"/>
     </rom>
 </misterromdescription>

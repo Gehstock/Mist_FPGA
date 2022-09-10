@@ -230,7 +230,7 @@ always_ff @(posedge CLK_96M) begin
                 st <= st; // wait
             else begin
                 line_buffer_color <= obj_color;
-                line_buffer_x = obj_org_x + ( 10'd16 * span );
+                line_buffer_x <= obj_org_x + ( 10'd16 * span );
                 line_buffer_req <= ~line_buffer_ack;
             end
         end
