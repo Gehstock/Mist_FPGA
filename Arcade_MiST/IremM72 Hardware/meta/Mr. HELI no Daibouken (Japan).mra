@@ -12,7 +12,7 @@
     <joystick>8-way</joystick>
     <num_buttons>2</num_buttons>
     <buttons default="B,A,R,L" names="Fire,Secondary,-,-,Start,Coin,P2 Start,Pause"></buttons>
-    <switches default="00 02" base="16" page_id="1" page_name="Switches">
+    <switches default="04,02" base="16" page_id="1" page_name="Switches">
         <dip bits="0,1" ids="3,2,4,1" name="Lives"></dip>
         <dip bits="2" ids="Off,On" name="Demo Sounds"></dip>
         <dip bits="3" ids="80K,100K" name="Bonus Life"></dip>
