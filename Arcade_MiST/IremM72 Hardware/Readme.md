@@ -2,7 +2,7 @@
 
 ![](docs/header_small.png)
 
-Implemention of the Irem M72 arcade hardware (https://www.system16.com/hardware.php?id=738) for the MiSTer FPGA platform.
+Implemention of the Irem M72 & M84 arcade hardware (https://www.system16.com/hardware.php?id=738) for the MiSTer FPGA platform.
 
 [Original core](https://github.com/MiSTer-devel/Arcade-IremM72_MiSTer) by Martin Donlon.
 
@@ -22,6 +22,9 @@ Implemention of the Irem M72 arcade hardware (https://www.system16.com/hardware.
 |[Dragon Breed](https://en.wikipedia.org/wiki/Dragon_Breed)|Japan|Conversion from M81 hardware.|
 |[X-Multiply](https://en.wikipedia.org/wiki/X_Multiply)|Japan|Conversion from M81 hardware.|
 |[Daiku no Gensan](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|Japan|Conversion from M81 hardware. Emulated MCU|
+|[R-Type II](https://en.wikipedia.org/wiki/R-Type_II)|Japan,World|M84 hardware.|
+|[Hammerin' Harry](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|US|M84 hardware.|
+
 
 **Note:** Emulated MCU is not implemented on MiST (FPGA is full).
 

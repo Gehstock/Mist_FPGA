@@ -22,125 +22,178 @@
 
 import m72_pkg::*;
 
-module pal_3a
+module address_translator
 (
     input logic [19:0] A,
+    input logic [15:0] data,
+    input logic [1:0] bytesel,
+
+    input logic rd,
+    input logic wr,
     
     input board_cfg_t board_cfg,
 
-    input logic BANK,
     input logic DBEN,
     input logic M_IO,
-    input logic [12:0] COD,
     output logic ls245_en, // TODO this signal might be better named
-    output [24:1] sdr_addr,
+    output [24:0] sdr_addr,
     output writable,
-    output logic S
+
+    output bg_a_memrq, // CHARA
+    output bg_b_memrq, // CHARA
+    output bg_palette_memrq, // CHARA_P
+    
+    output sprite_memrq, // 
+    output sprite_palette_memrq, // OBJ_P
+    output sound_memrq,
+
+    output sprite_dma,
+    output [1:0] iset,
+    output [15:0] iset_data,
+
+    output snd_latch1_wr,
+    output snd_latch2_wr
 );
 
+    assign snd_latch1_wr = ~M_IO & wr & ( A[7:0] == 8'h00 );
+    assign snd_latch2_wr = (board_cfg.m84) ? 1'b0 : ( ~M_IO & wr & ( A[7:0] == 8'hc0));
+    
     always_comb begin
         case (board_cfg.memory_map)
         0: begin
             casex (A[19:16])
-            4'b010x: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:1] | A[16:1]; end
-            4'b00xx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[17:1]; end
-            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[17:1]; end
+            4'b010x: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:0] | A[16:0]; end
+            4'b00xx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[17:0]; end
+            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[17:0]; end
             default: begin ls245_en = 0; writable = 0; sdr_addr = 24'd0; end
             endcase
         end
         1: begin
             casex (A[19:16])
-            4'b1010: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:1] | A[16:1]; end
-            4'b0xxx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[18:1]; end
-            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[18:1]; end
+            4'b1010: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:0] | A[16:0]; end
+            4'b0xxx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
+            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
             default: begin ls245_en = 0; writable = 0; sdr_addr = 24'd0; end
             endcase
         end
         2: begin
             casex (A[19:16])
-            4'b100x: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:1] | A[16:1]; end
-            4'b0xxx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[18:1]; end
-            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:1] | A[18:1]; end
+            4'b100x: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:0] | A[16:0]; end
+            4'b0xxx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
+            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
             default: begin ls245_en = 0; writable = 0; sdr_addr = 24'd0; end
             endcase
         end
-		  
-		  default: begin
-				ls245_en = 0;
-				writable = 0;
-				sdr_addr = 0;
-			end
-			
+
+        3,4: begin
+            casex (A[19:16])
+            4'b1110: begin ls245_en = DBEN & M_IO; writable = 1; sdr_addr = REGION_CPU_RAM.base_addr[24:0] | A[16:0]; end
+            4'b0xxx: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
+            4'b1111: begin ls245_en = DBEN & M_IO; writable = 0; sdr_addr = REGION_CPU_ROM.base_addr[24:0] | A[18:0]; end
+            default: begin ls245_en = 0; writable = 0; sdr_addr = 24'd0; end
+            endcase
+        end
+
+        default: begin
+            ls245_en = 0;
+            writable = 0;
+            sdr_addr = 0;
+        end
+            
         endcase
-
-        S = COD[11];
     end
-
-endmodule
-
-module pal_4d
-(
-    input logic IOWR,
-    input logic IORD,
-    input logic [7:0] A,
-
-    output logic SW,
-    output logic FLAG,
-    output logic DSW,
-    output logic SND,
-    output logic SND2,
-    output logic FSET,
-    output logic DMA_ON,
-    output logic ISET,
-    output logic INTCS
-);
 
     always_comb begin
-        SW = IORD & !A[7] & !A[6] & !A[3] & !A[2] & !A[1];
-        FLAG = IORD & !A[7] & !A[6] & !A[3] & !A[2] & A[1];
-        DSW = IORD & !A[7] & !A[6] & !A[3] & A[2] & !A[1];
-        SND = IOWR & !A[7] & !A[6] & !A[3] & !A[2] & !A[1];
-        SND2 = IOWR & A[7] & A[6] & !A[3] & !A[2] & !A[1];
-        FSET = IOWR & !A[7] & !A[6] & !A[3] & !A[2] & A[1];
-        DMA_ON = IOWR & !A[7] & !A[6] & !A[3] & A[2] & !A[1];
-        ISET = IOWR & !A[7] & !A[6] & !A[3] & A[2] & A[1];
-        INTCS = (IOWR | IORD) & !A[7] & A[6];
+        bg_a_memrq = 0;
+        bg_b_memrq = 0;
+        bg_palette_memrq = 0;
+        sprite_memrq = 0;
+        sprite_palette_memrq = 0;
+        sound_memrq = 0;
+
+        case (board_cfg.memory_map)
+        // M84 rtype2
+        3: begin
+            casex (A[19:12])
+            // 0xc0xxx
+            8'b1100_0000: sprite_memrq = 1;
+            // 0xc8xxx
+            8'b1100_1000: sprite_palette_memrq = 1;
+            // 0xd8xxx
+            8'b1101_1000: bg_palette_memrq = 1;
+            // 0xd0000 - 0xd3fff
+            8'b1101_00xx: bg_a_memrq = 1;
+            // 0xd4000 - 0xd7fff
+            8'b1101_01xx: bg_b_memrq = 1;
+            default: begin end// nothing
+            endcase
+        end
+        // M84 Hammerin' Harry
+        4: begin
+            casex (A[19:12])
+            // 0xc0xxx
+            8'b1100_0000: sprite_memrq = 1;
+            // 0xa0xxx
+            8'b1010_0000: sprite_palette_memrq = 1;
+            // 0xa8xxx
+            8'b1010_1000: bg_palette_memrq = 1;
+            // 0xd0000 - 0xd3fff
+            8'b1101_00xx: bg_a_memrq = 1;
+            // 0xd4000 - 0xd7fff
+            8'b1101_01xx: bg_b_memrq = 1;
+            default: begin end// nothing
+            endcase
+        end
+
+        // M72
+        default: begin
+            casex (A[19:12])
+            // 0xc0xxx
+            8'b1100_0000: sprite_memrq = 1;
+            // 0xc8xxx
+            8'b1100_1000: sprite_palette_memrq = 1;
+            // 0xccxxx
+            8'b1100_1100: bg_palette_memrq = 1;
+            // 0xd0000 - 0xd3fff
+            8'b1101_00xx: bg_a_memrq = 1;
+            // 0xd8000 - 0xdbfff
+            8'b1101_10xx: bg_b_memrq = 1;
+            // 0xexxxx
+            8'b1110_xxxx: sound_memrq = 1;
+            default: begin end// nothing
+            endcase
+        end
+        endcase
     end
-
-endmodule
-
-module pal_3d
-(
-    input logic [19:0] A,
-    input logic M_IO,
-    input logic DBEN,
-    input logic TNSL,
-    input logic BRQ,
-
-    output logic BUFDBEN,
-    output logic BUFCS,
-    output logic OBJ_P,
-    output logic CHARA_P,
-    output logic CHARA,
-    output logic SOUND,
-    output logic SDBEN
-);
 
     always_comb begin
-        BUFDBEN = A[19] & A[18] & !A[17] & !A[16] & !A[15] & !A[14] & M_IO & !DBEN & TNSL;
+        sprite_dma = 0;
+        iset_data = 16'd0;
+        iset = 2'b00;
 
-        BUFCS = TNSL & (!A[19] | !A[18] | A[17] | A[16] | A[15] | A[14] | !M_IO); // TODO unused, neg M_IO is not safe here
-
-        OBJ_P = A[19] & A[18] & !A[17] & !A[16] & A[15] & !A[14] & M_IO;
-
-        CHARA_P = A[19] & A[18] & !A[17] & !A[16] & A[15] & A[14] & M_IO;
-
-        CHARA = A[19] & A[18] & !A[17] & A[16] & M_IO;
-
-        SOUND = A[19] & A[18] & A[17] & !A[16] & M_IO;
-
-        SDBEN = A[19] & A[18] & A[17] & !A[16] & M_IO & !DBEN & BRQ;
+        // M84
+        if (board_cfg.m84) begin
+            if (M_IO & wr) begin
+                sprite_dma = A == 20'hbc000;
+                if (A == 20'hb0000) begin
+                    iset = bytesel;
+                    iset_data = data;
+                end else if (A == 20'hb0001) begin
+                    iset = 2'b10;
+                    iset_data = { data[7:0], 8'h00 };
+                end
+            end
+        end else begin
+            if (!M_IO & wr) begin
+                sprite_dma = A == 8'h04;
+                if (A == 8'h06) begin
+                    iset = 2'b01;
+                    iset_data = { 8'h00, data[7:0] };
+                end else if (A == 8'h07) begin
+                    iset = 2'b10;
+                    iset_data = { data[7:0], 8'h00 };
+                end
+            end
+        end
     end
-
 endmodule
-

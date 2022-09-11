@@ -98,7 +98,7 @@ module sdram_4w (
 	input             sample_req,
 	output reg        sample_ack = 0,
 	input      [22:1] sample_addr,
-	output reg [63:0] sample_data,
+	output reg [63:0] sample_q,
 
 	input             sp_req,
 	output reg        sp_ack = 0,
@@ -434,7 +434,7 @@ always @(posedge clk) begin
 				PORT_REQ  : port2_q[15:0] <= sd_din;
 				PORT_GFX1 :  gfx1_q[15:0] <= sd_din;
 				PORT_GFX2 :  gfx2_q[15:0] <= sd_din;
-				PORT_SAMPLE: sample_data[15:0] <= sd_din;
+				PORT_SAMPLE: sample_q[15:0] <= sd_din;
 				PORT_SP   :    sp_q[15:0] <= sd_din;
 				default: ;
 			endcase;
@@ -449,22 +449,22 @@ always @(posedge clk) begin
 				PORT_REQ  : begin port2_q[31:16] <= sd_din; port2_ack <= port2_req; end
 				PORT_GFX1 : begin  gfx1_q[31:16] <= sd_din; gfx1_ack <= gfx1_req; end
 				PORT_GFX2 : begin  gfx2_q[31:16] <= sd_din; gfx2_ack <= gfx2_req; end
-				PORT_SAMPLE:  sample_data[31:16] <= sd_din;
+				PORT_SAMPLE:     sample_q[31:16] <= sd_din;
 				PORT_SP   :          sp_q[31:16] <= sd_din;
 				default: ;
 			endcase;
 		end
 		if(t == STATE_READ1c && oe_latch[1]) begin
 			case(port[1])
-				PORT_SAMPLE: sample_data[47:32] <= sd_din;
-				PORT_SP:            sp_q[47:32] <= sd_din;
+				PORT_SAMPLE: sample_q[47:32] <= sd_din;
+				PORT_SP:         sp_q[47:32] <= sd_din;
 				default: ;
 			endcase;
 		end
 		if(t == STATE_READ1d && oe_latch[1]) begin
 			case(port[1])
-				PORT_SAMPLE: begin sample_data[63:48] <= sd_din; sample_ack <= sample_req; end
-				PORT_SP:     begin        sp_q[63:48] <= sd_din; sp_ack <= sp_req; end
+				PORT_SAMPLE: begin sample_q[63:48] <= sd_din; sample_ack <= sample_req; end
+				PORT_SP:     begin     sp_q[63:48] <= sd_din; sp_ack <= sp_req; end
 				default: ;
 			endcase;
 		end

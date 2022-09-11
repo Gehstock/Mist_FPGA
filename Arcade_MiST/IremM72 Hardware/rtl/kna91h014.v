@@ -20,6 +20,7 @@
 
 module kna91h014 (
     input CLK_32M,
+    input CE_PIX,
 
     input [7:0] CB,	// Pins 3-10.
     input [7:0] CA,	// Pins 11-18.
@@ -35,7 +36,7 @@ module kna91h014 (
     input MRD,	// Pin 28.
 
     input [15:0] DIN,	// Pins 25, 22-19 (split to input for Verilog).
-    output [15:0] DOUT,	// Pins 25, 22-19 (split to output for Verilog).
+    output reg [15:0] DOUT,	// Pins 25, 22-19 (split to output for Verilog).
     output DOUT_VALID,
     
     input [19:0] A,	// Pins 53-60
@@ -48,16 +49,7 @@ module kna91h014 (
 wire [7:0] A_IN = A[8:1];
 wire [2:0] A_S = { A[11], A[10], A[0] };
 
-reg [7:0] color_addr;
-
-always @(posedge CLK_32M) begin
-    color_addr <= SELECT ? CA : CB;
-end
-
-// Palette RAMs...
-reg [4:0] ram_a [256];
-reg [4:0] ram_b [256];
-reg [4:0] ram_c [256];
+wire [7:0] color_addr = SELECT ? CA : CB;
 
 // RAM Addr decoding...
 wire ram_a_cs = A_S==3'b000 | A_S==3'b110;
@@ -68,39 +60,32 @@ wire ram_c_cs = A_S==3'b100;
 wire wr_ena = G & MWR;
 wire rd_ena = G & MRD;
 
-wire ram_wr_a = ram_a_cs & wr_ena;
-wire ram_wr_b = ram_b_cs & wr_ena;
-wire ram_wr_c = ram_c_cs & wr_ena;
-
-reg [4:0] red_lat;
-reg [4:0] grn_lat;
-reg [4:0] blu_lat;
-
-// DOUT read driver...
-assign DOUT = { 11'd0,
-    (ram_a_cs) ? red_lat :
-    (ram_b_cs) ? grn_lat :
-    (ram_c_cs) ? blu_lat : 5'h00 };
 assign DOUT_VALID = rd_ena;
+
+// Palette RAM(s)
+reg [4:0] ram[1024];
+reg [1:0] cnt;
+reg [4:0] color_out;
+
+always @(negedge CLK_32M)
+begin
+    cnt <= cnt + 1'd1;
+    if (CE_PIX) cnt <= 0;
+    color_out <= ram[{cnt, color_addr}];
+    case(cnt)
+    2'b01: RED <= color_out;
+    2'b10: GRN <= color_out;
+    2'b11: BLU <= color_out;
+    default: ;
+    endcase
+end
+
+wire [9:0] ram_a = {ram_a_cs ? 2'b00 : ram_b_cs ? 2'b01 : ram_c_cs ? 2'b10 : 2'b11, A_IN};
 
 always @(posedge CLK_32M)
 begin
-    red_lat <= ram_a[A_IN];
-    if (ram_wr_a)
-        ram_a[A_IN] <= DIN[4:0];
-
-    grn_lat <= ram_b[A_IN];
-    if (ram_wr_b)
-        ram_b[A_IN] <= DIN[4:0];
-
-    blu_lat <= ram_c[A_IN];
-    if (ram_wr_c)
-        ram_c[A_IN] <= DIN[4:0];
-
-
-    RED <= ram_a[color_addr];
-    GRN <= ram_b[color_addr];
-    BLU <= ram_c[color_addr];
+    DOUT <= {11'd0, ram[ram_a]};
+    if (wr_ena) ram[ram_a] <= DIN[4:0];
 end
 
 endmodule

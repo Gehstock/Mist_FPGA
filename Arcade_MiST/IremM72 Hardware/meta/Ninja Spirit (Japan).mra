@@ -48,7 +48,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="nin-r00.7m" crc="5f61d30b" map="0001" />
             <part name="nin-r10.7j" crc="0caad107" map="0010" />
@@ -57,7 +57,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 04 00 00</part>
+        <part>02 04 00 00</part>
         <interleave output="32">
             <part name="nin_b-a0.4c" crc="63f8f658" map="0001" />
             <part name="nin_b-a1.4d" crc="75eb8306" map="0010" />
@@ -66,7 +66,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 04 00 00</part>
+        <part>03 04 00 00</part>
         <interleave output="32">
             <part name="b0.4j" crc="1b0e08a6" map="0001" />
             <part name="b1.4k" crc="728727f0" map="0010" />
@@ -75,11 +75,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="nin_c-pr-.ic1" crc="802d440a" />
 
         <!-- samples -->
-        <part>00 01 00 00</part>
+        <part>05 01 00 00</part>
         <part name="nin-v0.7a" crc="a32e8caf" />
 
     </rom>

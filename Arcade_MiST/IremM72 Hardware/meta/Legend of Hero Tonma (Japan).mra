@@ -39,7 +39,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="r200" crc="0b83265f" map="0001"/>
             <part name="r210" crc="8ec5f6f3" map="0010"/>
@@ -48,7 +48,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 04 00 00</part>
+        <part>02 04 00 00</part>
         <interleave output="32">
             <part name="r2a0.a0" crc="3ca3e771" map="0001" />
             <part name="r2a1.a1" crc="7a05ee2f" map="0010" />
@@ -57,7 +57,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 04 00 00</part>
+        <part>03 04 00 00</part>
         <interleave output="32">
             <part name="078.b0" crc="44626bf6" map="0001" />
             <part name="079.b1" crc="464952cf" map="0010" />
@@ -66,11 +66,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="tom_c-pr-.ic1" crc="9fa9b496"/>
 
         <!-- samples -->
-        <part>00 01 00 00</part>
+        <part>05 01 00 00</part>
         <part name="082" crc="3ed51d1f"/>
     </rom>
 </misterromdescription>

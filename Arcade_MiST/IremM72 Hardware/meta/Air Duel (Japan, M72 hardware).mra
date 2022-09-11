@@ -37,7 +37,7 @@
         </interleave>
 
         <!-- sprites -->
-        <part>00 08 00 00</part>
+        <part>01 08 00 00</part>
         <interleave output="32">
             <part name="ad-00.ic53" crc="2f0d599b" map="0001" />
             <part name="ad-10.ic51" crc="9865856b" map="0010" />
@@ -46,7 +46,7 @@
         </interleave>
 
         <!-- gfx2 -->
-        <part>00 08 00 00</part>
+        <part>02 08 00 00</part>
         <interleave output="32">
             <part name="ad-a0.ic21" crc="ce134b47" map="0001" />
             <part name="ad-a1.ic22" crc="097fd853" map="0010" />
@@ -55,7 +55,7 @@
         </interleave>
 
         <!-- gfx3 -->
-        <part>00 08 00 00</part>
+        <part>03 08 00 00</part>
         <interleave output="32">
             <part name="ad-b0.ic26" crc="ce134b47" map="0001" />
             <part name="ad-b1.ic27" crc="097fd853" map="0010" />
@@ -64,11 +64,11 @@
         </interleave>
 
         <!-- mcu -->
-        <part>00 00 10 00</part>
+        <part>04 00 10 00</part>
         <part name="ad_c-pr-.ic1" crc="45584e52"/>
 
         <!-- samples -->
-        <part>00 02 00 00</part>
+        <part>05 02 00 00</part>
         <part name="ad-v0.ic44" crc="339f474d"/>
     </rom>
 </misterromdescription>

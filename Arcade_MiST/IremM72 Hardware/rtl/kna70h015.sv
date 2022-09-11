@@ -23,9 +23,8 @@ module kna70h015 (
 
     input CE_PIX,
 
-    input [15:0] D,
-    input A0,
-    input ISET,
+    input [1:0] iset,
+    input [15:0] iset_data,
     input NL,
     input S24H,
     
@@ -88,12 +87,8 @@ V.Sync Pulse     = 384us (6)
 */
 
 always @(posedge CLK_32M) begin
-    if (ISET) begin
-        if (A0)
-            h_int_line[8] <= D[0];
-        else
-            h_int_line[7:0] <= D[7:0];
-    end
+    if (iset[1]) h_int_line[8] <= iset_data[8];
+    if (iset[0]) h_int_line[7:0] <= iset_data[7:0];
 
     if (CE_PIX) begin
         h_count <= h_count + 10'd1;
