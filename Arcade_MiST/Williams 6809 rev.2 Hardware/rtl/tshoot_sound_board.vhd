@@ -33,7 +33,7 @@ entity tshoot_sound_board is
 port(
  clock_12    : in std_logic;
  reset       : in std_logic;
- 
+ hwsel        : in std_logic_vector(1 downto 0);
  sound_select : in std_logic_vector(7 downto 0);
  sound_trig   : in std_logic;
  sound_ack    : out std_logic;
@@ -45,6 +45,8 @@ port(
 end tshoot_sound_board;
 
 architecture struct of tshoot_sound_board is
+
+constant HW_INFERNO : std_logic_vector(1 downto 0) := "10";
 
 -- signal reset_n   : std_logic;
  signal clock_div : std_logic_vector(3 downto 0);
@@ -131,7 +133,8 @@ pia_rw_n <=   '0' when cpu_rw_n = '0' and pia_cs = '1' else '1';
 -- mux cpu in data between roms/io/wram
 cpu_di <=
 	wram_do when wram_cs = '1' else
-	pia_do  when pia_cs = '1' else
+	sound_select when pia_cs = '1' and hwsel = HW_INFERNO else	
+	pia_do  when pia_cs = '1' and not hwsel = HW_INFERNO else
 	rom_do when rom_cs = '1' else X"55";
 
 -- pia irqs to cpu

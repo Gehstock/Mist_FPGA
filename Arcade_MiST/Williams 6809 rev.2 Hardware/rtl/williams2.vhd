@@ -1171,7 +1171,7 @@ tshoot_sound_board : entity work.tshoot_sound_board
 port map(
  clock_12   => clock_12,
  reset      => reset,
-
+ hwsel			=> hwsel,
  sound_select  => sound_select,
  sound_trig    => sound_trig, 
  sound_ack     => sound_ack,
