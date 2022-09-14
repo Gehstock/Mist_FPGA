@@ -11,7 +11,7 @@
     <joystick>8-way</joystick>
     <num_buttons>2</num_buttons>
     <buttons default="B,A,R,L" names="Fire,Pod Control,-,-,Start,Coin,P2 Start,Pause"></buttons>
-    <switches default="00,00" base="16" page_id="1" page_name="Switches">
+    <switches default="40,02" base="16" page_id="1" page_name="Switches">
         <dip name="Lives" bits="0,1" ids="3,2,4,5"/>
         <dip name="Difficulty" bits="2,3" ids="Normal,Easy,Hard,Very Easy"/>
         <dip name="Continue Limit" bits="4" ids="Yes,No"/>
