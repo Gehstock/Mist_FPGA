@@ -503,6 +503,9 @@ always@(posedge clk_sys) begin
                         reply_len <= 4'd4;
                     end
 
+                    // CMD59: CRC_ON_OFF
+                    8'h7b: reply <= 0;     // ok
+
                     endcase
                 end
             end

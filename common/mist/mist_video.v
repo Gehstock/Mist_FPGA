@@ -15,8 +15,9 @@ module mist_video
 	// scanlines (00-none 01-25% 10-50% 11-75%)
 	input  [1:0] scanlines,
 
-	// non-scandoubled pixel clock divider 0 - clk_sys/4, 1 - clk_sys/2
-	input        ce_divider,
+	// non-scandoubled pixel clock divider:
+	// 0 - clk_sys/4, 1 - clk_sys/2, 2 - clk_sys/3, 3 - clk_sys/4, etc
+	input  [2:0] ce_divider,
 
 	// 0 = HVSync 31KHz, 1 = CSync 15KHz
 	input        scandoubler_disable,
@@ -59,7 +60,7 @@ wire [5:0] SD_B_O;
 wire       SD_HS_O;
 wire       SD_VS_O;
 
-wire pixel_ena;
+wire       pixel_ena;
 
 scandoubler #(SD_HCNT_WIDTH, COLOR_DEPTH) scandoubler
 (
