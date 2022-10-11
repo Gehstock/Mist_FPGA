@@ -15,15 +15,15 @@ Implemention of the Irem M72 & M84 arcade hardware (https://www.system16.com/har
 |[R-Type](https://en.wikipedia.org/wiki/R-Type)|Japan, US, World||
 |[Ninja Spirit](https://en.wikipedia.org/wiki/Ninja_Spirit)|Japan||
 |[Image Fight](https://en.wikipedia.org/wiki/Image_Fight)|Japan, World||
-|[Gallop - Armed Police Unit](https://en.wikipedia.org/wiki/Armed_Police_Unit_Gallop)|Japan|Emulated MCU|
+|[Gallop - Armed Police Unit](https://en.wikipedia.org/wiki/Armed_Police_Unit_Gallop)|Japan|Emulated MCU.|
 |[Legend of Hero Tonma](https://en.wikipedia.org/wiki/Legend_of_Hero_Tonma)|Japan||
 |[Mr. HELI no Daibouken](https://en.wikipedia.org/wiki/Mr._Heli)|Japan||
-|[Air Duel](https://en.wikipedia.org/wiki/Air_Duel)|Japan|Conversion from M81 hardware.|
+|[Air Duel](https://en.wikipedia.org/wiki/Air_Duel)|Japan, World|Conversion from M81 hardware.|
 |[Dragon Breed](https://en.wikipedia.org/wiki/Dragon_Breed)|Japan|Conversion from M81 hardware.|
 |[X-Multiply](https://en.wikipedia.org/wiki/X_Multiply)|Japan|Conversion from M81 hardware.|
-|[Daiku no Gensan](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|Japan|Conversion from M81 hardware. Emulated MCU|
+|[Daiku no Gensan](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|Japan|Conversion from M81 hardware. Emulated MCU.|
+|[Hammerin' Harry](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|US, Japan|M84 Hardware.|
 |[R-Type II](https://en.wikipedia.org/wiki/R-Type_II)|Japan,World|M84 hardware.|
-|[Hammerin' Harry](https://en.wikipedia.org/wiki/Hammerin%27_Harry)|US|M84 hardware.|
 
 
 **Note:** Emulated MCU is not implemented on MiST (FPGA is full).

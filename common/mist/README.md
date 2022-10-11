@@ -7,8 +7,10 @@ The modules:
 - user_io.v - communicating with the IO controller.
 - data_io.v - handling file uploads from the IO controller.
 - mist_video.v - a video pipeline, which gives an optional scandoubler, OSD and rgb2ypbpr conversion.
-- osd.v, scandoubler.v, rgb2ypbpr.sv, cofi.sv - these are used in mist_video, but can be used separately, too.
+- osd.v, scandoubler.v, rgb2ypbpr.v, cofi.sv - these are used in mist_video, but can be used separately, too.
 - sd_card.v - gives an SPI interface with SD-Card commands towards the IO-Controller, accessing .VHD and other mounted files.
+- ide.v, ide_fifo.v - a bridge between a CPU and the data_io module for IDE/ATAPI disks.
+- cdda_fifo.v - a module which connects data_io with a DAC for CDDA playback.
 - dac.vhd - a simple sigma-delta DAC for audio output.
 - arcade_inputs.v - mostly for arcade-style games, gives access to the joysticks with MAME-style keyboard mapping.
 - mist.vhd - VHDL component declarations for user_io and mist_video.
