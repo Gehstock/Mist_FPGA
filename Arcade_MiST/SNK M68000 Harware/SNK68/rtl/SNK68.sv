@@ -306,6 +306,11 @@ always @ (posedge clk_sys) begin
         end else if ( sprite_state == 11 ) begin
             // wait for sprite bitmap data
             if ( sprite_rom_req == sprite_rom_ack ) begin
+                // prefetch pix 8-15 from rom
+                if (spr_x_ofs == 0) begin
+                    sprite_rom_addr[4] <= ~sprite_rom_addr[4];
+                    sprite_rom_req <= ~sprite_rom_req;
+                end
                 spr_pix_data <= sprite_rom_data;
                 sprite_state <= 12 ;
             end
@@ -322,7 +327,7 @@ always @ (posedge clk_sys) begin
                 
                 // the second 8 pixel needs another rom read
                 if ( spr_x_ofs == 7 ) begin
-                    sprite_state <= 10;
+                    sprite_state <= 11;
                 end
                 
             end else begin

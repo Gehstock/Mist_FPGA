@@ -204,6 +204,7 @@ reg  [1:0] ds[2];
 reg        port1_state;
 reg        port2_state;
 reg        cpu1_ram_req_state;
+reg        sp_state;
 
 localparam PORT_NONE     = 3'd0;
 localparam PORT_CPU1_ROM = 3'd1;
@@ -283,7 +284,7 @@ always @(*) begin
 	end else if (gfx3_addr != addr_last2[PORT_GFX3]) begin
 		next_port[1] = PORT_GFX3;
 		addr_latch_next[1] = { 1'b1, 2'd0, gfx3_addr, 1'b0 };
-	end else if (sp_req ^ sp_ack) begin
+	end else if (sp_req ^ sp_state) begin
 		next_port[1] = PORT_SP;
 		addr_latch_next[1] = { 1'b1, 2'd0, sp_addr, 1'b0 };
 	end else begin
@@ -370,6 +371,7 @@ always @(posedge clk) begin
 					ds[1] <= 2'b11;
 				end
 			end
+			if (next_port[1] == PORT_SP) sp_state <= sp_req;
 
 			if (next_port[1] == PORT_NONE && need_refresh && !we_latch[0] && !oe_latch[0]) begin
 				refresh <= 1'b1;
