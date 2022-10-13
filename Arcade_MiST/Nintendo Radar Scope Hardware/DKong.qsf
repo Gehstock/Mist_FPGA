@@ -249,9 +249,9 @@ set_global_assignment -name VERILOG_FILE rtl/dkong_bram.v
 set_global_assignment -name VERILOG_FILE rtl/dkong_adec.v
 set_global_assignment -name VERILOG_FILE rtl/radarscp_stars.v
 set_global_assignment -name VERILOG_FILE rtl/pll.v
-set_global_assignment -name QIP_FILE ../../../common/CPU/t48/T48.qip
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/t48/T48.qip
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
 set_global_assignment -name SIGNALTAP_FILE output_files/dkong.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/dl.stp
 set_global_assignment -name SIGNALTAP_FILE output_files/stars.stp
