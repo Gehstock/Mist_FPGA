@@ -286,12 +286,14 @@ always @(posedge clk_sys) begin
     endcase
   end
   // for scroll layer debug
+/*
   if (real_pause) begin
 	if (~j1[0] & old_j1[0]) scrollx <= scrollx - 5'd16;
 	if (~j1[1] & old_j1[1]) scrollx <= scrollx + 5'd16;
 	if (~j1[2] & old_j1[2]) scrollx <= scrollx - 1'd1;
 	if (~j1[3] & old_j1[3]) scrollx <= scrollx + 1'd1;
   end
+*/
 end
 
 /******** MCPU DATA BUS ********/
