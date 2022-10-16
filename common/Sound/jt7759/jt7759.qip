@@ -1,0 +1,5 @@
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jt7759.v       ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jt7759_adpcm.v ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jt7759_ctrl.v  ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jt7759_div.v   ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jt7759_data.v  ]

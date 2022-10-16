@@ -128,7 +128,7 @@ reg   [7:0] spy;
 reg   [8:0] code;
 
 wire  [7:0] smap_q = smap[spri];
-wire  [8:0] spy_next = v_flip ? smap_q - 1'd1 : 8'd239 - smap_q;
+wire  [8:0] spy_next = v_flip ? smap_q : 8'd239 - smap_q;
 wire  [7:0] spxa = spx[7:0] - 8'd128;
 wire  [7:0] sdy  = vv - spy;
 wire  [3:0] sdyf = (!v_flip ^ attr[7]) ? sdy[3:0] : 4'd15 - sdy[3:0];
