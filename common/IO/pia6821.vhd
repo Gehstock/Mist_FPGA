@@ -31,6 +31,14 @@
 -- Set output to low level when in data is in input mode
 -- (to avoid infered latch warning)
 --
+-- 18 October 2022 0.0.3 Slingshot
+-- Run through VHDLFormatter.
+-- Port A always read the input data.
+-- Feedback of output can be applied externally if required, as:
+-- pa_i <= (pa_o and pa_oe) or (pa_input and not pa_oe);
+-- In some applications, the input is stronger than the output,
+-- and the feedback is suppressed.
+--
 --===========================================================================----
 --
 -- Memory Map
@@ -134,11 +142,7 @@ BEGIN
 						data_out(count) <= porta_ddr(count);
 						porta_read <= '0';
 					ELSE
-						IF porta_ddr(count) = '1' THEN
-							data_out(count) <= porta_data(count);
-						ELSE
-							data_out(count) <= pa_i(count);
-						END IF;
+						data_out(count) <= pa_i(count);
 						porta_read <= cs;
 					END IF;
 				END LOOP;
