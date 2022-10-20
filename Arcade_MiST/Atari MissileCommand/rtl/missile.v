@@ -233,73 +233,55 @@ wire debug_data/*verilator public_flat*/;
 ///// PROGRAM MEMORY CIRCUIT /////
 //////////////////////////////////
 
-//dpram #(12,8) pgrom0
-//(
-//	.clock(clk_10M),
-//
-//	.enable_a(dn_pgrom0_we),
-//	.wren_a(dn_pgrom0_we),
-//	.address_a(dn_addr[11:0]),
-//	.data_a(dn_data),
-//	.q_a(),
-//
-//	.enable_b(1'b1),
-//	.wren_b(1'b0),
-//	.address_b(s_addr[11:0]),
-//	.data_b(),
-//	.q_b(s_pgrom0_out)
-//);
+dpram #(12,8) pgrom0
+(
+	.clock(clk_10M),
 
-rom1 rom1(
-	.clk(clk_10M),
-	.addr(s_addr[11:0]),
-	.data(s_pgrom0_out)
+	.enable_a(dn_pgrom0_we),
+	.wren_a(dn_pgrom0_we),
+	.address_a(dn_addr[11:0]),
+	.data_a(dn_data),
+	.q_a(),
+
+	.enable_b(1'b1),
+	.wren_b(1'b0),
+	.address_b(s_addr[11:0]),
+	.data_b(),
+	.q_b(s_pgrom0_out)
 );
 
-//dpram #(12,8) pgrom1
-//(
-//	.clock(clk_10M),
-//
-//	.enable_a(dn_pgrom1_we),
-//	.wren_a(dn_pgrom1_we),
-//	.address_a(dn_addr[11:0]),
-//	.data_a(dn_data),
-//	.q_a(),
-//
-//	.enable_b(1'b1),
-//	.wren_b(1'b0),
-//	.address_b(s_addr[11:0]),
-//	.data_b(),
-//	.q_b(s_pgrom1_out)
-//);
+dpram #(12,8) pgrom1
+(
+	.clock(clk_10M),
 
-rom2 rom2(
-	.clk(clk_10M),
-	.addr(s_addr[11:0]),
-	.data(s_pgrom1_out)
+	.enable_a(dn_pgrom1_we),
+	.wren_a(dn_pgrom1_we),
+	.address_a(dn_addr[11:0]),
+	.data_a(dn_data),
+	.q_a(),
+
+	.enable_b(1'b1),
+	.wren_b(1'b0),
+	.address_b(s_addr[11:0]),
+	.data_b(),
+	.q_b(s_pgrom1_out)
 );
 
-//dpram #(12,8) pgrom2
-//(
-//	.clock(clk_10M),
-//
-//	.enable_a(dn_pgrom2_we),
-//	.wren_a(dn_pgrom2_we),
-//	.address_a(dn_addr[11:0]),
-//	.data_a(dn_data),
-//	.q_a(),
-//
-//	.enable_b(1'b1),
-//	.wren_b(1'b0),
-//	.address_b(s_addr[11:0]),
-//	.data_b(),
-//	.q_b(s_pgrom2_out)
-//);
+dpram #(12,8) pgrom2
+(
+	.clock(clk_10M),
 
-rom3 rom3(
-	.clk(clk_10M),
-	.addr(s_addr[11:0]),
-	.data(s_pgrom2_out)
+	.enable_a(dn_pgrom2_we),
+	.wren_a(dn_pgrom2_we),
+	.address_a(dn_addr[11:0]),
+	.data_a(dn_data),
+	.q_a(),
+
+	.enable_b(1'b1),
+	.wren_b(1'b0),
+	.address_b(s_addr[11:0]),
+	.data_b(),
+	.q_b(s_pgrom2_out)
 );
 
 ////////////////
