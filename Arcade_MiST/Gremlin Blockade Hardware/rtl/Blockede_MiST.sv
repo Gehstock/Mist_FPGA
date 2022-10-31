@@ -226,8 +226,8 @@ begin
 		dip_overlay_type <= sw[2:1];
 		dip_boom <= sw[3];		
 		IN_1 <= ~{m_coin1, 2'b0, m_one_player, dip_comotion_lives, dip_boom, 2'b00}; 
-		IN_2 <= ~{m_left2, m_down2, m_right2, m_up2, m_left, m_down, m_right, m_up};
-		IN_4 <= ~{m_left4, m_down4, m_right4, m_up4, m_left3, m_down3, m_right3, m_up3};
+		IN_2 <= ~{m_left3, m_down3, m_right3, m_up3, m_left, m_down, m_right, m_up};
+		IN_4 <= ~{m_left4, m_down4, m_right4, m_up4, m_left4, m_down4, m_right4, m_up4};
 	end
 	7'h2: // GAME_HUSTLE
 	begin

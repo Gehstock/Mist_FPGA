@@ -54,6 +54,13 @@ localparam GAME_HUSTLE = 2;
 localparam GAME_BLASTO = 3;
 localparam GAME_MINESWEEPER = 4;
 localparam GAME_MINESWEEPER4 = 5;
+
+localparam COIN_START_TIMER_WIDTH = 6;
+reg [COIN_START_TIMER_WIDTH-1:0] coin_start;
+
+localparam COIN_LATCH_TIMER_WIDTH = 6;
+reg [COIN_LATCH_TIMER_WIDTH-1:0] coin_latch;
+
 // CPU and Video system clock enables
 // ----------------------------------
 
@@ -116,7 +123,8 @@ wire WR_N;
 wire SYNC /*verilator public_flat*/;
 
 // CPU reset can originate from system reset signal or coin start signal (only for CoMotion, Hustle, and Blasto)
-wire RESET = reset || (game_mode != GAME_BLOCKADE && coin_start > 6'b0);
+//wire RESET = reset || (game_mode != GAME_BLOCKADE && coin_start > 6'b0);
+wire RESET = reset || (game_mode != GAME_BLOCKADE && coin_start > {COIN_START_TIMER_WIDTH{1'b0}});
 
 // 8080A CPU
 vm80a cpu
@@ -417,9 +425,7 @@ assign audio_r = audio_l;
 // ------------
 wire OUTP1 = OUTP && ADDR[0];
 reg coin_last;
-reg [5:0] coin_start;
 reg coin_inserted;
-reg [5:0] coin_latch;
 
 always @(posedge clk) begin
 	if(reset)
@@ -434,10 +440,10 @@ always @(posedge clk) begin
 		begin
 			if(coin_inserted)
 			begin
-				coin_latch <= 6'b111111;
+				coin_latch <= {COIN_LATCH_TIMER_WIDTH{1'b1}};
 				coin_inserted <= 1'b0;
 			end
-			if(coin_latch > 6'b0) coin_latch <= coin_latch - 1'b1;
+			if(coin_latch > {COIN_LATCH_TIMER_WIDTH{1'b0}}) coin_latch <= coin_latch - 1'b1;
 		end
 
 		// When coin input is going high, latch coin inserted and start reset pulse
@@ -445,11 +451,11 @@ always @(posedge clk) begin
 		if(coin && !coin_last)
 		begin
 			coin_inserted <= 1'b1;
-			coin_start <= 6'b111111;
+			coin_start <= {COIN_START_TIMER_WIDTH{1'b1}};
 		end
 
 		// Decrement coin start timer if active
-		if(coin_start > 6'b0) coin_start <= coin_start - 6'b1;
+		if(coin_start > {COIN_START_TIMER_WIDTH{1'b0}}) coin_start <= coin_start - 6'b1;
 	end
 end
 
