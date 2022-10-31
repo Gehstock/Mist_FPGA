@@ -27,8 +27,9 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-//	"O6,Joystick Swap,Off,On;",	
-	"O8,Test Mode,Off,On;",
+//	"T7,Service Swap,Off,On;",	
+//	"O8,Test Mode,Off,On;",
+	
 	"O9,Lives,3,2;",
 	"OCD,Coinage,1 Coin/1 Credit,2 Coins/1 Credit,1 Coin/2 Credits,Freeplay;",
 	"OAB,Bonus,20000,10000,None,15000;",
@@ -94,8 +95,8 @@ Tankb_fpga Tankb_fpga(
 	.vid_vs(vs),
 	.vid_hb(hb),
 	.vid_vb(vb),
-	.P1(~{service,m_coin2,m_coin1,m_fireA,m_right,m_down,m_left,m_up}),
-	.P2(~{1'b0,m_two_players,m_one_player,m_fire2A,m_right2,m_down2,m_left2,m_up2}),
+	.P1(~{1'b0,m_coin2,m_coin1,m_fireA,m_right,m_down,m_left,m_up}),//service
+	.P2(~{1'b0,m_two_players,m_one_player,m_fire2A,m_right2,m_down2,m_left2,m_up2}),//testogg
 	.DSW(~{2'b00,lives,bonus,coinage,cabinet}),
 	.audio(audio)
 );
