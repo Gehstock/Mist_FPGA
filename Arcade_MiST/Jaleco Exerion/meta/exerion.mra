@@ -1,0 +1,41 @@
+<misterromdescription>
+	<name>Exerion</name>
+	<mameversion>0245</mameversion>
+	<setname>exerion</setname>
+	<mratimestamp>202210220604</mratimestamp>
+	<year>1983</year>
+	<manufacturer>Jaleco</manufacturer>
+	<category>Shooter</category>
+	<rbf>exerion</rbf>
+	<switches default="FF,0A,00">
+		<dip bits="8,10" name="Space Fighters" ids="1,2,3,4,5A,5B,5C,Free"/>
+		<dip bits="11,12" name="Bonus Score" ids="10000,20000,30000,40000"/>
+		<dip bits="13,14" name="Difficulty" ids="EASY,Hard,Harder,Hardest"/>
+		<dip bits="16,18" name="Credit" ids="1 Coin/1 Play,1 Coin/2 Play,1 Coin/3 Play,1 Coin/4 Play,2 Coin/1 Play,3 Coin/1 Play,4 Coin/1 Play,5 Coin/1 Play"/>		
+	</switches>
+	<rom index="0" md5="none" zip="exerion.zip | exeriont.zip">
+		<part crc="58b4dc1b" name="prom5.4p"/>
+		<part crc="fca18c2d" name="prom6.4s"/>
+		<part crc="f0633a09" name="exerion.11"/>
+		<part crc="80312de0" name="exerion.10"/>
+		<patch offset="0x0244">FE</patch>
+		<patch offset="0x0245">05</patch>
+		<patch offset="0x04E6">C9</patch>
+		<patch offset="0x07F0">C9</patch>
+		<patch offset="0x4129">C9</patch>
+		<patch offset="0x4D4A">00</patch>
+		<patch offset="0x4D4B">00</patch>
+		<patch offset="0x4D4C">00</patch>
+		<patch offset="0x5BE8">C9</patch>
+		<patch offset="0x5F77">C9</patch>	
+	</rom>
+	<rom index="3" md5="none">																	
+		<part>																
+			00 00 00 00 00 FF 00 02 00 02 00 01 00 FF 00 00
+			00 00 65 FF 00 CA 00 00        
+ 			00 00 67 00 00 28 00 00  				
+		</part>																
+	</rom>
+	<rom index="4"></rom>
+	<nvram index="4" size="242"/>	
+</misterromdescription>
