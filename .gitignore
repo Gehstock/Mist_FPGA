@@ -22,7 +22,6 @@ PLLJ_PLLSPE_INFO.txt
 *.ppf
 *.ddb
 *.srf
-common/CPU/T80/T80.qip
 Arcade_MiST/Jaleco Exerion/exerion.pdf
 Arcade_MiST/Jaleco Exerion/meta/Exerion.rbf
 *.exe
