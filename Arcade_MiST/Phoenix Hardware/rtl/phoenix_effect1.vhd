@@ -133,7 +133,7 @@ begin
 			u_c1 <= (others => '0');
 		else
 			cnt := cnt + 1;
-			if trigger = '1' then
+			if trigger = '0' then
 				if cnt = Cmd_ikc then
 					cnt := 0;
 					u_c1 <= u_c1 + (Cmd_iVFc - u_c1)/Cmd_div;
