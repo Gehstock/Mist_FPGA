@@ -49,13 +49,12 @@ module TropicalAngel_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {      
-	"TROPANG;ROM;",
+	"TROANGEL;;",
 	"O2,Rotate Controls,Off,On;",
 	"O1,Video Timing,Original,Pal 50Hz;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blending,Off,On;",
-	"O6,Flip,Off,On;",
-	"O7,Invulnerability,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -64,8 +63,6 @@ wire        palmode   = status[1];
 wire        rotate    = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend     = status[5];
-wire        flip      = status[6];
-wire        invuln    = status[7];
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
@@ -210,8 +207,8 @@ always @(posedge clk_sys) begin
 
 end
 
-wire [7:0] dip1 = ~8'b00000010;
-wire [7:0] dip2 = ~{ 1'b0, invuln, 1'b0, 1'b0/*stop*/, 3'b010, flip };
+wire [7:0] dip1 = ~status[15:8];
+wire [7:0] dip2 = ~status[23:16];
 
 TropicalAngel TropicalAngel(
 	.clock_36     ( clk_sys         ),

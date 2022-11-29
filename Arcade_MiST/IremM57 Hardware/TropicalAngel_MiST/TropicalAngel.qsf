@@ -25,7 +25,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		TropicalAngel_MiST_assignment_defaults.qdf
+#		TropicalAngel_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -43,7 +43,7 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:22:13  JUNE 04, 2019"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
-set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name SMART_RECOMPILE ON
 
 # Pin & Location Assignments
@@ -167,7 +167,7 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
 # --------------------------------
-# start ENTITY(TropicalAngel_MiST)
+# start ENTITY(TropicalAngel)
 
 	# Pin & Location Assignments
 	# ==========================
@@ -215,7 +215,7 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(TropicalAngel_MiST)
+# end ENTITY(TropicalAngel)
 # ------------------------------
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE output_files/trop.stp
