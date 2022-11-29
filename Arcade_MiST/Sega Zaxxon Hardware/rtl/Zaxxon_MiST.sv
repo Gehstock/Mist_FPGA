@@ -34,6 +34,7 @@ module Zaxxon_MiST(
 localparam CONF_STR = {
 	"ZAXXON;;",
 	"O2,Rotate Controls,Off,On;",
+	"O1,Pause,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Flip,Off,On;",
@@ -43,6 +44,7 @@ localparam CONF_STR = {
 	"V,v2.0.",`BUILD_DATE
 };
 
+wire           pause = status[1];
 wire          rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire           blend = status[5];
@@ -123,7 +125,7 @@ user_io(
 
 wire [15:0] audio_l;
 wire        hs, vs, cs, hb, vb;
-wire        blankn;
+wire        blankn = ~(hb | vb);
 wire  [2:0] g, r;
 wire  [1:0] b;
 wire [14:0] rom_addr;
@@ -226,11 +228,13 @@ wire dl_wr = ioctl_wr && ioctl_addr < 18'h28200;
 zaxxon zaxxon(
 	.clock_24(clk_sys),
 	.reset(reset),
-	
+	.pause(pause),
+
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
-	.video_blankn(blankn),
+	.video_hblank(hb),
+	.video_vblank(vb),
 	.video_hs(hs),
 	.video_vs(vs),
 	.video_csync(cs),
