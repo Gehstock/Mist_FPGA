@@ -251,7 +251,7 @@ zaxxon zaxxon(
 	.service(service),
 
 	.sw1_input(sw1), // cocktail(1) / sound(1) / ships(2) / N.U.(2) /  extra ship (2)
-	.sw2_input(8'h33), // coin b(4) / coin a(4)  -- "3" => 1c_1c
+	.sw2_input(sw2), // coin b(4) / coin a(4)  -- "3" => 1c_1c
 
 	.flip_screen(flip),
 
