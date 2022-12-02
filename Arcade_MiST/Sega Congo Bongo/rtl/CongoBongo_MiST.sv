@@ -1,5 +1,5 @@
 
-module Zaxxon_MiST(
+module CongoBongo_MiST(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -32,10 +32,11 @@ module Zaxxon_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"ZAXXON;;",
+	"CONGO;;",
 	"O2,Rotate Controls,Off,On;",
 	"O1,Pause,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
+	"O8,Diagonal joystick,Off,On;",
 	"O5,Blend,Off,On;",
 	"O6,Flip,Off,On;",
 	"O7,Service,Off,On;",
@@ -50,33 +51,15 @@ wire [1:0] scanlines = status[4:3];
 wire           blend = status[5];
 wire           flip  = status[6];
 wire        service  = status[7];
+wire       diagonal  = status[8];
 
 wire [7:0]       sw1 = status[23:16];
 wire [7:0]       sw2 = status[31:24];
 
-reg  [7:0] p1_input, p2_input;
-
-always @(*) begin
-	case (core_mod)
-	7'h22: // FUTSPY 
-	begin
-		p1_input = {2'b00, m_fireB, m_fireA, m_down, m_up, m_left, m_right};
-		p2_input = {2'b00, m_fire2B, m_fire2A, m_down2, m_up2, m_left2, m_right2};
-	end
-
-	default: // ZAXXON, SZAXXON
-	begin
-		p1_input = {3'b000, m_fireA, m_down, m_up, m_left, m_right};
-		p2_input = {3'b000, m_fire2A, m_down2, m_up2, m_left2, m_right2};
-	end
-	endcase
-
-end
 
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_sd;
 assign SDRAM_CKE = 1;
-assign AUDIO_R = AUDIO_L;
 
 wire clk_sys, clk_sd;
 wire pll_locked;
@@ -124,8 +107,9 @@ user_io(
 	);
 
 wire [15:0] audio_l;
+wire [15:0] audio_r;
 wire        hs, vs, cs, hb, vb;
-wire        blankn = ~(hb | vb);
+wire        blankn = ~(vb | hb);
 wire  [2:0] g, r;
 wire  [1:0] b;
 wire [14:0] rom_addr;
@@ -164,7 +148,7 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-wire [24:0] gfx_ioctl_addr = ioctl_addr - 17'h10000;
+wire [24:0] gfx_ioctl_addr = ioctl_addr - 17'hE000;
 
 reg port1_req, port2_req;
 sdram #(48) sdram(
@@ -223,53 +207,85 @@ always @(posedge clk_sd) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-wire dl_wr = ioctl_wr && ioctl_addr < 18'h28200;
+wire dl_wr = ioctl_wr && ioctl_index == 0;
 
-zaxxon zaxxon(
+wire m_north, m_south, m_east, m_west;
+
+always @(*) begin
+	if (~diagonal) begin
+		m_north <= m_up;
+		m_south <= m_down;
+		m_east  <= m_right;
+		m_west  <= m_left;
+	end
+	else begin
+		m_north <= m_up    & m_right;
+		m_south <= m_down  & m_left;
+		m_east  <= m_right & m_down;
+		m_west  <= m_left  & m_up;
+	end 
+end
+
+congo_bongo congo_bongo
+(
 	.clock_24(clk_sys),
 	.reset(reset),
 	.pause(pause),
-
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
-	.video_hblank(hb),
 	.video_vblank(vb),
+	.video_hblank(hb),
 	.video_hs(hs),
 	.video_vs(vs),
-	.video_csync(cs),
 
 	.audio_out_l(audio_l),
+	.audio_out_r(audio_r),
 
-	.hwsel(core_mod[1]),
-	.coin1(m_coin1),
-	.coin2(m_coin2),
-	.start2(m_two_players),
-	.start1(m_one_player),
-	.p1_input(p1_input),
-	.p2_input(p2_input),
-	.service(service),
-
-	.sw1_input(sw1), // cocktail(1) / sound(1) / ships(2) / N.U.(2) /  extra ship (2)
-	.sw2_input(sw2), // coin b(4) / coin a(4)  -- "3" => 1c_1c
-
-	.flip_screen(flip),
-
-	.enc_type     ( core_mod[6:4]) ,
 	.cpu_rom_addr ( rom_addr  ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
-	.wave_addr    ( wave_addr ),
-	.wave_data    ( wave_do   ),
-
 	.bg_graphics_addr( bg_addr ),
 	.bg_graphics_do  ( bg_do   ),
 	.sp_graphics_addr( sp_addr ),
 	.sp_graphics_do  ( sp_do   ),
 
-	.dl_addr      ( ioctl_addr[17:0] ),
-	.dl_data      ( ioctl_dout ),
-	.dl_wr        ( dl_wr )
+	.dl_addr(ioctl_addr[17:0]),
+	.dl_wr(dl_wr),
+	.dl_data(ioctl_dout),
+
+	.coin1(m_coin1),
+	.coin2(m_coin2),
+	.start1(m_one_player),
+	.start2(m_two_players),
+
+	.right(m_east),
+	.left(m_west),
+	.up(m_north),
+	.down(m_south),
+	.fire(m_fireA),
+ 
+	.right_c(m_east),
+	.left_c(m_west),
+	.up_c(m_north),
+	.down_c(m_south),
+	.fire_c(m_fireA),
+
+	.sw1_input(sw1), // cocktail(1) / sound(1) / ships(2) / N.U.(2) /  extra ship (2)	
+	.sw2_input(8'h33), // coin b(4) / coin a(4)  -- "3" => 1c_1c
+
+	.service(service),
+	.flip_screen(flip)
+	
+//Dar	.wave_data(wave_data),
+//Dar	.wave_addr(wave_addr),
+//Dar	.wave_rd(wave_rd),
+	
+//Dar	.hs_address(hs_address),
+//Dar	.hs_data_out(hs_data_out),
+//Dar	.hs_data_in(hs_data_in),
+//Dar	.hs_write(hs_write_enable)
 );
+
 
 mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.clk_sys        ( clk_sys          ),
@@ -297,11 +313,20 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 
 dac #(
 	.C_bits(16))
-dac(
+dacl(
 	.clk_i(clk_sys),
 	.res_n_i(1),
 	.dac_i(audio_l),
 	.dac_o(AUDIO_L)
+	);
+
+dac #(
+	.C_bits(16))
+dacr(
+	.clk_i(clk_sys),
+	.res_n_i(1),
+	.dac_i(audio_r),
+	.dac_o(AUDIO_R)
 	);
 
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;

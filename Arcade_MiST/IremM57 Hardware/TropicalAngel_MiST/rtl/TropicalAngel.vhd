@@ -612,11 +612,11 @@ begin
 		if pix_ena = '1' then
 			-- always give priority to sprite when not 0000
 			if spr_output_line_do /= "0000" then
-				video_r <= spr_rgb_lut_do(7 downto 6);
+				video_r <= spr_rgb_lut_do(6)&spr_rgb_lut_do(7);
 				video_g <= spr_rgb_lut_do(5 downto 3);
 				video_b <= spr_rgb_lut_do(2 downto 0);
 			else
-				video_r <= chr_palette_do(7 downto 6);
+				video_r <= chr_palette_do(6)&chr_palette_do(7);
 				video_g <= chr_palette_do(5 downto 3);
 				video_b <= chr_palette_do(2 downto 0);
 			end if;
