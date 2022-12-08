@@ -168,6 +168,7 @@ video u_video(
   .cpu_ab        ( cpu_ab        ),
   .cpu_dout      ( cpu_dout      ),
   .rw            ( rw            ),
+  .dma_swap      ( dma_swap      ),
   .sram_data     ( sram_data     ),
   .map_rom_addr  ( map_rom_addr  ),
   .map_data      ( map_data      ),
