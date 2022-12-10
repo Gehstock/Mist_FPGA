@@ -288,11 +288,6 @@ Arkanoid Arkanoid_inst
 
 	.pause(1'b0),
 
-	.hs_address(hs_address),
-	.hs_data_out(hs_data_out),
-	.hs_data_in(hs_data_in),
-	.hs_write(hs_write_enable),
-
 	.cpu_rom_addr(cpu_rom_addr),
 	.cpu_rom_do(cpu_rom_addr[0] ? cpu_rom_do[15:8] : cpu_rom_do[7:0]),
 	.gfx_rom_addr(bg_addr),

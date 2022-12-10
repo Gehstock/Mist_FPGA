@@ -731,8 +731,8 @@ assign video_g = green;
 assign video_b = blue;
 
 //Video sync & blanking outputs (HSync and blanks active-high, VSync active-low)
-assign video_hsync = h_center[3] ? (~h_cnt[8] && h_cnt[6:0] > (7'd54 - h_center[2:0]) && h_cnt[6:0] < (7'd87 - h_center[2:0])):
-                                   (~h_cnt[8] && h_cnt[6:0] > (7'd47 - h_center[2:0]) && h_cnt[6:0] < (7'd80 - h_center[2:0]));
+assign video_hsync = ~(h_center[3] ? (~h_cnt[8] && h_cnt[6:0] > (7'd54 - h_center[2:0]) && h_cnt[6:0] < (7'd87 - h_center[2:0])):
+                                   (~h_cnt[8] && h_cnt[6:0] > (7'd47 - h_center[2:0]) && h_cnt[6:0] < (7'd80 - h_center[2:0])));
 assign video_vsync = ~(v_cnt >= vcnt_start && v_cnt <= vcnt_start + 9'd7);
 assign video_csync = video_hsync ^ video_vsync;
 assign video_vblank = (v_cnt < 271 || v_cnt > 495);
