@@ -336,6 +336,8 @@ architecture arch of cpu is
    signal adjustNegate     : std_logic;
    signal enterCnt         : unsigned(5 downto 0);
    signal bcdOffset        : unsigned(6 downto 0);
+   signal bcdAccLow        : unsigned(4 downto 0);
+   signal bcdAccHigh       : unsigned(4 downto 0);
    signal bcdAcc           : unsigned(7 downto 0);
    
    type tMemAccessType is 
@@ -511,6 +513,7 @@ begin
       variable result32          : unsigned(31 downto 0);
       variable result8           : unsigned(7 downto 0);
       variable result8h          : unsigned(7 downto 0);
+      variable result9           : unsigned(8 downto 0);
       variable newZero           : std_logic;
       variable newParity         : std_logic;
       variable newSign           : std_logic;
@@ -544,7 +547,8 @@ begin
       variable newRepeat         : std_logic;
       variable jumpNow           : std_logic;
       variable jumpAddr          : unsigned(15 downto 0);
-      variable bcdResult         : unsigned(7 downto 0);
+      variable bcdResultLow      : unsigned(4 downto 0);
+      variable bcdResultHigh     : unsigned(4 downto 0);
    begin
       if rising_edge(clk) then
          
@@ -1178,7 +1182,7 @@ begin
 -- ####################################################################################
                      
                   when CPUSTAGE_MODRM =>
-                     if (consumePrefetch = 0) then
+                     if (consumePrefetch = 0 and prefetchCount > 2) then
                         regs.reg_ip     <= regs.reg_ip + 1;
                         consumePrefetch <= 1;
                         MODRM_mem := unsigned(prefetchBuffer(2 downto 0));
@@ -2207,24 +2211,26 @@ begin
                               result := result32(15 downto 0);
                               
                            when ALU_OP_DECADJUST => 
-                              result8 := regs.reg_ax(7 downto 0);
+                              result9 := resize(regs.reg_ax(7 downto 0), 9);
+                              regs.FlagCar <= '0';
                               if (regs.FlagHaC = '1' or regs.reg_ax(3 downto 0) > x"9") then
                                  if (adjustNegate = '1') then 
-                                    result8 := result8 - 6;
+                                    result9 := result9 - 6;
                                  else
-                                    result8 := result8 + 6;
+                                    result9 := result9 + 6;
                                  end if;
                                  regs.FlagHaC <= '1';
+                                 regs.FlagCar <= flagCarry or result9(8);
                               end if;
-                              if (regs.FlagCar = '1' or regs.reg_ax(7 downto 0) > x"99") then
+                              if (flagCarry = '1' or regs.reg_ax(7 downto 0) > x"99") then
                                  if (adjustNegate = '1') then 
-                                    result8 := result8 - 16#60#;
+                                    result9 := result9 - 16#60#;
                                  else
-                                    result8 := result8 + 16#60#;
+                                    result9 := result9 + 16#60#;
                                  end if;
                                  regs.FlagCar <= '1';
                               end if;
-                              result := x"00" & result8;
+                              result := x"00" & result9(7 downto 0);
                               newZero := '1'; newParity := '1'; newSign := '1';
                            
                            when ALU_OP_ASCIIADJUST =>
@@ -2524,30 +2530,35 @@ begin
                                  when 5 =>
                                     opstep <= 6;
                                     if (bcdOp = BCD_OP_ADD) then
-                                       bcdAcc <= unsigned(bus_dataread(7 downto 0)) + fetch1Val(7 downto 0);
+                                       bcdAccLow <= resize(unsigned(bus_dataread(3 downto 0)), 5) + resize(unsigned(fetch1Val(3 downto 0)), 5);
+                                       bcdAccHigh <= resize(unsigned(bus_dataread(7 downto 4)), 5) + resize(unsigned(fetch1Val(7 downto 4)), 5);
                                     else
-                                       bcdAcc <= unsigned(bus_dataread(7 downto 0)) - fetch1Val(7 downto 0);
+                                       bcdAccLow <= resize(unsigned(bus_dataread(3 downto 0)), 5) - resize(unsigned(fetch1Val(3 downto 0)), 5);
+                                       bcdAccHigh <= resize(unsigned(bus_dataread(7 downto 4)), 5) - resize(unsigned(fetch1Val(7 downto 4)), 5);
                                     end if;
 
                                  when 6 =>
                                     opstep <= 7;
-                                    bcdResult := bcdAcc;
-                                    if (bcdResult(3 downto 0) > x"9") then
+                                    bcdResultLow := bcdAccLow;
+                                    bcdResultHigh := bcdAccHigh;
+                                    if (bcdResultLow > x"9") then
                                        if (bcdOp = BCD_OP_ADD) then 
-                                          bcdResult := bcdResult + 6;
+                                          bcdResultLow := bcdResultLow + 6;
+                                          bcdResultHigh := bcdResultHigh + 1;
                                        else
-                                          bcdResult := bcdResult - 6;
+                                          bcdResultLow := bcdResultLow - 6;
+                                          bcdResultHigh := bcdResultHigh - 1;
                                        end if;
                                     end if;
-                                    if (bcdResult(7 downto 0) > x"99") then
+                                    if (bcdResultHigh > x"9") then
                                        if (bcdOp = BCD_OP_ADD) then 
-                                          bcdResult := bcdResult + 16#60#;
+                                          bcdResultHigh := bcdResultHigh + 6;
                                        else
-                                          bcdResult := bcdResult - 16#60#;
+                                          bcdResultHigh := bcdResultHigh - 6;
                                        end if;
                                        regs.FlagCar <= '1';
                                     end if;
-                                    bcdAcc <= bcdResult;
+                                    bcdAcc <= bcdResultHigh(3 downto 0) & bcdResultLow(3 downto 0);
                                  
                                  when 7 =>
                                     if (bcdOp = BCD_OP_CMP) then
