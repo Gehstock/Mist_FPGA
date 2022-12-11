@@ -65,7 +65,7 @@
 
         <!-- mcu -->
         <part>04 00 10 00</part>
-        <part name="ad_c-pr-.ic1" crc="8785e4e2"/>
+        <part name="ad_c-pr-c.ic1" crc="8785e4e2"/>
 
         <!-- samples -->
         <part>05 02 00 00</part>
