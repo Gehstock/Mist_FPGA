@@ -268,7 +268,6 @@ module line_buffer(
     output reg [7:0] pixel_out
 );
 
-reg       scan_buffer;
 reg [9:0] scan_pos = 0;
 wire [9:0] scan_pos_nl = scan_pos ^ {10{NL}};
 reg [7:0] line_pixel;
@@ -281,13 +280,13 @@ dpramv #(.widthad_a(10)) buffer_0
     .clock_a(CLK_32M),
     .address_a(scan_pos_nl),
     .q_a(scan_0),
-    .wren_a(!scan_buffer && CE_PIX),
+    .wren_a(!V0 && CE_PIX),
     .data_a(8'd0),
 
     .clock_b(CLK_96M),
     .address_b(line_position),
     .data_b(line_pixel),
-    .wren_b(scan_buffer && line_write),
+    .wren_b(V0 && line_write),
     .q_b()
 );
 
@@ -296,13 +295,13 @@ dpramv #(.widthad_a(10)) buffer_1
     .clock_a(CLK_32M),
     .address_a(scan_pos_nl),
     .q_a(scan_1),
-    .wren_a(scan_buffer && CE_PIX),
+    .wren_a(V0 && CE_PIX),
     .data_a(8'd0),
 
     .clock_b(CLK_96M),
     .address_b(line_position),
     .data_b(line_pixel),
-    .wren_b(!scan_buffer && line_write),
+    .wren_b(!V0 && line_write),
     .q_b()
 );
 
@@ -336,9 +335,8 @@ always_ff @(posedge CLK_32M) begin
     if (old_v0 != V0) begin
         scan_pos <= 249; // TODO why?
         old_v0 <= V0;
-        scan_buffer <= ~scan_buffer;
     end else if (CE_PIX) begin
-        pixel_out <= scan_buffer ? scan_1 : scan_0;
+        pixel_out <= V0 ? scan_1 : scan_0;
         scan_pos <= scan_pos + 10'd1;
     end
 end
