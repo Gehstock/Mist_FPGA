@@ -12,8 +12,9 @@ module video(
   input [15:0] cpu_ab,
   input [7:0] cpu_dout,
   input rw,
+  input dma_swap,
 
-  output reg [7:0] sram_data,
+  output [7:0] sram_data,
 
   output [14:0] map_rom_addr,
   input [7:0] map_data,
@@ -52,10 +53,6 @@ wire [7:0] sram1_q;
 wire [7:0] sram2_q;
 wire [7:0] sram3_q;
 wire [7:0] sram4_q;
-wire [7:0] sram1_dout;
-wire [7:0] sram2_dout;
-wire [7:0] sram3_dout;
-wire [7:0] sram4_dout;
 
 reg  [7:0] scx1; // 10C
 reg  [7:0] scx2; // 11C
@@ -96,29 +93,62 @@ dpram #(12,8) u8C(
 
 // SRAM
 
-wire sram_wr = sram_cs & ~rw;
-wire sram1_en = cpu_ab[1:0] == 2'b00;
-wire sram2_en = cpu_ab[1:0] == 2'b01;
-wire sram3_en = cpu_ab[1:0] == 2'b10;
-wire sram4_en = cpu_ab[1:0] == 2'b11;
+reg  [8:0]   dma_a;
+wire [7:0]   sram_q;
+reg          dma_wr;
 
-// must be synced to cpu clock if chip_6502 is used
-// a typical symptom is the horse with static legs
-always @(posedge clk_sys)
-  if (rw)
-    sram_data <=
-      sram1_en ? sram1_dout :
-      sram2_en ? sram2_dout :
-      sram3_en ? sram3_dout :
-      sram4_en ? sram4_dout : 8'hff;
+wire sram_wr = sram_cs & ~rw;
+wire sram1_en = dma_a[1:0] == 2'b00;
+wire sram2_en = dma_a[1:0] == 2'b01;
+wire sram3_en = dma_a[1:0] == 2'b10;
+wire sram4_en = dma_a[1:0] == 2'b11;
+
+reg  [1:0]   dma_state;
+always @(posedge clk_sys) begin
+  if (reset) begin
+    dma_state <= 0;
+    dma_wr <= 0;
+  end else begin
+    dma_wr <= 0;
+
+    case (dma_state)
+    0: begin
+      dma_a <= 0;
+      if (dma_swap) dma_state <= 1;
+    end
+    1: begin
+      dma_wr <= 1;
+      dma_state <= 2;
+    end
+    2: begin
+      dma_a <= dma_a + 1'd1;
+      if (dma_a == 9'h1FF) dma_state <= 0; // finished
+      else dma_state <= 3;
+    end
+    3: dma_state <= 1;
+    endcase
+  end
+end
+
+dpram #(9,8) sram(
+  .clock     ( clk_sys            ),
+  .address_a ( cpu_ab             ),
+  .data_a    ( cpu_dout           ),
+  .q_a       ( sram_data          ),
+  .rden_a    ( 1'b1               ),
+  .wren_a    ( sram_wr            ),
+  .address_b ( dma_a              ),
+  .rden_b    ( 1'b1               ),
+  .q_b       ( sram_q             )
+);
 
 dpram #(7,8) sram1(
   .clock     ( ~clk_sys           ),
-  .address_a ( cpu_ab[8:2]        ),
-  .data_a    ( cpu_dout           ),
-  .q_a       ( sram1_dout         ),
+  .address_a ( dma_a[8:2]         ),
+  .data_a    ( sram_q             ),
+  .q_a       (                    ),
   .rden_a    ( 1'b1               ),
-  .wren_a    ( sram_wr & sram1_en ),
+  .wren_a    ( dma_wr & sram1_en  ),
   .address_b ( sram_addr          ),
   .rden_b    ( 1'b1               ),
   .q_b       ( sram1_q            )
@@ -126,11 +156,11 @@ dpram #(7,8) sram1(
 
 dpram #(7,8) sram2(
   .clock     ( ~clk_sys           ),
-  .address_a ( cpu_ab[8:2]        ),
-  .data_a    ( cpu_dout           ),
-  .q_a       ( sram2_dout         ),
+  .address_a ( dma_a[8:2]         ),
+  .data_a    ( sram_q             ),
+  .q_a       (                    ),
   .rden_a    ( 1'b1               ),
-  .wren_a    ( sram_wr & sram2_en ),
+  .wren_a    ( dma_wr & sram2_en  ),
   .address_b ( sram_addr          ),
   .rden_b    ( 1'b1               ),
   .q_b       ( sram2_q            )
@@ -138,11 +168,11 @@ dpram #(7,8) sram2(
 
 dpram #(7,8) sram3(
   .clock     ( ~clk_sys           ),
-  .address_a ( cpu_ab[8:2]        ),
-  .data_a    ( cpu_dout           ),
-  .q_a       ( sram3_dout         ),
+  .address_a ( dma_a[8:2]         ),
+  .data_a    ( sram_q             ),
+  .q_a       (                    ),
   .rden_a    ( 1'b1               ),
-  .wren_a    ( sram_wr & sram3_en ),
+  .wren_a    ( dma_wr & sram3_en  ),
   .address_b ( sram_addr          ),
   .rden_b    ( 1'b1               ),
   .q_b       ( sram3_q            )
@@ -150,11 +180,11 @@ dpram #(7,8) sram3(
 
 dpram #(7,8) sram4(
   .clock     ( ~clk_sys           ),
-  .address_a ( cpu_ab[8:2]        ),
-  .data_a    ( cpu_dout           ),
-  .q_a       ( sram4_dout         ),
+  .address_a ( dma_a[8:2]         ),
+  .data_a    ( sram_q             ),
+  .q_a       (                    ),
   .rden_a    ( 1'b1               ),
-  .wren_a    ( sram_wr & sram4_en ),
+  .wren_a    ( dma_wr & sram4_en  ),
   .address_b ( sram_addr          ),
   .rden_b    ( 1'b1               ),
   .q_b       ( sram4_q            )
@@ -281,7 +311,7 @@ always @(posedge clk_sys) begin
           sxc <= 0;
           sp_rom_addr <= { sram2_q[7:5], id, flip, syc[3:0] };
           next_state <= 2;
-          state <= 3;//7;
+          state <= 3;
         end
         else begin
           sram_addr <= sram_addr + 7'd1;
@@ -298,7 +328,7 @@ always @(posedge clk_sys) begin
         if (sxc == 4'd7) begin
           sp_rom_addr <= { sram2_q[7:5], id, ~flip, syc[3:0] };
           next_state <= 2;
-          state <= 3;//7;
+          state <= 3;
         end
         else if (sxc == 4'd15) begin
           sram_addr <= sram_addr + 7'd1;

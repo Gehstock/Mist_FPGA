@@ -17,7 +17,7 @@ module DRUAGA_VIDEO
     input  [8:0]    PV,
     output          PCLK,
     output          PCLK_EN,
-    output [7:0]    POUT,       // pixel colour output
+    output reg [7:0]POUT,       // pixel colour output
     output          VB,
 
     output [10:0]   VRAM_A,
@@ -134,9 +134,9 @@ DRUAGA_SPRITE spr
 //----------------------------------------
 always @(posedge VCLKx8) if (VCLK_EN) begin
     PALT_A <= BGHI ? BGCOL : ((SPCOL[3:0]==4'd15) ? BGCOL : SPCOL );
+    POUT   <= PALT_D;
 end
 
-assign POUT    = oHB ? 8'd0 : PALT_D;
 assign PCLK    = VCLK;
 assign PCLK_EN = VCLK_EN;
 

@@ -25,7 +25,7 @@ assign VPOS = vcnt;
 always @(posedge MCLK) begin
 	if (PCLK_EN)
 	case (hcnt)
-		  1: begin HBLK <= 0; hcnt <= hcnt+1'd1; end
+		  2: begin HBLK <= 0; hcnt <= hcnt+1'd1; end
 		290: begin HBLK <= 1; hcnt <= hcnt+1'd1; end
 		311: begin HSYN <= 0; hcnt <= hcnt+1'd1; end
 		342: begin HSYN <= 1; hcnt <= 9'd470;    end
