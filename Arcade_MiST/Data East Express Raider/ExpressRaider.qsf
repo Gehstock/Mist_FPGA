@@ -206,11 +206,9 @@ set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
 set_global_assignment -name VERILOG_MACRO "EXT_ROM=1"
 set_global_assignment -name VERILOG_MACRO "SYNTH=1"
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ExpressRaider_MiST.sv
-set_global_assignment -name QIP_FILE rtl/pll_mist.qip
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/core.v
 set_global_assignment -name VERILOG_FILE rtl/prot.v
 set_global_assignment -name VERILOG_FILE rtl/er_decode.v
-set_global_assignment -name VERILOG_FILE rtl/core.v
 set_global_assignment -name VERILOG_FILE rtl/audio/audio.v
 set_global_assignment -name VERILOG_FILE rtl/audio/acpu_mem.v
 set_global_assignment -name VERILOG_FILE rtl/cpu/CPU16.v
@@ -225,6 +223,8 @@ set_global_assignment -name VERILOG_FILE rtl/tools/falling_edge.v
 set_global_assignment -name VERILOG_FILE rtl/tools/clk_en.v
 set_global_assignment -name VERILOG_FILE rtl/mem/ram.v
 set_global_assignment -name VERILOG_FILE rtl/mem/dpram.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
 set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
 set_global_assignment -name QIP_FILE ../../common/CPU/T65/T65.qip
 set_global_assignment -name QIP_FILE ../../common/Sound/JT12/hdl/jt03.qip
