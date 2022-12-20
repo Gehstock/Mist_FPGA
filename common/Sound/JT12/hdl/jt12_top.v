@@ -27,7 +27,7 @@ http://gendev.spritesmind.net/forum/viewtopic.php?t=386&postdays=0&postorder=asc
 module jt12_top (
     input           rst,        // rst should be at least 6 clk&cen cycles long
     input           clk,        // CPU clock
-    input           cen,        // optional clock enable, it not needed leave as 1'b1
+    (* direct_enable *) input cen,        // optional clock enable, if not needed leave as 1'b1
     input   [7:0]   din,
     input   [1:0]   addr,
     input           cs_n,
@@ -50,6 +50,8 @@ module jt12_top (
     input      [7:0] IOB_in,
     output     [7:0] IOA_out,
     output     [7:0] IOB_out,
+    output           IOA_oe,
+    output           IOB_oe,
     // Separated output
     output          [ 7:0] psg_A,
     output          [ 7:0] psg_B,
@@ -64,7 +66,9 @@ module jt12_top (
     output          [ 9:0] psg_snd,
     output  signed  [15:0] snd_right, // FM+PSG
     output  signed  [15:0] snd_left,  // FM+PSG
-    output                 snd_sample
+    output                 snd_sample,
+    input           [ 7:0] debug_bus,
+    output          [ 7:0] debug_view
 );
 
 // parameters to select the features for each chip type
@@ -72,6 +76,7 @@ module jt12_top (
 parameter use_lfo=1, use_ssg=0, num_ch=6, use_pcm=1;
 parameter use_adpcm=0;
 parameter JT49_DIV=2;
+parameter mask_div=1;
 
 wire flag_A, flag_B, busy;
 
@@ -162,9 +167,12 @@ wire [ 7:0] aeg_b;         // Envelope Generator Control
 wire [ 5:0] adpcma_flags;  // ADPMC-A read over flags
 wire        adpcmb_flag;
 wire [ 6:0] flag_ctl;
-
+wire [ 6:0] flag_mask;
+wire [ 1:0] div_setting;
 
 wire clk_en_2, clk_en_666, clk_en_111, clk_en_55;
+
+assign debug_view = { 4'd0, flag_B, flag_A, div_setting };
 
 generate
 if( use_adpcm==1 ) begin: gen_adpcm
@@ -217,7 +225,7 @@ if( use_adpcm==1 ) begin: gen_adpcm
         .acmd_on_b  ( acmd_on_b     ),  // Control - Process start, Key On
         .acmd_rep_b ( acmd_rep_b    ),  // Control - Repeat
         .acmd_rst_b ( acmd_rst_b    ),  // Control - Reset
-        //.acmd_up_b  ( acmd_up_b     ),  // Control - New command received
+        .acmd_up_b  ( acmd_up_b     ),  // Control - New command received
         .alr_b      ( alr_b         ),  // Left / Right
         .astart_b   ( astart_b      ),  // Start address
         .aend_b     ( aend_b        ),  // End   address
@@ -268,6 +276,8 @@ end else begin : gen_adpcm_no
     assign adpcma_roe_n = 'b1;
     assign adpcmb_addr  = 'd0;
     assign adpcmb_roe_n = 'd1;
+    assign adpcma_flags = 0;
+    assign adpcmb_flag  = 0;
 end
 endgenerate
 
@@ -278,8 +288,8 @@ jt12_dout #(.use_ssg(use_ssg),.use_adpcm(use_adpcm)) u_dout(
     .flag_A         ( flag_A        ),
     .flag_B         ( flag_B        ),
     .busy           ( busy          ),
-    .adpcma_flags   ( adpcma_flags  ),
-    .adpcmb_flag    ( adpcmb_flag   ),
+    .adpcma_flags   ( adpcma_flags & flag_mask[5:0] ),
+    .adpcmb_flag    ( adpcmb_flag & flag_mask[6]    ),
     .psg_dout       ( psg_dout      ),
     .addr           ( addr          ),
     .dout           ( dout          )
@@ -287,7 +297,7 @@ jt12_dout #(.use_ssg(use_ssg),.use_adpcm(use_adpcm)) u_dout(
 
 
 /* verilator tracing_on */
-jt12_mmr #(.use_ssg(use_ssg),.num_ch(num_ch),.use_pcm(use_pcm), .use_adpcm(use_adpcm))
+jt12_mmr #(.use_ssg(use_ssg),.num_ch(num_ch),.use_pcm(use_pcm), .use_adpcm(use_adpcm), .mask_div(mask_div))
     u_mmr(
     .rst        ( rst       ),
     .clk        ( clk       ),
@@ -345,6 +355,7 @@ jt12_mmr #(.use_ssg(use_ssg),.num_ch(num_ch),.use_pcm(use_pcm), .use_adpcm(use_a
     .adeltan_b  ( adeltan_b     ),  // Delta-N
     .aeg_b      ( aeg_b         ),  // Envelope Generator Control
     .flag_ctl   ( flag_ctl      ),
+    .flag_mask  ( flag_mask     ),
     // Operator
     .xuse_prevprev1 ( xuse_prevprev1  ),
     .xuse_internal  ( xuse_internal   ),
@@ -389,7 +400,9 @@ jt12_mmr #(.use_ssg(use_ssg),.num_ch(num_ch),.use_pcm(use_pcm), .use_adpcm(use_a
     // PSG interace
     .psg_addr   ( psg_addr  ),
     .psg_data   ( psg_data  ),
-    .psg_wr_n   ( psg_wr_n  )
+    .psg_wr_n   ( psg_wr_n  ),
+    .debug_bus  ( debug_bus ),
+    .div_setting(div_setting)
 );
 
 /* verilator tracing_on */
@@ -442,7 +455,7 @@ endgenerate
 `ifndef NOSSG
 generate
     if( use_ssg==1 ) begin : gen_ssg
-        jt49 #(.COMP(2'b00), .CLKDIV(JT49_DIV))
+        jt49 #(.COMP(2'b01), .CLKDIV(JT49_DIV))
             u_psg( // note that input ports are not multiplexed
             .rst_n      ( ~rst      ),
             .clk        ( clk       ),    // signal on positive edge
@@ -457,11 +470,13 @@ generate
             .C          ( psg_C     ),
             .dout       ( psg_dout  ),
             .sel        ( 1'b1      ),  // half clock speed
-            // Unused:
             .IOA_out    ( IOA_out   ),
             .IOB_out    ( IOB_out   ),
             .IOA_in     ( IOA_in    ),
             .IOB_in     ( IOB_in    ),
+            .IOA_oe     ( IOA_oe    ),
+            .IOB_oe     ( IOB_oe    ),
+            // Unused:
             .sample     (           )
         );
         assign snd_left  = fm_snd_left  + { 1'b0, psg_snd[9:0],5'd0};

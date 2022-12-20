@@ -39,6 +39,8 @@ module jt03(
     input   [7:0]   IOB_in,
     output  [7:0]   IOA_out,
     output  [7:0]   IOB_out,
+    output          IOA_oe,
+    output          IOB_oe,
     // Separated output
     output          [ 7:0] psg_A,
     output          [ 7:0] psg_B,
@@ -47,11 +49,14 @@ module jt03(
     // combined output
     output          [ 9:0] psg_snd,
     output  signed  [15:0] snd,
-    output          snd_sample
+    output                 snd_sample,
+    // Debug
+    //input           [ 7:0] debug_bus,
+    output          [ 7:0] debug_view
 );
 
 jt12_top #(
-    .use_lfo(0),.use_ssg(1), .num_ch(3), .use_pcm(0), .use_adpcm(0) )
+    .use_lfo(0),.use_ssg(1), .num_ch(3), .use_pcm(0), .use_adpcm(0), .mask_div(0) )
 u_jt12(
     .rst            ( rst          ),        // rst should be at least 6 clk&cen cycles long
     .clk            ( clk          ),        // CPU clock
@@ -64,10 +69,12 @@ u_jt12(
     .dout           ( dout         ),
     .irq_n          ( irq_n        ),
     // YM2203 I/O pins
-    .IOA_out        ( IOA_out      ),
-    .IOB_out        ( IOB_out      ),
     .IOA_in         ( IOA_in       ),
     .IOB_in         ( IOB_in       ),
+    .IOA_out        ( IOA_out      ),
+    .IOB_out        ( IOB_out      ),
+    .IOA_oe         ( IOA_oe       ),
+    .IOB_oe         ( IOB_oe       ),
     // Unused ADPCM pins
     .en_hifi_pcm    ( 1'b0         ), // used only on YM2612 mode
     .adpcma_addr    (              ), // real hardware has 10 pins multiplexed through RMPX pin
@@ -91,7 +98,11 @@ u_jt12(
 
     .snd_right      ( snd          ),
     .snd_left       (),
-    .snd_sample     ( snd_sample   )
+    .snd_sample     ( snd_sample   ),
+
+    //.debug_bus      ( debug_bus    ),
+    .debug_bus      ( 8'd0         ),
+    .debug_view     ( debug_view   )
 );
 
 endmodule // jt03

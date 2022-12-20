@@ -42,12 +42,14 @@ module jt49_bus ( // note that input ports are not multiplexed
 
     input      [7:0] IOA_in,
     output     [7:0] IOA_out,
+    output           IOA_oe,
 
     input      [7:0] IOB_in,
-    output     [7:0] IOB_out
+    output     [7:0] IOB_out,
+    output           IOB_oe
 );
 
-parameter [2:0] COMP=3'b000;
+parameter [1:0] COMP=2'b00;
 
 reg wr_n, cs_n;
 reg [3:0] addr;
@@ -94,8 +96,10 @@ jt49 #(.COMP(COMP)) u_jt49( // note that input ports are not multiplexed
     .C      (  C         ),
     .IOA_in (  IOA_in    ),
     .IOA_out(  IOA_out   ),
+    .IOA_oe (  IOA_oe    ),
     .IOB_in (  IOB_in    ),
-    .IOB_out(  IOB_out   )
+    .IOB_out(  IOB_out   ),
+    .IOB_oe (  IOB_oe    )
 );
 
 endmodule // jt49_bus
