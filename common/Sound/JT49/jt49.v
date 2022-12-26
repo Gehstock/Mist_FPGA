@@ -39,14 +39,16 @@ module jt49 ( // note that input ports are not multiplexed
 
     input      [7:0] IOA_in,
     output     [7:0] IOA_out,
+    output           IOA_oe,
 
     input      [7:0] IOB_in,
-    output     [7:0] IOB_out
+    output     [7:0] IOB_out,
+    output           IOB_oe
 );
 
-parameter [2:0] COMP=3'b000;
+parameter [1:0] COMP=2'b00;
 parameter       CLKDIV=3;
-wire [2:0] comp = COMP;
+wire [1:0] comp = COMP;
 
 reg  [7:0] regarray[15:0];
 wire [7:0] port_A, port_B;
@@ -60,8 +62,10 @@ wire cen16, cen256;
 
 assign IOA_out = regarray[14];
 assign IOB_out = regarray[15];
-assign port_A  = !regarray[7][6] ? IOA_in : IOA_out;
-assign port_B  = !regarray[7][7] ? IOB_in : IOB_out;
+assign port_A  = IOA_in;
+assign port_B  = IOB_in;
+assign IOA_oe  = regarray[7][6];
+assign IOB_oe  = regarray[7][7];
 assign sample  = cen16;
 
 jt49_cen #(.CLKDIV(CLKDIV)) u_cen(
