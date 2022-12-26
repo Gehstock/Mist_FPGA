@@ -20,23 +20,30 @@ module MrJong(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"MrJong;ROM;",
+	"MrJong;;",
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
-	"O6,Joystick Swap,Off,On;",
-	"DIP;",
+	"O6,Joystick Swap,Off,On;",	
+	"O7,Cabinet,Cocktail,Upright;",
+	"O8,Bonus Life,50k,30k;",
+	"O9,Difficulty,Normal,Hard;",
+	"OAB,Lives,6,4,5,3;",
+	"OCD,Coin,1c/1c,1c/2c,1c/3c,2c/1c;",	
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
-
 wire  [1:0] orientation = 2'b01;
 wire        rotate = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend = status[5];
 wire        joyswap = status[6];
-//wire        service = status[7];
-wire [15:0] dip_sw = ~status[23:8];
+wire        cabinet = status[7];
+wire        bonus = status[8];
+wire        difficulty = status[9];
+wire  [1:0] lives = status[11:10];
+wire  [1:0] coins = status[13:12];
+
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
 
@@ -91,13 +98,8 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-//reg [7:0] sw[8];
-//always @(posedge clk_sys)
-//  if (ioctl_wr && (ioctl_index==254) && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout;
-
-
-//wire [7:0] dsw = sw[0];
-wire [7:0] p1 = { m_fireB, m_coin2, m_coin1, m_fireA, m_down, m_right, m_left, m_up };
+wire [7:0] dsw = {coins, lives, difficulty, bonus, 1'b0, cabinet};
+wire [7:0] p1 = { m_fireB, 1'b0, m_coin1, m_fireA, m_down, m_right, m_left, m_up };
 wire [7:0] p2 = { m_fire2B, m_two_players, m_one_player, m_fire2A, m_down2, m_right2, m_left2, m_up2 };
 
 core core(
@@ -105,7 +107,7 @@ core core(
 	.clk_sys(clk_sys),
    .p1(p1),
    .p2(p2),
-	.dsw(dip_sw),
+	.dsw(dsw),
 	.ioctl_index(ioctl_index),
 	.ioctl_download(ioctl_downl),
 	.ioctl_addr(ioctl_addr),
@@ -191,7 +193,7 @@ arcade_inputs inputs (
 	.rotate      ( rotate      ),
 	.orientation ( orientation ),
 	.joyswap     ( joyswap     ),
-	.oneplayer   ( 1'b1        ),
+	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
