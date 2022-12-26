@@ -49,7 +49,7 @@ sn76489_audio sn1(
 //sn76489_top sn1(
 //  .clock_i		( clk_sys    ),
 //  .clock_en_i	( clk_en     ),
-//  .res_n_i		( ~reset		 ),
+//  .res_n_i		( !reset		 ),
 //  .ce_n_i		( sn1_ce_n   ),
 //  .we_n_i		( sn1_wr_n   ),
 //  .ready_o		( sn1_rdy    ),
@@ -70,7 +70,7 @@ sn76489_audio sn2(
 //sn76489_top sn2(
 //  .clock_i		( clk_sys    ),
 //  .clock_en_i	( clk_en     ),
-//  .res_n_i		( ~reset		 ),
+//  .res_n_i		( !reset		 ),
 //  .ce_n_i		( sn2_ce_n   ),
 //  .we_n_i		( sn2_wr_n   ),
 //  .ready_o		( sn2_rdy    ),

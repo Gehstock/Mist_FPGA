@@ -39,33 +39,9 @@ always @(posedge clk_sys) begin
   if (~cpu_rd_n) data_latch <= cpu_din;
 end
 
-// Enable the R (refresh) register,
-// it is used as a source for random number generation
-//`define TV80_REFRESH 1
-//tv80s cpu(
-//  .reset_n ( ~reset      ),
-//  .clk     ( clk_sys & cen_26    ),
-////  .cen     ( cen_26      ),
-//  .wait_n  ( cpu_wait_n  ),
-//  .int_n   ( 1'b1        ),
-//  .nmi_n   ( cpu_nmi_n   ),
-//  .busrq_n ( 1'b1        ),
-//  .m1_n    ( cpu_m1_n    ),
-//  .mreq_n  ( cpu_mreq_n  ),
-//  .iorq_n  ( cpu_iorq_n  ),
-//  .rd_n    ( cpu_rd_n    ),
-//  .wr_n    ( cpu_wr_n    ),
-//  .rfsh_n  ( cpu_rfsh_n  ),
-//  .halt_n  (             ),
-//  .busak_n (             ),
-//  .A       ( cpu_ab      ),
-//  .di      ( data_latch  ),
-//  .dout    ( cpu_dout    )
-//);
-
 T80se (
 	.RESET_n			( ~reset      ),
-	.CLK_n			( clk_sys    ),
+	.CLK_n			( clk_sys     ),
 	.CLKEN			( cen_26      ),
 	.WAIT_n			( cpu_wait_n  ),
 	.INT_n			( 1'b1        ),

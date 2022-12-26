@@ -27,10 +27,10 @@ module jg_decode(
   output reg sn2_wr
 );
 
-reg unmap;
+//reg unmap;
 
 always @* begin
-  unmap = 1'b0;
+//  unmap = 1'b0;
 
   rom_cs   = 0;
   ram1_cs  = 0;
@@ -62,7 +62,7 @@ always @* begin
         else
           dsw_cs = 1'b1;
       8'd3: /* ?? */;
-      default: unmap = 1'b1;
+      default: ;//unmap = 1'b1;
     endcase
   end
   else begin
@@ -80,7 +80,7 @@ always @* begin
           else begin // $E000-$E3FF
             vram_cs = 1'b1;
           end
-        default: unmap = 1'b1;
+        default: ;//unmap = 1'b1;
       endcase
     end
   end
