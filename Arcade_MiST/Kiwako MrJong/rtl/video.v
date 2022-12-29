@@ -54,7 +54,7 @@ module video(
   input             cpu_rd,
   input             cpu_wr,
 
-  output reg [11:0] char_rom_addr,
+  output     [11:0] char_rom_addr,
   input       [7:0] char_data1,
   input       [7:0] char_data2,
 
@@ -79,8 +79,8 @@ module video(
 
 );
 
-wire [8:0] hcount = flip ? (9'h200-hc)+1 : hc-1;
-wire [8:0] vcount = vc;
+wire [8:0] hcount = flip ? {hc[8], ~hc[7:0]} : hc;
+wire [8:0] vcount = flip ? {vc[8], ~vc[7:0]} : vc;
 wire [8:0] hc;
 wire [8:0] vc;
 
@@ -104,13 +104,13 @@ wire spram3_wr      = spram_cs[3] & cpu_wr;
 wire vram_wr        = cpu_wr & vram_cs;
 wire cram_wr        = cpu_wr & cram_cs;
 
-reg  [9:0] vram_addr;
-reg  [9:0] cram_addr;
+wire [9:0] vram_addr;
+wire [9:0] cram_addr;
 wire [7:0] vram_data;
 wire [7:0] cram_data;
 reg  [3:0] spram_addr;
 
-reg [6:0] bg_color_data;
+wire [6:0] bg_color_data;
 
 wire [7:0] spram_data0;
 wire [7:0] spram_data1;
@@ -122,7 +122,7 @@ wire [7:0] cpu_cdo;
 
 assign cpu_vdata =
   vram_cs     ? cpu_vdo  :
-  cram_cs     ? cpu_cdo  : 8'hff;
+  cram_cs     ? cpu_cdo  : 8'h0;
 
 dpram #(4,8) u_spram0 (
   .address_a    ( cpu_ab[5:2] ),
@@ -132,7 +132,7 @@ dpram #(4,8) u_spram0 (
   .data_b       (             ),
   .wren_a       ( spram0_wr   ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b0        ),
   .rden_b       ( 1'b1        ),
   .q_a          (             ),
   .q_b          ( spram_data0 )
@@ -146,7 +146,7 @@ dpram #(4,8) u_spram1 (
   .data_b       (             ),
   .wren_a       ( spram1_wr   ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b0        ),
   .rden_b       ( 1'b1        ),
   .q_a          (             ),
   .q_b          ( spram_data1 )
@@ -160,7 +160,7 @@ dpram #(4,8) u_spram2 (
   .data_b       (             ),
   .wren_a       ( spram2_wr   ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b0        ),
   .rden_b       ( 1'b1        ),
   .q_a          (             ),
   .q_b          ( spram_data2 )
@@ -174,7 +174,7 @@ dpram #(4,8) u_spram3 (
   .data_b       (             ),
   .wren_a       ( spram3_wr   ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b0        ),
   .rden_b       ( 1'b1        ),
   .q_a          (             ),
   .q_b          ( spram_data3 )
@@ -188,7 +188,7 @@ dpram #(10,8) vram(
   .data_b       (             ),
   .wren_a       ( vram_wr     ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b1        ),
   .rden_b       ( 1'b1        ),
   .q_a          ( cpu_vdo     ),
   .q_b          ( vram_data   )
@@ -202,7 +202,7 @@ dpram #(10,8) cram(
   .data_b       (             ),
   .wren_a       ( cram_wr     ),
   .wren_b       (             ),
-  .rden_a       ( cpu_rd      ),
+  .rden_a       ( 1'b1        ),
   .rden_b       ( 1'b1        ),
   .q_a          ( cpu_cdo     ),
   .q_b          ( cram_data   )
@@ -210,15 +210,10 @@ dpram #(10,8) cram(
 
 wire [2:0] hf = {3{cram_data[6]}};
 wire [2:0] vf = {3{cram_data[7]}};
-
-always @(posedge clk_sys) begin
-  if (ce_pix) begin
-    vram_addr <= { vcount[7:3], hcount[7:3] };
-    cram_addr <= { vcount[7:3], hcount[7:3] };
-  end
-  char_rom_addr <= { cram_data[5], vram_data, vcount[2:0]^vf };
-  bg_color_data <= { cram_data[4:0], char_data1[hcount[2:0]^hf], char_data2[hcount[2:0]^hf] };
-end
+assign vram_addr = { vcount[7:3], hcount[7:3] };
+assign cram_addr = { vcount[7:3], hcount[7:3] };
+assign bg_color_data = { cram_data[4:0], char_data2[hcount[2:0]^hf], char_data1[hcount[2:0]^hf] };
+assign char_rom_addr = { cram_data[5], vram_data, vcount[2:0]^vf };
 
 wire [6:0] sid = { spram_data3[5], spram_data1[7:2] };
 wire yflip = spram_data1[1];
@@ -230,7 +225,7 @@ wire spc0 = spr_data1[sxc[2:0]^{3{xflip}}];
 wire spc1 = spr_data2[sxc[2:0]^{3{xflip}}];
 
 wire [3:0] syc = yflip ? 4'd15 - (vcount - sy) : vcount - sy;
-wire [7:0] sxc2 = flip ? spram_data2+31 + sxc - 8'd16 : spram_data2 + sxc - 8'd16;
+wire [7:0] sxc2 = spram_data2 + sxc + (flip ? -8'd16 : 8'd16);
 reg [6:0] spn;
 reg [6:0] dlbuf[511:0];
 reg [1:0] state, next_state;
@@ -245,7 +240,6 @@ always @(posedge clk_sys) begin
   else begin
 
     oldv <= vcount;
-    if (ce_pix && !hc[8]) dlbuf[{ ~vcount[0], hcount[7:0] }] <= 7'd0;
 
     case (state)
       0: begin
@@ -268,7 +262,7 @@ always @(posedge clk_sys) begin
       end
       2: begin
         if (spc1|spc0) begin
-          dlbuf[{ vcount[0], sxc2 }] <= { spram_data3[4:0], spc0, spc1 };
+          dlbuf[{ vcount[0], sxc2 }] <= { spram_data3[4:0], spc1, spc0 };
         end
         sxc <= sxc + 4'd1;
         if (sxc == 4'd5) begin
@@ -295,8 +289,9 @@ end
 
 
 always @(posedge clk_sys) begin
+  sp_color_data <= dlbuf[{ ~vcount[0], hcount[7:0] }];
   if (ce_pix) begin
-    sp_color_data <= dlbuf[{ ~vcount[0], hcount[7:0] }];
+    if (!hc[8]) dlbuf[{ ~vcount[0], hcount[7:0] }] <= 7'd0;
     prom_addr <= |sp_color_data[1:0] ? sp_color_data : bg_color_data;
     pal_addr <= prom_data[4:0];
     red <= pal_data[2:0];

@@ -9,19 +9,17 @@ module ram
   input [addr_width-1:0] addr,
   input [data_width-1:0] din,
   output [data_width-1:0] q,
-  input rd_n,
-  input wr_n,
-  input ce_n
+  input wr_n
 );
 
 reg [data_width-1:0] data;
 reg [data_width-1:0] mem[(1<<addr_width)-1:0];
 
-assign q = ~ce_n ? data : 0;
+assign q = data;
 
 always @(posedge clk) begin
 
-  if (~rd_n) data <= mem[addr];
+  data <= mem[addr];
   if (~wr_n) mem[addr] <= din;
 
 end

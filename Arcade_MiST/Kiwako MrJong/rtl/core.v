@@ -22,6 +22,7 @@ module core(
   output       vs,
   output       hs,
   output       ce_pix,
+  output       flipped,
 
   output [15:0] sound_mix
 
@@ -69,6 +70,8 @@ reg hflip;
 
 always @(posedge clk_sys)
   if (flip_wr) hflip <= cpu_dout[2];
+
+assign flipped = hflip;
 
 wire [7:0] cpu_din =
   p1_cs             ? p1        :
@@ -161,7 +164,7 @@ video u_video(
   .blue          ( blue           ),
   .vram_cs       ( vram_cs        ),
   .cram_cs       ( cram_cs        ),
-  .flip          ( dsw[1] ^ hflip )
+  .flip          ( flipped        )
 );
 
 vdata u_vdata(

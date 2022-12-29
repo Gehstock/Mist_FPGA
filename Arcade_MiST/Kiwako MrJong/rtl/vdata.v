@@ -66,9 +66,7 @@ ram #(5,16) palette(
   .addr ( pal_admux  ),
   .din  ( ioctl_dout ),
   .q    ( pal_data   ),
-  .rd_n ( 1'b0       ),
-  .wr_n ( ~pal_wr    ),
-  .ce_n ( 1'b0       )
+  .wr_n ( ~pal_wr    )
 );
 
 ram #(7,8) prom(
@@ -76,9 +74,7 @@ ram #(7,8) prom(
   .addr ( prom_admux ),
   .din  ( ioctl_dout ),
   .q    ( prom_data  ),
-  .rd_n ( 1'b0       ),
-  .wr_n ( ~prom_wr   ),
-  .ce_n ( 1'b0       )
+  .wr_n ( ~prom_wr   )
 );
 
 
