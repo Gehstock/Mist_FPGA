@@ -13,19 +13,15 @@ module cpu_ram(
 );
 
 wire [7:0] ram_din = cpu_dout;
-wire ram1_ce_n = ~ram1_cs;
-wire ram2_ce_n = ~ram2_cs;
-wire ram1_wr_n = (ram1_ce_n | ~cpu_wr);
-wire ram2_wr_n = (ram2_ce_n | ~cpu_wr);
+wire ram1_wr_n = ~(ram1_cs & cpu_wr);
+wire ram2_wr_n = ~(ram2_cs & cpu_wr);
 
 ram #(11,8) ram1(
   .clk  ( clk_sys      ),
   .addr ( cpu_ab[10:0] ),
   .din  ( ram_din      ),
   .q    ( ram1_data    ),
-  .rd_n ( ~cpu_rd      ),
-  .wr_n ( ram1_wr_n    ),
-  .ce_n ( ~ram1_cs     )
+  .wr_n ( ram1_wr_n    )
 );
 
 ram #(11,8) ram2(
@@ -33,9 +29,7 @@ ram #(11,8) ram2(
   .addr ( cpu_ab[10:0] ),
   .din  ( ram_din      ),
   .q    ( ram2_data    ),
-  .rd_n ( ~cpu_rd      ),
-  .wr_n ( ram2_wr_n    ),
-  .ce_n ( ~ram2_cs     )
+  .wr_n ( ram2_wr_n    )
 );
 
 endmodule

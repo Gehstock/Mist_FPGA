@@ -25,24 +25,27 @@ localparam CONF_STR = {
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Joystick Swap,Off,On;",	
-	"O7,Cabinet,Cocktail,Upright;",
-	"O8,Bonus Life,50k,30k;",
-	"O9,Difficulty,Normal,Hard;",
-	"OAB,Lives,6,4,5,3;",
-	"OCD,Coin,1c/1c,1c/2c,1c/3c,2c/1c;",	
+	"O8,Cabinet,Cocktail,Upright;",
+	"O9,Flip,Off,On;",
+	"OA,Bonus Life,50k,30k;",
+	"OB,Difficulty,Normal,Hard;",
+	"OCD,Lives,6,4,5,3;",
+	"OEF,Coin,1c/1c,1c/2c,1c/3c,2c/1c;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
-wire  [1:0] orientation = 2'b01;
+wire        flipped;
+wire  [1:0] orientation = {flipped, 1'b1};
 wire        rotate = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend = status[5];
 wire        joyswap = status[6];
-wire        cabinet = status[7];
-wire        bonus = status[8];
-wire        difficulty = status[9];
-wire  [1:0] lives = status[11:10];
-wire  [1:0] coins = status[13:12];
+wire        cabinet = status[8];
+wire        flip = status[9];
+wire        bonus = status[10];
+wire        difficulty = status[11];
+wire  [1:0] lives = status[13:12];
+wire  [1:0] coins = status[15:14];
 
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
@@ -98,15 +101,15 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ~rom_loaded;
 end
 
-wire [7:0] dsw = {coins, lives, difficulty, bonus, 1'b0, cabinet};
-wire [7:0] p1 = { m_fireB, 1'b0, m_coin1, m_fireA, m_down, m_right, m_left, m_up };
-wire [7:0] p2 = { m_fire2B, m_two_players, m_one_player, m_fire2A, m_down2, m_right2, m_left2, m_up2 };
+wire [7:0] dsw = {coins, lives, difficulty, bonus, flip, cabinet};
+wire [7:0] p1 = { 1'b0, m_coin2, m_coin1, m_fireA, m_down, m_right, m_left, m_up };
+wire [7:0] p2 = { 1'b1, m_two_players, m_one_player, m_fire2A, m_down2, m_right2, m_left2, m_up2 };
 
 core core(
 	.reset(reset),
 	.clk_sys(clk_sys),
-   .p1(p1),
-   .p2(p2),
+	.p1(p1),
+	.p2(p2),
 	.dsw(dsw),
 	.ioctl_index(ioctl_index),
 	.ioctl_download(ioctl_downl),
@@ -120,6 +123,7 @@ core core(
 	.hb(hb),
 	.vs(vs),
 	.hs(hs),
+	.flipped(flipped),
 	.sound_mix(audio)
 );
 

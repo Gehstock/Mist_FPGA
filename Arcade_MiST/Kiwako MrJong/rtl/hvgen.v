@@ -3,21 +3,20 @@ module hvgen(
   input clk_sys,
   output reg hb, vb, hs, vs,
   output reg [8:0] hcount, vcount,
-  output reg ce_pix
+  output ce_pix
 );
 
 wire cen_6;
 clk_en #(7) hclk_en(clk_sys, cen_6);
+assign ce_pix = cen_6;
 
 // 240x224
 always @(posedge clk_sys) begin
-  ce_pix <= 1'b0;
-  if (cen_6) begin
-    ce_pix <= 1'b1;
+  if (ce_pix) begin
     hcount <= hcount + 9'd1;
     case (hcount)
-      4: hb <= 1'b0;
-      244: hb <= 1'b1;
+      18: hb <= 1'b0;
+      258: hb <= 1'b1;
       308: hs <= 1'b0;
       340: hs <= 1'b1;
       383: begin

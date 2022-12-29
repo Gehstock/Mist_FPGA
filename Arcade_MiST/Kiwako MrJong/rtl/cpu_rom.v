@@ -19,9 +19,7 @@ ram #(15,8) rom(
   .addr ( rom_addr   ),
   .din  ( ioctl_dout ),
   .q    ( rom_data   ),
-  .rd_n ( 1'b0       ),
-  .wr_n ( ~rom_wr    ),
-  .ce_n ( 1'b0       )
+  .wr_n ( ~rom_wr    )
 );
 
 

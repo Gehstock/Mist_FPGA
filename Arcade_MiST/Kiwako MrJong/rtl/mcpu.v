@@ -31,15 +31,13 @@ clk_en #(17) cpu_clk_en(clk_sys, cen_26);
 
 reg old_vb;
 reg [7:0] hold_nmi;
-reg [7:0] data_latch;
 always @(posedge clk_sys) begin
   old_vb <= vb;
   if (~old_vb & vb) hold_nmi <= 8'hff;
   if (hold_nmi != 8'd0) hold_nmi <= hold_nmi - 8'd1;
-  if (~cpu_rd_n) data_latch <= cpu_din;
 end
 
-T80se (
+T80se cpu (
 	.RESET_n			( ~reset      ),
 	.CLK_n			( clk_sys     ),
 	.CLKEN			( cen_26      ),
@@ -56,7 +54,7 @@ T80se (
 	.HALT_n			(             ),
 	.BUSAK_n			(             ),
 	.A					( cpu_ab      ),
-	.DI				( data_latch  ),
+	.DI				( cpu_din  ),
 	.DO				( cpu_dout    )
 	);
 
