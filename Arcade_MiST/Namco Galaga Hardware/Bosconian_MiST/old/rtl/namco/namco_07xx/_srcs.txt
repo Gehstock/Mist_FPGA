@@ -1,2 +1,0 @@
-c07_syncgen_pack.vhd
-c07_syncgen.vhd
