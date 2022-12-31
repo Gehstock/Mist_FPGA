@@ -12,6 +12,30 @@
 //============================================================================
 `timescale 1ns/1ps
 
+	
+//	output [14:0] cpu_rom_addr,
+//	input [7:0] cpu_rom_do,
+//	output [13:0] spr_rom_addr,
+//	input [7:0] spr_rom_do,		
+//	input [15:0] hs_address,
+//	output [7:0] hs_data_out,
+//	input [7:0] hs_data_in,
+//	input hs_write
+//);
+//============================================================================
+//  Arcade: Exerion
+//
+//  Manufaturer: Jaleco 
+//  Type: Arcade Game
+//  Genre: Shooter
+//  Orientation: Vertical
+//
+//  Hardware Description by Anton Gale
+//  https://github.com/antongale/EXERION
+//
+//============================================================================
+`timescale 1ns/1ps
+
 module Exerion_top(
 	input clkm_20MHZ,
 	input	clkaudio,
@@ -23,7 +47,6 @@ module Exerion_top(
 	output H_BLANK,
 	output V_BLANK,
 	input RESET_n,				//from sv to core, check implementation
-	input pause,
 	input [8:0] CONTROLS,	
 	input [7:0] DIP1,
 	input [7:0] DIP2,
@@ -31,15 +54,7 @@ module Exerion_top(
 	input 		 dn_wr,
 	input [7:0]  dn_data,
 	output reg [15:0] audio_l, //from jt49_1 .sound
-	output reg [15:0] audio_r,  //from jt49_2 .sound	
-	output [14:0] cpu_rom_addr,
-	input [7:0] cpu_rom_do,
-	output [13:0] spr_rom_addr,
-	input [7:0] spr_rom_do,		
-	input [15:0] hs_address,
-	output [7:0] hs_data_out,
-	input [7:0] hs_data_in,
-	input hs_write
+	output reg [15:0] audio_r  //from jt49_2 .sound
 );
 
 //pixel counters
@@ -80,6 +95,9 @@ wire spclk1_10MHZ,spclk2_6MHZ,spclk3_3MHZ,spclk4_6BMHZ;
 
 wire PUR = 1'b1;
 wire H4CA;
+
+
+
 wire U9M_B_nq,U9M_B_q;
 
 wire SNHI,SSEL;
@@ -260,10 +278,12 @@ ttl_7474 #(.BLOCKS(1), .DELAY_RISE(0), .DELAY_FALL(0)) U1D_A (
 	.n_q(nCOIN)
 );
 
+
+
 //First Z80 CPU responsible for main game logic, sound, sprites
 T80as Z80A(
 	.RESET_n(RESET_n),
-	.WAIT_n(wait_n),
+	.WAIT_n(1'b1),
 	.INT_n(PUR),
 	.BUSRQ_n(PUR),
 	.NMI_n(PUR&nCOIN), //+1 coin
@@ -283,7 +303,7 @@ T80as Z80B(
 	.INT_n(PUR),
 	.BUSRQ_n(PUR),
 	.NMI_n(PUR),
-	.CLK_n(bgclk_3),
+	.CLK_n(bgclk_3), //bgclk_3
 	.MREQ_n(Z80B_MREQ),
 	.DI(Z80B_databus_in),
 	.DO(Z80B_databus_out),
@@ -309,9 +329,10 @@ ls139 U3RB(
 
 wire [3:0] U3RA_Q;
 wire [3:0] U3RB_Q;
-wire Z80_RAM_en = !U3RA_Q[3];
-wire Z80_B1_en = !(U3RA_Q[2] & U3RA_Q[1] & U3RA_Q[0]);
-
+wire Z80_RAM_en;
+wire Z80_B1_en ;
+assign Z80_RAM_en = !U3RA_Q[3];
+assign Z80_B1_en = !(U3RA_Q[2] & U3RA_Q[1] & U3RA_Q[0]);
 reg [7:0] rZ80A_databus_in;
 reg [7:0] rZ80B_databus_in;
 
@@ -329,7 +350,7 @@ wire m_coin   		= CONTROLS[8];
 //CPU read selection logic
 // ******* PRIMARY CPU IC SELECTION LOGIC FOR TILE, SPRITE, SOUND & GAME EXECUTION ********
 always @(posedge clk3_3MHZ) begin
-if (Z80_B1_en&!Z80_MREQ) rZ80A_databus_in <= prom_prog1_out;
+	if (Z80_B1_en&!Z80_MREQ) rZ80A_databus_in <= prom_prog1_out;	//Main Program ROM & Second Program ROM
 	else if (Z80_RAM_en & !Z80_RD) rZ80A_databus_in <= U4N_Z80A_RAM_out;					//Main System RAM
 
 	//reads from AY sound chips
@@ -341,9 +362,9 @@ if (Z80_B1_en&!Z80_MREQ) rZ80A_databus_in <= prom_prog1_out;
 
 		if (!Z80_RD & !RAMA) 	rZ80A_databus_in <= U6N_VRAM_Q; 		//VRAM
 		else if (!Z80_RD & !RAMB) 		rZ80A_databus_in <= rSPRITE_databus;//U11SR_SPRAM_Q; 
-		else if (!Z80_RD & !IN1) 		rZ80A_databus_in <= ({m_start2p,m_start1p,m_shoot2,m_shoot,m_left,m_right,m_down,m_up});//ST2, ST1, FIRB,FIRA,LF,  RG,  DN,  UP
-		else if (!Z80_RD & !IN2) 		rZ80A_databus_in <= {DIP1};//DIP SWITCH 1 //LIVES //BONUS LIFE //DIFFICULTY //CABINET
-		else if (!Z80_RD & !IN3) 		rZ80A_databus_in <= {1'b0,1'b0,1'b0,1'b0,DIP2[1],DIP2[0],DIP2[2],nVDSP};//DIP SWITCH 2 & VDSP feedback
+		else if (!Z80_RD & !IN1) 		rZ80A_databus_in <= ({m_start2p,m_start1p,m_shoot2,m_shoot,m_left,m_right,m_down,m_up});	//JOYSTICK 1 & 2 - ST2, ST1,    FIRB,FIRA,LF,  RG,  DN,  UP
+		else if (!Z80_RD & !IN2) 		rZ80A_databus_in <= {DIP1};												//DIP SWITCH 1 //LIVES //BONUS LIFE //DIFFICULTY //CABINET
+		else if (!Z80_RD & !IN3) 		rZ80A_databus_in <= {1'b0,1'b0,1'b0,1'b0,DIP2[1],DIP2[0],DIP2[2],nVDSP};											//DIP SWITCH 2 & VDSP feedback
 
 	end
 
@@ -358,9 +379,9 @@ always @(posedge bgclk_3) begin
 										(!Z80B_RD & !BG_IO2)   					? Z80A_IO2:
 										(!Z80B_RD & !BG_VDSP)					? ({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,nVDSP,SNHI}):
 																						8'b00000000;
-end
 
-wire wait_n = !pause;
+
+end
 wire nVDSP = V_BLANK; 
 wire nHDSP = H_BLANK; //vertical & horizontal display
 
@@ -431,8 +452,8 @@ top_74ls153 U4ML(
 //	.q({ZC3,ZC2,ZC1,ZC0})
 //);
 
-exerion_i3 exerion_i3(
-	.clk(clkm_20MHZ),  ///clkm_20MHZ
+ exerion_i3  exerion_i3(
+	.clk(clkm_20MHZ),
 	.addr({U3K_Q[7:4],U4KJ_Q[1:0],U4ML_2,U4ML_1}),
 	.data({ZC3,ZC2,ZC1,ZC0})
 );
@@ -463,43 +484,35 @@ assign Z80A_databus_in = rZ80A_databus_in;
 assign Z80B_databus_in = rZ80B_databus_in;
 
 //Z80A CPU main program program ROM
-//eprom_8 prom_prog1
-//(
-//	.ADDR(Z80A_addrbus[14:0]),//
-//	.CLK(clkC_20MHZ),//
-//	.DATA(prom_prog1_out),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep8_cs_i),
-//	.WR(dn_wr)
-//);
-
-assign cpu_rom_addr = Z80A_addrbus[14:0];
-assign prom_prog1_out = cpu_rom_do;
+eprom_8 prom_prog1
+(
+	.ADDR(Z80A_addrbus[14:0]),//
+	.CLK(clkm_20MHZ),//
+	.DATA(prom_prog1_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep8_cs_i),
+	.WR(dn_wr)
+);
 
 wire [7:0] prom_prog1_out;
+wire [7:0] prom_prog2_out;
 wire [7:0] bg_prom_prog2_out;
 wire [7:0] U4N_Z80A_RAM_out;
 wire [7:0] U4V_Z80B_RAM_out;
 
 //background layer program ROM
-//eprom_6 prom_prog2
-//(
-//	.ADDR(Z80B_addrbus[12:0]),//
-//	.CLK(clkC_20MHZ),//
-//	.DATA(bg_prom_prog2_out),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep6_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_05 exerion_05(
-	.clk(clkm_20MHZ),
-	.addr(Z80B_addrbus[12:0]),
-	.data(bg_prom_prog2_out)
+eprom_6 prom_prog2
+(
+	.ADDR(Z80B_addrbus[12:0]),//
+	.CLK(clkm_20MHZ),//
+	.DATA(bg_prom_prog2_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep6_cs_i),
+	.WR(dn_wr)
 );
 
 //main CPU (Z80A) work RAM - dual port RAM for hi-score logic
@@ -511,12 +524,13 @@ dpram_dc #(.widthad_a(11)) U4N_Z80A_RAM
 	.wren_a(!Z80_WR & !U3RA_Q[3]),
 	.q_a(U4N_Z80A_RAM_out),
 	
-	.clock_b(clkm_20MHZ),
-	.address_b(hs_address[10:0]),
-	.data_b(hs_data_in),
-	.wren_b(hs_write),
-	.q_b(hs_data_out)
+	.clock_b(),
+	.address_b(),
+	.data_b(),
+	.wren_b(),
+	.q_b()
 );
+
 
 //External Bus Selection Logic #1 for Sprite & Video RAM and IN1 (control panel), IN2(dip switch 1) & IN3 (dip switch 2)
 ls138x U3M(
@@ -594,22 +608,16 @@ assign npixH=~pixH[2];
 always @(posedge npixH) vramdata0out<=U6N_VRAM_Q;
 
 //forground character ROM
-//eprom_7 u6k
-//(
-//	.ADDR({char_ROMA12,vramdata0out[7:4],pixelbusV[2:0],vramdata0out[3:0],pixelbusH[2]}),//
-//	.CLK(clkm_20MHZ),//
-//	.DATA(u6k_data),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep7_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_06 exerion_06(
-	.clk(clkm_20MHZ),
-	.addr({char_ROMA12,vramdata0out[7:4],pixelbusV[2:0],vramdata0out[3:0],pixelbusH[2]}),
-	.data(u6k_data)
+eprom_7 u6k
+(
+	.ADDR({char_ROMA12,vramdata0out[7:4],pixelbusV[2:0],vramdata0out[3:0],pixelbusH[2]}),//
+	.CLK(clkm_20MHZ),//
+	.DATA(u6k_data),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep7_cs_i),
+	.WR(dn_wr)
 );
 
 wire npix1;
@@ -642,17 +650,11 @@ top_74ls153 U8K(
 );
 
 //forground / text / bullet layer output
-//prom6301_L8 UL8(
-//	.addr({U8L_A7,U8L_A6,U8K_2,U8K_1,U7L_Q3,U7L_Q2,U7L_Q1,U7L_Q0}),
-//	.clk(clkm_20MHZ),
-//	.n_cs(1'b0), 
-//	.q({ZA3,ZA2,ZA1,ZA0})
-//);
-
-exerion_i8 exerion_i8(
-	.clk(clkm_20MHZ),
+prom6301_L8 UL8(
 	.addr({U8L_A7,U8L_A6,U8K_2,U8K_1,U7L_Q3,U7L_Q2,U7L_Q1,U7L_Q0}),
-	.data({ZA3,ZA2,ZA1,ZA0})
+	.clk(clkm_20MHZ),
+	.n_cs(1'b0), 
+	.q({ZA3,ZA2,ZA1,ZA0})
 );
 
 wire clrR0,clrR1,clrR2;
@@ -676,17 +678,11 @@ assign VID_A = U8K_1|U8K_2;		//tile map layer active (bullets & text)
 assign VID_B = ZB3|ZB2|ZB1|ZB0;	//sprite layer active
 
 //colour prom
-//prom6331_E1 UE1(
-//	.addr({VID_A|VID_B,clr_addr}),
-//	.clk(clkm_20MHZ),
-//	.n_cs(1'b0),
-//	.q({clrB1,clrB0,clrG2,clrG1,clrG0,clrR2,clrR1,clrR0})
-//);
-
-exerion_e1 exerion_e1(
-	.clk(clkm_20MHZ),
+prom6331_E1 UE1(
 	.addr({VID_A|VID_B,clr_addr}),
-	.data({clrB1,clrB0,clrG2,clrG1,clrG0,clrR2,clrR1,clrR0})
+	.clk(clkm_20MHZ),
+	.n_cs(1'b0),
+	.q({clrB1,clrB0,clrG2,clrG1,clrG0,clrR2,clrR1,clrR0})
 );
 
 reg rVGA_HS;
@@ -805,26 +801,17 @@ end
 reg CHLF,sROM_A11,sROM_A10,sROM_A9,CHDN,sROM_A4,sROM_A3,sROM_A2;
 wire [7:0] sprom_data;
 
-//eprom_5 prom_SPRITE
-//(
-//	.ADDR({CHDN,CHLF,sROM_A11,sROM_A10,sROM_A9,sum4,sum3,sum2,sum1,sROM_A4,sROM_A3,sROM_A2,sROM_A1,sROM_A0}),//
-//	.CLK(clkm_20MHZ),//clkSP_20MHz
-//	.DATA(sprom_data),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep5_cs_i),
-//	.WR(dn_wr)
-//);
-
-//sprite sprite(
-//	.clk(clkm_20MHZ),
-//	.addr({CHDN,CHLF,sROM_A11,sROM_A10,sROM_A9,sum4,sum3,sum2,sum1,sROM_A4,sROM_A3,sROM_A2,sROM_A1,sROM_A0}),
-//	.data(sprom_data)
-//);
-
-assign spr_rom_addr = {CHDN,CHLF,sROM_A11,sROM_A10,sROM_A9,sum4,sum3,sum2,sum1,sROM_A4,sROM_A3,sROM_A2,sROM_A1,sROM_A0};
-assign sprom_data = spr_rom_do;
+eprom_5 prom_SPRITE
+(
+	.ADDR({CHDN,CHLF,sROM_A11,sROM_A10,sROM_A9,sum4,sum3,sum2,sum1,sROM_A4,sROM_A3,sROM_A2,sROM_A1,sROM_A0}),//
+	.CLK(clkm_20MHZ),//clkm_20MHZ
+	.DATA(sprom_data),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep5_cs_i),
+	.WR(dn_wr)
+);
 
 reg [7:0] U8H_Q;
 
@@ -849,17 +836,11 @@ top_74ls153 U11J(
 
 wire [3:0] U10H_data;
 
-//prom6301_H10 U10H(
-//	.addr({CD5,CD4,U11J_2,U11J_1,CD3,CD2,CD1,CD0}),
-//	.clk(clkm_20MHZ),
-//	.n_cs(1'b0), 
-//	.q({U10H_data})
-//);
-
-exerion_h10 exerion_h10(
-	.clk(clkm_20MHZ),
+prom6301_H10 U10H(
 	.addr({CD5,CD4,U11J_2,U11J_1,CD3,CD2,CD1,CD0}),
-	.data({U10H_data})
+	.clk(clkm_20MHZ),
+	.n_cs(1'b0), 
+	.q({U10H_data})
 );
 
 reg [3:0] spbitdata_10;
@@ -1099,6 +1080,7 @@ jt49_bus AY_12F(
     .B(ay12F_braw),
     .C(ay12F_craw),
     .sample(AY12F_sample)
+
 );
 
 jt49_bus AY_12V(
@@ -1151,8 +1133,8 @@ wire [7:0] bg_gfx4H_out;
 
 //------------------------------------------------- MiSTer data write selector -------------------------------------------------//
 //Instantiate MiSTer data write selector to generate write enables for loading ROMs into the FPGA's BRAM
-//wire ep1_cs_i, ep2_cs_i, ep3_cs_i, ep4_cs_i, ep5_cs_i, ep6_cs_i, ep7_cs_i, ep8_cs_i;
-
+wire ep1_cs_i, ep2_cs_i, ep3_cs_i, ep4_cs_i, ep5_cs_i, ep6_cs_i, ep7_cs_i, ep8_cs_i;
+//
 //selector DLSEL
 //(
 //	.ioctl_addr(dn_addr),
@@ -1166,83 +1148,57 @@ wire [7:0] bg_gfx4H_out;
 //	.ep8_cs(ep8_cs_i)
 //);
 
-//eprom_1 bg_gfx4B
-//(
-//	.ADDR({BG4BaddrH[7:0],BG4BaddrL[6:2]}),//
-//	.CLK(clkm_20MHZ),		//
-//	.CEN(BG4BaddrL[7]),
-//	.DATA(bg_gfx4B_out),	//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),	//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep1_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_01 exerion_01(
-	.clk(clkm_20MHZ),
-	.addr({BG4BaddrH[7:0],BG4BaddrL[6:2]}),
-	.data(bg_gfx4B_out)
+eprom_1 bg_gfx4B
+(
+	.ADDR({BG4BaddrH[7:0],BG4BaddrL[6:2]}),//
+	.CLK(clkm_20MHZ),		//
+	.CEN(BG4BaddrL[7]),
+	.DATA(bg_gfx4B_out),	//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),	//
+	.DATA_IN(dn_data),
+	.CS_DL(ep1_cs_i),
+	.WR(dn_wr)
 );
 
-//eprom_2 bg_gfx4D
-//(
-//	.ADDR({BG4DaddrH[7:0],BG4DaddrL[6:2]}),//
-//	.CLK(clkm_20MHZ),//
-//	.CEN(BG4DaddrL[7]),	
-//	.DATA(bg_gfx4D_out),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep2_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_02 exerion_02(
-	.clk(clkm_20MHZ),
-	.addr({BG4DaddrH[7:0],BG4DaddrL[6:2]}),
-	.data(bg_gfx4D_out)
+eprom_2 bg_gfx4D
+(
+	.ADDR({BG4DaddrH[7:0],BG4DaddrL[6:2]}),//
+	.CLK(clkm_20MHZ),//
+	.CEN(BG4DaddrL[7]),	
+	.DATA(bg_gfx4D_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep2_cs_i),
+	.WR(dn_wr)
 );
 
-//eprom_3 bg_gfx4E
-//(
-//	.ADDR({BG4EaddrH[7:0],BG4EaddrL[6:2]}),//
-//	.CLK(clkm_20MHZ),//
-//	.CEN(BG4EaddrL[7]),	//!BG4EaddrL[7]
-//	.DATA(bg_gfx4E_out),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep3_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_03 exerion_03(
-	.clk(clkm_20MHZ),
-	.addr({BG4EaddrH[7:0],BG4EaddrL[6:2]}),
-	.data(bg_gfx4E_out)
+eprom_3 bg_gfx4E
+(
+	.ADDR({BG4EaddrH[7:0],BG4EaddrL[6:2]}),//
+	.CLK(clkm_20MHZ),//
+	.CEN(BG4EaddrL[7]),	//!BG4EaddrL[7]
+	.DATA(bg_gfx4E_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep3_cs_i),
+	.WR(dn_wr)
 );
 
-//eprom_4 bg_gfx4H
-//(
-//	.ADDR({BG4HaddrH[7:0],BG4HaddrL[6:2]}),//
-//	.CLK(clkm_20MHZ),//
-//	.CEN(BG4HaddrL[7]),	 //
-//	.DATA(bg_gfx4H_out),//
-//	.ADDR_DL(dn_addr),
-//	.CLK_DL(clkm_20MHZ),//
-//	.DATA_IN(dn_data),
-//	.CS_DL(ep4_cs_i),
-//	.WR(dn_wr)
-//);
-
-exerion_04 exerion_04(
-	.clk(clkm_20MHZ),
-	.addr({BG4HaddrH[7:0],BG4HaddrL[6:2]}),
-	.data(bg_gfx4H_out)
+eprom_4 bg_gfx4H
+(
+	.ADDR({BG4HaddrH[7:0],BG4HaddrL[6:2]}),//
+	.CLK(clkm_20MHZ),//
+	.CEN(BG4HaddrL[7]),	 //
+	.DATA(bg_gfx4H_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(clkm_20MHZ),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep4_cs_i),
+	.WR(dn_wr)
 );
-
-
 
 reg [7:0] U5B_out,U5D_out,U5E_out,U5H_out;
 
@@ -1466,6 +1422,7 @@ m2511_ram_4 sprites_11(
 	.nWE(sp11_WE),
 	.q(spram_out_11)
 );
+
 
 //  ****** FINAL 7-BIT ANALOGUE OUTPUT *******
 assign BLUE =  {clrB1,clrB0,1'b0}; //rBLUE;

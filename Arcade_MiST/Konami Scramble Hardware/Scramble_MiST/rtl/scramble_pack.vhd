@@ -16,5 +16,5 @@ package scramble_pack is
     constant I_HWSEL_MARS     : integer := 10; -- Mars
     constant I_HWSEL_TURTLES  : integer := 11; -- Turtles
     constant I_HWSEL_MIMONKEY : integer := 12; -- Mighty Monkey (use mimonscr bootleg ROMs to avoid writing the ROM decryptor)
-
+    constant I_HWSEL_MRKOUGAR : integer := 13; -- Mr Kougar, Troopy
 end;

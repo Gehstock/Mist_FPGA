@@ -23,8 +23,8 @@
 		<part name="8a.bin" crc="0e803777"/>
 		<part name="c4.a8"  crc="c7f5a247"/>
 		<!-- gfx -->
-		<part name="4h.bin" crc="67dd6c19"/>
 		<part name="5h.bin" crc="50fba1d4"/>
+		<part name="4h.bin" crc="67dd6c19"/>
 		<!-- prom -->
 		<part name="clr.j7" crc="ee1cf1d5"/>
 		<part name="clr.g5" crc="bcb1e2e3"/>

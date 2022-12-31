@@ -203,7 +203,11 @@ always @(*) begin
 			hwsel = 12;
 			input2[5] = status[9]; // infinite lives
 		end
-
+		7'h13: // MRKOUGAR
+		begin
+			hwsel = 13;
+//			input2[5] = status[9]; // infinite lives
+		end
 		default:
 		begin
 			hwsel = 0;

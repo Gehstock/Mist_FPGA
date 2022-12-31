@@ -1,0 +1,34 @@
+set_global_assignment -name VHDL_FILE rtl/cpu/T80se.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
+
+set_global_assignment -name VHDL_FILE rtl/namco/namco_03xx/n03xx.vhd
+set_global_assignment -name VHDL_FILE rtl/namco/namco_05xx/n05xx.vhd
+set_global_assignment -name VHDL_FILE rtl/namco/namco_07xx/c07_syncgen.vhd
+set_global_assignment -name VHDL_FILE rtl/namco/namco_07xx/c07_syncgen_pack.vhd
+
+set_global_assignment -name VHDL_FILE rtl/luts/rom_2r.vhd
+set_global_assignment -name VHDL_FILE rtl/luts/rom_4m.vhd
+set_global_assignment -name VHDL_FILE rtl/luts/rom_6b.vhd
+set_global_assignment -name VHDL_FILE rtl/luts/rom_7h.vhd
+
+set_global_assignment -name VHDL_FILE rtl/mb88.vhd
+set_global_assignment -name VHDL_FILE rtl/namco_06xx.vhd
+set_global_assignment -name VHDL_FILE rtl/sound_seq.vhd
+set_global_assignment -name VHDL_FILE rtl/sound_samples.vhd
+set_global_assignment -name VHDL_FILE rtl/sound_lpf.vhd
+set_global_assignment -name VHDL_FILE rtl/rgb.vhd
+set_global_assignment -name VHDL_FILE rtl/bg_palette.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/sound_machine.vhd
+set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
+set_global_assignment -name VHDL_FILE rtl/bosco_video_render.vhd
+set_global_assignment -name VHDL_FILE rtl/bosconian.vhd
+
+set_global_assignment -name VERILOG_FILE "rtl/hiscore.v"
+set_global_assignment -name VERILOG_FILE "rtl/pause.v"
+
+set_global_assignment -name SYSTEMVERILOG_FILE "Arcade-Bosconian.sv"

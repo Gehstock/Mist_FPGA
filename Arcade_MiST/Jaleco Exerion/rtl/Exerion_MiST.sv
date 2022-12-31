@@ -161,7 +161,7 @@ always @(posedge clock_40) begin
 end
 
 
-Exerion_top Exerion_top_inst(
+Exerion_top Exerion_top(
 	.clkm_20MHZ(clock_20),
 	.clkaudio(clock_6),
 	.RED(r),
@@ -172,16 +172,15 @@ Exerion_top Exerion_top_inst(
 	.H_BLANK(hb),
 	.V_BLANK(vb),
 	.RESET_n(~reset),
-	.pause(0),
 	.CONTROLS(~{m_coin1,m_two_players,m_one_player,m_fireB,m_fireA,m_up,m_down,m_left,m_right}),
 	.DIP1(dip_sw[15:8]&8'h7F), //dip switch #1 - filter out table option
 	.DIP2(dip_sw[23:16]),
 	.audio_l(audio_l),
 	.audio_r(audio_r),
-	.cpu_rom_addr(cpu_rom_addr),
-	.cpu_rom_do(cpu_rom_addr[0] ? cpu_rom_do[15:8] : cpu_rom_do[7:0]),
-	.spr_rom_addr(spr_rom_addr),
-	.spr_rom_do(spr_rom_addr[0] ? spr_rom_do[15:8] : spr_rom_do[7:0]),
+//	.cpu_rom_addr(cpu_rom_addr),
+//	.cpu_rom_do(cpu_rom_addr[0] ? cpu_rom_do[15:8] : cpu_rom_do[7:0]),
+//	.spr_rom_addr(spr_rom_addr),
+//	.spr_rom_do(spr_rom_addr[0] ? spr_rom_do[15:8] : spr_rom_do[7:0]),
 	.dn_addr(ioctl_addr),
 	.dn_data(ioctl_dout),
 	.dn_wr(ioctl_wr && !ioctl_index) //& rom_downl
