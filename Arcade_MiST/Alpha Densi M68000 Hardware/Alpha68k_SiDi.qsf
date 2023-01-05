@@ -1,0 +1,225 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2013 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 64-Bit
+# Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
+# Date created = 05:08:48  November 15, 2017
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		Arcade-Scramble_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+
+# Project-Wide Assignments
+# ========================
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.2
+set_global_assignment -name LAST_QUARTUS_VERSION "17.1.0 Lite Edition"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "01:53:30  APRIL 20, 2017"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+
+# Pin & Location Assignments
+# ==========================
+set_location_assignment PIN_G1 -to LED
+set_location_assignment PIN_E1 -to CLOCK_27
+set_location_assignment PIN_P16 -to VGA_R[5]
+set_location_assignment PIN_P15 -to VGA_R[4]
+set_location_assignment PIN_R16 -to VGA_R[3]
+set_location_assignment PIN_R14 -to VGA_R[2]
+set_location_assignment PIN_T15 -to VGA_R[1]
+set_location_assignment PIN_T14 -to VGA_R[0]
+set_location_assignment PIN_J16 -to VGA_B[5]
+set_location_assignment PIN_J15 -to VGA_B[4]
+set_location_assignment PIN_J14 -to VGA_B[3]
+set_location_assignment PIN_K16 -to VGA_B[2]
+set_location_assignment PIN_K15 -to VGA_B[1]
+set_location_assignment PIN_J13 -to VGA_B[0]
+set_location_assignment PIN_F16 -to VGA_G[5]
+set_location_assignment PIN_F15 -to VGA_G[4]
+set_location_assignment PIN_L16 -to VGA_G[3]
+set_location_assignment PIN_L15 -to VGA_G[2]
+set_location_assignment PIN_N15 -to VGA_G[1]
+set_location_assignment PIN_N16 -to VGA_G[0]
+set_location_assignment PIN_T10 -to VGA_VS
+set_location_assignment PIN_T11 -to VGA_HS
+set_location_assignment PIN_T12 -to AUDIO_L
+set_location_assignment PIN_T13 -to AUDIO_R
+set_location_assignment PIN_T2 -to SPI_DO
+set_location_assignment PIN_R1 -to SPI_DI
+set_location_assignment PIN_T3 -to SPI_SCK
+set_location_assignment PIN_T4 -to SPI_SS2
+set_location_assignment PIN_G15 -to SPI_SS3
+set_location_assignment PIN_G16 -to SPI_SS4
+set_location_assignment PIN_H2 -to CONF_DATA0
+set_location_assignment PIN_B14 -to SDRAM_A[0]
+set_location_assignment PIN_C14 -to SDRAM_A[1]
+set_location_assignment PIN_C15 -to SDRAM_A[2]
+set_location_assignment PIN_C16 -to SDRAM_A[3]
+set_location_assignment PIN_B16 -to SDRAM_A[4]
+set_location_assignment PIN_A15 -to SDRAM_A[5]
+set_location_assignment PIN_A14 -to SDRAM_A[6]
+set_location_assignment PIN_A13 -to SDRAM_A[7]
+set_location_assignment PIN_A12 -to SDRAM_A[8]
+set_location_assignment PIN_D16 -to SDRAM_A[9]
+set_location_assignment PIN_B13 -to SDRAM_A[10]
+set_location_assignment PIN_D15 -to SDRAM_A[11]
+set_location_assignment PIN_D14 -to SDRAM_A[12]
+set_location_assignment PIN_C3 -to SDRAM_DQ[0]
+set_location_assignment PIN_C2 -to SDRAM_DQ[1]
+set_location_assignment PIN_A4 -to SDRAM_DQ[2]
+set_location_assignment PIN_B4 -to SDRAM_DQ[3]
+set_location_assignment PIN_A6 -to SDRAM_DQ[4]
+set_location_assignment PIN_D6 -to SDRAM_DQ[5]
+set_location_assignment PIN_A7 -to SDRAM_DQ[6]
+set_location_assignment PIN_B7 -to SDRAM_DQ[7]
+set_location_assignment PIN_E6 -to SDRAM_DQ[8]
+set_location_assignment PIN_C6 -to SDRAM_DQ[9]
+set_location_assignment PIN_B6 -to SDRAM_DQ[10]
+set_location_assignment PIN_B5 -to SDRAM_DQ[11]
+set_location_assignment PIN_A5 -to SDRAM_DQ[12]
+set_location_assignment PIN_B3 -to SDRAM_DQ[13]
+set_location_assignment PIN_A3 -to SDRAM_DQ[14]
+set_location_assignment PIN_A2 -to SDRAM_DQ[15]
+set_location_assignment PIN_A11 -to SDRAM_BA[0]
+set_location_assignment PIN_B12 -to SDRAM_BA[1]
+set_location_assignment PIN_C9 -to SDRAM_DQMH
+set_location_assignment PIN_C8 -to SDRAM_DQML
+set_location_assignment PIN_A10 -to SDRAM_nRAS
+set_location_assignment PIN_B10 -to SDRAM_nCAS
+set_location_assignment PIN_D8 -to SDRAM_nWE
+set_location_assignment PIN_B11 -to SDRAM_nCS
+set_location_assignment PIN_C11 -to SDRAM_CKE
+set_location_assignment PIN_R4 -to SDRAM_CLK
+set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
+
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+
+# Analysis & Synthesis Assignments
+# ================================
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY Alpha68k_MiST
+
+# Fitter Assignments
+# ==================
+set_global_assignment -name DEVICE EP4CE22F17C8
+set_global_assignment -name FAMILY "Cyclone IV"
+
+# Assembler Assignments
+# =====================
+set_global_assignment -name GENERATE_RBF_FILE ON
+
+# Power Estimation Assignments
+# ============================
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+
+# ----------------------
+# start ENTITY(Alpha68k)
+
+	# start DESIGN_PARTITION(Top)
+	# ---------------------------
+
+		# Incremental Compilation Assignments
+		# ===================================
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+	# end DESIGN_PARTITION(Top)
+	# -------------------------
+
+# end ENTITY(Alpha68k)
+# --------------------
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+set_global_assignment -name ENABLE_NCE_PIN OFF
+set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
+set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/cpu.stp
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION ON
+set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
+set_global_assignment -name FORCE_SYNCH_CLEAR ON
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Alpha68k_MiST.sv
+set_global_assignment -name QIP_FILE rtl/pll_mist.qip
+set_global_assignment -name VERILOG_FILE rtl/video_timing.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/Alpha68k.sv
+set_global_assignment -name VHDL_FILE rtl/math.vhd
+set_global_assignment -name VHDL_FILE rtl/dual_port_ram.vhd
+set_global_assignment -name VERILOG_FILE rtl/chip_select.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/68000/FX68k/fx68k.qip
+set_global_assignment -name QIP_FILE ../../common/Sound/JT12/hdl/jt03.qip
+set_global_assignment -name QIP_FILE ../../common/Sound/jtopl/jt2413.qip
+set_global_assignment -name QIP_FILE ../../common/Sound/JT49/jt49.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name AUTO_SHIFT_REGISTER_RECOGNITION OFF
+set_global_assignment -name CDF_FILE output_files/Alpha68k.cdf
+set_global_assignment -name SIGNALTAP_FILE output_files/cpu.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/cpu2.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/fg.stp
+set_global_assignment -name SIGNALTAP_FILE output_files/mcu.stp
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
