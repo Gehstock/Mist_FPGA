@@ -289,7 +289,7 @@ mist_video: work.mist.mist_video
 		ypbpr       => ypbpr,
 		no_csync    => no_csync,
 		rotate      => "00",
-		ce_divider  => '1',
+		ce_divider  => "001",
 
 		SPI_SCK     => SPI_SCK,
 		SPI_SS3     => SPI_SS3,
