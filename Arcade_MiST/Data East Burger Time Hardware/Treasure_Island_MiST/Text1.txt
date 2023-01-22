@@ -1,0 +1,32 @@
+void btime_state::btime_map(address_map &map)
+{
+	map(0x0000, 0x07ff).ram().share("rambase");
+	map(0x0c00, 0x0c0f).ram().w(m_palette, FUNC(palette_device::write8)).share("palette");
+	map(0x1000, 0x13ff).ram().share("videoram");
+	map(0x1400, 0x17ff).ram().share("colorram");
+	map(0x1800, 0x1bff).rw(FUNC(btime_state::btime_mirrorvideoram_r), FUNC(btime_state::btime_mirrorvideoram_w));
+	map(0x1c00, 0x1fff).rw(FUNC(btime_state::btime_mirrorcolorram_r), FUNC(btime_state::btime_mirrorcolorram_w));
+	map(0x4000, 0x4000).portr("P1").nopw();
+	map(0x4001, 0x4001).portr("P2");
+	map(0x4002, 0x4002).portr("SYSTEM").w(FUNC(btime_state::btime_video_control_w));
+	map(0x4003, 0x4003).portr("DSW1").w(m_soundlatch, FUNC(generic_latch_8_device::write));
+	map(0x4004, 0x4004).portr("DSW2").w(FUNC(btime_state::bnj_scroll1_w));
+	map(0xb000, 0xffff).rom();
+}
+
+void btime_state::tisland_map(address_map &map)
+{
+	map(0x0000, 0x07ff).ram().share("rambase");
+	map(0x0c00, 0x0c0f).ram().w(m_palette, FUNC(palette_device::write8)).share("palette");
+	map(0x1000, 0x13ff).ram().share("videoram");
+	map(0x1400, 0x17ff).ram().share("colorram");
+	map(0x1800, 0x1bff).rw(FUNC(btime_state::btime_mirrorvideoram_r), FUNC(btime_state::btime_mirrorvideoram_w));
+	map(0x1c00, 0x1fff).rw(FUNC(btime_state::btime_mirrorcolorram_r), FUNC(btime_state::btime_mirrorcolorram_w));
+	map(0x4000, 0x4000).portr("P1").nopw();
+	map(0x4001, 0x4001).portr("P2");
+	map(0x4002, 0x4002).portr("SYSTEM").w(FUNC(btime_state::btime_video_control_w));
+	map(0x4003, 0x4003).portr("DSW1").w(m_soundlatch, FUNC(generic_latch_8_device::write));
+	map(0x4004, 0x4004).portr("DSW2").w(FUNC(btime_state::bnj_scroll1_w));
+	map(0x4005, 0x4005).w(FUNC(btime_state::bnj_scroll2_w));
+	map(0x9000, 0xffff).rom();
+}
