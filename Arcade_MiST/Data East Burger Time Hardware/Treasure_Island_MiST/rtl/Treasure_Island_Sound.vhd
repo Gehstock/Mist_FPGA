@@ -352,15 +352,15 @@ port map(
 );
 
 -- program rom
-program_rom: entity work.sound_prog
-port map(
- clk  => clock_12n,
- addr => cpu_addr(11 downto 0),
- data => prog_rom_do
-);
+--program_rom: entity work.sound_prog
+--port map(
+-- clk  => clock_12n,
+-- addr => cpu_addr(11 downto 0),
+-- data => prog_rom_do
+--);
 
---snd_rom_addr <= cpu_addr(11 downto 0);
---prog_rom_do <= snd_rom_do;	
+snd_rom_addr <= cpu_addr(11 downto 0);
+prog_rom_do <= snd_rom_do;	
 
 -- AY-3-8910 #1
 ay_3_8910_1 : entity work.YM2149

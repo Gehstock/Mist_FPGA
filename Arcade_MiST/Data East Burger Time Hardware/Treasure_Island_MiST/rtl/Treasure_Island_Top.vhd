@@ -277,7 +277,7 @@ wram_cs     <= '1' when cpu_addr(15 downto 11) = "00000"         else '0'; -- wo
 io_cs       <= '1' when cpu_addr(15 downto  3) = "0100000000000" else '0'; -- player/dip_sw   4000-4007 (4004) 
 fg_ram_cs   <= '1' when cpu_addr(15 downto 12) = "0001"          else '0'; -- foreground ram  1000-1fff
 palette_cs  <= '1' when cpu_addr(15 downto  4) = "000011000000"  else '0'; -- palette ram     0c00-0c0f
-prog_rom_cs <= '1' when cpu_addr(15) = '1'           else '0'; -- program rom     9000-ffff
+prog_rom_cs <= '1' when cpu_addr(15) = '1' else '0'; 								-- program rom     9000-ffff
 
 -- write enable
 wram_we        <= '1' when wram_cs = '1'   and cpu_rw_n = '0' and cpu_ena = '1' else '0'; -- 0000-07ff
@@ -453,7 +453,8 @@ end process;
 bg_scan_hcnt <= (hcnt_flip) + (scroll1(1 downto 0)&scroll2) + "0011110010" when cocktail_flip = '0' else
                 (hcnt_flip) + (scroll1(1 downto 0)&scroll2) + "1100000101";
 
-bg_map_addr <= scroll1(3) & scroll1(2) & bg_scan_hcnt(9 downto 4) & vcnt_flip(7 downto 4);
+bg_map_addr <= scroll1(2) & bg_scan_hcnt(9 downto 4) & vcnt_flip(8 downto 4);--todo
+--bg_map_addr <= scroll1(2) & bg_scan_hcnt(9 downto 4) & vcnt_flip(7 downto 4);
 
 -- manage background graphics rom address
 process (clock_12,clock_6) 

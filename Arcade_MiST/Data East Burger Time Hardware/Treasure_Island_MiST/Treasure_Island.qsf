@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 09:56:31  May 18, 2021
+# Date created = 13:12:40  January 23, 2023
 #
 # -------------------------------------------------------------------------- #
 #
@@ -47,10 +47,9 @@ set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Treasure_Island.sv
 set_global_assignment -name VHDL_FILE rtl/Treasure_Island_Top.vhd
 set_global_assignment -name VHDL_FILE rtl/Treasure_Island_Sound.vhd
-set_global_assignment -name VERILOG_FILE rtl/keyboard.v
 set_global_assignment -name VHDL_FILE rtl/gen_ram.vhd
-set_global_assignment -name VHDL_FILE rtl/Roms/prog.vhd
-set_global_assignment -name VHDL_FILE rtl/Roms/sound_prog.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_global_assignment -name VHDL_FILE rtl/Roms/bg_map.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/fg_sp_graphx_1.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/fg_sp_graphx_2.vhd
@@ -58,11 +57,10 @@ set_global_assignment -name VHDL_FILE rtl/Roms/fg_sp_graphx_3.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/bg_graphx_1.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/bg_graphx_2.vhd
 set_global_assignment -name VHDL_FILE rtl/Roms/bg_graphx_3.vhd
-set_global_assignment -name QIP_FILE ../../../Mist_FPGA/common/CPU/T65/T65.qip
-set_global_assignment -name QIP_FILE ../../../Mist_FPGA/common/mist/mist.qip
-set_global_assignment -name VHDL_FILE ../../../Mist_FPGA/common/Sound/ym2149/YM2149.vhd
-set_global_assignment -name VHDL_FILE ../../../Mist_FPGA/common/Sound/ym2149/vol_table_array.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name QIP_FILE ../../../common/CPU/T65/T65.qip
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -205,6 +203,4 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 # end ENTITY(Treasure_Island)
 # ---------------------------
-set_global_assignment -name TEXT_FILE Text1.txt
-set_global_assignment -name VERILOG_FILE rtl/pll.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

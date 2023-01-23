@@ -120,7 +120,7 @@ sdram sdram(
 	
 	.cpu1_addr     ( ioctl_downl ? 16'hffff : {2'b00, prg_rom_addr[14:1]} ),
 	.cpu1_q        ( prg_rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : {snd_rom_addr[11:1] + 16'h8000} ),
+	.cpu2_addr     ( ioctl_downl ? 16'hffff : {snd_rom_addr[11:1] + 16'h4000} ),
 	.cpu2_q        ( snd_rom_do ),
 
 	// port2 for graphics
