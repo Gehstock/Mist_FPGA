@@ -137,7 +137,7 @@ cpu_irq <= pia_irqa or pia_irqb;
 audio_out <= pia_pa_out(7 downto 0)&pia_pb_out(7 downto 6);
 pia_pb_in(5 downto 0) <= "00"&input(4 downto 1); -- stat1-stat0, sr3-sr0
 pia_ca1_in <= not input(0); -- sirq
-pia_pa_in <= (others => '0');
+pia_pa_in <= pia_pa_out;
 pia_cb1_in <= '0'; -- spare
 
 end rtl;

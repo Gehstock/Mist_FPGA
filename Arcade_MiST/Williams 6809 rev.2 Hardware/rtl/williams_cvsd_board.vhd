@@ -172,7 +172,8 @@ end component mc6809is;
 -- signal pia_pa_o   : std_logic_vector( 7 downto 0);
  signal pia_irqa   : std_logic;
  signal pia_irqb   : std_logic;
- 
+ signal pia_a_o    : std_logic_vector( 7 downto 0);
+
  signal ym2151_irq_n  : std_logic := '0';
  signal ym2151_cs_n   : std_logic;
  signal ym2151_do     : std_logic_vector( 7 downto 0);
@@ -404,8 +405,8 @@ port map
 	data_out  	=> pia_do,
 	irqa      	=> pia_irqa,            -- active high
 	irqb      	=> pia_irqb,            -- active high
-	pa_i      	=> x"00",
-	pa_o        => pia_audio,
+	pa_i      	=> pia_a_o,
+	pa_o        => pia_a_o,
 	pa_oe       => open,
 	ca1       	=> ym2151_irq_n,
 	ca2_i      	=> '0',
@@ -419,6 +420,8 @@ port map
 	cb2_o       => open,
 	cb2_oe      => open
 );
+
+pia_audio <= pia_a_o;
 
 -- CVSD speech decoder	
 cvsd : entity work.HC55564	
