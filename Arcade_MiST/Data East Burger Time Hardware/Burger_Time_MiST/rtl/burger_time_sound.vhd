@@ -29,7 +29,7 @@ use ieee.std_logic_1164.ALL;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity Treasure_Island_Sound is
+entity burger_time_sound is
 port
 (
 	clock_12     : in std_logic;
@@ -41,12 +41,12 @@ port
 
 	audio_out     : out std_logic_vector(10 downto 0);
 	snd_rom_addr	: out std_logic_vector(11 downto 0);
-	snd_rom_do     : in std_logic_vector(7 downto 0);			
+	snd_rom_do     : in std_logic_vector(7 downto 0);
 	dbg_cpu_addr: out std_logic_vector(15 downto 0)
   );
-end Treasure_Island_Sound;
+end burger_time_sound;
 
-architecture syn of Treasure_Island_Sound is
+architecture syn of burger_time_sound is
 
   -- clocks, reset
   signal clock_12n      : std_logic;
