@@ -70,8 +70,8 @@ pll pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire [31:0] joystick_0;
+wire [31:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
@@ -190,12 +190,12 @@ Jackal Jackal(
 	.clk_49m(clock_49), 
 	.coins({~m_coin2,~m_coin1}),
 	.btn_start({~m_two_players,~m_one_player}),
-	.p1_joystick({~m_down, ~m_up, ~m_right, ~m_left}),
+	.p1_joystick({~m_down1, ~m_up1, ~m_right1, ~m_left1}),
 	.p2_joystick({~m_down2, ~m_up2, ~m_right2, ~m_left2}),
 	.p1_rotary(~p1_rotary),
 	.p2_rotary(~p2_rotary),
-	.p1_buttons({~m_fireB, ~m_fireA}),
-	.p2_buttons({~m_fire2B, ~m_fire2A}),
+	.p1_buttons({~m_fire1[1], ~m_fire1[0]}),
+	.p2_buttons({~m_fire2[1], ~m_fire2[0]}),
 	.btn_service(~service),
 	.dipsw(dip_sw),
 	.is_bootleg(is_bootleg),
@@ -298,10 +298,10 @@ dac #(.C_bits(16))dac_r(
 reg [22:0] rotary_div = 23'd0;
 reg [7:0] rotary1 = 8'h01;
 reg [7:0] rotary2 = 8'h01;
-wire m_rotary1_l = m_fireC;
-wire m_rotary1_r = m_fireD;
-wire m_rotary2_l = m_fire2C;
-wire m_rotary2_r = m_fire2D;
+wire m_rotary1_l = m_fire1[2] | m_left1B | m_down1B;
+wire m_rotary1_r = m_fire1[3] | m_right1B | m_up1B;
+wire m_rotary2_l = m_fire2[2] | m_left2B | m_down2B;
+wire m_rotary2_r = m_fire2[3] | m_right2B | m_up2B;
 
 wire rotary_en = rotary_speed ? !rotary_div[21:0] : !rotary_div;
 always_ff @(posedge clock_49) begin
@@ -337,9 +337,10 @@ end
 wire [7:0] p1_rotary = (is_bootleg == 2'b01) ? 8'hFF : rotary1;
 wire [7:0] p2_rotary = (is_bootleg == 2'b01) ? 8'hFF : rotary2;
 
-wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
-wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
+wire m_up1, m_down1, m_left1, m_right1, m_up1B, m_down1B, m_left1B, m_right1B;
+wire m_up2, m_down2, m_left2, m_right2, m_up2B, m_down2B, m_left2B, m_right2B;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
+wire [11:0] m_fire1, m_fire2;
 
 arcade_inputs inputs (
 	.clk         ( clock_49    ),
@@ -353,8 +354,8 @@ arcade_inputs inputs (
 	.joyswap     ( joyswap     ),
 	.oneplayer   ( 1'b0   		),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
-	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
-	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
+	.player1     ( {m_up1B, m_down1B, m_left1B, m_right1B, m_fire1, m_up1, m_down1, m_left1, m_right1} ),
+	.player2     ( {m_up2B, m_down2B, m_left2B, m_right2B, m_fire2, m_up2, m_down2, m_left2, m_right2} )
 );
 
 endmodule
