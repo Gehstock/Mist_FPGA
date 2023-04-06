@@ -12,19 +12,18 @@
 
     You should have received a copy of the GNU General Public License
     along with JT51.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
     Date: 27-10-2016
     */
 
-`timescale 1ns / 1ps
 
 module jt51(
     input               rst,    // reset
     input               clk,    // main clock
-    input               cen,    // clock enable
-    input               cen_p1, // clock enable at half the speed
+    (* direct_enable *) input cen,    // clock enable
+    (* direct_enable *) input cen_p1, // clock enable at half the speed
     input               cs_n,   // chip select
     input               wr_n,   // write
     input               a0,
@@ -40,14 +39,8 @@ module jt51(
     output  signed  [15:0] right,
     // Full resolution output
     output  signed  [15:0] xleft,
-    output  signed  [15:0] xright,
-    // unsigned outputs for sigma delta converters, full resolution
-    output  [15:0] dacleft,
-    output  [15:0] dacright
+    output  signed  [15:0] xright
 );
-
-assign dacleft  = { ~xleft [15],  xleft[14:0] };
-assign dacright = { ~xright[15], xright[14:0] };
 
 // Timers
 wire [9:0]  value_A;
@@ -56,9 +49,10 @@ wire        load_A, load_B;
 wire        enable_irq_A, enable_irq_B;
 wire        clr_flag_A, clr_flag_B;
 wire        flag_A, flag_B, overflow_A;
-wire        zero;
+wire        zero, half;
+wire [4:0]  cycles;
 
-jt51_timers u_timers( 
+jt51_timers u_timers(
     .clk        ( clk           ),
     .cen        ( cen_p1        ),
     .rst        ( rst           ),
@@ -77,7 +71,7 @@ jt51_timers u_timers(
     .irq_n      ( irq_n         )
 );
 
-/*verilator tracing_off*/
+/*verilator tracing_on*/
 
 `ifndef JT51_ONLYTIMERS
 `define YM_TIMER_CTRL 8'h14
@@ -102,36 +96,50 @@ wire    [3:0]   d1l_I;
 wire    [3:0]   rrate_II;
 
 wire    [1:0]   cur_op;
-assign  sample =zero;
 wire            keyon_II;
 
 wire    [7:0]   lfo_freq;
 wire    [1:0]   lfo_w;
-wire            lfo_rst;
-wire    [6:0]   am;
+wire            lfo_up;
+wire    [7:0]   am;
 wire    [7:0]   pm;
 wire    [6:0]   amd, pmd;
+wire    [7:0]   test_mode;
+wire            noise;
 
 wire m1_enters, m2_enters, c1_enters, c2_enters;
 wire use_prevprev1,use_internal_x,use_internal_y, use_prev2,use_prev1;
 
+assign  sample = zero & cen_p1; // single strobe
+
 jt51_lfo u_lfo(
     .rst        ( rst       ),
     .clk        ( clk       ),
-    .cen        ( cen       ),  // should it be cen_p1?
-    .zero       ( zero      ),
-    .lfo_rst    ( lfo_rst   ),
+    .cen        ( cen_p1    ),
+    .cycles     ( cycles    ),
+
+    // Configuration
     .lfo_freq   ( lfo_freq  ),
     .lfo_w      ( lfo_w     ),
     .lfo_amd    ( amd       ),
     .lfo_pmd    ( pmd       ),
+    .lfo_up     ( lfo_up    ),
+    .noise      ( noise     ),
+
+    // Test
+    .test       ( test_mode ),
+    .lfo_clk    (           ),
+
     .am         ( am        ),
-    .pm_u       ( pm        )
+    .pm         ( pm        )
 );
 
 wire    [ 4:0]  keycode_III;
 wire    [ 9:0]  ph_X;
 wire            pg_rst_III;
+
+/*verilator tracing_on*/
+
 
 jt51_pg u_pg(
     .rst        ( rst       ),
@@ -163,7 +171,7 @@ wire [9:0]  eg_XI;
 jt51_eg u_eg(
     `ifdef TEST_SUPPORT
     .test_eg    ( test_eg   ),
-    `endif  
+    `endif
     .rst        ( rst       ),
     .clk        ( clk       ),
     .cen        ( cen_p1    ),
@@ -187,12 +195,13 @@ jt51_eg u_eg(
     .eg_XI      ( eg_XI )
 );
 
+/*verilator tracing_off*/
 wire signed [13:0] op_out;
 
 jt51_op u_op(
     `ifdef TEST_SUPPORT
     .test_eg        ( test_eg           ),
-    .test_op0       ( test_op0          ),  
+    .test_op0       ( test_op0          ),
     `endif
     .rst            ( rst               ),
     .clk            ( clk               ),
@@ -210,7 +219,7 @@ jt51_op u_op(
     .use_internal_x ( use_internal_x    ),
     .use_internal_y ( use_internal_y    ),
     .use_prev2      ( use_prev2         ),
-    .use_prev1      ( use_prev1         ),  
+    .use_prev1      ( use_prev1         ),
     .test_214       ( 1'b0              ),
     `ifdef SIMULATION
     .zero           ( zero              ),
@@ -219,18 +228,20 @@ jt51_op u_op(
     .op_XVII        ( op_out            )
 );
 
-wire    [4:0] nfrq;
-wire    [10:0] noise_out;
-wire          ne, op31_acc, op31_no;
+wire [ 4:0] nfrq;
+wire [11:0] noise_mix;
+wire        ne, op31_acc, op31_no;
 
 jt51_noise u_noise(
     .rst    ( rst       ),
     .clk    ( clk       ),
     .cen    ( cen_p1    ),
-    .nfrq   ( nfrq      ),  
+    .cycles ( cycles    ),
+    .nfrq   ( nfrq      ),
     .eg     ( eg_XI     ),
-    .out    ( noise_out ),
-    .op31_no( op31_no   )
+    .op31_no( op31_no   ),
+    .out    ( noise     ),
+    .mix    ( noise_mix )
 );
 
 jt51_acc u_acc(
@@ -246,7 +257,7 @@ jt51_acc u_acc(
     .con_I      ( con_I         ),
     .op_out     ( op_out        ),
     .ne         ( ne            ),
-    .noise      ( noise_out     ),
+    .noise_mix  ( noise_mix     ),
     .left       ( left          ),
     .right      ( right         ),
     .xleft      ( xleft         ),
@@ -275,20 +286,21 @@ jt51_mmr u_mmr(
     .din        ( din           ),
     .busy       ( busy          ),
 
+    .test_mode  ( test_mode     ),
     // CT
-    .ct1        ( ct1           ),
+    .ct1        ( ct1           ), // the LFO clock can be outputted via CT1 -not implemented-
     .ct2        ( ct2           ),
     // LFO
     .lfo_freq   ( lfo_freq      ),
     .lfo_w      ( lfo_w         ),
     .lfo_amd    ( amd           ),
     .lfo_pmd    ( pmd           ),
-    .lfo_rst    ( lfo_rst       ),
-    
+    .lfo_up     ( lfo_up        ),
+
     // Noise
     .ne         ( ne            ),
     .nfrq       ( nfrq          ),
-    
+
     // Timers
     .value_A    ( value_A       ),
     .value_B    ( value_B       ),
@@ -297,9 +309,9 @@ jt51_mmr u_mmr(
     .enable_irq_A( enable_irq_A ),
     .enable_irq_B( enable_irq_B ),
     .clr_flag_A ( clr_flag_A    ),
-    .clr_flag_B ( clr_flag_B    ),  
+    .clr_flag_B ( clr_flag_B    ),
     .overflow_A ( overflow_A    ),
-    `ifdef TEST_SUPPORT 
+    `ifdef TEST_SUPPORT
     // Test
     .test_eg    ( test_eg       ),
     .test_op0   ( test_op0      ),
@@ -329,6 +341,8 @@ jt51_mmr u_mmr(
     .op31_no    ( op31_no       ),
     .op31_acc   ( op31_acc      ),
     .zero       ( zero          ),
+    .half       ( half          ),
+    .cycles     ( cycles        ),
     .m1_enters  ( m1_enters     ),
     .m2_enters  ( m2_enters     ),
     .c1_enters  ( c1_enters     ),

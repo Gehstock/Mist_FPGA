@@ -58,8 +58,8 @@ port(
  
  pia_audio    : out std_logic_vector( 7 downto 0);
  speech_out   : out std_logic_vector(15 downto 0);
- ym2151_left  : out unsigned (15 downto 0);
- ym2151_right : out unsigned (15 downto 0);
+ ym2151_left  : out signed (15 downto 0);
+ ym2151_right : out signed (15 downto 0);
 
  snd_rom_addr : buffer std_logic_vector(16 downto 0);
  snd_rom_do   : in  std_logic_vector( 7 downto 0);
@@ -94,10 +94,7 @@ port (
  right : out signed (15 downto 0);
  -- Full resolution output
  xleft  : out signed (15 downto 0);
- xright : out signed (15 downto 0);
- -- unsigned outputs for sigma delta converters, full resolution
- dacleft  : out unsigned (15 downto 0);
- dacright : out unsigned (15 downto 0)
+ xright : out signed (15 downto 0)
 ); end component jt51;
 
 
@@ -488,11 +485,8 @@ port map (
  left   => open,
  right  => open,
  -- Full resolution output
- xleft  => open,
- xright => open,
- -- unsigned outputs for sigma delta converters, full resolution
- dacleft  => ym2151_left,
- dacright => ym2151_right
+ xleft  => ym2151_left,
+ xright => ym2151_right
 );
 
 end struct;

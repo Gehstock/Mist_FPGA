@@ -18,7 +18,6 @@
     Date: 27-10-2016
     */
 
-`timescale 1ns / 1ps
 
 module jt51_reg(
     input           rst,
@@ -43,7 +42,6 @@ module jt51_reg(
     input           csm,
     input           overflow_A,
 
-    output  reg     busy,
     output  [1:0]   rl_I,
     output  [2:0]   fb_II,
     output  [2:0]   con_I,
@@ -68,6 +66,8 @@ module jt51_reg(
 
     // Pipeline order
     output  reg     zero,
+    output  reg     half,
+    output  [4:0]   cycles,
     output  reg     m1_enters,
     output  reg     m2_enters,
     output  reg     c1_enters,
@@ -88,8 +88,8 @@ reg     kon, koff;
 reg [1:0] csm_state;
 reg [4:0] csm_cnt;
 
-wire csm_kon  = csm_state[0];
-wire csm_koff = csm_state[1];
+// wire csm_kon  = csm_state[0];
+// wire csm_koff = csm_state[1];
 
 always @(*) begin
     m1_enters = cur_op == 2'b00;
@@ -98,8 +98,10 @@ always @(*) begin
     c2_enters = cur_op == 2'b11;
 end
 
+`ifdef SIMULATION
 wire up =   up_rl | up_kc | up_kf | up_pms | up_dt1 | up_tl |
             up_ks | up_amsen | up_dt2 | up_d1l | up_keyon;
+`endif
 
 reg [4:0]   cur;
 
@@ -109,6 +111,7 @@ always @(posedge clk) if(cen) begin
 end
 
 assign cur_op = cur[4:3];
+assign cycles = cur;
 
 wire [4:0] req_I   = { op, ch };
 wire [4:0] req_II  = req_I   + 5'd1;
@@ -122,8 +125,8 @@ wire [4:0] req_VII = req_VI  + 5'd1;
 wire    update_op_I     = cur == req_I;
 wire    update_op_II    = cur == req_II;
 wire    update_op_III   = cur == req_III;
-wire    update_op_IV    = cur == req_IV;
-wire    update_op_V     = cur == req_V;
+// wire    update_op_IV    = cur == req_IV;
+// wire    update_op_V     = cur == req_V;
 wire    update_op_VI    = cur == req_VI;
 wire    update_op_VII   = cur == req_VII;
 
@@ -155,12 +158,12 @@ always @(posedge clk, posedge rst) begin : up_counter
     if( rst ) begin
         cur     <= 5'h0;
         zero    <= 1'b0;
-        busy    <= 1'b0;
+        half    <= 1'b0;
     end
     else if(cen) begin
         cur     <= next;
         zero    <= next== 5'd0;
-        if( &cur ) busy <= up && !busy;
+        half    <= next[3:0] == 4'd0;
     end
 end
 
@@ -176,7 +179,7 @@ jt51_kon u_kon (
     .keyon_ch  (keyon_ch  ),
     .cur_op    (cur_op    ),
     .cur_ch    (cur_ch    ),
-    .up_keyon  (up_keyon && busy ),
+    .up_keyon  (up_keyon  ),
     .csm       (csm       ),
     .overflow_A(overflow_A),
     .keyon_II  (keyon_II  )
@@ -252,7 +255,7 @@ jt51_csr_ch u_csr_ch(
 );
 
 //////////////////// Debug
-`ifndef JT51_NODEBUG
+`ifdef JT51_DEBUG
 `ifdef SIMULATION
 /* verilator lint_off PINMISSING */
 wire [4:0] cnt_aux;
