@@ -441,7 +441,8 @@ dpram_dc #(.widthad_a(8)) u14H
 //Sound chip - Yamaha YM2151 (uses JT51 implementation by Jotego)
 wire [7:0] ym2151_Dout;
 wire signed [15:0] sound_l_raw, sound_r_raw;
-wire [15:0] unsgined_sound_l_raw, unsgined_sound_r_raw;
+wire [15:0] unsgined_sound_l_raw = {~sound_l_raw[15], sound_l_raw[14:0]};
+wire [15:0] unsgined_sound_r_raw = {~sound_r_raw[15], sound_r_raw[14:0]};
 jt51 u8C
 (
 	.rst(~reset),
@@ -454,9 +455,7 @@ jt51 u8C
 	.din(soundcpu_Dout),
 	.dout(ym2151_Dout),
 	.xleft(sound_l_raw),
-	.xright(sound_r_raw),
-	.dacleft(unsgined_sound_l_raw),
-	.dacright(unsgined_sound_r_raw)
+	.xright(sound_r_raw)
 );
 
 //----------------------------------------------------- Final video output -----------------------------------------------------//

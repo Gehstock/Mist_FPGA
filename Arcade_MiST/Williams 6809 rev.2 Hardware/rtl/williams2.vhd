@@ -294,8 +294,8 @@ architecture struct of williams2 is
  signal audio        : std_logic_vector( 7 downto 0);
  signal pia_audio    : std_logic_vector( 7 downto 0);
  signal speech_out   : std_logic_vector(15 downto 0);
- signal fm_left      : unsigned(15 downto 0);
- signal fm_right     : unsigned(15 downto 0);
+ signal fm_left      : signed(15 downto 0);
+ signal fm_right     : signed(15 downto 0);
 
  signal ic79_a   : std_logic_vector(3 downto 0);
  signal ic79_b   : std_logic_vector(3 downto 0);
@@ -1197,7 +1197,7 @@ port map(
  snd_rom_do    => snd2_rom_do
 );
 
-audio_left  <= "00000000000000000" + unsigned(audio&"00000") + unsigned(pia_audio&"00000") + unsigned(speech_out(15 downto 1)) + fm_left;
-audio_right <= "00000000000000000" + unsigned(audio&"00000") + unsigned(pia_audio&"00000") + unsigned(speech_out(15 downto 1)) + fm_right;
+audio_left  <= "00000000000000000" + unsigned(audio&"00000") + unsigned(pia_audio&"00000") + unsigned(speech_out(15 downto 1)) + unsigned(not fm_left(15)&fm_left(14 downto 0));
+audio_right <= "00000000000000000" + unsigned(audio&"00000") + unsigned(pia_audio&"00000") + unsigned(speech_out(15 downto 1)) + unsigned(not fm_right(15)&fm_right(14 downto 0));
 
 end struct;

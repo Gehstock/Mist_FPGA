@@ -58,8 +58,8 @@ port(
  
  pia_audio    : out std_logic_vector( 7 downto 0);
  speech_out   : out std_logic_vector(15 downto 0);
- ym2151_left  : out unsigned (15 downto 0);
- ym2151_right : out unsigned (15 downto 0);
+ ym2151_left  : out signed (15 downto 0);
+ ym2151_right : out signed (15 downto 0);
 
  snd_rom_addr : buffer std_logic_vector(16 downto 0);
  snd_rom_do   : in  std_logic_vector( 7 downto 0);
@@ -94,10 +94,7 @@ port (
  right : out signed (15 downto 0);
  -- Full resolution output
  xleft  : out signed (15 downto 0);
- xright : out signed (15 downto 0);
- -- unsigned outputs for sigma delta converters, full resolution
- dacleft  : out unsigned (15 downto 0);
- dacright : out unsigned (15 downto 0)
+ xright : out signed (15 downto 0)
 ); end component jt51;
 
 
@@ -172,7 +169,8 @@ end component mc6809is;
 -- signal pia_pa_o   : std_logic_vector( 7 downto 0);
  signal pia_irqa   : std_logic;
  signal pia_irqb   : std_logic;
- 
+ signal pia_a_o    : std_logic_vector( 7 downto 0);
+
  signal ym2151_irq_n  : std_logic := '0';
  signal ym2151_cs_n   : std_logic;
  signal ym2151_do     : std_logic_vector( 7 downto 0);
@@ -404,8 +402,8 @@ port map
 	data_out  	=> pia_do,
 	irqa      	=> pia_irqa,            -- active high
 	irqb      	=> pia_irqb,            -- active high
-	pa_i      	=> x"00",
-	pa_o        => pia_audio,
+	pa_i      	=> pia_a_o,
+	pa_o        => pia_a_o,
 	pa_oe       => open,
 	ca1       	=> ym2151_irq_n,
 	ca2_i      	=> '0',
@@ -419,6 +417,8 @@ port map
 	cb2_o       => open,
 	cb2_oe      => open
 );
+
+pia_audio <= pia_a_o;
 
 -- CVSD speech decoder	
 cvsd : entity work.HC55564	
@@ -485,11 +485,8 @@ port map (
  left   => open,
  right  => open,
  -- Full resolution output
- xleft  => open,
- xright => open,
- -- unsigned outputs for sigma delta converters, full resolution
- dacleft  => ym2151_left,
- dacright => ym2151_right
+ xleft  => ym2151_left,
+ xright => ym2151_right
 );
 
 end struct;

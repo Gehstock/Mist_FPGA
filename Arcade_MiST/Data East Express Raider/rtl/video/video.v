@@ -243,13 +243,14 @@ end
 
 wire [2:0] fg;
 reg  [7:0] cdata;
+reg        cdata_d, cdata_l;
 reg  [7:0] char_data_l;
 reg  [9:0] mapad, mapad2;
 
 assign vram_addr = { 1'b1, hcount[2], vcount[7:3], hcount[7:3] };
 assign char_rom_addr = { hcount[2], mapad[9:8], mapad2[7:0], vcount[2:0] };
 assign fg = {
-    cdata[4],
+    cdata_l,
     char_data_l[4+(2'b11^hcount[1:0])],
     char_data_l[2'b11^hcount[1:0]]
   };
@@ -259,10 +260,12 @@ always @(posedge clk_sys) begin
   if (ce_pix) begin
     if (hcount[2:0] == 3'b111) cdata <= vram_q;
     if (hcount[2:0] == 3'b011) begin
+      cdata_d <= cdata[4];
       mapad <= { cdata[1:0], vram_q };
       mapad2 <= mapad;
     end
     if (hcount[1:0] == 2'b11) begin
+      cdata_l <= cdata_d;
       char_data_l <= char_data;
     end
   end

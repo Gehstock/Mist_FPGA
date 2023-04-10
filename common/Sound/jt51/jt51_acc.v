@@ -12,13 +12,12 @@
 
     You should have received a copy of the GNU General Public License
     along with JT51.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.1 Date: 14- 4-2017
     Version: 1.0 Date: 27-10-2016
     */
 
-`timescale 1ns / 1ps
 
 module jt51_acc(
     input                   rst,
@@ -33,18 +32,18 @@ module jt51_acc(
     input           [2:0]   con_I,
     input   signed  [13:0]  op_out,
     input                   ne,     // noise enable
-    input   signed  [10:0]  noise,
+    input   signed  [11:0]  noise_mix,
     output  signed  [15:0]  left,
     output  signed  [15:0]  right,
     output  reg signed  [15:0]  xleft,  // exact outputs
-    output  reg signed  [15:0]  xright    
+    output  reg signed  [15:0]  xright
 );
 
 reg signed [13:0] op_val;
 
 always @(*) begin
     if( ne && op31_acc ) // cambiar a OP 31
-        op_val = { {2{noise[10]}}, noise, 1'd0 };
+        op_val = { {2{noise_mix[11]}}, noise_mix };
     else
         op_val = op_out;
 end
@@ -55,7 +54,7 @@ always @(*) begin
     case ( con_I )
         3'd0,3'd1,3'd2,3'd3:    sum_en = m2_enters;
         3'd4:                   sum_en = m1_enters | m2_enters;
-        3'd5,3'd6:              sum_en = ~c1_enters;        
+        3'd5,3'd6:              sum_en = ~c1_enters;
         3'd7:                   sum_en = 1'b1;
         default:                sum_en = 1'bx;
     endcase
@@ -76,7 +75,7 @@ wire rst_sum = c2_enters;
 
 function signed [15:0] lim16;
     input signed [16:0] din;
-    lim16 = !din[16] &&  din[15] ? 16'h7fff : 
+    lim16 = !din[16] &&  din[15] ? 16'h7fff :
            ( din[16] && !din[15] ? 16'h8000 : din[15:0] );
 endfunction
 
@@ -104,7 +103,7 @@ always @(posedge clk) begin
         end
     end
 end
-            
+
 reg  signed [15:0] opsum;
 wire signed [16:0] opsum10 = {{3{op_val[13]}},op_val}+{total[15],total};
 

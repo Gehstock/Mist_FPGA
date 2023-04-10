@@ -18,7 +18,6 @@
     Date: 27-10-2016
     */
 
-`timescale 1ns / 1ps
 
 module jt51_mmr(
     input           rst,
@@ -28,6 +27,9 @@ module jt51_mmr(
     input           write,
     input           a0,
     output  reg     busy,
+
+    // Original test bits
+    output reg [7:0] test_mode,
 
     // CT
     output  reg     ct1,
@@ -42,7 +44,7 @@ module jt51_mmr(
     output  reg [1:0]   lfo_w,
     output  reg [6:0]   lfo_amd,
     output  reg [6:0]   lfo_pmd,
-    output  reg         lfo_rst,
+    output  reg         lfo_up,
     // Timers
     output  reg [9:0]   value_A,
     output  reg [7:0]   value_B,
@@ -84,7 +86,9 @@ module jt51_mmr(
     output          op31_no,
     output          op31_acc,
 
-    output          zero,
+    output          zero,       // high once per round
+    output          half,       // high twice per round
+    output  [4:0]   cycles,
     output          m1_enters,
     output          m2_enters,
     output          c1_enters,
@@ -104,8 +108,6 @@ reg       up_rl,  up_kc,  up_kf,  up_pms,
           up_d1l, up_keyon,   up_amsen;
 reg [1:0] up_op;
 reg [2:0] up_ch;
-
-wire    busy_reg;
 
 `ifdef SIMULATION
 reg mmr_dump;
@@ -143,12 +145,13 @@ always @(posedge clk, posedge rst) begin : memory_mapped_registers
         enable_irq_B, enable_irq_A, load_B, load_A } <= 6'd0;
         // LFO
         { lfo_amd, lfo_pmd }    <= 14'h0;
+        lfo_up          <= 1'b0;
         lfo_freq        <= 8'd0;
         lfo_w           <= 2'd0;
-        lfo_rst         <= 1'b0;
         { ct2, ct1 }    <= 2'd0;
         csm             <= 1'b0;
         din_copy        <= 8'd0;
+        test_mode       <= 8'd0;
         `ifdef SIMULATION
         mmr_dump <= 1'b0;
         `endif
@@ -176,7 +179,7 @@ always @(posedge clk, posedge rst) begin : memory_mapped_registers
                 if( selected_register < 8'h20 ) begin
                     case( selected_register)
                     // registros especiales
-                    REG_TEST:   lfo_rst <= 1'b1; // regardless of din
+                    REG_TEST:   test_mode <= din; // regardless of din
                     `ifdef TEST_SUPPORT
                     REG_TEST2:  { test_op0, test_eg } <= din[1:0];
                     `endif
@@ -191,7 +194,10 @@ always @(posedge clk, posedge rst) begin : memory_mapped_registers
                           enable_irq_B, enable_irq_A,
                           load_B, load_A } <= din[5:0];
                         end
-                    REG_LFRQ:   lfo_freq <= din;
+                    REG_LFRQ: begin
+                        lfo_freq <= din;
+                        lfo_up   <= 1;
+                    end
                     REG_PMDAMD: begin
                         if( !din[7] )
                             lfo_amd <= din[6:0];
@@ -237,8 +243,8 @@ always @(posedge clk, posedge rst) begin : memory_mapped_registers
             `ifdef SIMULATION
             mmr_dump <= 1'b0;
             `endif
-            csm     <= 1'b0;
-            lfo_rst <= 1'b0;
+            csm     <= 0;
+            lfo_up  <= 0;
             { clr_flag_B, clr_flag_A } <= 2'd0;
         end
     end
@@ -287,7 +293,6 @@ jt51_reg u_reg(
     .csm        ( csm       ),
     .overflow_A ( overflow_A),
 
-    .busy       ( busy_reg  ),
     .rl_I       ( rl_I      ),
     .fb_II      ( fb_II     ),
     .con_I      ( con_I     ),
@@ -315,6 +320,8 @@ jt51_reg u_reg(
     .op31_no    ( op31_no   ),
     .op31_acc   ( op31_acc  ),
     .zero       ( zero      ),
+    .half       ( half      ),
+    .cycles     ( cycles    ),
     .m1_enters  ( m1_enters ),
     .m2_enters  ( m2_enters ),
     .c1_enters  ( c1_enters ),
@@ -345,7 +352,7 @@ end
 `endif
 
 
-`ifndef JT51_NODEBUG
+`ifdef JT51_DEBUG
 `ifdef SIMULATION
 /* verilator lint_off PINMISSING */
 wire [4:0] cnt_aux;

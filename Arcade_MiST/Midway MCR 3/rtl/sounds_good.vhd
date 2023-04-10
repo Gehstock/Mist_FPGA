@@ -218,7 +218,7 @@ cpu_data_in <= rom_do when cs_rom = '1' else
 audio_out <= pia_pa_out(7 downto 0)&pia_pb_out(7 downto 6);
 pia_pb_in <= "1100"&sndsel;
 pia_ca1_in <= not sint;
-pia_pa_in <= (others => '0');
+pia_pa_in <= pia_pa_out;
 pia_cb1_in <= '0'; -- spare
 stat <= pia_pb_out(5 downto 4);
 
