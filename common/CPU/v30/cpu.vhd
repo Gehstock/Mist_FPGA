@@ -32,7 +32,7 @@ use work.pReg_savestates.all;
 
 use work.whatever.all;
 
-entity cpu is
+entity v30 is
    port
    (
       clk               : in  std_logic;
@@ -52,6 +52,7 @@ entity cpu is
          
       bus_read          : out std_logic := '0';
       bus_write         : out std_logic := '0';
+      bus_prefetch      : out std_logic := '0';
       bus_be            : out std_logic_vector(1 downto 0) := "00";
       bus_addr          : out unsigned(19 downto 0) := (others => '0');
       bus_datawrite     : out std_logic_vector(15 downto 0) := (others => '0');
@@ -60,7 +61,8 @@ entity cpu is
       irqrequest_in     : in std_logic;
       irqvector_in      : in unsigned(9 downto 0) := (others => '0');
       irqrequest_ack    : out std_logic := '0';
-         
+      irqrequest_fini   : out std_logic := '0';
+
       load_savestate    : in  std_logic;
             
       cpu_done          : out std_logic := '0'; 
@@ -68,7 +70,11 @@ entity cpu is
 		cpu_export_reg_cs : out unsigned(15 downto 0);
 		cpu_export_reg_ip : out unsigned(15 downto 0);
 		
-         
+      secure            : in std_logic := '0';
+      secure_wr         : in std_logic;
+      secure_addr       : in unsigned(7 downto 0);
+      secure_data       : in std_logic_vector(7 downto 0);
+ 
       -- register 
       RegBus_Din        : out std_logic_vector(7 downto 0) := (others => '0');
       RegBus_Adr        : out std_logic_vector(7 downto 0) := (others => '0');
@@ -87,7 +93,7 @@ entity cpu is
    );
 end entity;
 
-architecture arch of cpu is
+architecture arch of v30 is
    
    -- push/pop
    constant REGPOS_ax  : std_logic_vector(15 downto 0) := x"0001";
@@ -419,7 +425,12 @@ architecture arch of cpu is
    signal DIVdivisor       : signed(32 downto 0);
    signal DIVquotient      : signed(32 downto 0);
    signal DIVremainder     : signed(32 downto 0);
-   
+
+   type arr_opcode IS ARRAY (0 to 255) OF std_logic_vector(7 downto 0);
+   signal decryption_table : arr_opcode;
+   attribute ramstyle : string;
+   attribute ramstyle OF decryption_table : signal is "logic";   
+
    -- savestates
    signal SS_CPU1          : std_logic_vector(REG_SAVESTATE_CPU1.upper downto REG_SAVESTATE_CPU1.lower);
    signal SS_CPU2          : std_logic_vector(REG_SAVESTATE_CPU2.upper downto REG_SAVESTATE_CPU2.lower);
@@ -447,7 +458,8 @@ begin
    cpu_halt       <= halt;
    cpu_irqrequest <= irqrequest;
    cpu_prefix     <= '1' when PrefixIP > 0 else '0';
-   
+   bus_prefetch   <= '0' when (prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
+
    canSpeedup <= '1';
    
    Reg_f(0 ) <= regs.FlagCar;
@@ -549,6 +561,7 @@ begin
       variable jumpAddr          : unsigned(15 downto 0);
       variable bcdResultLow      : unsigned(4 downto 0);
       variable bcdResultHigh     : unsigned(4 downto 0);
+      variable wordAligned       : std_logic;
    begin
       if rising_edge(clk) then
          
@@ -568,8 +581,13 @@ begin
             RegBus_wren    <= '0';
             RegBus_rden    <= '0';
             irqrequest_ack <= '0';
+            irqrequest_fini <= '0';
          end if;
-         
+
+         if (secure_wr = '1') then
+            decryption_table(to_integer(secure_addr)) <= secure_data;
+         end if;
+
          --if (testpcsum(63) = '1' and testcmd(31) = '1') then
          --   DIVstart      <= '1';
          --end if;
@@ -683,14 +701,11 @@ begin
                            fetchedSource1 <= '0';
                            fetchedSource2 <= '0';
                            memFirst       <= '1';
-                           if (irqExtern = '1') then
-                              irqvector   <= irqvector_in;
-                              irqrequest_ack <= '1';
-                           end if;
                            
                         elsif (irqrequest_in = '1' and irqBlocked = '0' and regs.FlagIrq = '1') then
                            
                            irqrequest <= '1';
+                           irqrequest_ack <= '1';
                            irqExtern  <= '1';
                            halt       <= '0';
                            
@@ -703,9 +718,17 @@ begin
                            if (repeat = '0') then
                                  exOpcodebyte <= x"00";
                               if (consumePrefetch = 1) then
-                                 opcodebyte   <= prefetchBuffer(15 downto 8);
+                                 if (secure) then
+                                    opcodebyte <= decryption_table(to_integer(unsigned(prefetchBuffer(15 downto 8))));
+                                 else
+                                    opcodebyte   <= prefetchBuffer(15 downto 8);
+                                 end if;
                               else
-                                 opcodebyte   <= prefetchBuffer(7 downto 0);
+                                 if (secure) then
+                                    opcodebyte <= decryption_table(to_integer(unsigned(prefetchBuffer(7 downto 0))));
+                                 else
+                                    opcodebyte   <= prefetchBuffer(7 downto 0);
+                                 end if;
                               end if;
                               if (repeatNext = '0') then
                                  regs.reg_ip     <= regs.reg_ip + 1;
@@ -835,6 +858,8 @@ begin
                               when x"33" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               -- INS
                               when x"39" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              -- FINT
+                              when x"92" => newDelay := 2; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; irqrequest_fini <= '1';
                               -- BRKEM
                               when x"ff" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               
@@ -1687,10 +1712,22 @@ begin
                      
                   when CPUSTAGE_IRQVECTOR_REQ =>
                      if (ce = '1') then
-                        bus_addr      <= resize(irqvector, 20);
+                        if (irqExtern = '1') then
+                           if (memFirst = '1') then
+                              bus_addr      <= resize(irqvector_in, 20);
+                           else
+                              bus_addr      <= resize(irqvector_in + 2, 20);
+                           end if;
+                        else
+                           if (memFirst = '1') then
+                              bus_addr      <= resize(irqvector, 20);
+                           else
+                              bus_addr      <= resize(irqvector + 2, 20);
+                           end if;
+                        end if;
+
                         bus_read      <= '1';
                         prefetchAllow <= '0';
-                        irqvector     <= irqvector + 2;
                         cpustage      <= CPUSTAGE_IRQVECTOR_WAIT;
                      end if;
                      
@@ -1753,7 +1790,7 @@ begin
                               bus_read         <= '0';
                               bus_write        <= '1';
                               bus_be           <= "11";
-                              bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 2, 20);
+                              bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 2,16), 20);
                               bus_datawrite    <= pushValue;
                               prefetchAllow    <= '0';
                               cpustage         <= CPUSTAGE_CHECKDATAREADY;
@@ -1762,7 +1799,7 @@ begin
                               bus_read         <= '0';
                               bus_write        <= '1';
                               bus_be           <= "01";
-                              bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 2, 20);
+                              bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 2,16), 20);
                               bus_datawrite    <= pushValue;
                               prefetchAllow    <= '0';
                               pushFirst        <= '0';
@@ -1772,7 +1809,7 @@ begin
                            bus_read         <= '0';
                            bus_write        <= '1';
                            bus_be           <= "01";
-                           bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 1, 20);
+                           bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 1,16), 20);
                            bus_datawrite    <= x"00" & pushValue(15 downto 8);
                            prefetchAllow    <= '0';
                            cpustage         <= CPUSTAGE_CHECKDATAREADY;
@@ -1803,7 +1840,7 @@ begin
                         if (popFirst = '1') then
                            bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp, 20);
                         else
-                           bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp + 1, 20);
+                           bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp + 1, 16), 20);
                         end if;
                         prefetchAllow    <= '0';
                         
@@ -2592,6 +2629,11 @@ begin
                            end if;
                         
                         when OP_STRINGLOAD =>
+                           if (opsize = 2) then
+                               wordAligned := (not regs.reg_si(0));
+                           else
+                               wordAligned := '0';
+                           end if;
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2627,13 +2669,15 @@ begin
                                  when 2 => 
                                     opstep <= 0;
                                     memFirst <= '0';
-                                    if (opsize = 1 or memFirst = '1') then 
+                                    if (wordAligned = '1') then
+                                       stringLoad(15 downto 0) <= unsigned(bus_dataread(15 downto 0));
+                                    elsif (opsize = 1 or memFirst = '1') then
                                        stringLoad(7 downto 0) <= unsigned(bus_dataread(7 downto 0));
                                        if (opsize = 1) then stringLoad(15 downto 8) <= x"00"; end if;
                                     else
                                        stringLoad(15 downto 8) <= unsigned(bus_dataread(7 downto 0));
                                     end if;
-                                    if (opsize = 1 or memFirst = '0') then
+                                    if (opsize = 1 or memFirst = '0' or wordAligned = '1') then
                                        if (regs.FlagDir) then 
                                           regs.reg_si <= regs.reg_si - opsize;
                                        else                                 
@@ -2665,6 +2709,12 @@ begin
                            end if;
                            
                         when OP_STRINGCOMPARE =>
+                           if (opsize = 2) then
+                               wordAligned := (not regs.reg_di(0));
+                           else
+                               wordAligned := '0';
+                           end if;
+
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2692,13 +2742,15 @@ begin
                                  
                                  when 2 => 
                                     memFirst <= '0';
-                                    if (opsize = 1 or memFirst = '1') then 
+                                    if (wordAligned = '1') then
+                                       stringLoad2(15 downto 0) <= unsigned(bus_dataread(15 downto 0));
+                                    elsif (opsize = 1 or memFirst = '1') then
                                        stringLoad2(7 downto 0) <= unsigned(bus_dataread(7 downto 0));
                                        if (opsize = 1) then stringLoad2(15 downto 8) <= x"00"; end if;
                                     else
                                        stringLoad2(15 downto 8) <= unsigned(bus_dataread(7 downto 0));
                                     end if;
-                                    if (opsize = 1 or memFirst = '0') then
+                                    if (opsize = 1 or memFirst = '0' or wordAligned = '1') then
                                        opstep <= 3;
                                        aluop  <= ALU_OP_CMP;
                                     else
@@ -2732,6 +2784,11 @@ begin
                            end if;
                            
                         when OP_STRINGSTORE =>
+                           if (opsize = 2) then
+                               wordAligned := (not regs.reg_di(0));
+                           else
+                               wordAligned := '0';
+                           end if;
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2749,7 +2806,11 @@ begin
                                  bus_read          <= '0';
                                  bus_write         <= '1';
                                  bus_be            <= "01";
-                                 if (memFirst = '0') then
+                                 if (wordAligned = '1') then
+                                    bus_datawrite    <= std_logic_vector(resultval(15 downto 0));
+                                    bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di, 20);
+                                    bus_be           <= "11";
+                                 elsif (memFirst = '0') then
                                     bus_datawrite    <= x"00" & std_logic_vector(resultval(15 downto 8));
                                     bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di + 1, 20);
                                  else
@@ -2757,7 +2818,7 @@ begin
                                     bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di, 20);
                                  end if;
                                  
-                                 if (opsize = 1 or memFirst = '0') then 
+                                 if (opsize = 1 or memFirst = '0' or wordAligned = '1') then
                                     exeDone   := '1';
                                     if (regs.FlagDir) then 
                                        regs.reg_di <= regs.reg_di - opsize;

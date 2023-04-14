@@ -284,7 +284,7 @@ always_comb begin
     cpu_io_in = cpu_io_addr[0] ? io16[15:8] : io16[7:0];
 end
 
-cpu v30(
+v30 v30(
     .clk(CLK_32M),
     .ce(ce_cpu), // TODO
     .ce_4x(ce_4x_cpu), // TODO
