@@ -1,0 +1,176 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2014 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 64-Bit
+# Version 13.1.4 Build 182 03/12/2014 SJ Full Version
+# Date created = 14:19:15  April 14, 2023
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		SpaceChaser_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+
+# Project-Wide Assignments
+# ========================
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:27:39  NOVEMBER 20, 2017"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SpaceChaser.sv
+set_global_assignment -name VHDL_FILE rtl/invaders.vhd
+set_global_assignment -name VHDL_FILE rtl/mw8080.vhd
+set_global_assignment -name VHDL_FILE rtl/invaders_audio.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/invaders_memory.sv
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/pll.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/rom1.vhd
+set_global_assignment -name VHDL_FILE rtl/roms/rom2.vhd
+set_global_assignment -name QIP_FILE ../../../../Mist_FPGA/common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../../Mist_FPGA/common/CPU/T80/T80.qip
+
+# Pin & Location Assignments
+# ==========================
+set_location_assignment PIN_7 -to LED
+set_location_assignment PIN_54 -to CLOCK_27
+set_location_assignment PIN_144 -to VGA_R[5]
+set_location_assignment PIN_143 -to VGA_R[4]
+set_location_assignment PIN_142 -to VGA_R[3]
+set_location_assignment PIN_141 -to VGA_R[2]
+set_location_assignment PIN_137 -to VGA_R[1]
+set_location_assignment PIN_135 -to VGA_R[0]
+set_location_assignment PIN_133 -to VGA_B[5]
+set_location_assignment PIN_132 -to VGA_B[4]
+set_location_assignment PIN_125 -to VGA_B[3]
+set_location_assignment PIN_121 -to VGA_B[2]
+set_location_assignment PIN_120 -to VGA_B[1]
+set_location_assignment PIN_115 -to VGA_B[0]
+set_location_assignment PIN_114 -to VGA_G[5]
+set_location_assignment PIN_113 -to VGA_G[4]
+set_location_assignment PIN_112 -to VGA_G[3]
+set_location_assignment PIN_111 -to VGA_G[2]
+set_location_assignment PIN_110 -to VGA_G[1]
+set_location_assignment PIN_106 -to VGA_G[0]
+set_location_assignment PIN_136 -to VGA_VS
+set_location_assignment PIN_119 -to VGA_HS
+set_location_assignment PIN_65 -to AUDIO_L
+set_location_assignment PIN_80 -to AUDIO_R
+set_location_assignment PIN_105 -to SPI_DO
+set_location_assignment PIN_88 -to SPI_DI
+set_location_assignment PIN_126 -to SPI_SCK
+set_location_assignment PIN_127 -to SPI_SS2
+set_location_assignment PIN_91 -to SPI_SS3
+set_location_assignment PIN_13 -to CONF_DATA0
+set_location_assignment PLL_1 -to "pll:pll|altpll:altpll_component"
+
+# Classic Timing Assignments
+# ==========================
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+
+# Analysis & Synthesis Assignments
+# ================================
+set_global_assignment -name FAMILY "Cyclone III"
+set_global_assignment -name TOP_LEVEL_ENTITY SpaceChaser
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+
+# Fitter Assignments
+# ==================
+set_global_assignment -name DEVICE EP3C25E144C8
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA0_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
+
+# EDA Netlist Writer Assignments
+# ==============================
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+
+# Assembler Assignments
+# =====================
+set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name GENERATE_RBF_FILE ON
+
+# Power Estimation Assignments
+# ============================
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+
+# Advanced I/O Timing Assignments
+# ===============================
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
+
+# start EDA_TOOL_SETTINGS(eda_simulation)
+# ---------------------------------------
+
+	# EDA Netlist Writer Assignments
+	# ==============================
+	set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+
+# end EDA_TOOL_SETTINGS(eda_simulation)
+# -------------------------------------
+
+# ----------------------------
+# start ENTITY(Invaders2_mist)
+
+# end ENTITY(Invaders2_mist)
+# --------------------------
+
+# -------------------------
+# start ENTITY(SpaceChaser)
+
+	# start DESIGN_PARTITION(Top)
+	# ---------------------------
+
+		# Incremental Compilation Assignments
+		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+	# end DESIGN_PARTITION(Top)
+	# -------------------------
+
+# end ENTITY(SpaceChaser)
+# -----------------------
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
