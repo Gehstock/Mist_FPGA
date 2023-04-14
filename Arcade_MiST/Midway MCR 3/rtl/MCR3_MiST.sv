@@ -594,7 +594,7 @@ spinner spinner4 (clk_sys, reset, m_left4, m_right4, 1'b0, vs, wheel4);
 
 // dotron spinner
 wire [5:0] dotron_spinner;
-spinner #(15) dotron_spn (clk_sys, reset, m_fireE | m_fireG, m_fireF | m_fireH, 1'b0, vs, dotron_spinner);
+spinner #(15) dotron_spn (clk_sys, reset, m_fireE | m_fireG | m_leftB, m_fireF | m_fireH | m_rightB, 1'b0, vs, dotron_spinner);
 
 // Common inputs
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF, m_fireG, m_fireH, m_upB, m_downB, m_leftB, m_rightB;
