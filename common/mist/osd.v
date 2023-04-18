@@ -185,9 +185,8 @@ end
 
 wire [10:0] osd_hcnt    = h_cnt - h_osd_start;
 wire [10:0] osd_vcnt    = v_cnt - v_osd_start;
-wire [10:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd pixel
-wire [10:0] osd_hcnt_next2 = osd_hcnt + 2'd2;  // two pixel offset for osd byte address register
-reg        osd_de;
+wire [10:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd byte address register
+reg         osd_de;
 
 reg [10:0] osd_buffer_addr;
 wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];
@@ -195,16 +194,16 @@ reg        osd_pixel;
 
 always @(posedge clk_sys) begin
 	if(ce_pix) begin
-		osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next2[7:5] : ~osd_hcnt_next2[7:5],
+		osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next[7:5] : ~osd_hcnt_next[7:5],
 		                                rotate[1] ? (doublescan ? ~osd_vcnt[7:0] : ~{osd_vcnt[6:0], 1'b0}) :
 		                                            (doublescan ?  osd_vcnt[7:0]  : {osd_vcnt[6:0], 1'b0})} :
-		                               {doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt_next2[7:0]};
+		                               {doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt_next[7:0]};
 
-		osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt_next[4:2] : ~osd_hcnt_next[4:2]] :
+		osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt[4:2] : ~osd_hcnt[4:2]] :
 		                          osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
 
 		osd_de <= osd_enable &&
-		    (HSync != hs_pol) && ((h_cnt + 1'd1) >= h_osd_start) && ((h_cnt + 1'd1) < h_osd_end) &&
+		    (HSync != hs_pol) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
 		    (VSync != vs_pol) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
 	end
 end
