@@ -233,6 +233,8 @@ architecture rtl of T80 is
 	signal LDHLSP               : std_logic;
 	signal ADDSPdd              : std_logic;
 	signal IORQ_i               : std_logic;
+	signal Write_i              : std_logic;
+	signal NoRead_i             : std_logic;
 	signal Special_LD           : std_logic_vector(2 downto 0);
 	signal ExchangeDH           : std_logic;
 	signal ExchangeRp           : std_logic;
@@ -261,6 +263,8 @@ architecture rtl of T80 is
 	signal XYbit_undoc          : std_logic;
 	signal No_PC                : std_logic;
 	signal DOR                  : std_logic_vector(127 downto 0);
+
+	signal Really_Wait          : std_logic;
 
 begin
 
@@ -338,8 +342,8 @@ begin
 			SetEI       => SetEI,
 			IMode       => IMode,
 			Halt        => Halt,
-			NoRead      => NoRead,
-			Write       => Write,
+			NoRead      => NoRead_i,
+			Write       => Write_i,
 			R800_mode   => R800_mode,
 			No_PC       => No_PC,
 			XYbit_undoc => XYbit_undoc);
@@ -369,6 +373,8 @@ begin
 			F_In    => F,
 			Q       => ALU_Q,
 			F_Out   => F_Out);
+
+	Really_Wait <= not Wait_n and (Write_i or not NoRead_i);
 
 	ClkEn <= CEN and not BusAck;
 
@@ -679,7 +685,7 @@ begin
 						end if;
 					end if;
 
-					if (TState = 2 and I_BTR = '1' and IR(0) = '1') or (TState = 1 and I_BTR = '1' and IR(0) = '0') then
+					if (TState = 2 and Really_Wait = '0' and I_BTR = '1' and IR(0) = '1') or (TState = 1 and I_BTR = '1' and IR(0) = '0') then
 						ioq := ('0' & DI_Reg) + ('0' & std_logic_vector(ID16(7 downto 0)));
 						F(Flag_N) <= DI_Reg(7);
 						F(Flag_C) <= ioq(8);
@@ -688,7 +694,7 @@ begin
 						F(Flag_P) <= not (ioq(0) xor ioq(1) xor ioq(2) xor ioq(3) xor ioq(4) xor ioq(5) xor ioq(6) xor ioq(7));
 					end if;
 
-					if TState = 2 and Wait_n = '1' then
+					if TState = 2 and Really_Wait = '0' then
 						if ISet = "01" and MCycle = "111" then
 							IR <= DInst;
 						end if;
@@ -716,7 +722,7 @@ begin
 						end if;
 					end if;
 
-					if (TState = 2 and Wait_n = '1') or (TState = 4 and MCycle = "001") then
+					if (TState = 2 and Really_Wait = '0') or (TState = 4 and MCycle = "001") then
 						if IncDec_16(2 downto 0) = "111" then
 							if IncDec_16(3) = '1' then
 								SP <= SP - 1;
@@ -1005,7 +1011,7 @@ begin
 			signed(RegBusA) + 1;
 
 	process (Save_ALU_r, Auto_Wait_t1, ALU_OP_r, Read_To_Reg_r, I_MULU, T_Res,
-			ExchangeDH, ExchangeWH, IncDec_16, MCycle, TState, Wait_n, LDHLSP)
+			ExchangeDH, ExchangeWH, IncDec_16, MCycle, TState, Really_Wait, LDHLSP)
 	begin
 		RegWEH <= '0';
 		RegWEL <= '0';
@@ -1034,7 +1040,7 @@ begin
 			RegWEL <= '1';
 		end if;
 
-		if IncDec_16(2) = '1' and ((TState = 2 and Wait_n = '1' and MCycle /= "001") or (TState = 3 and MCycle = "001")) then
+		if IncDec_16(2) = '1' and ((TState = 2 and Really_Wait = '0' and MCycle /= "001") or (TState = 3 and MCycle = "001")) then
 			case IncDec_16(1 downto 0) is
 			when "00" | "01" | "10" =>
 				RegWEH <= '1';
@@ -1047,7 +1053,7 @@ begin
 	TmpAddr2 <= std_logic_vector(unsigned(signed(SP) + signed(Save_Mux)));
 
 	process (Save_Mux, RegBusB, RegBusA_r, ID16, I_MULU, MULU_Prod32, MULU_tmp, T_Res,
-			ExchangeDH, ExchangeWH, IncDec_16, MCycle, TState, Wait_n, LDHLSP, TmpAddr2, WZ)
+			ExchangeDH, ExchangeWH, IncDec_16, MCycle, TState, Really_Wait, LDHLSP, TmpAddr2, WZ)
 	begin
 		RegDIH <= Save_Mux;
 		RegDIL <= Save_Mux;
@@ -1204,6 +1210,8 @@ begin
 	IntCycle_n <= not IntCycle;
 	IntE <= IntE_FF1;
 	IORQ <= IORQ_i;
+	NoRead <= NoRead_i;
+	Write <= Write_i;
 	Stop <= I_DJNZ;
 -------------------------------------------------------------------------
 --
@@ -1275,7 +1283,7 @@ begin
 					if BusReq_s = '1' and BusAck = '1' then
 					else
 						BusAck <= '0';
-						if TState = 2 and Wait_n = '0' then
+						if TState = 2 and Really_Wait = '1' then
 						elsif T_Res = '1' then
 							if Halt = '1' and  ( not(Mode = 3 and INT_n = '0' and IntE_FF1 = '0')) then  -- halt bug when Mode = 3 , INT_n = '0' and IME=0
 								Halt_FF <= '1';

@@ -32,7 +32,7 @@ use work.pReg_savestates.all;
 
 use work.whatever.all;
 
-entity cpu is
+entity v30 is
    port
    (
       clk               : in  std_logic;
@@ -52,6 +52,7 @@ entity cpu is
          
       bus_read          : out std_logic := '0';
       bus_write         : out std_logic := '0';
+      bus_prefetch      : out std_logic := '0';
       bus_be            : out std_logic_vector(1 downto 0) := "00";
       bus_addr          : out unsigned(19 downto 0) := (others => '0');
       bus_datawrite     : out std_logic_vector(15 downto 0) := (others => '0');
@@ -60,7 +61,8 @@ entity cpu is
       irqrequest_in     : in std_logic;
       irqvector_in      : in unsigned(9 downto 0) := (others => '0');
       irqrequest_ack    : out std_logic := '0';
-         
+      irqrequest_fini   : out std_logic := '0';
+
       load_savestate    : in  std_logic;
             
       cpu_done          : out std_logic := '0'; 
@@ -68,7 +70,11 @@ entity cpu is
 		cpu_export_reg_cs : out unsigned(15 downto 0);
 		cpu_export_reg_ip : out unsigned(15 downto 0);
 		
-         
+      secure            : in std_logic := '0';
+      secure_wr         : in std_logic;
+      secure_addr       : in unsigned(7 downto 0);
+      secure_data       : in std_logic_vector(7 downto 0);
+ 
       -- register 
       RegBus_Din        : out std_logic_vector(7 downto 0) := (others => '0');
       RegBus_Adr        : out std_logic_vector(7 downto 0) := (others => '0');
@@ -87,7 +93,7 @@ entity cpu is
    );
 end entity;
 
-architecture arch of cpu is
+architecture arch of v30 is
    
    -- push/pop
    constant REGPOS_ax  : std_logic_vector(15 downto 0) := x"0001";
@@ -313,7 +319,7 @@ architecture arch of cpu is
    signal irqBlocked       : std_logic;
    signal reqModRM         : std_logic;
    signal repeatZero       : std_logic;
-   signal opsize           : integer range 1 to 2;
+   signal opsize           : std_logic;
    signal instantFetch     : std_logic;
    signal fetch1Val        : unsigned(15 downto 0);
    signal fetch2Val        : unsigned(15 downto 0);
@@ -419,7 +425,14 @@ architecture arch of cpu is
    signal DIVdivisor       : signed(32 downto 0);
    signal DIVquotient      : signed(32 downto 0);
    signal DIVremainder     : signed(32 downto 0);
-   
+
+   type arr_opcode IS ARRAY (0 to 255) OF std_logic_vector(7 downto 0);
+   signal decryption_table : arr_opcode;
+   attribute ramstyle : string;
+   --attribute ramstyle OF decryption_table : signal is "logic";
+   signal decryption_addr : unsigned(7 downto 0);
+   signal decryption_q : std_logic_vector(7 downto 0);
+
    -- savestates
    signal SS_CPU1          : std_logic_vector(REG_SAVESTATE_CPU1.upper downto REG_SAVESTATE_CPU1.lower);
    signal SS_CPU2          : std_logic_vector(REG_SAVESTATE_CPU2.upper downto REG_SAVESTATE_CPU2.lower);
@@ -447,7 +460,8 @@ begin
    cpu_halt       <= halt;
    cpu_irqrequest <= irqrequest;
    cpu_prefix     <= '1' when PrefixIP > 0 else '0';
-   
+   bus_prefetch   <= '0' when (prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
+
    canSpeedup <= '1';
    
    Reg_f(0 ) <= regs.FlagCar;
@@ -497,7 +511,15 @@ begin
    SS_CPU_BACK3(63 downto 48) <= std_logic_vector(regs.reg_ss);
    SS_CPU_BACK4(15 downto  0) <= std_logic_vector(regs.reg_ds);
    SS_CPU_BACK4(31 downto 16) <= std_logic_vector(Reg_f);      
-   
+
+   decryption_addr <= secure_addr when secure_wr = '1' else 
+                      unsigned(prefetchBuffer(15 downto 8)) when consumePrefetch = 1 else unsigned(prefetchBuffer(7 downto 0));
+   process (clk) begin
+      if falling_edge(clk) then
+         decryption_q <= decryption_table(to_integer(decryption_addr));
+      end if;
+   end process;
+
    process (clk)
       variable varPrefetchCount  : integer range 0 to 15;
       variable varprefetchBuffer : std_logic_vector(127 downto 0);
@@ -549,6 +571,7 @@ begin
       variable jumpAddr          : unsigned(15 downto 0);
       variable bcdResultLow      : unsigned(4 downto 0);
       variable bcdResultHigh     : unsigned(4 downto 0);
+      variable wordAligned       : std_logic;
    begin
       if rising_edge(clk) then
          
@@ -557,7 +580,7 @@ begin
          
          bus_read         <= '0';
          bus_write        <= '0';
-         
+
          if (ce_4x = '1') then
             clearPrefetch    <= '0';
             consumePrefetch  <= 0;  
@@ -568,8 +591,12 @@ begin
             RegBus_wren    <= '0';
             RegBus_rden    <= '0';
             irqrequest_ack <= '0';
+            irqrequest_fini <= '0';
          end if;
-         
+
+         if (secure_wr = '1') then
+            decryption_table(to_integer(decryption_addr)) <= secure_data;
+         end if;
          --if (testpcsum(63) = '1' and testcmd(31) = '1') then
          --   DIVstart      <= '1';
          --end if;
@@ -580,30 +607,30 @@ begin
       
          if (reset = '1') then
             
-            regs.reg_ip  <= unsigned(SS_CPU1(15 downto  0)); -- x"0000";
-            regs.reg_ax  <= unsigned(SS_CPU1(31 downto 16)); -- x"0000";
-            regs.reg_cx  <= unsigned(SS_CPU1(47 downto 32)); -- x"0000";
-            regs.reg_dx  <= unsigned(SS_CPU1(63 downto 48)); -- x"0000";
-            regs.reg_bx  <= unsigned(SS_CPU2(15 downto  0)); -- x"0000";
-            regs.reg_sp  <= unsigned(SS_CPU2(31 downto 16)); -- x"2000";
-            regs.reg_bp  <= unsigned(SS_CPU2(47 downto 32)); -- x"0000";
-            regs.reg_si  <= unsigned(SS_CPU2(63 downto 48)); -- x"0000";
-            regs.reg_di  <= unsigned(SS_CPU3(15 downto  0)); -- x"0000";
-            regs.reg_es  <= unsigned(SS_CPU3(31 downto 16)); -- x"0000";
-            regs.reg_cs  <= unsigned(SS_CPU3(47 downto 32)); -- x"FFFF";
-            regs.reg_ss  <= unsigned(SS_CPU3(63 downto 48)); -- x"0000";
-            regs.reg_ds  <= unsigned(SS_CPU4(15 downto  0)); -- x"0000";
+            regs.reg_ip  <= x"0000";
+            regs.reg_ax  <= x"0000";
+            regs.reg_cx  <= x"0000";
+            regs.reg_dx  <= x"0000";
+            regs.reg_bx  <= x"0000";
+            regs.reg_sp  <= x"2000";
+            regs.reg_bp  <= x"0000";
+            regs.reg_si  <= x"0000";
+            regs.reg_di  <= x"0000";
+            regs.reg_es  <= x"0000";
+            regs.reg_cs  <= x"FFFF";
+            regs.reg_ss  <= x"0000";
+            regs.reg_ds  <= x"0000";
   
-            regs.FlagCar <= SS_CPU4(16); --'0';
-            regs.FlagPar <= SS_CPU4(18); --'0';
-            regs.FlagHaC <= SS_CPU4(20); --'0';
-            regs.FlagZer <= SS_CPU4(22); --'0';
-            regs.FlagSgn <= SS_CPU4(23); --'0';
-            regs.FlagBrk <= SS_CPU4(24); --'0';
-            regs.FlagIrq <= SS_CPU4(25); --'0';
-            regs.FlagDir <= SS_CPU4(26); --'0';
-            regs.FlagOvf <= SS_CPU4(27); --'0';
-            regs.FlagMod <= SS_CPU4(31); --'1';
+            regs.FlagCar <= '0';
+            regs.FlagPar <= '0';
+            regs.FlagHaC <= '0';
+            regs.FlagZer <= '0';
+            regs.FlagSgn <= '0';
+            regs.FlagBrk <= '0';
+            regs.FlagIrq <= '0';
+            regs.FlagDir <= '0';
+            regs.FlagOvf <= '0';
+            regs.FlagMod <= '1';
             
             halt            <= '0';
             cpustage        <= CPUSTAGE_IDLE;
@@ -683,14 +710,11 @@ begin
                            fetchedSource1 <= '0';
                            fetchedSource2 <= '0';
                            memFirst       <= '1';
-                           if (irqExtern = '1') then
-                              irqvector   <= irqvector_in;
-                              irqrequest_ack <= '1';
-                           end if;
                            
                         elsif (irqrequest_in = '1' and irqBlocked = '0' and regs.FlagIrq = '1') then
                            
                            irqrequest <= '1';
+                           irqrequest_ack <= '1';
                            irqExtern  <= '1';
                            halt       <= '0';
                            
@@ -703,9 +727,17 @@ begin
                            if (repeat = '0') then
                                  exOpcodebyte <= x"00";
                               if (consumePrefetch = 1) then
-                                 opcodebyte   <= prefetchBuffer(15 downto 8);
+                                 if (secure) then
+                                    opcodebyte <= decryption_q;
+                                 else
+                                    opcodebyte   <= prefetchBuffer(15 downto 8);
+                                 end if;
                               else
-                                 opcodebyte   <= prefetchBuffer(7 downto 0);
+                                 if (secure) then
+                                    opcodebyte <= decryption_q;
+                                 else
+                                    opcodebyte   <= prefetchBuffer(7 downto 0);
+                                 end if;
                               end if;
                               if (repeatNext = '0') then
                                  regs.reg_ip     <= regs.reg_ip + 1;
@@ -776,22 +808,22 @@ begin
                      
                      case (opcodebyte) is
                         
-                        when x"00" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"01" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"02" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"03" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"04" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"05" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"00" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"01" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"02" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"03" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"04" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"05" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADD; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"06" => pushlist <= REGPOS_es; cpustage <= CPUSTAGE_CHECKDATAREADY;
                         when x"07" => poplist  <= REGPOS_es; cpustage <= CPUSTAGE_CHECKDATAREADY; newDelay := 1;
 
-                        when x"08" => opcode <= OP_MOVMEM; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"09" => opcode <= OP_MOVMEM; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"0A" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"0B" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"0C" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"0D" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"08" => opcode <= OP_MOVMEM; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"09" => opcode <= OP_MOVMEM; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"0A" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"0B" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"0C" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"0D" => opcode <= OP_MOVREG; aluop <= ALU_OP_OR ; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"0E" => pushlist <= REGPOS_cs; cpustage <= CPUSTAGE_CHECKDATAREADY;
                         when x"0F" =>
@@ -800,25 +832,25 @@ begin
                            consumePrefetch <= 1;
                            case (prefetchBuffer(15 downto 8)) is
                               -- TEST1
-                              when x"10" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 1; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
-                              when x"11" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 2; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
-                              when x"18" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 1; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
-                              when x"19" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= 2; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
+                              when x"10" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= '0'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
+                              when x"11" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM;
+                              when x"18" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= '0'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
+                              when x"19" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_NOP; aluop <= ALU_OP_TEST1; opsize <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM;
                               -- CLR1
-                              when x"12" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"13" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1a" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1b" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"12" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"13" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1a" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1b" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_CLR1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- SET1
-                              when x"14" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"15" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1c" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1d" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"14" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"15" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1c" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1d" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_SET1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- NOT1
-                              when x"16" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"17" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1e" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 1; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
-                              when x"1f" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= 2; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"16" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"17" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_REG_cx; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1e" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= '0'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"1f" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_NOT1; opsize <= '1'; useAluResult <= '1'; source2 <= OPSOURCE_FETCHVALUE8; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- ADD4S
                               when x"20" => cpustage <= CPUSTAGE_EXECUTE; opcode <= OP_BCDSTRING; bcdOp <= BCD_OP_ADD; bcdOffset <= (others => '0'); regs.FlagCar <= '0'; regs.FlagZer <= '1';
                               -- SUB4S
@@ -826,15 +858,17 @@ begin
                               -- CMP4S
                               when x"26" => cpustage <= CPUSTAGE_EXECUTE; opcode <= OP_BCDSTRING; bcdOp <= BCD_OP_CMP; bcdOffset <= (others => '0'); regs.FlagCar <= '0'; regs.FlagZer <= '1';
                               -- ROL4
-                              when x"28" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROL4; opsize <= 1; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"28" => cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROL4; opsize <= '0'; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- ROR4
-                              when x"2a" =>  cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROR4; opsize <= 1; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
+                              when x"2a" =>  cpustage <= CPUSTAGE_MODRM; opcode <= OP_MOVMEM; aluop <= ALU_OP_ROR4; opsize <= '0'; useAluResult <= '1'; source1 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM;
                               -- INS
                               when x"31" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               -- EXT
                               when x"33" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               -- INS
                               when x"39" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
+                              -- FINT
+                              when x"92" => newDelay := 2; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; irqrequest_fini <= '1';
                               -- BRKEM
                               when x"ff" => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1'; halt <= '1';
                               
@@ -842,86 +876,86 @@ begin
                            end case;
 
 
-                        when x"10" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"11" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"12" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"13" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"14" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"15" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"10" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"11" => opcode <= OP_MOVMEM; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"12" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"13" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"14" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"15" => opcode <= OP_MOVREG; aluop <= ALU_OP_ADC; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"16" => pushlist <= REGPOS_ss; cpustage <= CPUSTAGE_CHECKDATAREADY;
                         when x"17" => poplist  <= REGPOS_ss; cpustage <= CPUSTAGE_CHECKDATAREADY; newDelay := 1; irqBlocked <= '1';  
 
-                        when x"18" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"19" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"1A" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"1B" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"1C" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"1D" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"18" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"19" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"1A" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"1B" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"1C" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"1D" => opcode <= OP_MOVREG; aluop <= ALU_OP_SBB; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
                    
                         when x"1E" => pushlist <= REGPOS_ds; cpustage <= CPUSTAGE_CHECKDATAREADY;
                         when x"1F" => poplist  <= REGPOS_ds; cpustage <= CPUSTAGE_CHECKDATAREADY; newDelay := 1;
                    
-                        when x"20" => opcode <= OP_MOVMEM; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"21" => opcode <= OP_MOVMEM; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"22" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"23" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"24" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"25" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"20" => opcode <= OP_MOVMEM; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"21" => opcode <= OP_MOVMEM; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"22" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"23" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"24" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"25" => opcode <= OP_MOVREG; aluop <= ALU_OP_AND; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"26" => prefixSegmentES <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
       
-                        when x"27" => opcode <= OP_MOVREG; aluop <= ALU_OP_DECADJUST; useAluResult <= '1'; newDelay := 9; opsize <= 1;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
+                        when x"27" => opcode <= OP_MOVREG; aluop <= ALU_OP_DECADJUST; useAluResult <= '1'; newDelay := 9; opsize <= '0';  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
       
-                        when x"28" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"29" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"2A" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"2B" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"2C" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"2D" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"28" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"29" => opcode <= OP_MOVMEM; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"2A" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"2B" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"2C" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"2D" => opcode <= OP_MOVREG; aluop <= ALU_OP_SUB; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"2E" => prefixSegmentCS <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
       
-                        when x"2F" => opcode <= OP_MOVREG; aluop <= ALU_OP_DECADJUST; useAluResult <= '1'; newDelay := 10; opsize <= 1;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
+                        when x"2F" => opcode <= OP_MOVREG; aluop <= ALU_OP_DECADJUST; useAluResult <= '1'; newDelay := 10; opsize <= '0';  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
       
-                        when x"30" => opcode <= OP_MOVMEM; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 1; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"31" => opcode <= OP_MOVMEM; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 2; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
-                        when x"32" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"33" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
-                        when x"34" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
-                        when x"35" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"30" => opcode <= OP_MOVMEM; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '0'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"31" => opcode <= OP_MOVMEM; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '1'; newDelay := 1;       source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MEM; 
+                        when x"32" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"33" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;         optarget <= OPTARGET_MODRM_REG; 
+                        when x"34" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al;
+                        when x"35" => opcode <= OP_MOVREG; aluop <= ALU_OP_XOR; useAluResult <= '1'; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
 
                         when x"36" => prefixSegmentSS <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
       
-                        when x"37" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 2;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
+                        when x"37" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= '1';  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '0';
       
-                        when x"38" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 1;                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
-                        when x"39" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 2;                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
-                        when x"3A" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 1;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;        
-                        when x"3B" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 2;                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;        
-                        when x"3C" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 1; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ;
-                        when x"3D" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= 2; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16;
+                        when x"38" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '0';                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
+                        when x"39" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '1';                      source1 <= OPSOURCE_MEM;       source2 <= OPSOURCE_MODRM_REG;    cpustage <= CPUSTAGE_MODRM;        
+                        when x"3A" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '0';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;        
+                        when x"3B" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '1';                      source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM;          cpustage <= CPUSTAGE_MODRM;        
+                        when x"3C" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '0'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE8;  cpustage <= CPUSTAGE_FETCHDATA2_8 ;
+                        when x"3D" => opcode <= OP_NOP; aluop <= ALU_OP_CMP; opsize <= '1'; instantFetch <= '1'; source1 <= OPSOURCE_ACC;       source2 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA2_16;
 
                         when x"3E" => prefixSegmentDS <= '1'; isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; cpu_done <= '1'; newBuf := dbuf + 1; cpustage <= CPUSTAGE_IDLE;
 
-                        when x"3F" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= 2;  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
+                        when x"3F" => opcode <= OP_MOVREG; aluop <= ALU_OP_ASCIIADJUST; useAluResult <= '1'; newDelay := 8; opsize <= '1';  cpustage <= CPUSTAGE_EXECUTE; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; adjustNegate <= '1';
 
-                        when x"40" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_ax; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1'; 
-                        when x"41" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_cx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_cx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"42" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_dx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"43" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_bx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"44" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_sp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_sp; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"45" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_bp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bp; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"46" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_si; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_si; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"47" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_di; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_di; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"48" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_ax; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"49" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_cx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_cx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4A" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_dx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4B" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_bx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bx; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4C" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_sp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_sp; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4D" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_bp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bp; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4E" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_si; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_si; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
-                        when x"4F" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_di; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_di; optarget <= OPTARGET_DECODE; opsize <= 2; useAluResult <= '1';
+                        when x"40" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_ax; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1'; 
+                        when x"41" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_cx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_cx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"42" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_dx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"43" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_bx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"44" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_sp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_sp; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"45" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_bp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bp; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"46" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_si; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_si; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"47" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_INC; source1 <= OPSOURCE_REG_di; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_di; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"48" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_ax; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"49" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_cx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_cx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4A" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_dx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4B" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_bx; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bx; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4C" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_sp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_sp; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4D" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_bp; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_bp; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4E" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_si; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_si; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
+                        when x"4F" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_DEC; source1 <= OPSOURCE_REG_di; source2 <= OPSOURCE_IMMIDIATE; immidiate8 <= x"01"; target_decode <= CPU_REG_di; optarget <= OPTARGET_DECODE; opsize <= '1'; useAluResult <= '1';
 
                         when x"50" => pushlist <= REGPOS_ax; cpustage <= CPUSTAGE_CHECKDATAREADY; newBuf := dbuf + 1;
                         when x"51" => pushlist <= REGPOS_cx; cpustage <= CPUSTAGE_CHECKDATAREADY; newBuf := dbuf + 1;
@@ -943,7 +977,7 @@ begin
                         when x"60" => pushlist <= REGPOS_ax or REGPOS_cx or REGPOS_dx or REGPOS_bx or REGPOS_sp or REGPOS_bp or REGPOS_si or REGPOS_di; cpustage <= CPUSTAGE_CHECKDATAREADY;
                         when x"61" => poplist  <= REGPOS_ax or REGPOS_cx or REGPOS_dx or REGPOS_bx or REGPOS_bp or REGPOS_si or REGPOS_di;              cpustage <= CPUSTAGE_CHECKDATAREADY; newDelay := 1; 
 
-                        when x"62" => opcode <= OP_BOUND; newDelay := 4; opsize <= 2; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM;
+                        when x"62" => opcode <= OP_BOUND; newDelay := 4; opsize <= '1'; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM;
 
                         -- when x"63" => ?
                         -- when x"64" => repnc
@@ -951,42 +985,42 @@ begin
                         -- when x"66" => fpo2
                         -- when x"67" => fpo2
                         
-                        when x"68" => pushlist <= REGPOS_imm; cpustage <= CPUSTAGE_PUSH; opsize <= 2; newBuf := dbuf + 1; fetch1Val <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2;
-                        when x"69" => opcode <= OP_MOVREG; aluop <= ALU_OP_MULI; newDelay := 3; useAluResult <= '1'; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; optarget <= OPTARGET_MODRM_REG;
-                        when x"6A" => pushlist <= REGPOS_imm; cpustage <= CPUSTAGE_PUSH; opsize <= 1; newBuf := dbuf + 1; fetch1Val <= x"00" & unsigned(prefetchBuffer(15 downto 8)); regs.reg_ip <= regs.reg_ip + 1; consumePrefetch <= 1;
-                        when x"6B" => opcode <= OP_MOVREG; aluop <= ALU_OP_MULI; newDelay := 3; useAluResult <= '1'; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE8;  source2 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; optarget <= OPTARGET_MODRM_REG;
+                        when x"68" => pushlist <= REGPOS_imm; cpustage <= CPUSTAGE_PUSH; opsize <= '1'; newBuf := dbuf + 1; fetch1Val <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2;
+                        when x"69" => opcode <= OP_MOVREG; aluop <= ALU_OP_MULI; newDelay := 3; useAluResult <= '1'; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; optarget <= OPTARGET_MODRM_REG;
+                        when x"6A" => pushlist <= REGPOS_imm; cpustage <= CPUSTAGE_PUSH; opsize <= '0'; newBuf := dbuf + 1; fetch1Val <= x"00" & unsigned(prefetchBuffer(15 downto 8)); regs.reg_ip <= regs.reg_ip + 1; consumePrefetch <= 1;
+                        when x"6B" => opcode <= OP_MOVREG; aluop <= ALU_OP_MULI; newDelay := 3; useAluResult <= '1'; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE8;  source2 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; optarget <= OPTARGET_MODRM_REG;
                         
-                        when x"6C" => opcode <= OP_OPIN;       newDelay := 5; opcodeNext <= OP_STRINGSTORE; opsize <= 1; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_MEM;
-                        when x"6D" => opcode <= OP_OPIN;       newDelay := 4; opcodeNext <= OP_STRINGSTORE; opsize <= 2; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_MEM;
-                        when x"6E" => opcode <= OP_STRINGLOAD; newDelay := 5; opcodeNext <= OP_OPOUT;       opsize <= 1; cpustage <= CPUSTAGE_EXECUTE;      source1 <= OPSOURCE_REG_dx;      source2 <= OPSOURCE_STRINGLOAD1;
-                        when x"6F" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_OPOUT;       opsize <= 2; cpustage <= CPUSTAGE_EXECUTE;      source1 <= OPSOURCE_REG_dx;      source2 <= OPSOURCE_STRINGLOAD1;
+                        when x"6C" => opcode <= OP_OPIN;       newDelay := 5; opcodeNext <= OP_STRINGSTORE; opsize <= '0'; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_MEM;
+                        when x"6D" => opcode <= OP_OPIN;       newDelay := 4; opcodeNext <= OP_STRINGSTORE; opsize <= '1'; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_MEM;
+                        when x"6E" => opcode <= OP_STRINGLOAD; newDelay := 5; opcodeNext <= OP_OPOUT;       opsize <= '0'; cpustage <= CPUSTAGE_EXECUTE;      source1 <= OPSOURCE_REG_dx;      source2 <= OPSOURCE_STRINGLOAD1;
+                        when x"6F" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_OPOUT;       opsize <= '1'; cpustage <= CPUSTAGE_EXECUTE;      source1 <= OPSOURCE_REG_dx;      source2 <= OPSOURCE_STRINGLOAD1;
                         
                         when x"70" | x"71" | x"72" | x"73" | x"74" | x"75" | x"76" | x"77" | x"78" | x"79" | x"7a" | x"7b" | x"7c" | x"7d" | x"7e" | x"7f" =>
                            opcode <= OP_JUMPIF; source1 <= OPSOURCE_FETCHVALUE8; cpustage <= CPUSTAGE_FETCHDATA1_8;
                      
-                        when x"80" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= 1; opsign <= '0';
-                        when x"81" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE16; optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= 2; opsign <= '0';
-                        when x"82" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= 1; opsign <= '1';
-                        when x"83" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= 2; opsign <= '1';
+                        when x"80" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= '0'; opsign <= '0';
+                        when x"81" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE16; optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= '1'; opsign <= '0';
+                        when x"82" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= '0'; opsign <= '1';
+                        when x"83" => opcode <= OP_MEMIMM1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; useAluResult <= '1'; opsize <= '1'; opsign <= '1';
 
-                        when x"84" => opcode <= OP_NOP; cpustage <= CPUSTAGE_MODRM; opsize <= 1; aluop <= ALU_OP_TST; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MODRM_REG;
-                        when x"85" => opcode <= OP_NOP; cpustage <= CPUSTAGE_MODRM; opsize <= 2; aluop <= ALU_OP_TST; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MODRM_REG;
+                        when x"84" => opcode <= OP_NOP; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; aluop <= ALU_OP_TST; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MODRM_REG;
+                        when x"85" => opcode <= OP_NOP; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; aluop <= ALU_OP_TST; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MODRM_REG;
 
-                        when x"86" => opcode <= OP_MOVMEM; newDelay := 2; opcodeNext <= OP_MOVREG; opsize <= 1; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM; optarget2 <= OPTARGET_MODRM_REG;
-                        when x"87" => opcode <= OP_MOVMEM; newDelay := 2; opcodeNext <= OP_MOVREG; opsize <= 2; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM; optarget2 <= OPTARGET_MODRM_REG;
+                        when x"86" => opcode <= OP_MOVMEM; newDelay := 2; opcodeNext <= OP_MOVREG; opsize <= '0'; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM; optarget2 <= OPTARGET_MODRM_REG;
+                        when x"87" => opcode <= OP_MOVMEM; newDelay := 2; opcodeNext <= OP_MOVREG; opsize <= '1'; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_MODRM_REG; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MEM; optarget2 <= OPTARGET_MODRM_REG;
 
-                        when x"88" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_MODRM_REG; optarget <= OPTARGET_MEM;
-                        when x"89" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MODRM_REG; optarget <= OPTARGET_MEM;
-                        when x"8A" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; newBuf := dbuf + 1;
-                        when x"8B" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; newBuf := dbuf + 1;
+                        when x"88" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_MODRM_REG; optarget <= OPTARGET_MEM;
+                        when x"89" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MODRM_REG; optarget <= OPTARGET_MEM;
+                        when x"8A" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; newBuf := dbuf + 1;
+                        when x"8B" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; newBuf := dbuf + 1;
                      
-                        when x"8C" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MODRM_REG; segmentaccess <= '1'; optarget <= OPTARGET_MEM; irqBlocked <= '1';
+                        when x"8C" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MODRM_REG; segmentaccess <= '1'; optarget <= OPTARGET_MEM; irqBlocked <= '1';
                      
-                        when x"8D" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MODRM_ADDR; optarget <= OPTARGET_MODRM_REG;
+                        when x"8D" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MODRM_ADDR; optarget <= OPTARGET_MODRM_REG;
                      
-                        when x"8E" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; segmentaccess <= '1'; newDelay := 1; 
+                        when x"8E" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM;       optarget <= OPTARGET_MODRM_REG; segmentaccess <= '1'; newDelay := 1; 
                     
-                        when x"8F" => opcode <= OP_MOVMEM; poplist <= REGPOS_mem; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_POPVALUE; optarget <= OPTARGET_MEM; opsize <= 2; newDelay := 1; 
+                        when x"8F" => opcode <= OP_MOVMEM; poplist <= REGPOS_mem; cpustage <= CPUSTAGE_MODRM; source1 <= OPSOURCE_POPVALUE; optarget <= OPTARGET_MEM; opsize <= '1'; newDelay := 1; 
                     
                         -- when x"90" => NOP
                     
@@ -998,8 +1032,8 @@ begin
                         when x"96" => opcode <= OP_EXCHANGE; cpustage <= CPUSTAGE_EXECUTE; newDelay := 2;
                         when x"97" => opcode <= OP_EXCHANGE; cpustage <= CPUSTAGE_EXECUTE; newDelay := 2;
                     
-                        when x"98" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_SXT; source1 <= OPSOURCE_ACC; opsize <= 2; useAluResult <= '1'; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
-                        when x"99" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_SXT; source1 <= OPSOURCE_ACC; opsize <= 2; useAluResult <= '1'; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_dx;
+                        when x"98" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_SXT; source1 <= OPSOURCE_ACC; opsize <= '1'; useAluResult <= '1'; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_ax;
+                        when x"99" => opcode <= OP_MOVREG; cpustage <= CPUSTAGE_EXECUTE; aluop <= ALU_OP_SXT; source1 <= OPSOURCE_ACC; opsize <= '1'; useAluResult <= '1'; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_dx;
                     
                         when x"9A" => opcode <= OP_JUMPFAR; newDelay := 4; cpustage <= CPUSTAGE_FETCHDATA1_16; pushlist <= REGPOS_cs or REGPOS_ip; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_FETCHVALUE16;
                     
@@ -1011,63 +1045,63 @@ begin
                         when x"9E" => opcode <= OP_FLAGSFROMACC; newDelay := 3; cpustage <= CPUSTAGE_EXECUTE;
                         when x"9F" => opcode <= OP_FLAGSTOACC;   newDelay := 1; cpustage <= CPUSTAGE_EXECUTE;
                     
-                        when x"A0" => opcode <= OP_MOVREG; newBuf := dbuf + 1; memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= 1; source1 <= OPSOURCE_MEM; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE;
-                        when x"A1" => opcode <= OP_MOVREG; newBuf := dbuf + 1; memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= 2; source1 <= OPSOURCE_MEM; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE;              
-                        when x"A2" => opcode <= OP_MOVMEM;                     memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= 1; source1 <= OPSOURCE_ACC; optarget <= OPTARGET_MEM;
-                        when x"A3" => opcode <= OP_MOVMEM;                     memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= 2; source1 <= OPSOURCE_ACC; optarget <= OPTARGET_MEM;
+                        when x"A0" => opcode <= OP_MOVREG; newBuf := dbuf + 1; memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= '0'; source1 <= OPSOURCE_MEM; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE;
+                        when x"A1" => opcode <= OP_MOVREG; newBuf := dbuf + 1; memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= '1'; source1 <= OPSOURCE_MEM; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE;              
+                        when x"A2" => opcode <= OP_MOVMEM;                     memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= '0'; source1 <= OPSOURCE_ACC; optarget <= OPTARGET_MEM;
+                        when x"A3" => opcode <= OP_MOVMEM;                     memAddr <= unsigned(prefetchBuffer(23 downto 8)); regs.reg_ip <= regs.reg_ip + 2; consumePrefetch <= 2; cpustage <= CPUSTAGE_CHECKDATAREADY; opsize <= '1'; source1 <= OPSOURCE_ACC; optarget <= OPTARGET_MEM;
                         
-                        when x"A4" => opcode <= OP_STRINGLOAD; newDelay := 3; opcodeNext <= OP_STRINGSTORE; opsize <= 1; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; usePrefix := '1';
-                        when x"A5" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_STRINGSTORE; opsize <= 2; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; usePrefix := '1';	
+                        when x"A4" => opcode <= OP_STRINGLOAD; newDelay := 3; opcodeNext <= OP_STRINGSTORE; opsize <= '0'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; usePrefix := '1';
+                        when x"A5" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_STRINGSTORE; opsize <= '1'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; usePrefix := '1';	
                     
-                        when x"A6" => opcode <= OP_STRINGLOAD; newDelay := 2; opcodeNext <= OP_STRINGCOMPARE; opsize <= 1; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
-                        when x"A7" => opcode <= OP_STRINGLOAD;                opcodeNext <= OP_STRINGCOMPARE; opsize <= 2; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
+                        when x"A6" => opcode <= OP_STRINGLOAD; newDelay := 2; opcodeNext <= OP_STRINGCOMPARE; opsize <= '0'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
+                        when x"A7" => opcode <= OP_STRINGLOAD;                opcodeNext <= OP_STRINGCOMPARE; opsize <= '1'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_STRINGLOAD1; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
 
-                        when x"A8" => opcode <= OP_NOP; opsize <= 1; cpustage <= CPUSTAGE_FETCHDATA1_8 ; aluop <= ALU_OP_TST; source1 <= OPSOURCE_FETCHVALUE8;  source2 <= OPSOURCE_ACC; instantFetch <= '1';
-                        when x"A9" => opcode <= OP_NOP; opsize <= 2; cpustage <= CPUSTAGE_FETCHDATA1_16; aluop <= ALU_OP_TST; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_ACC; instantFetch <= '1';
+                        when x"A8" => opcode <= OP_NOP; opsize <= '0'; cpustage <= CPUSTAGE_FETCHDATA1_8 ; aluop <= ALU_OP_TST; source1 <= OPSOURCE_FETCHVALUE8;  source2 <= OPSOURCE_ACC; instantFetch <= '1';
+                        when x"A9" => opcode <= OP_NOP; opsize <= '1'; cpustage <= CPUSTAGE_FETCHDATA1_16; aluop <= ALU_OP_TST; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_ACC; instantFetch <= '1';
                     
-                        when x"AA" => opcode <= OP_STRINGSTORE; newDelay := 2; opsize <= 1; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; usePrefix := '1';
-                        when x"AB" => opcode <= OP_STRINGSTORE; newDelay := 1; opsize <= 2; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; usePrefix := '1';
+                        when x"AA" => opcode <= OP_STRINGSTORE; newDelay := 2; opsize <= '0'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; usePrefix := '1';
+                        when x"AB" => opcode <= OP_STRINGSTORE; newDelay := 1; opsize <= '1'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; usePrefix := '1';
                     
-                        when x"AC" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_MOVREG; opsize <= 1; source1 <= OPSOURCE_STRINGLOAD1; cpustage <= CPUSTAGE_EXECUTE; usePrefix := '1'; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE;
-                        when x"AD" => opcode <= OP_STRINGLOAD;             opcodeNext <= OP_MOVREG; opsize <= 2; source1 <= OPSOURCE_STRINGLOAD1; cpustage <= CPUSTAGE_EXECUTE; usePrefix := '1'; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE;
+                        when x"AC" => opcode <= OP_STRINGLOAD; newDelay := 1; opcodeNext <= OP_MOVREG; opsize <= '0'; source1 <= OPSOURCE_STRINGLOAD1; cpustage <= CPUSTAGE_EXECUTE; usePrefix := '1'; target_decode <= CPU_REG_al; optarget <= OPTARGET_DECODE;
+                        when x"AD" => opcode <= OP_STRINGLOAD;             opcodeNext <= OP_MOVREG; opsize <= '1'; source1 <= OPSOURCE_STRINGLOAD1; cpustage <= CPUSTAGE_EXECUTE; usePrefix := '1'; target_decode <= CPU_REG_ax; optarget <= OPTARGET_DECODE;
    
-                        when x"AE" => opcode <= OP_STRINGCOMPARE; newDelay := 1; opsize <= 1; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
-                        when x"AF" => opcode <= OP_STRINGCOMPARE;                opsize <= 2; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
+                        when x"AE" => opcode <= OP_STRINGCOMPARE; newDelay := 1; opsize <= '0'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
+                        when x"AF" => opcode <= OP_STRINGCOMPARE;                opsize <= '1'; cpustage <= CPUSTAGE_EXECUTE; source1 <= OPSOURCE_ACC; source2 <= OPSOURCE_STRINGLOAD2; usePrefix := '1';
                     
-                        when x"B0" => opcode <= OP_MOVREG; target_decode <= CPU_REG_al; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B1" => opcode <= OP_MOVREG; target_decode <= CPU_REG_cl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B2" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B3" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B4" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ah; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B5" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ch; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B6" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dh; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B7" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bh; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= 1; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B8" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ax; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"B9" => opcode <= OP_MOVREG; target_decode <= CPU_REG_cx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BA" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BB" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BC" => opcode <= OP_MOVREG; target_decode <= CPU_REG_sp; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BD" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bp; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BE" => opcode <= OP_MOVREG; target_decode <= CPU_REG_si; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
-                        when x"BF" => opcode <= OP_MOVREG; target_decode <= CPU_REG_di; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= 2; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B0" => opcode <= OP_MOVREG; target_decode <= CPU_REG_al; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B1" => opcode <= OP_MOVREG; target_decode <= CPU_REG_cl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B2" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B3" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bl; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B4" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ah; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B5" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ch; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B6" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dh; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B7" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bh; cpustage <= CPUSTAGE_FETCHDATA1_8 ; source1 <= OPSOURCE_FETCHVALUE8;  opsize <= '0'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B8" => opcode <= OP_MOVREG; target_decode <= CPU_REG_ax; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"B9" => opcode <= OP_MOVREG; target_decode <= CPU_REG_cx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BA" => opcode <= OP_MOVREG; target_decode <= CPU_REG_dx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BB" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bx; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BC" => opcode <= OP_MOVREG; target_decode <= CPU_REG_sp; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BD" => opcode <= OP_MOVREG; target_decode <= CPU_REG_bp; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BE" => opcode <= OP_MOVREG; target_decode <= CPU_REG_si; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
+                        when x"BF" => opcode <= OP_MOVREG; target_decode <= CPU_REG_di; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; opsize <= '1'; optarget <= OPTARGET_DECODE; instantFetch <= '1';
                                     	
-                        when x"C0" => opcode <= OP_MEMIMM2; newDelay := 2; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8; useAluResult <= '1'; optarget <= OPTARGET_MEM;
-                        when x"C1" => opcode <= OP_MEMIMM2; newDelay := 2; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8; useAluResult <= '1'; optarget <= OPTARGET_MEM;
+                        when x"C0" => opcode <= OP_MEMIMM2; newDelay := 2; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8; useAluResult <= '1'; optarget <= OPTARGET_MEM;
+                        when x"C1" => opcode <= OP_MEMIMM2; newDelay := 2; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_FETCHVALUE8; useAluResult <= '1'; optarget <= OPTARGET_MEM;
                                  
-                        when x"C2" => opcode <= OP_RETURNFAR; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA1_16; newDelay := 1; poplist <= REGPOS_ip;
+                        when x"C2" => opcode <= OP_RETURNFAR; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA1_16; newDelay := 1; poplist <= REGPOS_ip;
                                  
                         when x"C3" => newDelay := 1; poplist <= REGPOS_ip; cpustage <= CPUSTAGE_CHECKDATAREADY;
                              
-                        when x"C4" => opcode <= OP_MOVREG; newDelay := 3; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MODRM_REG;
-                        when x"C5" => opcode <= OP_MOVREG; newDelay := 3; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MODRM_REG;
+                        when x"C4" => opcode <= OP_MOVREG; newDelay := 3; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MODRM_REG;
+                        when x"C5" => opcode <= OP_MOVREG; newDelay := 3; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_MEM; optarget <= OPTARGET_MODRM_REG;
                              
-                        when x"C6" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; newBuf := dbuf + 1;
-                        when x"C7" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE16; optarget <= OPTARGET_MEM; newBuf := dbuf + 1;
+                        when x"C6" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_FETCHVALUE8;  optarget <= OPTARGET_MEM; newBuf := dbuf + 1;
+                        when x"C7" => opcode <= OP_MOVMEM; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE16; optarget <= OPTARGET_MEM; newBuf := dbuf + 1;
                      
-                        when x"C8" => opcode <= OP_ENTER; cpustage <= CPUSTAGE_FETCHDATA1_16; newDelay := 6; pushlist <= REGPOS_bp; opsize <= 1; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_FETCHVALUE8;
+                        when x"C8" => opcode <= OP_ENTER; cpustage <= CPUSTAGE_FETCHDATA1_16; newDelay := 6; pushlist <= REGPOS_bp; opsize <= '0'; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_FETCHVALUE8;
                         when x"C9" => opcode <= OP_MOVREG; regs.reg_sp <= regs.reg_bp; poplist <= REGPOS_MEM; cpustage <= CPUSTAGE_POP_REQ; source1 <= OPSOURCE_POPVALUE; target_decode <= CPU_REG_bp; optarget <= OPTARGET_DECODE;
             
-                        when x"CA" => opcode <= OP_RETURNFAR; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA1_16; poplist <= REGPOS_cs or REGPOS_ip;
+                        when x"CA" => opcode <= OP_RETURNFAR; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE16; cpustage <= CPUSTAGE_FETCHDATA1_16; poplist <= REGPOS_cs or REGPOS_ip;
                      
                         when x"CB" => newDelay := 2; poplist <= REGPOS_cs or REGPOS_ip; cpustage <= CPUSTAGE_CHECKDATAREADY;
                
@@ -1077,16 +1111,16 @@ begin
                
                         when x"CF" => newDelay := 3; poplist <= REGPOS_cs or REGPOS_ip or REGPOS_f; cpustage <= CPUSTAGE_CHECKDATAREADY; irqBlocked <= '1';
                      
-                        when x"D0" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 1; immidiate8 <= x"01";
-                        when x"D1" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 1; immidiate8 <= x"01";
-                        when x"D2" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= 1; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 3; immidiate8 <= regs.reg_cx(7 downto 0);
-                        when x"D3" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= 2; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 3; immidiate8 <= regs.reg_cx(7 downto 0);
+                        when x"D0" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 1; immidiate8 <= x"01";
+                        when x"D1" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 1; immidiate8 <= x"01";
+                        when x"D2" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= '0'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 3; immidiate8 <= regs.reg_cx(7 downto 0);
+                        when x"D3" => opcode <= OP_MEMIMM2; cpustage <= CPUSTAGE_MODRM; opsize <= '1'; source1 <= OPSOURCE_MEM; source2 <= OPSOURCE_IMMIDIATE; useAluResult <= '1'; optarget <= OPTARGET_MEM; newDelay := 3; immidiate8 <= regs.reg_cx(7 downto 0);
                      
-                        when x"D4" => opcode <= OP_MULADJUST; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; newDelay := 2; opsize <= 2;
-                        when x"D5" => opcode <= OP_DIVADJUST; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; newDelay := 4; opsize <= 2;
+                        when x"D4" => opcode <= OP_MULADJUST; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; newDelay := 2; opsize <= '1';
+                        when x"D5" => opcode <= OP_DIVADJUST; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8; newDelay := 4; opsize <= '1';
                      
                      	when x"D6" | x"D7" => 
-                           opcode <= OP_MOVREG; cpustage <= CPUSTAGE_CHECKDATAREADY; source1 <= OPSOURCE_MEM; opsize <= 1; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al; newDelay := 3;
+                           opcode <= OP_MOVREG; cpustage <= CPUSTAGE_CHECKDATAREADY; source1 <= OPSOURCE_MEM; opsize <= '0'; optarget <= OPTARGET_DECODE; target_decode <= CPU_REG_al; newDelay := 3;
                            memSegment <= regs.reg_ds;
                            if (prefixSegmentES = '1') then memSegment <= regs.reg_es; end if;
                            if (prefixSegmentCS = '1') then memSegment <= regs.reg_cs; end if;
@@ -1109,20 +1143,20 @@ begin
                         when x"E2" => opcode <= OP_JUMPIF; newDelay := 1; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8;
                         when x"E3" => opcode <= OP_JUMPIF;             cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8;
                      
-                        when x"E4" => opcode <= OP_OPIN;  newDelay := 5; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= 1; source1 <= OPSOURCE_FETCHVALUE8;
-                        when x"E5" => opcode <= OP_OPIN;  newDelay := 4; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE8;
-                        when x"E6" => opcode <= OP_OPOUT; newDelay := 4; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= 1; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_ACC;
-                        when x"E7" => opcode <= OP_OPOUT; newDelay := 3; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= 2; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_ACC;
+                        when x"E4" => opcode <= OP_OPIN;  newDelay := 5; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= '0'; source1 <= OPSOURCE_FETCHVALUE8;
+                        when x"E5" => opcode <= OP_OPIN;  newDelay := 4; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE8;
+                        when x"E6" => opcode <= OP_OPOUT; newDelay := 4; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= '0'; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_ACC;
+                        when x"E7" => opcode <= OP_OPOUT; newDelay := 3; cpustage <= CPUSTAGE_FETCHDATA1_8; opsize <= '1'; source1 <= OPSOURCE_FETCHVALUE8; source2 <= OPSOURCE_ACC;
                      
                      	when x"E8" => opcode <= OP_JUMP; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; pushlist <= REGPOS_ip;
                         when x"E9" => opcode <= OP_JUMP; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16;
-                        when x"EA" => opcode <= OP_JUMPFAR; newDelay := 3; opsize <= 2; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_FETCHVALUE16;
+                        when x"EA" => opcode <= OP_JUMPFAR; newDelay := 3; opsize <= '1'; cpustage <= CPUSTAGE_FETCHDATA1_16; source1 <= OPSOURCE_FETCHVALUE16; source2 <= OPSOURCE_FETCHVALUE16;
                         when x"EB" => opcode <= OP_JUMPIF; cpustage <= CPUSTAGE_FETCHDATA1_8; source1 <= OPSOURCE_FETCHVALUE8;
 
-                        when x"EC" => opcode <= OP_OPIN; newDelay := 4;  cpustage <= CPUSTAGE_EXECUTE; opsize <= 1; source1 <= OPSOURCE_REG_dx;
-                        when x"ED" => opcode <= OP_OPIN; newDelay := 4;  cpustage <= CPUSTAGE_EXECUTE; opsize <= 2; source1 <= OPSOURCE_REG_dx;
-                        when x"EE" => opcode <= OP_OPOUT; newDelay := 3; cpustage <= CPUSTAGE_EXECUTE; opsize <= 1; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_ACC;
-                        when x"EF" => opcode <= OP_OPOUT; newDelay := 2; cpustage <= CPUSTAGE_EXECUTE; opsize <= 2; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_ACC;
+                        when x"EC" => opcode <= OP_OPIN; newDelay := 4;  cpustage <= CPUSTAGE_EXECUTE; opsize <= '0'; source1 <= OPSOURCE_REG_dx;
+                        when x"ED" => opcode <= OP_OPIN; newDelay := 4;  cpustage <= CPUSTAGE_EXECUTE; opsize <= '1'; source1 <= OPSOURCE_REG_dx;
+                        when x"EE" => opcode <= OP_OPOUT; newDelay := 3; cpustage <= CPUSTAGE_EXECUTE; opsize <= '0'; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_ACC;
+                        when x"EF" => opcode <= OP_OPOUT; newDelay := 2; cpustage <= CPUSTAGE_EXECUTE; opsize <= '1'; source1 <= OPSOURCE_REG_dx; source2 <= OPSOURCE_ACC;
 
                         when x"F0" => isPrefix := '1'; irqBlocked <= '1'; usePrefix := '1'; -- lock
                         
@@ -1135,8 +1169,8 @@ begin
                         
                         when x"F5" => opcode <= OP_NOP; newDelay := 3; regs.FlagCar <= not regs.FlagCar; cpustage <= CPUSTAGE_EXECUTE;
 
-                        when x"F6" => opcode <= OP_MEMIMM3; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= 1;
-                        when x"F7" => opcode <= OP_MEMIMM3; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= 2;
+                        when x"F6" => opcode <= OP_MEMIMM3; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= '0';
+                        when x"F7" => opcode <= OP_MEMIMM3; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= '1';
 
                         when x"F8" => newDelay := 3; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; regs.FlagCar <= '0'; 
                         when x"F9" => newDelay := 3; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; regs.FlagCar <= '1'; 
@@ -1145,8 +1179,8 @@ begin
                         when x"FC" => newDelay := 3; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; regs.FlagDir <= '0';
                         when x"FD" => newDelay := 3; cpustage <= CPUSTAGE_IDLE; cpu_finished <= '1'; regs.FlagDir <= '1';
                      
-                        when x"FE" => opcode <= OP_MEMIMM4; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= 1;
-                        when x"FF" => opcode <= OP_MEMIMM4; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= 2;
+                        when x"FE" => opcode <= OP_MEMIMM4; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= '0';
+                        when x"FF" => opcode <= OP_MEMIMM4; source1 <= OPSOURCE_MEM; cpustage <= CPUSTAGE_MODRM; opsize <= '1';
                      
                         when others => cpustage <= CPUSTAGE_IDLE; cpu_done <= '1';
                   
@@ -1240,7 +1274,7 @@ begin
                               when others => null;
                            end case;
                         else
-                           if (opsize = 1) then
+                           if (opsize = '0') then
                               case (to_integer(MODRM_reg)) is
                                  when 0 => vartarget_reg := CPU_REG_al;
                                  when 1 => vartarget_reg := CPU_REG_cl;
@@ -1252,7 +1286,7 @@ begin
                                  when 7 => vartarget_reg := CPU_REG_bh;
                                  when others => null;
                               end case;
-                           elsif (opsize = 2) then
+                           elsif (opsize = '1') then
                               case (to_integer(MODRM_reg)) is
                                  when 0 => vartarget_reg := CPU_REG_ax;
                                  when 1 => vartarget_reg := CPU_REG_cx;
@@ -1278,7 +1312,7 @@ begin
                               when others => null;
                            end case;
                         else
-                           if (opsize = 1) then
+                           if (opsize = '0') then
                               case (to_integer(MODRM_reg)) is
                                  when 0 => MODRM_value_reg <= x"00" & regs.reg_ax( 7 downto 0);
                                  when 1 => MODRM_value_reg <= x"00" & regs.reg_cx( 7 downto 0);
@@ -1290,7 +1324,7 @@ begin
                                  when 7 => MODRM_value_reg <= x"00" & regs.reg_bx(15 downto 8);
                                  when others => null;
                               end case;
-                           elsif (opsize = 2) then
+                           elsif (opsize = '1') then
                               case (to_integer(MODRM_reg)) is
                                  when 0 => MODRM_value_reg <= regs.reg_ax;
                                  when 1 => MODRM_value_reg <= regs.reg_cx;
@@ -1339,16 +1373,16 @@ begin
                               case (to_integer(MODRM_reg)) is
                                  when 0 | 1 =>
                                     opcode <= OP_NOP; aluop <= ALU_OP_TST;
-                                    if (opsize = 2) then varsource2 := OPSOURCE_FETCHVALUE16; else varsource2 := OPSOURCE_FETCHVALUE8; end if;
+                                    if (opsize = '1') then varsource2 := OPSOURCE_FETCHVALUE16; else varsource2 := OPSOURCE_FETCHVALUE8; end if;
                                     dbuf <= dbuf + 1;
                                  when 2 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NOT; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
                                  when 3 => opcode <= OP_MOVMEM; varoptarget := OPTARGET_MEM; aluop <= ALU_OP_NEG; useAluResult <= '1'; if (MODRM_mod /= 3) then newModDelay := newModDelay + 1; end if;
                                  when 4 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MUL;  useAluResult <= '1'; newModDelay := newModDelay + 2;
                                  when 5 => opcode <= OP_NOP; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM; aluop <= ALU_OP_MULI; useAluResult <= '1'; newModDelay := newModDelay + 2;
                                  when 6 => opcode <= OP_DIV; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
-                                    if (opsize = 1) then newModDelay := newModDelay + 2; else newModDelay := newModDelay + 11; end if;
+                                    if (opsize = '0') then newModDelay := newModDelay + 2; else newModDelay := newModDelay + 11; end if;
                                  when 7 => opcode <= OP_DIVI; varsource1 := OPSOURCE_ACC; varsource2 := OPSOURCE_MEM;
-                                    if (opsize = 1) then newModDelay := newModDelay + 4; else newModDelay := newModDelay + 12; end if;
+                                    if (opsize = '0') then newModDelay := newModDelay + 4; else newModDelay := newModDelay + 12; end if;
                                  when others => null;
                               end case;
                            
@@ -1382,7 +1416,7 @@ begin
                            if (opcode = OP_MEMIMM1 and to_integer(MODRM_reg) = 7) then -- special case: CMP
                               opcode <= OP_NOP;
                            end if;
-                           if (opsize = 1) then
+                           if (opsize = '0') then
                               case (to_integer(MODRM_mem)) is
                                  when 0 => target_reg <= CPU_REG_al;
                                  when 1 => target_reg <= CPU_REG_cl;
@@ -1394,7 +1428,7 @@ begin
                                  when 7 => target_reg <= CPU_REG_bh;
                                  when others => null;
                               end case;
-                           elsif (opsize = 2) then
+                           elsif (opsize = '1') then
                               case (to_integer(MODRM_mem)) is
                                  when 0 => target_reg <= CPU_REG_ax;
                                  when 1 => target_reg <= CPU_REG_cx;
@@ -1432,7 +1466,7 @@ begin
                            
                         -- instant fetching if memory access degrades to register access
                         fetchedRMMODData := x"0000";
-                        if (opsize = 1) then
+                        if (opsize = '0') then
                            case (to_integer(MODRM_mem)) is
                               when 0 => fetchedRMMODData := x"00" & regs.reg_ax( 7 downto 0);
                               when 1 => fetchedRMMODData := x"00" & regs.reg_cx( 7 downto 0);
@@ -1444,7 +1478,7 @@ begin
                               when 7 => fetchedRMMODData := x"00" & regs.reg_bx(15 downto 8);
                               when others => null;
                            end case;
-                        elsif (opsize = 2) then
+                        elsif (opsize = '1') then
                            case (to_integer(MODRM_mem)) is
                               when 0 => fetchedRMMODData := regs.reg_ax;
                               when 1 => fetchedRMMODData := regs.reg_cx;
@@ -1608,7 +1642,7 @@ begin
                   
                   when CPUSTAGE_FETCHMEM_REC =>
                      if (source1 = OPSOURCE_MEM and fetchedSource1 = '0') then
-                        if (opsize = 1) then
+                        if (opsize = '0') then
                            memFetchValue1 <= x"00" & unsigned(bus_dataread(7 downto 0));
                            if (source2 = OPSOURCE_MEM) then memAddr <= memAddr + 1; end if;
                            fetchedSource1 <= '1';
@@ -1646,7 +1680,7 @@ begin
                            end if;
                         end if;            
                      elsif (source2 = OPSOURCE_MEM and fetchedSource2 = '0') then
-                        if (opsize = 1) then
+                        if (opsize = '0') then
                            memFetchValue2 <= x"00" & unsigned(bus_dataread(7 downto 0));
                            fetchedSource2 <= '1';
                            if (pushlist /= x"0000") then
@@ -1687,10 +1721,22 @@ begin
                      
                   when CPUSTAGE_IRQVECTOR_REQ =>
                      if (ce = '1') then
-                        bus_addr      <= resize(irqvector, 20);
+                        if (irqExtern = '1') then
+                           if (memFirst = '1') then
+                              bus_addr      <= resize(irqvector_in, 20);
+                           else
+                              bus_addr      <= resize(irqvector_in + 2, 20);
+                           end if;
+                        else
+                           if (memFirst = '1') then
+                              bus_addr      <= resize(irqvector, 20);
+                           else
+                              bus_addr      <= resize(irqvector + 2, 20);
+                           end if;
+                        end if;
+
                         bus_read      <= '1';
                         prefetchAllow <= '0';
-                        irqvector     <= irqvector + 2;
                         cpustage      <= CPUSTAGE_IRQVECTOR_WAIT;
                      end if;
                      
@@ -1739,7 +1785,7 @@ begin
                            when 13 => pushValue := std_logic_vector(regs.reg_ip - prefixIP);
                            when 14 => pushValue := std_logic_vector(memFetchValue1);
                            when 15 => 
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  pushValue := std_logic_vector(resize(signed(fetch1Val(7 downto 0)), 16)); 
                               else 
                                  pushValue := std_logic_vector(fetch1Val);
@@ -1753,7 +1799,7 @@ begin
                               bus_read         <= '0';
                               bus_write        <= '1';
                               bus_be           <= "11";
-                              bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 2, 20);
+                              bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 2,16), 20);
                               bus_datawrite    <= pushValue;
                               prefetchAllow    <= '0';
                               cpustage         <= CPUSTAGE_CHECKDATAREADY;
@@ -1762,7 +1808,7 @@ begin
                               bus_read         <= '0';
                               bus_write        <= '1';
                               bus_be           <= "01";
-                              bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 2, 20);
+                              bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 2,16), 20);
                               bus_datawrite    <= pushValue;
                               prefetchAllow    <= '0';
                               pushFirst        <= '0';
@@ -1772,7 +1818,7 @@ begin
                            bus_read         <= '0';
                            bus_write        <= '1';
                            bus_be           <= "01";
-                           bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp - 1, 20);
+                           bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp - 1,16), 20);
                            bus_datawrite    <= x"00" & pushValue(15 downto 8);
                            prefetchAllow    <= '0';
                            cpustage         <= CPUSTAGE_CHECKDATAREADY;
@@ -1803,7 +1849,7 @@ begin
                         if (popFirst = '1') then
                            bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp, 20);
                         else
-                           bus_addr         <= resize(regs.reg_ss * 16 + regs.reg_sp + 1, 20);
+                           bus_addr         <= resize(regs.reg_ss * 16 + resize(regs.reg_sp + 1, 16), 20);
                         end if;
                         prefetchAllow    <= '0';
                         
@@ -1897,7 +1943,7 @@ begin
                         when OPSOURCE_MEM          => source1Val := memFetchValue1;
                         when OPSOURCE_MODRM_REG    => source1Val := MODRM_value_reg;
                         when OPSOURCE_MODRM_ADDR   => source1Val := memAddr;
-                        when OPSOURCE_ACC          => if (opsize = 1) then source1Val := x"00" & regs.reg_ax(7 downto 0); else source1Val := regs.reg_ax; end if; 
+                        when OPSOURCE_ACC          => if (opsize = '0') then source1Val := x"00" & regs.reg_ax(7 downto 0); else source1Val := regs.reg_ax; end if; 
                         when OPSOURCE_STRINGLOAD1  => source1Val := stringLoad;
                         when OPSOURCE_STRINGLOAD2  => source1Val := stringLoad2;
                         when OPSOURCE_IMMIDIATE    => source1Val := x"00" & immidiate8;
@@ -1920,7 +1966,7 @@ begin
                         when OPSOURCE_IRQVECTOR    => source2Val := fetch2Val;
                         when OPSOURCE_MEM          => source2Val := memFetchValue2;
                         when OPSOURCE_MODRM_REG    => source2Val := MODRM_value_reg;
-                        when OPSOURCE_ACC          => if (opsize = 1) then source2Val := x"00" & regs.reg_ax(7 downto 0); else source2Val := regs.reg_ax; end if; 
+                        when OPSOURCE_ACC          => if (opsize = '0') then source2Val := x"00" & regs.reg_ax(7 downto 0); else source2Val := regs.reg_ax; end if; 
                         when OPSOURCE_STRINGLOAD1  => source2Val := stringLoad;
                         when OPSOURCE_STRINGLOAD2  => source2Val := stringLoad2;
                         when OPSOURCE_IMMIDIATE    => source2Val := x"00" & immidiate8;
@@ -1948,7 +1994,7 @@ begin
                      if (aluop /= ALU_OP_NOTHING) then
                         case (aluop) is
                            when ALU_OP_SET1 =>
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
                               else
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
@@ -1956,7 +2002,7 @@ begin
                               result := source1Val or op2value;
 
                            when ALU_OP_CLR1 =>
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
                               else
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
@@ -1964,7 +2010,7 @@ begin
                               result := source1Val and (not op2value);
 
                            when ALU_OP_TEST1 =>
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
                               else
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
@@ -1974,7 +2020,7 @@ begin
                               newZero := '1'; newParity := '1'; newSign := '1';
 
                            when ALU_OP_NOT1 =>
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(2 downto 0)));
                               else
                                  op2value := shift_left(to_unsigned(1, 16), to_integer(source2Val(3 downto 0)));
@@ -2012,8 +2058,8 @@ begin
                               if (source1Val             > 0) then regs.FlagCar <= '1'; else regs.FlagCar <= '0'; end if;
                               if (source1Val(3 downto 0) > 0) then regs.FlagHaC <= '1'; else regs.FlagHaC <= '0'; end if;
                               regs.FlagOvf <= '0';
-                              if (opsize = 1 and source1Val(7 downto 0) =   x"80") then regs.FlagOvf <= '1'; end if;
-                              if (opsize = 2 and source1Val             = x"8000") then regs.FlagOvf <= '1'; end if;
+                              if (opsize = '0' and source1Val(7 downto 0) =   x"80") then regs.FlagOvf <= '1'; end if;
+                              if (opsize = '1' and source1Val             = x"8000") then regs.FlagOvf <= '1'; end if;
                               newZero := '1'; newParity := '1'; newSign := '1';
                            
                            when ALU_OP_ADD | ALU_OP_INC | ALU_OP_ADC =>
@@ -2025,11 +2071,11 @@ begin
                               result  := source1Val + op2value;
                               if (aluop /= ALU_OP_INC) then
                                  regs.FlagCar <= '0';
-                                 if (opsize = 1 and to_integer(source1Val) + to_integer(op2value) >   16#FF#) then regs.FlagCar <= '1'; end if;
-                                 if (opsize = 2 and to_integer(source1Val) + to_integer(op2value) > 16#FFFF#) then regs.FlagCar <= '1'; end if;
+                                 if (opsize = '0' and to_integer(source1Val) + to_integer(op2value) >   16#FF#) then regs.FlagCar <= '1'; end if;
+                                 if (opsize = '1' and to_integer(source1Val) + to_integer(op2value) > 16#FFFF#) then regs.FlagCar <= '1'; end if;
                               end if;
                               if (to_integer(source1Val(3 downto 0)) + to_integer(op2value(3 downto 0))  >= 16) then regs.FlagHaC <= '1'; else regs.FlagHaC <= '0'; end if;
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  regs.FlagOvf <= (source1Val(7) xor result(7)) and (op2value(7) xor result(7));
                               else
                                  regs.FlagOvf <= (source1Val(15) xor result(15)) and (op2value(15) xor result(15));
@@ -2046,7 +2092,7 @@ begin
                                  if (op2value > source1Val) then regs.FlagCar <= '1'; else regs.FlagCar <= '0'; end if;
                               end if;
                               if (op2value(3 downto 0) > source1Val(3 downto 0)) then regs.FlagHaC <= '1'; else regs.FlagHaC <= '0'; end if;
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  regs.FlagOvf <= (source1Val(7) xor op2value(7)) and (source1Val(7) xor result(7));
                               else
                                  regs.FlagOvf <= (source1Val(15) xor op2value(15)) and (source1Val(15) xor result(15));
@@ -2054,7 +2100,7 @@ begin
                               
                            when ALU_OP_ROL =>
                               result17 := resize(source1Val, 17) sll to_integer(source2Val(4 downto 0));
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  result(7 downto 0) := source1Val(7 downto 0) rol to_integer(source2Val(4 downto 0));
                                  regs.FlagCar <= result17(8);
                                  regs.FlagOvf <= source1Val(7) xor result(7);
@@ -2069,7 +2115,7 @@ begin
                               result17 := (source1Val & '0') srl to_integer(source2Val(4 downto 0));
                               result := result17(16 downto 1);
                               regs.FlagCar <= result17(0);
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  result(7 downto 0) := source1Val(7 downto 0) ror to_integer(source2Val(4 downto 0));
                                  regs.FlagOvf <= source1Val(7) xor result(7);
                               else
@@ -2082,7 +2128,7 @@ begin
                               result := source1Val;
                               for i in 0 to 31 loop
                                  if (i < source2Val(4 downto 0)) then
-                                    if (opsize = 1) then
+                                    if (opsize = '0') then
                                        carryWork2 := result(7);
                                     else
                                        carryWork2 := result(15);
@@ -2092,7 +2138,7 @@ begin
                                  end if;
                               end loop;
                               regs.FlagCar <= carryWork1;
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  regs.FlagOvf <= (source1Val(7) xor result(7));
                               else
                                  regs.FlagOvf <= (source1Val(15) xor result(15));
@@ -2105,7 +2151,7 @@ begin
                                  if (i < source2Val(4 downto 0)) then
                                     carryWork2 := result(0);
                                     result     := '0' & result(15 downto 1);
-                                    if (opsize = 1) then
+                                    if (opsize = '0') then
                                        result(7) := carryWork1;
                                     else
                                        result(15) := carryWork1;
@@ -2114,7 +2160,7 @@ begin
                                  end if;
                               end loop;
                               regs.FlagCar <= carryWork1;
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  regs.FlagOvf <= (source1Val(7) xor result(7));
                               else
                                  regs.FlagOvf <= (source1Val(15) xor result(15));
@@ -2122,12 +2168,12 @@ begin
                            
                            when ALU_OP_SHL | ALU_OP_SAL =>
                               result17 := resize(source1Val, 17) sll to_integer(source2Val(4 downto 0));
-                              if (opsize = 1) then regs.FlagCar <= result17(8); end if;
-                              if (opsize = 2) then regs.FlagCar <= result17(16); end if;
+                              if (opsize = '0') then regs.FlagCar <= result17(8); end if;
+                              if (opsize = '1') then regs.FlagCar <= result17(16); end if;
                               if (aluop = ALU_OP_SAL) then 
                                  regs.FlagOvf <= '0'; 
                               else
-                                 if (opsize = 1) then
+                                 if (opsize = '0') then
                                     regs.FlagOvf <= source1Val(7) xor result17(7);
                                  else
                                     regs.FlagOvf <= source1Val(15) xor result17(15);
@@ -2140,7 +2186,7 @@ begin
                               result17 := (source1Val & '0') srl to_integer(source2Val(4 downto 0));
                               result := result17(16 downto 1);
                               regs.FlagCar <= result17(0);
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  regs.FlagOvf <= source1Val(7) xor result(7);
                               else
                                  regs.FlagOvf <= source1Val(15) xor result(15);
@@ -2149,7 +2195,7 @@ begin
                               
                            when ALU_OP_SAR =>
                               if (source2Val(4) = '1') then
-                                 if ((opsize = 1 and source1Val(7) = '1') or (opsize = 2 and source1Val(15) = '1')) then
+                                 if ((opsize = '0' and source1Val(7) = '1') or (opsize = '1' and source1Val(15) = '1')) then
                                     result       := x"FFFF";
                                     regs.FlagCar <= '1';
                                  else
@@ -2159,7 +2205,7 @@ begin
                               else
                                  result17 := (source1Val & '0') srl to_integer(source2Val(4 downto 0));
                                  regs.FlagCar <= result17(0);
-                                 if (opsize = 1) then
+                                 if (opsize = '0') then
                                     result   := x"00" & unsigned(shift_right(signed(source1Val(7 downto 0)),to_integer(source2Val(4 downto 0))));
                                  else
                                     result   := unsigned(shift_right(signed(source1Val),to_integer(source2Val(4 downto 0))));
@@ -2171,7 +2217,7 @@ begin
                            
                            when ALU_OP_MUL =>
                               regs.FlagCar <= '0'; regs.FlagOvf <= '0';
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  result32 := resize(source1Val(7 downto 0) * memFetchValue2, 32);
                                  regs.reg_ax <= result32(15 downto 0);
                                  if (result32(31 downto 8) /= x"000000") then
@@ -2188,7 +2234,7 @@ begin
                            
                            when ALU_OP_MULI => 
                               regs.FlagCar <= '0'; regs.FlagOvf <= '0';
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  result32 := unsigned(to_signed(to_integer(signed(source1Val(7 downto 0))) * to_integer(signed(memFetchValue2(7 downto 0))), 32));
                                  if (opcode = OP_NOP) then regs.reg_ax <= result32(15 downto 0); end if;
                                  if (result32(31 downto 8) /= x"000000") then
@@ -2273,7 +2319,7 @@ begin
                      end if;
          
                      -- flags
-                     if (opsize = 1) then
+                     if (opsize = '0') then
                         result(15 downto 8) := x"00";
                      end if;
                      
@@ -2282,7 +2328,7 @@ begin
                      end if;
                      
                      if (newSign = '1') then
-                        if (opsize = 1) then regs.FlagSgn <= result(7); else regs.FlagSgn <= result(15); end if;
+                        if (opsize = '0') then regs.FlagSgn <= result(7); else regs.FlagSgn <= result(15); end if;
                      end if;
          
                      if (newParity = '1') then
@@ -2327,7 +2373,7 @@ begin
                                     bus_addr         <= resize(varmemSegment * 16 + memAddr + 1, 20);
                                     bus_datawrite    <= x"00" & std_logic_vector(resultval(15 downto 8));
                                     bus_be           <= "01";
-                                 elsif (opsize = 2 and memAddr(0) = '0') then
+                                 elsif (opsize = '1' and memAddr(0) = '0') then
                                     bus_addr         <= resize(varmemSegment * 16 + memAddr, 20);
                                     bus_datawrite    <= std_logic_vector(resultval);
                                     bus_be           <= "11";
@@ -2337,7 +2383,7 @@ begin
                                     bus_be           <= "01";
                                  end if;
                                  
-                                 if (opsize = 1 or memFirst = '0' or memAddr(0) = '0') then
+                                 if (opsize = '0' or memFirst = '0' or memAddr(0) = '0') then
                                     if (SLOWTIMING = '1') then newExeDelay := newExeDelay + 1; end if;
                                     if (opcodeNext /= OP_INVALID) then
                                        if (target_reg2 /= CPU_REG_NONE) then 
@@ -2435,7 +2481,7 @@ begin
                                  if (opcodeNext = OP_INVALID) then
                                     regs.reg_ax(7 downto 0) <= unsigned(RegBus_Dout);
                                  end if;
-                                 if (opsize = 1) then
+                                 if (opsize = '0') then
                                     if (opcodeNext /= OP_INVALID) then
                                        if (ce = '1') then
                                           source1        <= source2;
@@ -2472,7 +2518,7 @@ begin
                            
                         when OP_OPOUT =>
                            memFirst <= '0';
-                           if (opsize = 1 or memFirst = '1') then
+                           if (opsize = '0' or memFirst = '1') then
                               RegBus_Din   <= std_logic_vector(source2Val(7 downto 0));
                               RegBus_Adr   <= std_logic_vector(source1Val(7 downto 0));
                               RegBus_wren  <= '1';
@@ -2481,7 +2527,7 @@ begin
                               RegBus_Adr   <= std_logic_vector(source1Val(7 downto 0) + 1);
                               RegBus_wren  <= '1';
                            end if;
-                           if (opsize = 1 or (memFirst = '0' and ce = '1')) then
+                           if (opsize = '0' or (memFirst = '0' and ce = '1')) then
                               exeDone      := '1';
                               newExeDelay  := newExeDelay + 1;
                            end if;
@@ -2592,6 +2638,11 @@ begin
                            end if;
                         
                         when OP_STRINGLOAD =>
+                           if (opsize = '1') then
+                               wordAligned := (not regs.reg_si(0));
+                           else
+                               wordAligned := '0';
+                           end if;
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2600,7 +2651,7 @@ begin
                               consumePrefetch <= 1;
                               newExeDelay     := newExeDelay + 1;
                               exeDone         := '1';
-                              if (opcodeNext /= OP_INVALID) then newExeDelay := newExeDelay + 1 + opsize; end if;
+                              if (opcodeNext /= OP_INVALID) then newExeDelay := newExeDelay + 2 + to_integer('0'&opsize); end if;
                            else
                            
                               case (opstep) is
@@ -2627,17 +2678,19 @@ begin
                                  when 2 => 
                                     opstep <= 0;
                                     memFirst <= '0';
-                                    if (opsize = 1 or memFirst = '1') then 
+                                    if (wordAligned = '1') then
+                                       stringLoad(15 downto 0) <= unsigned(bus_dataread(15 downto 0));
+                                    elsif (opsize = '0' or memFirst = '1') then
                                        stringLoad(7 downto 0) <= unsigned(bus_dataread(7 downto 0));
-                                       if (opsize = 1) then stringLoad(15 downto 8) <= x"00"; end if;
+                                       if (opsize = '0') then stringLoad(15 downto 8) <= x"00"; end if;
                                     else
                                        stringLoad(15 downto 8) <= unsigned(bus_dataread(7 downto 0));
                                     end if;
-                                    if (opsize = 1 or memFirst = '0') then
+                                    if (opsize = '0' or memFirst = '0' or wordAligned = '1') then
                                        if (regs.FlagDir) then 
-                                          regs.reg_si <= regs.reg_si - opsize;
+                                          regs.reg_si <= regs.reg_si - 1 - to_integer('0'&opsize);
                                        else                                 
-                                          regs.reg_si <= regs.reg_si + opsize;
+                                          regs.reg_si <= regs.reg_si + 1 + to_integer('0'&opsize);
                                        end if;
                                     
                                        if (opcodeNext /= OP_INVALID) then
@@ -2665,6 +2718,12 @@ begin
                            end if;
                            
                         when OP_STRINGCOMPARE =>
+                           if (opsize = '1') then
+                               wordAligned := (not regs.reg_di(0));
+                           else
+                               wordAligned := '0';
+                           end if;
+
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2692,13 +2751,15 @@ begin
                                  
                                  when 2 => 
                                     memFirst <= '0';
-                                    if (opsize = 1 or memFirst = '1') then 
+                                    if (wordAligned = '1') then
+                                       stringLoad2(15 downto 0) <= unsigned(bus_dataread(15 downto 0));
+                                    elsif (opsize = '0' or memFirst = '1') then
                                        stringLoad2(7 downto 0) <= unsigned(bus_dataread(7 downto 0));
-                                       if (opsize = 1) then stringLoad2(15 downto 8) <= x"00"; end if;
+                                       if (opsize = '0') then stringLoad2(15 downto 8) <= x"00"; end if;
                                     else
                                        stringLoad2(15 downto 8) <= unsigned(bus_dataread(7 downto 0));
                                     end if;
-                                    if (opsize = 1 or memFirst = '0') then
+                                    if (opsize = '0' or memFirst = '0' or wordAligned = '1') then
                                        opstep <= 3;
                                        aluop  <= ALU_OP_CMP;
                                     else
@@ -2709,9 +2770,9 @@ begin
                                     if (ce = '1') then
                                        exeDone := '1';
                                        if (regs.FlagDir) then 
-                                          regs.reg_di <= regs.reg_di - opsize;
+                                          regs.reg_di <= regs.reg_di - 1 - to_integer('0'&opsize);
                                        else                                 
-                                          regs.reg_di <= regs.reg_di + opsize;
+                                          regs.reg_di <= regs.reg_di + 1 + to_integer('0'&opsize);
                                        end if;
                                        if (repeat = '1') then
                                           regs.reg_cx <= regs.reg_cx - 1;
@@ -2732,6 +2793,11 @@ begin
                            end if;
                            
                         when OP_STRINGSTORE =>
+                           if (opsize = '1') then
+                               wordAligned := (not regs.reg_di(0));
+                           else
+                               wordAligned := '0';
+                           end if;
                            if (repeat = '1' and regs.reg_cx = 0) then
                               repeat          <= '0';
                               endRepeat       := '1';
@@ -2749,7 +2815,11 @@ begin
                                  bus_read          <= '0';
                                  bus_write         <= '1';
                                  bus_be            <= "01";
-                                 if (memFirst = '0') then
+                                 if (wordAligned = '1') then
+                                    bus_datawrite    <= std_logic_vector(resultval(15 downto 0));
+                                    bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di, 20);
+                                    bus_be           <= "11";
+                                 elsif (memFirst = '0') then
                                     bus_datawrite    <= x"00" & std_logic_vector(resultval(15 downto 8));
                                     bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di + 1, 20);
                                  else
@@ -2757,12 +2827,12 @@ begin
                                     bus_addr         <= resize(regs.reg_es * 16 + regs.reg_di, 20);
                                  end if;
                                  
-                                 if (opsize = 1 or memFirst = '0') then 
+                                 if (opsize = '0' or memFirst = '0' or wordAligned = '1') then
                                     exeDone   := '1';
                                     if (regs.FlagDir) then 
-                                       regs.reg_di <= regs.reg_di - opsize;
+                                       regs.reg_di <= regs.reg_di - 1 - to_integer('0'&opsize);
                                     else                                 
-                                       regs.reg_di <= regs.reg_di + opsize;
+                                       regs.reg_di <= regs.reg_di + 1 + to_integer('0'&opsize);
                                     end if;
                                     if (repeat = '1') then
                                        regs.reg_cx <= regs.reg_cx - 1;
@@ -2925,7 +2995,7 @@ begin
                               opstep     <= 1;
                               DIVstart   <= '1';
                               DIVdivisor <= '0' & x"0000" & signed(memFetchValue2);
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  DIVdividend <= '0' & x"0000" & signed(regs.reg_ax);
                               else
                                  DIVdividend <= '0' & signed(regs.reg_dx) & signed(regs.reg_ax);
@@ -2936,7 +3006,7 @@ begin
                                  irqrequest <= '1';
                                  irqvector  <= (others => '0');
                               else
-                                  if (opsize = 1) then
+                                  if (opsize = '0') then
                                     regs.reg_ax <= unsigned(DIVremainder(7 downto 0)) & unsigned(DIVquotient(7 downto 0));
                                  else
                                     regs.reg_ax <= unsigned(DIVquotient(15 downto 0));
@@ -2950,7 +3020,7 @@ begin
                               delay      <= 10;
                               opstep     <= 1;
                               DIVstart   <= '1';
-                              if (opsize = 1) then
+                              if (opsize = '0') then
                                  DIVdividend <= resize(signed(regs.reg_ax), 33);
                                  DIVdivisor  <= resize(signed(memFetchValue2(7 downto 0)), 33);
                               else
@@ -2963,7 +3033,7 @@ begin
                                  irqrequest <= '1';
                                  irqvector  <= (others => '0');
                               else
-                                  if (opsize = 1) then
+                                  if (opsize = '0') then
                                     regs.reg_ax <= unsigned(DIVremainder(7 downto 0)) & unsigned(DIVquotient(7 downto 0));
                                  else
                                     regs.reg_ax <= unsigned(DIVquotient(15 downto 0));
