@@ -178,7 +178,8 @@ wire [10:0] audio;
 wire hs, vs, cs;
 wire [2:0] r, g;
 wire [1:0] b;
-wire       hb, vb, blankn = ~(hb | vb);
+wire       hb, vb;
+wire		  blankn = ~(hb | vb);
 
 burger_time burger_time (
 	.clock_12       (clk_12),
