@@ -94,8 +94,8 @@ pll_mist pll(
 wire [31:0] status;
 wire  [1:0] buttons;
 wire  [1:0] switches;
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire [15:0] joystick_0;
+wire [15:0] joystick_1;
 wire        scandoublerD;
 wire        ypbpr;
 wire        no_csync;
@@ -308,7 +308,6 @@ rom_loader rom_loader(
 wire [15:0] ch_left, ch_right;
 wire [7:0] R, G, B;
 wire HBlank, VBlank, HSync, VSync;
-wire blankn = !(HBlank | VBlank);
 wire ce_pix;
 
 ddr_debug_data_t ddr_debug_data;
@@ -400,14 +399,16 @@ m72 m72(
     .video_60hz(video_60hz)
 );
 
-mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10), .USE_BLANKS(1'b1)) mist_video(
 	.clk_sys        ( CLK_32M          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? R[7:2] : 0   ),
-	.G              ( blankn ? G[7:2] : 0   ),
-	.B              ( blankn ? B[7:2] : 0   ),
+	.R              ( R[7:2]           ),
+	.G              ( G[7:2]           ),
+	.B              ( B[7:2]           ),
+	.HBlank         ( HBlank           ),
+	.VBlank         ( VBlank           ),
 	.HSync          ( HSync            ),
 	.VSync          ( VSync            ),
 	.VGA_R          ( VGA_R            ),
@@ -446,7 +447,7 @@ wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE,
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 
-arcade_inputs inputs (
+arcade_inputs #(.START1(8), .START2(10), .COIN1(9)) inputs (
 	.clk         ( CLK_32M     ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),
