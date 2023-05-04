@@ -25,9 +25,9 @@ module m92 (
 
     input reset_n,
     output reg ce_pix,
+    output flipped,
 
     input board_cfg_t board_cfg,
-    
 
     output [7:0] R,
     output [7:0] G,
@@ -128,6 +128,7 @@ module m92 (
 );
 
 assign ioctl_upload_index = 8'd1;
+assign flipped = NL;
 
 wire [15:0] rgb_color;
 assign R = { rgb_color[4:0], rgb_color[4:2] };
@@ -359,7 +360,7 @@ end
 wire int_req, int_ack;
 wire [8:0] int_vector;
 
-v30 v30(
+v30 #(.INTACK_DELAY(0)) v30(
     .clk(clk_sys),
     .ce(ce_cpu),
     .ce_4x(ce_4x_cpu),
@@ -593,6 +594,7 @@ GA23 ga23(
     .vram_din(sdr_vram_data),
     .vram_req(sdr_vram_req),
 
+    .NL(NL),
     .large_tileset(board_cfg.large_tileset),
 
     .sdr_data_a(sdr_bg_data_a),
@@ -696,6 +698,7 @@ sound sound(
 assign AUDIO_L = sound_sample;
 assign AUDIO_R = sound_sample;
 
+`ifndef NO_EEPROM
 eeprom_28C64 eeprom(
     .clk(clk_sys),
     .reset(~reset_n),
@@ -720,5 +723,6 @@ eeprom_28C64 eeprom(
     .ioctl_din(ioctl_din),
     .ioctl_rd(ioctl_rd)
 );
+`endif
 
 endmodule

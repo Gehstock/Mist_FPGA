@@ -33,6 +33,8 @@ module GA23(
     output reg vram_req,
     input [31:0] vram_din,
 
+    input NL,
+
     input large_tileset,
 
     input  [31:0] sdr_data_a,
@@ -77,7 +79,11 @@ assign vblank = vcnt > 10'd113 && vcnt < 10'd136;
 assign vsync = vcnt > 10'd119 && vcnt < 10'd125;
 assign hpulse = hcnt == 10'd48;
 assign vpulse = (vcnt == 10'd124 && hcnt > 10'd260) || (vcnt == 10'd125 && hcnt < 10'd260);
-assign hint = vcnt == hint_line && hcnt > 10'd422 && ~paused;
+
+wire [9:0] VE = vcnt ^ {1'b0, {9{NL}}};
+
+assign hint = VE == hint_line && hcnt > 10'd422 && ~paused;
+
 
 always_ff @(posedge clk) begin
     if (ce) begin
@@ -149,19 +155,19 @@ always_ff @(posedge clk, posedge reset) begin
                 case(rs_cyc)
                 0: vram_addr <= 'h7800;
                 4: begin
-                    rs_y = y_ofs[0] + vcnt;
+                    rs_y = y_ofs[0] + VE;
                     vram_addr <= 'h7a00 + rs_y[8:0];
                     vram_req <= ~vram_req;
                 end
                 7: rowscroll[0] <= vram_din[9:0];
                 8: begin
-                    rs_y = y_ofs[1] + vcnt;
+                    rs_y = y_ofs[1] + VE;
                     vram_addr <= 'h7c00 + rs_y[8:0];
                     vram_req <= ~vram_req;
                 end
                 10: rowscroll[1] <= vram_din[9:0];
                 12: begin
-                    rs_y = y_ofs[2] + vcnt;
+                    rs_y = y_ofs[2] + VE;
                     vram_addr <= 'h7e00 + rs_y[8:0];
                     vram_req <= ~vram_req;
                 end
@@ -280,15 +286,15 @@ generate
             .clk(clk),
             .ce_pix(ce),
 
-            .NL(0),
+            .NL(NL),
             .large_tileset(large_tileset),
 
             .x_ofs(_x_ofs),
             .y_ofs(_y_ofs),
             .control(_control),
 
-            .x_base({hcnt[9:3], 3'd0}),
-            .y(_y_ofs + vcnt),
+            .x_base({hcnt[9:3] ^ {7{NL}}, 3'd0}),
+            .y(_y_ofs + VE),
             .rowscroll(_rowscroll),
 
             .vram_addr(layer_vram_addr[i]),
