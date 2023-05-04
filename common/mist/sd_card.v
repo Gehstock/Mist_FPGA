@@ -350,7 +350,10 @@ always@(posedge clk_sys) begin
 
         RD_STATE_DELAY:
             if(bit_cnt == 7) begin
-                if (delay_cnt == 0) begin
+                if (terminate_cmd) begin
+                    read_state <= RD_STATE_IDLE;
+                    cmd <= 0;
+                end else if (delay_cnt == 0) begin
                     read_state <= RD_STATE_SEND_TOKEN;
                 end else begin
                     delay_cnt <= delay_cnt - 1'd1;

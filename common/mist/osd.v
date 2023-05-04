@@ -18,6 +18,8 @@ module osd (
 	input  [5:0] R_in,
 	input  [5:0] G_in,
 	input  [5:0] B_in,
+	input        HBlank,
+	input        VBlank,
 	input        HSync,
 	input        VSync,
 
@@ -31,6 +33,7 @@ parameter OSD_X_OFFSET = 11'd0;
 parameter OSD_Y_OFFSET = 11'd0;
 parameter OSD_COLOR    = 3'd0;
 parameter OSD_AUTO_CE  = 1'b1;
+parameter USE_BLANKS   = 1'b0;
 
 localparam OSD_WIDTH   = 11'd256;
 localparam OSD_HEIGHT  = 11'd128;
@@ -89,13 +92,13 @@ end
 reg  [10:0] h_cnt;
 reg  [10:0] hs_low, hs_high;
 wire        hs_pol = hs_high < hs_low;
-wire [10:0] dsp_width = hs_pol ? hs_low : hs_high;
+wire [10:0] dsp_width = (hs_pol & !USE_BLANKS) ? hs_low : hs_high;
 
 // vertical counter
 reg  [10:0] v_cnt;
 reg  [10:0] vs_low, vs_high;
 wire        vs_pol = vs_high < vs_low;
-wire [10:0] dsp_height = vs_pol ? vs_low : vs_high;
+wire [10:0] dsp_height = (vs_pol & !USE_BLANKS) ? vs_low : vs_high;
 
 wire doublescan = (dsp_height>350);
 
@@ -134,38 +137,53 @@ always @(posedge clk_sys) begin
 	reg vsD;
 
 	if(ce_pix) begin
-		// bring hsync into local clock domain
-		hsD <= HSync;
-
-		// falling edge of HSync
-		if(!HSync && hsD) begin
-			h_cnt <= 0;
-			hs_high <= h_cnt;
-		end
-
-		// rising edge of HSync
-		else if(HSync && !hsD) begin
-			h_cnt <= 0;
-			hs_low <= h_cnt;
-			v_cnt <= v_cnt + 1'd1;
-		end else begin
+		if (USE_BLANKS) begin
 			h_cnt <= h_cnt + 1'd1;
-		end
+			if(HBlank) begin
+				h_cnt <= 0;
+				if (h_cnt != 0) begin
+					hs_high <= h_cnt;
+					v_cnt <= v_cnt + 1'd1;
+				end
+			end
+			if(VBlank) begin
+				v_cnt <= 0;
+				if (v_cnt != 0 && vs_high != v_cnt + 1'd1) vs_high <= v_cnt;
+			end
+		end else begin
+			// bring hsync into local clock domain
+			hsD <= HSync;
 
-		vsD <= VSync;
+			// falling edge of HSync
+			if(!HSync && hsD) begin
+				h_cnt <= 0;
+				hs_high <= h_cnt;
+			end
 
-		// falling edge of VSync
-		if(!VSync && vsD) begin
-			v_cnt <= 0;
-			// if the difference is only one line, that might be interlaced picture
-			if (vs_high != v_cnt + 1'd1) vs_high <= v_cnt;
-		end
+			// rising edge of HSync
+			else if(HSync && !hsD) begin
+				h_cnt <= 0;
+				hs_low <= h_cnt;
+				v_cnt <= v_cnt + 1'd1;
+			end else begin
+				h_cnt <= h_cnt + 1'd1;
+			end
 
-		// rising edge of VSync
-		else if(VSync && !vsD) begin
-			v_cnt <= 0;
-			// if the difference is only one line, that might be interlaced picture
-			if (vs_low != v_cnt + 1'd1) vs_low <= v_cnt;
+			vsD <= VSync;
+
+			// falling edge of VSync
+			if(!VSync && vsD) begin
+				v_cnt <= 0;
+				// if the difference is only one line, that might be interlaced picture
+				if (vs_high != v_cnt + 1'd1) vs_high <= v_cnt;
+			end
+
+			// rising edge of VSync
+			else if(VSync && !vsD) begin
+				v_cnt <= 0;
+				// if the difference is only one line, that might be interlaced picture
+				if (vs_low != v_cnt + 1'd1) vs_low <= v_cnt;
+			end
 		end
 	end
 end
@@ -203,8 +221,8 @@ always @(posedge clk_sys) begin
 		                          osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
 
 		osd_de <= osd_enable &&
-		    (HSync != hs_pol) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
-		    (VSync != vs_pol) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
+		    ((USE_BLANKS && !HBlank) || (!USE_BLANKS && HSync != hs_pol)) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
+		    ((USE_BLANKS && !VBlank) || (!USE_BLANKS && VSync != vs_pol)) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
 	end
 end
 

@@ -31,14 +31,29 @@ module arcade_inputs(
 	output [19:0] player4
 );
 
+// joystick button indices for special functions 0 - no joystick button assigned
+parameter COIN1 = 0;
+parameter COIN2 = 0;
+parameter START1 = 0;
+parameter START2 = 0;
+parameter START3 = 0;
+parameter START4 = 0;
+
 assign controls = { btn_tilt,
-                    btn_coin | btn_coin4_mame, btn_coin | btn_coin3_mame, btn_coin | btn_coin2_mame, btn_coin | btn_coin1_mame,
-                    btn_four_players | btn_start4_mame, btn_three_players | btn_start3_mame, btn_two_players | btn_start2_mame, btn_one_player | btn_start1_mame };
+                    btn_coin | btn_coin4_mame, btn_coin | btn_coin3_mame, btn_coin | btn_coin2_mame | joy_coin2, btn_coin | btn_coin1_mame | joy_coin1,
+                    btn_four_players | btn_start4_mame | joy_start4, btn_three_players | btn_start3_mame | joy_start3, btn_two_players | btn_start2_mame | joy_start2, btn_one_player | btn_start1_mame | joy_start1 };
 
 wire [19:0] joy0 = joyswap ? joystick_1 : joystick_0;
 wire [19:0] joy1 = joyswap ? joystick_0 : joystick_1;
 wire [19:0] joy2 = joystick_2;
 wire [19:0] joy3 = joystick_3;
+
+wire joy_coin1 =  (COIN1  == 0) ? 1'b0 : (joy0[COIN1]  | joy1[COIN1]  | joy2[COIN1]  | joy3[COIN1]);
+wire joy_coin2 =  (COIN2  == 0) ? 1'b0 : (joy0[COIN2]  | joy1[COIN2]  | joy2[COIN2]  | joy3[COIN2]);
+wire joy_start1 = (START1 == 0) ? 1'b0 : (joy0[START1] | joy1[START1] | joy2[START1] | joy3[START1]);
+wire joy_start2 = (START2 == 0) ? 1'b0 : (joy0[START2] | joy1[START2] | joy2[START2] | joy3[START2]);
+wire joy_start3 = (START3 == 0) ? 1'b0 : (joy0[START3] | joy1[START3] | joy2[START3] | joy3[START3]);
+wire joy_start4 = (START4 == 0) ? 1'b0 : (joy0[START4] | joy1[START4] | joy2[START4] | joy3[START4]);
 
 wire [19:0] p1;
 wire [19:0] p2;

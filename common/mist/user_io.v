@@ -112,7 +112,6 @@ parameter FEATURES=0; // requested features from the firmware
 parameter ARCHIE=0;
 
 localparam W = $clog2(SD_IMAGES);
-localparam PS2_FIFO_BITS = 4;
 
 reg [6:0]     sbuf;
 reg [7:0]     cmd;
