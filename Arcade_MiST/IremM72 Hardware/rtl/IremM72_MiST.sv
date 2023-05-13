@@ -31,7 +31,7 @@ module IremM72_MiST(
 	output        SDRAM_CKE
 );
 
-`include "rtl/build_id.v" 
+`include "build_id.v" 
 
 `define CORE_NAME "RTYPE2"
 //`define CORE_NAME "HHARRYU"
