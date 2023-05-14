@@ -464,7 +464,7 @@ begin
    cpu_halt       <= halt;
    cpu_irqrequest <= irqrequest;
    cpu_prefix     <= '1' when PrefixIP > 0 else '0';
-   bus_prefetch   <= '0' when (prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
+   bus_prefetch   <= '0' when (prefetchAllow = '0' or prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
 
    canSpeedup <= '1';
    
