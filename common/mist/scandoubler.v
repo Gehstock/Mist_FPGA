@@ -43,6 +43,8 @@ module scandoubler
 	input      [1:0] scanlines,
 
 	// shifter video interface
+	input            hb_in,
+	input            vb_in,
 	input            hs_in,
 	input            vs_in,
 	input      [COLOR_DEPTH-1:0] r_in,
@@ -50,6 +52,8 @@ module scandoubler
 	input      [COLOR_DEPTH-1:0] b_in,
 
 	// output interface
+	output       hb_out,
+	output       vb_out,
 	output       hs_out,
 	output       vs_out,
 	output [5:0] r_out,
@@ -68,13 +72,7 @@ reg [5:0] r;
 reg [5:0] g;
 reg [5:0] b;
 
-wire [5:0] r_o;
-wire [5:0] g_o;
-wire [5:0] b_o;
-reg hs_o;
-reg vs_o;
-
-wire [COLOR_DEPTH*3-1:0] sd_mux = bypass ? {r_in, g_in, b_in} : sd_out;
+wire [COLOR_DEPTH*3-1:0] sd_mux = bypass ? {r_in, g_in, b_in} : sd_out[COLOR_DEPTH*3-1:0];
 
 always @(*) begin
 	if (COLOR_DEPTH == 6) begin
@@ -129,16 +127,21 @@ always @(posedge clk_sys) begin
 	end
 end
 
-assign r_o = r_mul[11:6];
-assign g_o = g_mul[11:6];
-assign b_o = b_mul[11:6];
-
+wire [5:0] r_o = r_mul[11:6];
+wire [5:0] g_o = g_mul[11:6];
+wire [5:0] b_o = b_mul[11:6];
+wire hb_o = hb_sd;
+wire vb_o = vb_sd;
+reg hs_o;
+reg vs_o;
 
 // Output multiplexing
-
-assign r_out = bypass ? r : r_o;
-assign g_out = bypass ? g : g_o;
-assign b_out = bypass ? b : b_o;
+wire   blank_out = hb_out | vb_out;
+assign r_out = blank_out ? {COLOR_DEPTH{1'b0}} : bypass ? r : r_o;
+assign g_out = blank_out ? {COLOR_DEPTH{1'b0}} : bypass ? g : g_o;
+assign b_out = blank_out ? {COLOR_DEPTH{1'b0}} : bypass ? b : b_o;
+assign hb_out = bypass ? hb_in : hb_o;
+assign vb_out = bypass ? vb_in : vb_o;
 assign hs_out = bypass ? hs_in : hs_o;
 assign vs_out = bypass ? vs_in : vs_o;
 
@@ -146,14 +149,14 @@ assign pixel_ena = bypass ? ce_x1 : ce_x2;
 
 
 // scan doubler output register
-reg [COLOR_DEPTH*3-1:0] sd_out;
+reg [3+COLOR_DEPTH*3-1:0] sd_out;
 
 // ==================================================================
 // ======================== the line buffers ========================
 // ==================================================================
 
 // 2 lines of 2**HCNT_WIDTH pixels 3*COLOR_DEPTH bit RGB
-(* ramstyle = "no_rw_check" *) reg [COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH];
+(* ramstyle = "no_rw_check" *) reg [3+COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH];
 
 // use alternating sd_buffers when storing/reading data   
 reg        line_toggle;
@@ -174,11 +177,13 @@ wire ce_x1 = (i_div == ce_divider_in);
 
 always @(posedge clk_sys) begin
 	reg hsD, vsD;
+	reg vbD;
 
 	// Pixel logic on x1 clkena
 	if(ce_x1) begin
 		hcnt <= hcnt + 1'd1;
-		sd_buffer[{line_toggle, hcnt}] <= {r_in, g_in, b_in};
+		vbD <= vb_in;
+		sd_buffer[{line_toggle, hcnt}] <= {vbD & ~vb_in, ~vbD & vb_in, hb_in, r_in, g_in, b_in};
 	end
 
 	// Generate pixel clock
@@ -217,7 +222,11 @@ end
 
 reg  [HSCNT_WIDTH:0] sd_synccnt;
 reg  [HCNT_WIDTH-1:0] sd_hcnt;
-reg        hs_sd;
+reg vb_sd = 0;
+wire vb_on = sd_out[COLOR_DEPTH*3+1];
+wire vb_off = sd_out[COLOR_DEPTH*3+2];
+reg hb_sd = 0;
+reg hs_sd = 0;
 
 // Output pixel clock, aligned with output sync:
 reg [2:0] sd_i_div;
@@ -234,14 +243,17 @@ always @(posedge clk_sys) begin
 
 		// read data from line sd_buffer
 		sd_out <= sd_buffer[{~line_toggle, sd_hcnt}];
+
+		if (vb_on) vb_sd <= 1;
+		if (vb_off) vb_sd <= 0;
+		hb_sd <= sd_out[COLOR_DEPTH*3];
 	end
 
 	//  Framing logic on sysclk
 	sd_synccnt <= sd_synccnt + 1'd1;
 	hsD <= hs_in;
-	if(hsD && !hs_in) sd_synccnt <= hs_max;
 
-	if(sd_synccnt == hs_max) begin
+	if(sd_synccnt == hs_max || (hsD && !hs_in)) begin
 		sd_synccnt <= 0;
 		sd_hcnt <= 0;
 	end

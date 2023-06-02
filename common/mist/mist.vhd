@@ -90,7 +90,8 @@ generic (
 	SD_HCNT_WIDTH: integer := 9;
 	COLOR_DEPTH  : integer := 6;
 	OSD_AUTO_CE  : boolean := true;
-	SYNC_AND     : boolean := false
+	SYNC_AND     : boolean := false;
+	USE_BLANKS   : boolean := false
 );
 port (
 	clk_sys     : in std_logic;
@@ -107,6 +108,8 @@ port (
 	no_csync    : in std_logic := '0';
 	blend       : in std_logic := '0';
 
+	HBlank      : in std_logic := '0';
+	VBlank      : in std_logic := '0';
 	HSync       : in std_logic;
 	VSync       : in std_logic;
 	R           : in std_logic_vector(COLOR_DEPTH-1 downto 0);
