@@ -52,7 +52,9 @@ localparam CONF_STR = {
 `endif
 	//"OD,Audio Filters,On,Off;",
 	"DIP;",
+`ifndef NO_EEPROM
 	"R8192,Save EEPROM;",
+`endif
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -66,7 +68,7 @@ wire  [2:0] dbg_en_layers = ~status[11:9];
 wire        dbg_fm_en = ~status[12];
 wire        dbg_sprite_freeze = 0;
 wire        filters = 0;//~status[13];
-wire  [1:0] orientation = {1'b0, core_mod[0]};
+wire  [1:0] orientation = {flipped, core_mod[0]};
 reg         oneplayer = 0;
 wire [15:0] dip_sw = status[31:16];
 
@@ -323,13 +325,13 @@ rom_loader rom_loader(
 wire [15:0] ch_left, ch_right;
 wire [7:0] R, G, B;
 wire HBlank, VBlank, HSync, VSync;
-wire blankn = !(HBlank | VBlank);
 wire ce_pix;
-
+wire flipped;
 
 m92 m92(
     .clk_sys(CLK_40M),
     .ce_pix(ce_pix),
+    .flipped(flipped),
     .reset_n(~reset),
     .HBlank(HBlank),
     .VBlank(VBlank),
@@ -420,14 +422,16 @@ m92 m92(
     .en_audio_filters(filters)
 );
 
-mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10), .USE_BLANKS(1)) mist_video(
 	.clk_sys        ( CLK_40M          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( blankn ? R[7:2] : 0   ),
-	.G              ( blankn ? G[7:2] : 0   ),
-	.B              ( blankn ? B[7:2] : 0   ),
+	.R              ( R[7:2]           ),
+	.G              ( G[7:2]           ),
+	.B              ( B[7:2]           ),
+	.HBlank         ( HBlank           ),
+	.VBlank         ( VBlank           ),
 	.HSync          ( HSync            ),
 	.VSync          ( VSync            ),
 	.VGA_R          ( VGA_R            ),
@@ -469,7 +473,7 @@ wire m_up4, m_down4, m_left4, m_right4, m_up4B, m_down4B, m_left4B, m_right4B;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
 wire [11:0] m_fire1, m_fire2, m_fire3, m_fire4;
 
-arcade_inputs inputs (
+arcade_inputs #(.START1(10), .START2(12), .COIN1(11)) inputs (
 	.clk         ( CLK_40M     ),
 	.key_strobe  ( key_strobe  ),
 	.key_pressed ( key_pressed ),

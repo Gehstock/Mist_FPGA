@@ -221,7 +221,7 @@ end
 assign dout = buf_cs ? (direct_access_obj ? obj_din : (direct_access_pal ? pal_din : buffer_din)) : 16'd0;
 assign busy = copy_state != IDLE;
 
-assign buffer_we = ~busy & buf_cs & wr & ~direct_access_obj & ~direct_access_pal;
+assign buffer_we = ~busy & buf_cs & wr;
 assign buffer_addr = busy ? buffer_src_addr : addr;
 
 assign buffer_dout = din;

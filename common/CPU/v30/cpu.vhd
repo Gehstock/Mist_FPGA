@@ -33,6 +33,10 @@ use work.pReg_savestates.all;
 use work.whatever.all;
 
 entity v30 is
+   generic
+   (
+      INTACK_DELAY      : integer := 22
+   );
    port
    (
       clk               : in  std_logic;
@@ -460,7 +464,7 @@ begin
    cpu_halt       <= halt;
    cpu_irqrequest <= irqrequest;
    cpu_prefix     <= '1' when PrefixIP > 0 else '0';
-   bus_prefetch   <= '0' when (prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
+   bus_prefetch   <= '0' when (prefetchAllow = '0' or prefetchState = PREFETCH_IDLE or prefetchState = PREFETCH_RECEIVE) else '1';
 
    canSpeedup <= '1';
    
@@ -698,7 +702,7 @@ begin
                         if (irqrequest = '1') then
                            irqrequest     <= '0';
                            repeat         <= '0';
-                           delay          <= 22;
+                           delay          <= INTACK_DELAY;
                            cpustage       <= CPUSTAGE_IRQVECTOR_REQ;
                            pushlist       <= REGPOS_f or REGPOS_cs or REGPOS_ip;
                            poplist        <= (others => '0');
