@@ -1,0 +1,63 @@
+<misterromdescription>
+    <name>Rally Bike / Dash Yarou</name>
+    <setname>rallybik</setname>
+    <rbf>rallybike</rbf>
+    <mameversion>0254</mameversion>
+    <year>1988</year>
+    <manufacturer>Toaplan / Taito Corporation</manufacturer>
+    <players>2</players>
+    <joystick>8-way</joystick>
+    <rotation>Vertical (CW)</rotation>
+    <region>Japan</region>
+
+  <switches default="01,00,00,00,00,00,00,00">
+    <!-- DSWA -->
+    <dip name="Table Type" bits="0" ids="Cocktail,Upright"/>
+    <dip name="Screen Rotation" bits="1" ids="Off,On"/>
+    <dip name="Test Mode" bits="2" ids="Off,On"/>
+    <dip name="Advertise Sounds" bits="3" ids="On,Off"/>
+    <dip name="Coin A" bits="4,5" ids="1/1,2/1,1/2,3/1,2/1,4/1,2/3"/>
+    <dip name="Coin B" bits="6,7" ids="1/1,1/2,1/2,1/3,2/1,1/4,2/3,1/6"/>
+    <!-- DSWB -->
+    <dip name="Difficulty" bits="8,9" ids="B,A,C,D"/>
+    <dip name="Territory" bits="12,13" ids="Japan,USA-0,Europe,USA-1"/>
+    <dip name="Dip-Switch Display" bits="14" ids="Off,On"/>
+    <dip name="Continue Play" bits="15" ids="Yes,No"/>
+  </switches>
+
+    <buttons names="Accelerator,Brake,-,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,L,Start,Select"/>
+
+    <rom index="0" zip="rallybik.zip" md5="None">
+        <!-- maincpu - starts at 0x0 -->
+        <interleave output="16">
+            <part name="b45-02.rom" crc="383386d7" map="01"/>
+            <part name="b45-01.rom" crc="7602f6a7" map="10"/>
+        </interleave>
+        <part repeat="0x30000"> FF</part>
+        <interleave output="16">
+            <part name="b45-04.rom" crc="e9b005b1" map="01"/>
+            <part name="b45-03.rom" crc="555344ce" map="10"/>
+        </interleave>
+
+        <!-- gfx1 - starts at 0x80000 -->
+        <interleave output="32">
+            <part name="b45-09.bin" crc="1dc7b010" map="0001"/>
+            <part name="b45-08.bin" crc="fab661ba" map="0010"/>
+            <part name="b45-07.bin" crc="cd3748b4" map="0100"/>
+            <part name="b45-06.bin" crc="144b085c" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- scu - starts at 0x180000 -->
+        <part name="b45-11.rom" crc="0d56e8bb"/>
+        <part name="b45-10.rom" crc="dbb7c57e"/>
+        <part name="b45-12.rom" crc="cf5aae4e"/>
+        <part name="b45-13.rom" crc="1683b07c"/>
+        <part repeat="0x40000"> FF</part>
+
+        <!-- audiocpu - starts at 0x200000 -->
+        <part name="b45-05.rom" crc="10814601"/>
+
+        <!-- Total 0x204000 bytes - 2064 kBytes -->
+    </rom>
+</misterromdescription>

@@ -1,0 +1,72 @@
+<misterromdescription>
+    <name>Same! Same! Same! (2P Set)</name>
+    <setname>samesame2</setname>
+    <rbf>vimana</rbf>
+    <mameversion>0254</mameversion>
+    <year>1989</year>
+    <manufacturer>Toaplan</manufacturer>
+    <players>2</players>
+    <joystick>8-way</joystick>
+    <rotation>Vertical (CW)</rotation>
+    <region>Japan</region>
+
+    <switches default="00,00,00,00,00,00,00,00">
+        <!-- DSWA -->
+        <dip name="Screen Rotation" bits="1" ids="Off,On"/>
+        <dip name="Test Mode" bits="2" ids="Off,On"/>
+        <dip name="Advertise Sound" bits="3" ids="On,Off"/>
+        <dip name="Coin A" bits="4,5" ids="1/1,2/1,3/1,4/1"/>
+        <dip name="Coin B" bits="6,7" ids="1/2,1/3,1/4,1/6"/>
+        <!-- DSWB -->
+        <dip name="Difficulty" bits="8,9" ids="B,A,C,D"/>
+        <dip name="Extend" bits="10,11" ids="70k/200k,50k/150k,100k,None"/>
+        <dip name="Hero Counts" bits="12,13" ids="3,5,4,2"/>
+        <dip name="No Death/Stop Mode" bits="14" ids="Off,On"/>
+        <dip name="Continue Play" bits="15" ids="Yes,No"/>
+        <!-- TJUMP -->
+        <!-- Not applicable to samesame2, just programmed in ROM -->
+        <!-- <dip name="Territory" bits="16,17" ids="USA,Europe"/> -->
+    </switches>
+
+    <buttons names="Shot,Bomb,-,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,Start,L"/>
+
+    <rom index="1">
+        <part>01</part>
+    </rom>
+
+    <rom index="0" zip="samesame2.zip|fireshrk.zip" md5="None">
+        <!-- maincpu - starts at 0x0 -->
+        <interleave output="16">
+            <part name="o17_09x.8j" crc="3472e03e" map="01"/>
+            <part name="o17_10x.8l" crc="a3ac49b5" map="10"/>
+        </interleave>
+        <part repeat="0x30000"> FF</part>
+        <interleave output="16">
+            <part name="o17_11ii.7j" crc="6beac378" map="01"/>
+            <part name="o17_12ii.7l" crc="6adb6eb5" map="10"/>
+        </interleave>
+
+        <!-- gfx1 - starts at 0x80000 -->
+        <interleave output="32">
+            <part name="o17_05.12j" crc="565315f8" map="0001"/>
+            <part name="o17_06.13j" crc="95262d4c" map="0010"/>
+            <part name="o17_07.12l" crc="4c4b735c" map="0100"/>
+            <part name="o17_08.13l" crc="95c6586c" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- gfx2 - starts at 0x180000 -->
+        <interleave output="32">
+            <part name="o17_01.1d" crc="ea12e491" map="0001"/>
+            <part name="o17_02.3d" crc="32a13a9f" map="0010"/>
+            <part name="o17_03.5d" crc="68723dc9" map="0100"/>
+            <part name="o17_04.7d" crc="fe0ecb13" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- audiocpu - starts at 0x280000 -->
+        <part name="hd647180.017" crc="43523032"/>
+
+        <!-- Total 0x288000 bytes - 2592 kBytes -->
+    </rom>
+</misterromdescription>

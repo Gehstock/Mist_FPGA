@@ -1,0 +1,65 @@
+<misterromdescription>
+    <name>Hellfire (2P Set)</name>
+    <setname>hellfire</setname>
+    <rbf>zerowing</rbf>
+    <mameversion>0254</mameversion>
+    <year>1989</year>
+    <manufacturer>Toaplan (Taito License)</manufacturer>
+    <players>2</players>
+    <joystick>8-way</joystick>
+    <rotation>Horizontal</rotation>
+    <region>Japan</region>
+
+    <switches default="00,00,00,00,00,00,00,00">
+        <!-- DSWA -->
+        <dip name="Screen Rotation" bits="1" ids="Off,On"/>
+        <dip name="Test Mode" bits="2" ids="Off,On"/>
+        <dip name="Attract Sound" bits="3" ids="On,Off"/>
+        <dip name="Coin 1" bits="4,5" ids="1/1,2/1,1/2,3/1,2/1,4/1,2/3"/>
+        <dip name="Coin 2" bits="6,7" ids="1/1,1/2,1/2,1/3,2/1,1/4,2/3,1/6"/>
+        <!-- DSWB -->
+        <dip name="Game Difficulty" bits="8,9" ids="B,A,C,D"/>
+        <dip name="Extend" bits="10,11" ids="70k/270k,100k/250k,100k,200k"/>
+        <dip name="Player" bits="12,13" ids="3,1,2,5"/>
+        <dip name="No Hit" bits="14" ids="Off,On"/>
+        <!-- TJUMP -->
+        <dip name="Region" bits="16,19" ids="Japan,USA,Europe-0,Europe-1"/>
+    </switches>
+
+    <buttons names="Shot,Shot Direction,-,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,L,Start,Select"/>
+
+    <rom index="1">
+        <part>03</part>
+    </rom>
+
+    <rom index="0" zip="hellfire.zip" md5="None">
+        <!-- maincpu - starts at 0x0 -->
+        <interleave output="16">
+            <part name="b90_14.0" crc="101df9f5" map="01"/>
+            <part name="b90_15.1" crc="e67fd452" map="10"/>
+        </interleave>
+        <part repeat="0x40000"> FF</part>
+
+        <!-- gfx1 - starts at 0x80000 -->
+        <interleave output="32">
+            <part name="b90_04.3" crc="ea6150fc" map="0001"/>
+            <part name="b90_05.4" crc="bb52c507" map="0010"/>
+            <part name="b90_06.5" crc="cf5b0252" map="0100"/>
+            <part name="b90_07.6" crc="b98af263" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- gfx2 - starts at 0x180000 -->
+        <interleave output="32">
+            <part name="b90_11.10" crc="c33e543c" map="0001"/>
+            <part name="b90_10.9" crc="35fd1092" map="0010"/>
+            <part name="b90_09.8" crc="cf01009e" map="0100"/>
+            <part name="b90_08.7" crc="3404a5e3" map="1000"/>
+        </interleave>
+
+        <!-- audiocpu - starts at 0x200000 -->
+        <part name="b90_03.2" crc="4058fa67"/>
+
+        <!-- Total 0x208000 bytes - 2080 kBytes -->
+    </rom>
+</misterromdescription>

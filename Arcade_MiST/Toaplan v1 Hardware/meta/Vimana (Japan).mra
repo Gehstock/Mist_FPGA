@@ -1,0 +1,64 @@
+<misterromdescription>
+    <name>Vimana (Japan)</name>
+    <setname>vimanaj</setname>
+    <rbf>vimana</rbf>
+    <mameversion>0254</mameversion>
+    <year>1991</year>
+    <manufacturer>Toaplan</manufacturer>
+    <players>2</players>
+    <joystick>8-way</joystick>
+    <rotation>vertical</rotation>
+    <region>Japan</region>
+
+    <switches default="00,00,00,00,00,00,00,00">
+        <!-- DSWA -->
+        <dip name="Screen Rotation" bits="1" ids="Off,On"/>
+        <dip name="Test Mode" bits="2" ids="Off,On"/>
+        <dip name="Advertise Sound" bits="3" ids="On,Off"/>
+        <dip name="Coin A" bits="4,5" ids="1/1,2/1,1/2,3/1,2/1,4/1,2/3"/>
+        <dip name="Coin B" bits="6,7" ids="1/1,1/2,1/2,1/3,2/1,1/4,2/3,1/6"/>
+        <!-- DSWB -->
+        <dip name="Difficulty" bits="8,9" ids="B,A,C,D"/>
+        <dip name="Extend" bits="10,11" ids="70k/200k,100k/250k,100k Only,200k Only"/>
+        <dip name="Hero Counts" bits="12,13" ids="3,5,4,2"/>
+        <dip name="No Death/Stop Mode" bits="14" ids="Off,On"/>
+        <dip name="Continue Play" bits="15" ids="Yes,No"/>
+        <!-- TJUMP -->
+        <dip name="Region" bits="16,19" ids="Japan-0,USA,Europe,Hong Kong,Korea,Taiwan-0,Taiwan-1,USA,Hong Kong,Blank-0,Blank-1,Blank-2,Blank-3,Blank-4,Blank-5,Japan-1"/>
+    </switches>
+
+    <buttons names="Shot/Charging Shot,Bomb,Fast Scroll,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,Start,Select,L"/>
+
+    <rom index="1">
+        <part>00</part>
+    </rom>
+
+    <rom index="0" zip="vimanaj.zip|vimana.zip" md5="None">
+        <!-- maincpu - starts at 0x0 -->
+        <interleave output="16">
+            <part name="vim07.bin" crc="1efaea84" map="01"/>
+            <part name="vim08.bin" crc="e45b7def" map="10"/>
+        </interleave>
+        <part repeat="0x40000"> FF</part>
+
+        <!-- gfx1 - starts at 0x80000 -->
+        <interleave output="32">
+            <part name="vim6.bin" crc="2886878d" map="0001"/>
+            <part name="vim5.bin" crc="61a63d7a" map="0010"/>
+            <part name="vim4.bin" crc="b0515768" map="0100"/>
+            <part name="vim3.bin" crc="0b539131" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- gfx2 - starts at 0x180000 -->
+        <interleave output="32">
+            <part name="vim1.bin" crc="cdde26cd" map="0021"/>
+            <part name="vim2.bin" crc="1dbfc118" map="2100"/>
+        </interleave>
+
+        <!-- audiocpu - starts at 0x280000 -->
+        <part name="hd647180.019" crc="41a97ebe"/>
+
+        <!-- Total 0x288000 bytes - 2592 kBytes -->
+    </rom>
+</misterromdescription>

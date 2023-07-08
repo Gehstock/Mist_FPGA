@@ -1,0 +1,66 @@
+<misterromdescription>
+    <name>Demon's World / Horror Story (Set 2)</name>
+    <setname>demonwld1</setname>
+    <rbf>demonwld</rbf>
+    <mameversion>0254</mameversion>
+    <year>1989</year>
+    <manufacturer>Toaplan</manufacturer>
+    <players>2</players>
+    <joystick>8-way</joystick>
+    <rotation>Horizontal</rotation>
+    <region>Japan</region>
+
+    <switches default="00,00,00,00,00,00,00,00">
+        <!-- DSWA -->
+        <dip name="Screen Rotation" bits="1" ids="Off,On"/>
+        <dip name="Test Mode" bits="2" ids="Off,On"/>
+        <dip name="Attract Sound" bits="3" ids="On,Off"/>
+        <dip name="Coin 1" bits="4,5" ids="1/1,2/1,3/1,4/1"/>
+        <dip name="Coin 2" bits="6,7" ids="1/2,1/3,1/4,1/6"/>
+        <!-- DSWB -->
+        <dip name="Game Difficulty" bits="8,9" ids="B,A,C,D"/>
+        <dip name="Extend" bits="10,11" ids="30k/100k,50k/100k,100k,None"/>
+        <dip name="Player" bits="12,13" ids="3,5,2,1"/>
+        <dip name="No Hit" bits="14" ids="Off,On"/>
+        <!-- TJUMP -->
+        <dip name="Region" bits="16" ids="Japan/Taito Corp,Toaplan"/>
+    </switches>
+
+    <buttons names="Shot,Jump,Rapid Shot,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,L,Start,Select"/>
+
+    <rom index="0" zip="demonwld1.zip|demonwld.zip" md5="None">
+        <!-- maincpu - starts at 0x0 -->
+        <interleave output="16">
+            <part name="o16n-10.bin" crc="fc38aeaa" map="01"/>
+            <part name="o16n-09.bin" crc="74f66643" map="10"/>
+        </interleave>
+        <part repeat="0x40000"> FF</part>
+
+        <!-- gfx1 - starts at 0x80000 -->
+        <interleave output="32">
+            <part name="rom05" crc="6506c982" map="0001"/>
+            <part name="rom07" crc="a3a0d993" map="0010"/>
+            <part name="rom06" crc="4fc5e5f3" map="0100"/>
+            <part name="rom08" crc="eb53ab09" map="1000"/>
+        </interleave>
+        <part repeat="0x80000"> FF</part>
+
+        <!-- gfx2 - starts at 0x180000 -->
+        <interleave output="32">
+            <part name="rom01" crc="1b3724e9" map="0001"/>
+            <part name="rom02" crc="7b20a44d" map="0010"/>
+            <part name="rom03" crc="2cacdcd0" map="0100"/>
+            <part name="rom04" crc="76fd3201" map="1000"/>
+        </interleave>
+
+        <!-- audiocpu - starts at 0x200000 -->
+        <part name="o16-11.bin" crc="dbe08c85"/>
+
+        <patch offset="0x0000145E">67 16</patch>
+        <patch offset="0x00001474">66 20</patch>
+        <patch offset="0x00001430">4E 71</patch>
+        <patch offset="0x00001438">60 0A</patch>
+
+        <!-- Total 0x208000 bytes - 2084 kBytes -->
+    </rom>
+</misterromdescription>
