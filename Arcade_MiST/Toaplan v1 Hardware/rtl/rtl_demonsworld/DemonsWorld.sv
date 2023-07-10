@@ -16,7 +16,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-module Vimana(
+module DemonsWorld(
 	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
@@ -50,7 +50,7 @@ module Vimana(
 `include "../build_id.v"
 //`include "defs.v"
 
-`define CORE_NAME "Vimana"
+`define CORE_NAME "DemonsWorld"
 assign LED = ~ioctl_downl;
 assign SDRAM_CLK = clk_72;
 assign SDRAM_CKE = 1;
@@ -163,7 +163,7 @@ wire        blankn = ~(hb | vb);
 wire        hb, vb;
 wire  [4:0] r,b,g;
 
-Vimana_Top Vimana_Top(
+DemonsWorld_Top DemonsWorld_Top(
 	.pll_locked   	( pll_locked ),
 	.clk_sys      	( clk_72     ),
 	.reset        	( reset      ),

@@ -1,58 +1,136 @@
-module Vimana_Top(
+//============================================================================
+//
+//  This program is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by the Free
+//  Software Foundation; either version 2 of the License, or (at your option)
+//  any later version.
+//
+//  This program is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//============================================================================
 
-	input		[1:0] 	pcb,
-	input					clk_sys,
-	input					pll_locked,
-	input					turbo_68k,//cpu_turbo
-	input					reset,	
-	input					pause_cpu,
-//------------------------------------
-	input					scrollDBG,
-	input					p1_right,
-	input					p1_left,
-	input					p1_down,
-	input					p1_up,
-	input		[3:0]  	p1_buttons,
-	input					p2_right,
-	input					p2_left,
-	input					p2_down,
-	input					p2_up,
-	input		[3:0]  	p2_buttons,
-	input					start1,
-	input					start2,
-	input					coin_a,
-	input					coin_b,
-	input					b_pause,
-	input					service,
-	input					key_tilt,
-	input					key_service,
-	input		[7:0] 	sw0,
-	input		[7:0] 	sw1,
-	input		[7:0] 	sw2,
-//------------------------------------
-	output				hsync,
-	output				vsync,
-	output				hblank,
-	output				vblank,
-	input		[3:0] 	hs_offset,
-	input		[3:0] 	vs_offset,
-	input		[3:0] 	hs_width,
-	input		[3:0] 	vs_width,
-	input					refresh_mod,
-	output	[4:0] 	r,
-	output	[4:0] 	g,
-	output	[4:0] 	b,
-	input					ntsc,
-	input 	[1:0] 	opl2_level,
-//------------------------------------	
-	output	[15:0] 	audio_l,
-	output	[15:0] 	audio_r,
-//------------------------------------	
-    input         ioctl_download,
-    input         ioctl_index,
-    input  [23:0] ioctl_addr,
-    input         ioctl_wr,
-    input   [7:0] ioctl_dout,
+`default_nettype none
+
+module emu
+(
+    //Master input clock
+    input         CLK_50M,
+
+    //Async reset from top-level module.
+    //Can be used as initial reset.
+    input         RESET,
+
+    //Must be passed to hps_io module
+    inout  [48:0] HPS_BUS,
+
+    //Base video clock. Usually equals to CLK_SYS.
+    output        CLK_VIDEO,
+
+    //Multiple resolutions are supported using different CE_PIXEL rates.
+    //Must be based on CLK_VIDEO
+    output        CE_PIXEL,
+
+    //Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
+    //if VIDEO_ARX[12] or VIDEO_ARY[12] is set then [11:0] contains scaled size instead of aspect ratio.
+    output [12:0] VIDEO_ARX,
+    output [12:0] VIDEO_ARY,
+
+    output  [7:0] VGA_R,
+    output  [7:0] VGA_G,
+    output  [7:0] VGA_B,
+    output        VGA_HS,
+    output        VGA_VS,
+    output        VGA_DE,     // = ~(VBlank | HBlank)
+    output        VGA_F1,
+    output [2:0]  VGA_SL,
+    output        VGA_SCALER, // Force VGA scaler
+
+    input  [11:0] HDMI_WIDTH,
+    input  [11:0] HDMI_HEIGHT,
+    output        HDMI_FREEZE,
+
+`ifdef MISTER_FB
+    // Use framebuffer in DDRAM (USE_FB=1 in qsf)
+    // FB_FORMAT:
+    //    [2:0] : 011=8bpp(palette) 100=16bpp 101=24bpp 110=32bpp
+    //    [3]   : 0=16bits 565 1=16bits 1555
+    //    [4]   : 0=RGB  1=BGR (for 16/24/32 modes)
+    //
+    // FB_STRIDE either 0 (rounded to 256 bytes) or multiple of pixel size (in bytes)
+    output        FB_EN,
+    output  [4:0] FB_FORMAT,
+    output [11:0] FB_WIDTH,
+    output [11:0] FB_HEIGHT,
+    output [31:0] FB_BASE,
+    output [13:0] FB_STRIDE,
+    input         FB_VBL,
+    input         FB_LL,
+    output        FB_FORCE_BLANK,
+
+`ifdef MISTER_FB_PALETTE
+    // Palette control for 8bit modes.
+    // Ignored for other video modes.
+    output        FB_PAL_CLK,
+    output  [7:0] FB_PAL_ADDR,
+    output [23:0] FB_PAL_DOUT,
+    input  [23:0] FB_PAL_DIN,
+    output        FB_PAL_WR,
+`endif
+`endif
+
+    output        LED_USER,  // 1 - ON, 0 - OFF.
+
+    // b[1]: 0 - LED status is system status OR'd with b[0]
+    //       1 - LED status is controled solely by b[0]
+    // hint: supply 2'b00 to let the system control the LED.
+    output  [1:0] LED_POWER,
+    output  [1:0] LED_DISK,
+
+    // I/O board button press simulation (active high)
+    // b[1]: user button
+    // b[0]: osd button
+    output  [1:0] BUTTONS,
+
+    //Audio
+    input         CLK_AUDIO, // 24.576 MHz
+    output [15:0] AUDIO_L,
+    output [15:0] AUDIO_R,
+    output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
+    output  [1:0] AUDIO_MIX, // 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
+
+    //ADC
+    inout   [3:0] ADC_BUS,
+
+    //SD-SPI
+    output        SD_SCK,
+    output        SD_MOSI,
+    input         SD_MISO,
+    output        SD_CS,
+    input         SD_CD,
+
+    //High latency DDR3 RAM interface
+    //Use for non-critical time purposes
+    output        DDRAM_CLK,
+    input         DDRAM_BUSY,
+    output  [7:0] DDRAM_BURSTCNT,
+    output [28:0] DDRAM_ADDR,
+    input  [63:0] DDRAM_DOUT,
+    input         DDRAM_DOUT_READY,
+    output        DDRAM_RD,
+    output [63:0] DDRAM_DIN,
+    output  [7:0] DDRAM_BE,
+    output        DDRAM_WE,
+
+    //SDRAM interface with lower latency
+    output        SDRAM_CLK,
+    output        SDRAM_CKE,
     output [12:0] SDRAM_A,
     output  [1:0] SDRAM_BA,
     inout  [15:0] SDRAM_DQ,
@@ -61,15 +139,211 @@ module Vimana_Top(
     output        SDRAM_nCS,
     output        SDRAM_nCAS,
     output        SDRAM_nRAS,
-    output        SDRAM_nWE
+    output        SDRAM_nWE,
+
+`ifdef MISTER_DUAL_SDRAM
+    //Secondary SDRAM
+    //Set all output SDRAM_* signals to Z ASAP if SDRAM2_EN is 0
+    input         SDRAM2_EN,
+    output        SDRAM2_CLK,
+    output [12:0] SDRAM2_A,
+    output  [1:0] SDRAM2_BA,
+    inout  [15:0] SDRAM2_DQ,
+    output        SDRAM2_nCS,
+    output        SDRAM2_nCAS,
+    output        SDRAM2_nRAS,
+    output        SDRAM2_nWE,
+`endif
+
+    input         UART_CTS,
+    output        UART_RTS,
+    input         UART_RXD,
+    output        UART_TXD,
+    output        UART_DTR,
+    input         UART_DSR,
+
+`ifdef MISTER_ENABLE_YC
+    output [39:0] CHROMA_PHASE_INC,
+    output        YC_EN,
+    output        PALFLAG,
+`endif
+
+    // Open-drain User port.
+    // 0 - D+/RX
+    // 1 - D-/TX
+    // 2..6 - USR2..USR6
+    // Set USER_OUT to 1 to read from USER_IN.
+    input   [6:0] USER_IN,
+    output  [6:0] USER_OUT,
+
+    input         OSD_STATUS
 );
 
+///////// Default values for ports not used in this core /////////
 
-//reg   [1:0] pcb;
-//wire        tile_priority_type;
+assign ADC_BUS  = 'Z;
+assign USER_OUT = 0;
+assign {UART_RTS, UART_TXD, UART_DTR} = 0;
+assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
+//assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+//assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = '0;
+assign VGA_F1 = 0;
+assign VGA_SCALER = 0;
+assign HDMI_FREEZE = 0;
+
+assign AUDIO_MIX = 0;
+assign LED_USER = ioctl_download & cpu_a[0];
+assign LED_DISK = 0;
+assign LED_POWER = 0;
+assign BUTTONS = 0;
+
+// Status Bit Map:
+//              Upper Case                     Lower Case           
+// 0         1         2         3          4         5         6   
+// 01234567890123456789012345678901 23456789012345678901234567890123
+// 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
+// X  XXXXXXXX XX     X X XXXXXXXX  X          XX           XXXXXXXX
+
+wire [1:0] aspect_ratio = status[9:8];
+wire       orientation  = ~status[3];
+wire [2:0] scan_lines   = status[6:4];
+reg        refresh_mod;
+reg        new_vmode;
+
+always @(posedge clk_sys) begin
+    if (refresh_mod != status[19]) begin
+        refresh_mod <= status[19];
+        new_vmode <= ~new_vmode;
+    end
+end
+
+wire [3:0] hs_offset = status[27:24];
+wire [3:0] vs_offset = status[31:28];
+wire [3:0] hs_width  = status[59:56];
+wire [3:0] vs_width  = status[63:60];
+
+assign VIDEO_ARX = (!aspect_ratio) ? (orientation  ? 8'd4 : 8'd3) : (aspect_ratio - 1'd1);
+assign VIDEO_ARY = (!aspect_ratio) ? (orientation  ? 8'd3 : 8'd4) : 12'd0;
+
+`include "build_id.v" 
+localparam CONF_STR = {
+    "Toaplan V1;;",
+    "-;",
+    "P1,Video Settings;",
+    "P1-;",
+    "P1O89,Aspect Ratio,Original,Full Screen,[ARC1],[ARC2];",
+    "P1O3,Orientation,Horz,Vert;",
+    "P1-;",
+    "P1O46,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%,CRT 100%;",
+    "P1OA,Force Scandoubler,Off,On;",
+    "P1-;",
+    "P1O7,Video Mode,NTSC,PAL;",
+    "P1OM,Video Signal,RGBS/YPbPr,Y/C;",
+    "P1OJ,Refresh Rate,Native,NTSC;",
+    "P1-;",
+    "P1OOR,H-sync Pos Adj,0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,-2,-1;",
+    "P1OSV,V-sync Pos Adj,0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,-2,-1;",
+    "P1-;",
+    "P1oOR,H-sync Width Adj,0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,-2,-1;",
+    "P1oSV,V-sync Width Adj,0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,-2,-1;",
+    "P1-;",
+    "P2,Audio Settings;",
+    "P2-;",
+    "P2oBC,OPL2 Volume,Default,50%,25%,0%;",
+    "P2-;",
+    "-;",
+    "P3,Core Options;",
+    "P3-;",
+    "P3o6,Swap P1/P2 Joystick,Off,On;",
+    "P3-;",
+    "P3OF,68k Freq.,10Mhz,17.5MHz;",
+    "P3-;",
+    "P3o0,Scroll Debug,Off,On;",
+    "P3-;",
+    "DIP;",
+    "-;",
+    "OK,Pause OSD,Off,When Open;",
+    "OL,Dim Video,Off,10s;",
+    "-;",
+    "R0,Reset;",
+    "V,v",`BUILD_DATE
+};
+
+wire hps_forced_scandoubler;
+wire forced_scandoubler = hps_forced_scandoubler | status[10];
+
+wire  [1:0] buttons;
+wire [63:0] status;
+wire [10:0] ps2_key;
+wire [15:0] joy0, joy1;
+
+hps_io #(.CONF_STR(CONF_STR)) hps_io
+(
+    .clk_sys(clk_sys),
+    .HPS_BUS(HPS_BUS),
+
+    .buttons(buttons),
+    .ps2_key(ps2_key),
+    .status(status),
+    .status_menumask(direct_video),
+    .forced_scandoubler(hps_forced_scandoubler),
+    .gamma_bus(gamma_bus),
+    .new_vmode(new_vmode),
+    .direct_video(direct_video),
+    .video_rotated(video_rotated),
+
+    .ioctl_download(ioctl_download),
+    .ioctl_upload(ioctl_upload),
+    .ioctl_wr(ioctl_wr),
+    .ioctl_addr(ioctl_addr),
+    .ioctl_dout(ioctl_dout),
+    .ioctl_din(ioctl_din),
+    .ioctl_index(ioctl_index),
+    .ioctl_wait(ioctl_wait),
+
+    .joystick_0(joy0),
+    .joystick_1(joy1)
+);
+
+// INPUT
+
+// 8 dip switches of 8 bits
+reg [7:0] sw[8];
+always @(posedge clk_sys) begin
+    if (ioctl_wr && (ioctl_index==254) && !ioctl_addr[24:3]) begin
+        sw[ioctl_addr[2:0]] <= ioctl_dout;
+    end
+end
+
+always @(posedge clk_sys) begin
+    if (ioctl_wr && ioctl_index==1) begin
+        pcb <= ioctl_dout;
+    end
+end
+
+wire        direct_video;
+
+wire        ioctl_download;
+wire        ioctl_upload;
+wire        ioctl_upload_req;
+wire        ioctl_wait;
+wire        ioctl_wr;
+wire [15:0] ioctl_index;
+wire [26:0] ioctl_addr;
+wire [15:0] ioctl_dout;
+wire [15:0] ioctl_din;
+
+reg   [1:0] pcb;
+wire        tile_priority_type;
 wire [15:0] scroll_y_offset;
-//wire [15:0] scroll_x_offset = 30;
 
+localparam pcb_vimana   = 0;
+localparam pcb_samesame = 1;
+
+wire [21:0] gamma_bus;
+
+//<buttons names="Fire,Jump,Start,Coin,Pause" default="A,B,R,L,Start" />
+// Inputs tied to z80_din
 reg [7:0] p1;
 reg [7:0] p2;
 reg [7:0] z80_dswa;
@@ -80,19 +354,145 @@ reg [7:0] system;
 always @ (posedge clk_sys ) begin
     p1        <= { 1'b0, p1_buttons[2:0], p1_right, p1_left, p1_down, p1_up };
     p2        <= { 1'b0, p2_buttons[2:0], p2_right, p2_left, p2_down, p2_up };
-    z80_dswa  <= sw0;
-    z80_tjump <= sw2;
+    z80_dswa  <= sw[0];
+    z80_tjump <= sw[2];
 
-    if ( scrollDBG == 1 ) begin
-        z80_dswb  <= { sw1[7], sw1[6] | scrollDBG, sw1[5:0] };
-        system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service, key_tilt, key_service };
+    if ( status[32] == 1 ) begin
+        z80_dswb  <= { sw[1][7], sw[1][6] | status[32], sw[1][5:0] };
+        system    <= { vbl, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service, key_tilt, key_service };
     end else begin
-        z80_dswb  <= sw1;
-        system    <= { vblank, start2,                 start1,                 coin_b, coin_a, service, key_tilt, key_service };
+        z80_dswb  <= sw[1];
+        system    <= { vbl, start2,                 start1,                 coin_b, coin_a, service, key_tilt, key_service };
     end
 end
 
+reg        p1_swap;
+
+reg        p1_right;
+reg        p1_left;
+reg        p1_down;
+reg        p1_up;
+reg [3:0]  p1_buttons;
+
+reg        p2_right;
+reg        p2_left;
+reg        p2_down;
+reg        p2_up;
+reg [3:0]  p2_buttons;
+
+reg start1;
+reg start2;
+reg coin_a;
+reg coin_b;
+reg b_pause;
+reg service;
+reg [7:0]   credits;
+
+always @ * begin
+    p1_swap <= status[38];
+
+        if ( status[38] == 0 ) begin
+        p1_right   <= joy0[0]   | key_p1_right;
+        p1_left    <= joy0[1]   | key_p1_left;
+        p1_down    <= joy0[2]   | key_p1_down;
+        p1_up      <= joy0[3]   | key_p1_up;
+        p1_buttons <= joy0[7:4] | {key_p1_c, key_p1_b, key_p1_a};
+
+        p2_right   <= joy1[0]   | key_p2_right;
+        p2_left    <= joy1[1]   | key_p2_left;
+        p2_down    <= joy1[2]   | key_p2_down;
+        p2_up      <= joy1[3]   | key_p2_up;
+        p2_buttons <= joy1[7:4] | {key_p2_c, key_p2_b, key_p2_a};
+    end else begin
+        p2_right   <= joy0[0]   | key_p1_right;
+        p2_left    <= joy0[1]   | key_p1_left;
+        p2_down    <= joy0[2]   | key_p1_down;
+        p2_up      <= joy0[3]   | key_p1_up;
+        p2_buttons <= joy0[7:4] | {key_p1_c, key_p1_b, key_p1_a};
+
+        p1_right   <= joy1[0]   | key_p2_right;
+        p1_left    <= joy1[1]   | key_p2_left;
+        p1_down    <= joy1[2]   | key_p2_down;
+        p1_up      <= joy1[3]   | key_p2_up;
+        p1_buttons <= joy1[7:4] | {key_p2_c, key_p2_b, key_p2_a};
+    end
+end
+
+always @ * begin
+        start1    <= joy0[8]  | joy1[8]  | key_start_1p;
+        start2    <= joy0[9]  | joy1[9]  | key_start_2p;
+
+        coin_a    <= joy0[10] | joy1[10] | key_coin_a;
+        coin_b    <= joy0[11] | joy1[11] | key_coin_b;
+
+        b_pause   <= joy0[12] | key_pause;
+        service   <= key_test;
+end
+
+// Keyboard handler
+
+reg key_start_1p, key_start_2p, key_coin_a, key_coin_b;
+reg key_tilt, key_test, key_reset, key_service, key_pause;
+
+reg key_p1_up, key_p1_left, key_p1_down, key_p1_right, key_p1_a, key_p1_b, key_p1_c;
+reg key_p2_up, key_p2_left, key_p2_down, key_p2_right, key_p2_a, key_p2_b, key_p2_c;
+
+wire pressed = ps2_key[9];
+
+always @(posedge clk_sys) begin
+    reg old_state;
+    old_state <= ps2_key[10];
+    if ( old_state ^ ps2_key[10] ) begin
+        casex ( ps2_key[8:0] )
+            'h016 :  key_start_1p   <= pressed;            // 1
+            'h01E :  key_start_2p   <= pressed;            // 2
+            'h02E :  key_coin_a     <= pressed;            // 5
+            'h036 :  key_coin_b     <= pressed;            // 6
+            'h006 :  key_test       <= key_test ^ pressed; // f2
+            'h004 :  key_reset      <= pressed;            // f3
+            'h046 :  key_service    <= pressed;            // 9
+            'h02C :  key_tilt       <= pressed;            // t
+            'h04D :  key_pause      <= pressed;            // p
+
+            'h175 :  key_p1_up      <= pressed;            // up
+            'h172 :  key_p1_down    <= pressed;            // down
+            'h16B :  key_p1_left    <= pressed;            // left
+            'h174 :  key_p1_right   <= pressed;            // right
+            'h014 :  key_p1_a       <= pressed;            // lctrl
+            'h011 :  key_p1_b       <= pressed;            // lalt
+            'h029 :  key_p1_c       <= pressed;            // spacebar
+
+            'h02D :  key_p2_up      <= pressed;            // r
+            'h02B :  key_p2_down    <= pressed;            // f
+            'h023 :  key_p2_left    <= pressed;            // d
+            'h034 :  key_p2_right   <= pressed;            // g
+            'h01C :  key_p2_a       <= pressed;            // a
+            'h01B :  key_p2_b       <= pressed;            // s
+            'h015 :  key_p2_c       <= pressed;            // q
+        endcase
+    end
+end
+
+wire pll_locked;
+
+wire clk_sys;
+wire turbo_68k = status[15];
 reg  clk_3_5M, clk_7M, clk_10M, clk_14M;
+
+wire  clk_70M;
+
+pll pll
+(
+    .refclk(CLK_50M),
+    .rst(0),
+    .outclk_0(clk_sys),
+    .outclk_1(clk_70M),
+    .locked(pll_locked)
+);
+
+assign    SDRAM_CLK = clk_70M;
+
+localparam  CLKSYS=70;
 
 reg [5:0] clk14_count;
 reg [5:0] clk10_count;
@@ -143,17 +543,30 @@ always @ (posedge clk_sys ) begin
     end
 end
 
+wire reset;
+assign reset = RESET | status[0] | (ioctl_download & !ioctl_index) | buttons[1] | key_reset;
+
 //////////////////////////////////////////////////////////////////
+wire rotate_ccw = 1;
+wire no_rotate = orientation | direct_video;
+wire video_rotated;
+
+reg [23:0] rgb;
+
+wire hbl;
+wire vbl;
 
 wire [8:0] hc;
 wire [8:0] vc;
 
+wire hsync;
+wire vsync;
 
 reg hbl_delay, vbl_delay;
 
 always @ ( posedge clk_7M ) begin
-    hbl_delay <= hblank;
-    vbl_delay <= vblank;
+    hbl_delay <= hbl;
+    vbl_delay <= vbl;
 end
 
 video_timing video_timing (
@@ -170,11 +583,72 @@ video_timing video_timing (
     .refresh_mod(refresh_mod),
     .hc(hc),
     .vc(vc),
-    .hbl_delay(hblank),
-    .vbl(vblank),
+    .hbl_delay(hbl),
+    .vbl(vbl),
     .hsync(hsync),
     .vsync(vsync)
 );
+
+// PAUSE SYSTEM
+wire    pause_cpu;
+wire    hs_pause;
+
+// 8 bits per colour, 70MHz sys clk
+pause #(8,8,8,70) pause
+(
+    .clk_sys(clk_sys),
+    .reset(reset),
+    .user_button(b_pause),
+    .pause_request(hs_pause),
+    .options(status[21:20]),
+    .pause_cpu(pause_cpu),
+    .dim_video(dim_video),
+    .OSD_STATUS(OSD_STATUS),
+    .r(rgb[23:16]),
+    .g(rgb[15:8]),
+    .b(rgb[7:0]),
+    .rgb_out(rgb_pause_out)
+);
+
+wire [23:0] rgb_pause_out;
+wire dim_video;
+
+arcade_video #(320,24) arcade_video
+(
+        .*,
+
+        .clk_video(clk_sys),
+        .ce_pix(clk_7M),
+
+        .RGB_in(rgb_pause_out),
+
+        .HBlank(hbl),
+        .VBlank(vbl),
+        .HSync(hsync),
+        .VSync(vsync),
+
+        .fx(scan_lines)
+);
+
+/*
+    Phase Accumulator Increments (Fractional Size 32, look up size 8 bit, total 40 bits)
+    Increment Calculation - (Output Clock * 2 ^ Word Size) / Reference Clock
+    Example
+    NTSC = 3.579545
+    PAL =  4.43361875
+    W = 40 ( 32 bit fraction, 8 bit look up reference)
+    Ref CLK = 42.954544 (This could us any clock)
+    NTSC_Inc = 3.579545333 * 2 ^ 40 / 96 = 40997413706
+*/
+
+// SET PAL and NTSC TIMING
+`ifdef MISTER_ENABLE_YC
+    assign CHROMA_PHASE_INC = PALFLAG ? 40'd56225080500: 40'd56225080500;
+    assign YC_EN =  status[22];
+    assign PALFLAG = status[7];
+`endif
+
+screen_rotate screen_rotate (.*);
 
 wire [9:0] sprite_adj_x = 0;
 wire [9:0] sprite_adj_y = 0;
@@ -186,6 +660,7 @@ reg [15:0] scroll_adj_x [3:0];
 reg [15:0] scroll_adj_y [3:0];
 reg layer_en [3:0];
 
+reg ce_pix;
 
 // flip is done in the rendering so leave screen_rotate flip off
 wire flip = 0;
@@ -227,7 +702,9 @@ reg  [15:0] cpu_din;
 
 // CPU inputs
 reg  dtack_n;    // Data transfer ack (always ready)
-reg  ipl1_n, ipl2_n;
+
+reg  ipl1_n;
+reg  ipl2_n;
 
 wire reset_n;
 wire vpa_n = ~ ( cpu_lds_n == 0 && cpu_fc == 3'b111 );    // from outzone schematic
@@ -278,6 +755,8 @@ fx68k fx68k (
     .oEdb(cpu_dout),
     .eab(cpu_a[23:1])
 );
+
+
 
 always @ (posedge clk_sys) begin
 end
@@ -333,9 +812,9 @@ always @ (posedge clk_sys) begin
                     sprite_2_cs ? sprite_2_dout :
                     sprite_3_cs ? sprite_3_dout :
                     sprite_size_cs ? sprite_size_cpu_dout :
-                    frame_done_cs ? { 16 { vblank } } : // get vblank state
+                    frame_done_cs ? { 16 { vbl } } : // get vblank state
                     shared_ram_cs ? cpu_shared_dout :
-                    vblank_cs ? { 15'b0, vblank } :
+                    vblank_cs ? { 15'b0, vbl } :
                     int_en_cs ? 16'hffff :
                     16'd0;
                 
@@ -360,8 +839,8 @@ always @ (posedge clk_sys) begin
                     dswb_cs ? { 8'h00, z80_dswb[7:0] } :
                     system_cs ? { 8'h00, system[7:0] } :
                     tjump_cs ? { 8'h00, 1'b1, z80_tjump[6:0] } :
-                    frame_done_cs ? { 15'b0, vblank } : // get vblank state
-                    vblank_cs ? { 15'b0, vblank } :
+                    frame_done_cs ? { 15'b0, vbl } : // get vblank state
+                    vblank_cs ? { 15'b0, vbl } :
                     int_en_cs ? 16'hffff :
                     16'd0;
             end
@@ -482,6 +961,7 @@ wire opl_irq_n;
 
 reg signed [15:0] sample;
 
+assign AUDIO_S = 1'b1;
 
 wire opl_sample_clk;
 
@@ -499,6 +979,8 @@ jtopl #(.OPL_TYPE(2)) jtopl2
     .snd(sample),
     .sample(opl_sample_clk)
 );
+
+wire [1:0] opl2_level = status[44:43];    // opl2 audio mix
 
 reg  [7:0] opl2_mult;
 
@@ -539,12 +1021,12 @@ jtframe_mixer #(.W0(16), .WOUT(16)) u_mix_mono(
 
 always @ (posedge clk_sys ) begin
     if ( pause_cpu == 1 ) begin
-        audio_l <= 0;
-		  audio_r <= 0;
+        AUDIO_L <= 0;
+        AUDIO_R <= 0;
     end else if ( pause_cpu == 0 ) begin
         // mix audio
-        audio_l <= {mono[15:0]};
-		  audio_r <= {mono[15:0]};
+        AUDIO_L <= mono;
+        AUDIO_R <= mono;
     end
 end
 
@@ -639,7 +1121,7 @@ always @ (posedge clk_sys ) begin
         ipl1_n <= 1;
         int_ack <= 0;
     end else begin
-        vbl_sr <= { vbl_sr[0], vblank };
+        vbl_sr <= { vbl_sr[0], vbl };
         if ( clk_10M == 1 ) begin
             int_ack <= ( cpu_as_n == 0 ) && ( cpu_fc == 3'b111 ); // cpu acknowledged the interrupt
         end
@@ -976,7 +1458,7 @@ always @ (posedge clk_sys) begin
             sprite_copy_state <= 0;
         end
         // tile state machine
-        if ( draw_state == 0 && vc == ({ crtc[2][7:0], 1'b1 } - (ntsc ? (vtotal_282_flag ? 5'd19 : 4'd7) : 3'd0)) ) begin // 282 Lines standard (263 Lines for 60Hz)
+        if ( draw_state == 0 && vc == ({ crtc[2][7:0], 1'b1 } - (status[19] ? (vtotal_282_flag ? 5'd19 : 4'd7) : 3'd0)) ) begin // 282 Lines standard (263 Lines for 60Hz)
             layer <= 4; // layer 4 is layer 0 but draws hidden and transparent
             y <= 0;
             draw_state <= 2;
@@ -1070,7 +1552,7 @@ always @ (posedge clk_sys) begin
                 // wait for next line or quit
                 if ( y == 239 ) begin
                     draw_state <= 0;
-                end else if ( hc ==  (ntsc ? 9'd444 : 9'd449) ) begin // 450 Lines standard (445 Lines for NTSC standard 15.73kHz line freq)
+                end else if ( hc ==  (status[19] ? 9'd444 : 9'd449) ) begin // 450 Lines standard (445 Lines for NTSC standard 15.73kHz line freq)
                     y <= y + 1;
                     draw_state <= 2;
                     sprite_state <= 0;
@@ -1102,16 +1584,12 @@ always @ (posedge clk_sys) begin
         sprite_palette_addr <= sprite_fb_out[9:0];
     end else if ( clk7_count == 6 ) begin
         // if palette index is zero then it's from layer 3 and is transparent render as blank (black).
-			r <= dac[tile_palette_dout[4:0]];
-			g <= dac[tile_palette_dout[9:5]];
-			b <= dac[tile_palette_dout[14:10]];
+        rgb <= { dac[tile_palette_dout[4:0]], dac[tile_palette_dout[9:5]], dac[tile_palette_dout[14:10]] };
 
         // if not transparent and sprite is higher priority 
         if ( sprite_fb_out[3:0] > 0 && (sprite_fb_out[13:10] > tile_fb_out[13:10]) ) begin
             // draw sprite
-			r <= dac[sprite_palette_dout[4:0]];
-			g <= dac[sprite_palette_dout[9:5]];
-			b <= dac[sprite_palette_dout[14:10]];
+            rgb <= { dac[sprite_palette_dout[4:0]], dac[sprite_palette_dout[9:5]], dac[sprite_palette_dout[14:10]] };
         end
     end
 end
@@ -1435,33 +1913,33 @@ wire        sdram_ack;
 wire        sdram_valid;
 wire [31:0] sdram_q;
 
-//sdram #(.CLK_FREQ(70.0)) sdram
-//(
-//  .reset(~pll_locked),
-//  .clk(clk_sys),
-//
-//  // controller interface
-//  .addr(sdram_addr),
-//  .data(sdram_data),
-//  .we(sdram_we),
-//  .req(sdram_req),
-//  
-//  .ack(sdram_ack),
-//  .valid(sdram_valid),
-//  .q(sdram_q),
-//
-//  // SDRAM interface
-//  .sdram_a(SDRAM_A),
-//  .sdram_ba(SDRAM_BA),
-//  .sdram_dq(SDRAM_DQ),
-//  .sdram_cke(SDRAM_CKE),
-//  .sdram_cs_n(SDRAM_nCS),
-//  .sdram_ras_n(SDRAM_nRAS),
-//  .sdram_cas_n(SDRAM_nCAS),
-//  .sdram_we_n(SDRAM_nWE),
-//  .sdram_dqml(SDRAM_DQML),
-//  .sdram_dqmh(SDRAM_DQMH)
-//);
+sdram #(.CLK_FREQ(70.0)) sdram
+(
+  .reset(~pll_locked),
+  .clk(clk_sys),
+
+  // controller interface
+  .addr(sdram_addr),
+  .data(sdram_data),
+  .we(sdram_we),
+  .req(sdram_req),
+  
+  .ack(sdram_ack),
+  .valid(sdram_valid),
+  .q(sdram_q),
+
+  // SDRAM interface
+  .sdram_a(SDRAM_A),
+  .sdram_ba(SDRAM_BA),
+  .sdram_dq(SDRAM_DQ),
+  .sdram_cke(SDRAM_CKE),
+  .sdram_cs_n(SDRAM_nCS),
+  .sdram_ras_n(SDRAM_nRAS),
+  .sdram_cas_n(SDRAM_nCAS),
+  .sdram_we_n(SDRAM_nWE),
+  .sdram_dqml(SDRAM_DQML),
+  .sdram_dqmh(SDRAM_DQMH)
+);
 
 wire        prog_cache_rom_cs;
 wire [22:0] prog_cache_addr;
@@ -1607,8 +2085,5 @@ always @(posedge clk_out) begin
 end
 
 endmodule
-
-
-
 
 

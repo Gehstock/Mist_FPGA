@@ -1,13 +1,12 @@
 module RallyBike_Top(
 	input					clk_sys,
-	input					clk_70M,
 	input					pll_locked,
 	input					turbo_68k,//cpu_turbo
 	input					reset,
 	
 	input					pause_cpu,
 
-	input					status32,
+	input					scrollDBG,
 	input					p1_right,
 	input					p1_left,
 	input					p1_down,
@@ -44,18 +43,24 @@ module RallyBike_Top(
 	output	[4:0] 	b,
 	input					ntsc,
 	input 	[1:0] 	opl2_level,
-	output	[15:0] 	audio,
+	output	[15:0] 	audio_l,
+	output	[15:0] 	audio_r,	
 	
-	
-	input 				ioctl_download,
-	input 				ioctl_upload,
-//	input					ioctl_upload_req;
-//	input					ioctl_wait;
-	output 				ioctl_wr,
-	input 	[15:0] 	ioctl_index,
-	output 	[26:0] 	ioctl_addr,
-	input 	[15:0] 	ioctl_dout,
-	output 	[15:0] 	ioctl_din
+	 input 			ioctl_index,
+    input         ioctl_download,
+    input  [23:0] ioctl_addr,
+    input         ioctl_wr,
+    input   [7:0] ioctl_dout,
+
+    output [12:0] SDRAM_A,
+    output  [1:0] SDRAM_BA,
+    inout  [15:0] SDRAM_DQ,
+    output        SDRAM_DQML,
+    output        SDRAM_DQMH,
+    output        SDRAM_nCS,
+    output        SDRAM_nCAS,
+    output        SDRAM_nRAS,
+    output        SDRAM_nWE
 );
 
 //// INPUT
@@ -81,8 +86,8 @@ always @ (posedge clk_sys ) begin
     z80_dswb  <= sw1;
     z80_tjump <= sw2;
 
-    if ( status32 == 1 ) begin
-        system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service | status32, key_tilt, key_service };
+    if ( scrollDBG == 1 ) begin
+        system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service | scrollDBG, key_tilt, key_service };
     end else begin
         system    <= { vblank, start2,                 start1,                 coin_b, coin_a, service,              key_tilt, key_service };
     end
@@ -431,10 +436,12 @@ jtframe_mixer #(.W0(16), .WOUT(16)) u_mix_mono(
 
 always @ (posedge clk_sys ) begin
     if ( pause_cpu == 1 ) begin
-        audio <= 0;
+        audio_l <= 0;
+		  audio_r <= 0;
     end else if ( pause_cpu == 0 ) begin
         // mix audio
-        audio <= {~mono[15],mono[14:0]};
+        audio_l <= {mono[15:0]};
+		  audio_r <= {mono[15:0]};
     end
 end
 
@@ -1201,23 +1208,23 @@ dual_port_ram #(.LEN(1024), .DATA_WIDTH(8)) sprite_palram_h (
 );
 
 
-// main 68k ram low
-dual_port_ram #(.LEN(16384), .DATA_WIDTH(8))    ram16kx8_L (
-    .clock_a ( clk_10M ),
-    .address_a ( cpu_a[14:1] ),
-    .wren_a ( !cpu_rw & ram_cs & !cpu_lds_n ),
-    .data_a ( cpu_dout[7:0]  ),
-    .q_a (  ram_dout[7:0] )
-);
-
-// main 68k ram high
-dual_port_ram #(.LEN(16384), .DATA_WIDTH(8))     ram16kx8_H (
-    .clock_a ( clk_10M ),
-    .address_a ( cpu_a[14:1] ),
-    .wren_a ( !cpu_rw & ram_cs & !cpu_uds_n ),
-    .data_a ( cpu_dout[15:8]  ),
-    .q_a (  ram_dout[15:8] )
-);
+//// main 68k ram low
+//dual_port_ram #(.LEN(16384), .DATA_WIDTH(8))    ram16kx8_L (
+//    .clock_a ( clk_10M ),
+//    .address_a ( cpu_a[14:1] ),
+//    .wren_a ( !cpu_rw & ram_cs & !cpu_lds_n ),
+//    .data_a ( cpu_dout[7:0]  ),
+//    .q_a (  ram_dout[7:0] )
+//);
+//
+//// main 68k ram high
+//dual_port_ram #(.LEN(16384), .DATA_WIDTH(8))     ram16kx8_H (
+//    .clock_a ( clk_10M ),
+//    .address_a ( cpu_a[14:1] ),
+//    .wren_a ( !cpu_rw & ram_cs & !cpu_uds_n ),
+//    .data_a ( cpu_dout[15:8]  ),
+//    .q_a (  ram_dout[15:8] )
+//);
 
 
 //wire [15:0] z80_shared_addr = z80_addr - 16'h8000;
@@ -1225,19 +1232,19 @@ dual_port_ram #(.LEN(16384), .DATA_WIDTH(8))     ram16kx8_H (
 
 // z80 and 68k shared ram
 // 4k
-dual_port_ram #(.LEN(4096), .DATA_WIDTH(8))  shared_ram (
-    .clock_a ( clk_10M ),
-    .address_a ( cpu_a[12:1] ),
-    .wren_a ( shared_ram_cs & !cpu_rw & !cpu_lds_n),
-    .data_a ( cpu_dout[7:0]  ),
-    .q_a ( cpu_shared_dout[7:0] ),
-
-    .clock_b ( clk_3_5M ),  // z80 clock is 3.5M
-    .address_b ( z80_addr[11:0] ),
-    .data_b ( z80_dout ),
-    .wren_b ( sound_ram_1_cs & ~z80_wr_n ),
-    .q_b ( z80_shared_dout )
-);
+//dual_port_ram #(.LEN(4096), .DATA_WIDTH(8))  shared_ram (
+//    .clock_a ( clk_10M ),
+//    .address_a ( cpu_a[12:1] ),
+//    .wren_a ( shared_ram_cs & !cpu_rw & !cpu_lds_n),
+//    .data_a ( cpu_dout[7:0]  ),
+//    .q_a ( cpu_shared_dout[7:0] ),
+//
+//    .clock_b ( clk_3_5M ),  // z80 clock is 3.5M
+//    .address_b ( z80_addr[11:0] ),
+//    .data_b ( z80_dout ),
+//    .wren_b ( sound_ram_1_cs & ~z80_wr_n ),
+//    .q_b ( z80_shared_dout )
+//);
 
 reg         sprite_attr_w ;
 reg  [10:0] sprite_attr_addr;
