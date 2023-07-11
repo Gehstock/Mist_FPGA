@@ -31,7 +31,7 @@
     <buttons names="Shot,Bomb,-,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,Start,L"/>
 
     <rom index="1">
-        <part>01</part>
+        <part>03</part>
     </rom>
 
     <rom index="0" zip="samesame2.zip|fireshrk.zip" md5="None">

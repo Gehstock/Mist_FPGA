@@ -12,3 +12,6 @@ set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) true_dual_
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jtframe_fir_mono.v ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jtframe_mixer.v ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) video_timing.v ]
+
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) sdram.sv ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) pll_mist.v ]

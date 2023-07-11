@@ -30,7 +30,7 @@
     <buttons names="Shot/Charging Shot,Bomb,Fast Scroll,Slow Scroll,P1 Start,P2 Start,Coin A,Coin B,Pause" default="A,B,X,Y,R,Start,Select,L"/>
 
     <rom index="1">
-        <part>00</part>
+        <part>02</part>
     </rom>
 
     <rom index="0" zip="vimanaj.zip|vimana.zip" md5="None">

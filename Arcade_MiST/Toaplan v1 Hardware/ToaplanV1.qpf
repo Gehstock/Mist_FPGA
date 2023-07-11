@@ -18,13 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 16:01:18  November 25, 2020
+# Date created = 11:52:25  July 11, 2023
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "13.1"
-DATE = "16:01:18  November 25, 2020"
+DATE = "11:52:25  July 11, 2023"
 
 # Revisions
 
-PROJECT_REVISION = "Zerowing"
+PROJECT_REVISION = "ToaplanV1"
+PROJECT_REVISION = "DemonsWorld"
