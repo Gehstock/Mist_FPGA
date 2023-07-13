@@ -53,14 +53,20 @@ module ToaplanV1_Top(
     output        SDRAM_nWE
 );
 
-//// INPUT
-//
-//
-//
-//wire        tile_priority_type;
+//		CoreMod 		Game
+//		0				Demons World
+//		1				Rally Bike
+//		2				Vimana
+//		3				Same! Same! Same!
+//		4				Zerowing
+//		5				Truxton
+//		6				Out Zone
+//		7				Out Zone Conversation
+//		8				HellFire
+
+wire        tile_priority_type;
 wire [15:0] scroll_y_offset;
 wire [15:0] scroll_x_offset = 30;
-
 reg [7:0] p1;
 reg [7:0] p2;
 reg [7:0] z80_dswa;
@@ -73,7 +79,8 @@ always @ (posedge clk_sys ) begin
 			p1        <= { 1'b0, p1_in[6:4], p1_in[3], p1_in[2], p1_in[1], p1_in[0] };
 			p2        <= { 1'b0, p2_in[6:4], p2_in[3], p2_in[2], p2_in[1], p2_in[0] };
 case (core_mod)
-	0,1:	begin
+	0,1:	begin	//Demons World, Rally Bike
+
 			z80_dswa  <= sw0;
 			z80_dswb  <= sw1;
 			z80_tjump <= sw2;
@@ -83,8 +90,7 @@ case (core_mod)
 					system    <= { vblank, start[1],            start[0],            coin[1], coin[0], service,             	key_tilt, key_service };
 				end
 			end		
-	2,3:	begin
-
+	2,3:	begin	//Vimana, Same Same Same
 			z80_dswa  <= sw0;
 			z80_tjump <= sw2;
 				if ( scrollDBG == 1 ) begin
@@ -95,7 +101,7 @@ case (core_mod)
 					system    <= { vblank, start[1],            start[0],            coin[1], coin[0], service, 					key_tilt, key_service };
 				end
 			end
-	 4,5,6,7,8:	begin
+	4,5,6,7,8:	begin
 			z80_tjump <= sw2;
 				if ( core_mod == 4 || core_mod == 6 || core_mod == 7 || core_mod == 8 && scrollDBG == 1 ) begin
         // zerowing, hellfire, outzone, outzone conversion debug options
@@ -118,7 +124,7 @@ endcase
 
 end
 
-
+//demon
 reg  clk_3_5M, clk_7M, clk_10M, clk_14M, clk_14M_N;
 
 reg [5:0] clk14_count;
@@ -210,8 +216,6 @@ wire flip = 0;
 reg tile_flip;
 reg sprite_flip;
 
-//assign vc = vcx - vs_offset;
-
 // ===============================================================
 // 68000 CPU
 // ===============================================================
@@ -244,7 +248,7 @@ reg  [15:0] cpu_din;
 
 // CPU inputs
 reg  dtack_n;    // Data transfer ack (always ready)
-reg  ipl2_n;
+reg  ipl1_n, ipl2_n;
 
 wire reset_n;
 wire vpa_n = ~ ( cpu_lds_n == 0 && cpu_fc == 3'b111 );    // from outzone schematic
@@ -287,7 +291,8 @@ fx68k fx68k (
     .BGACKn(1'b1),
 
     .IPL0n(1'b1),
-    .IPL1n(1'b1),
+//    .IPL1n(1'b1),
+	 .IPL1n((core_mod == 2 | core_mod == 3) ? ipl1_n : 1'b1),
     .IPL2n(ipl2_n),
 
     // busses
@@ -296,30 +301,52 @@ fx68k fx68k (
     .eab(cpu_a[23:1])
 );
 
+////////////////////////////////////////////////////
+//Progress here
+
+//todo
+//
+//add Vimana HW
+////////////////////////////////////////////////////
 always @ (posedge clk_sys) begin
     if ( clk_10M == 1 ) begin
         // tell 68k to wait for valid data. 0=ready 1=wait
         // always ack when it's not program rom
         dtack_n <= prog_rom_cs ? !prog_rom_data_valid : 0;
+        // add dsp_ctrl_cs to cpu_din
         // select cpu data input based on what is active
-        cpu_din <= prog_rom_cs ? prog_rom_data :
-            ram_cs ? ram_dout :
+			if (core_mod == 1) begin 
+				cpu_din <= prog_rom_cs ? prog_rom_data :
+            m68k_ram_cs ? ram_dout :// ram_cs
             tile_palette_cs ?  tile_palette_cpu_dout :
             sprite_palette_cs ?  sprite_palette_cpu_dout :
             shared_ram_cs ? cpu_shared_dout :
             tile_ofs_cs ? curr_tile_ofs :
             sprite_ofs_cs ? curr_sprite_ofs :
             tile_attr_cs ? cpu_tile_dout_attr :
-            tile_num_cs ? cpu_tile_dout_num :
-            sprite_0_cs ? sprite_0_dout :
-            sprite_1_cs ? sprite_1_dout :
-            sprite_2_cs ? sprite_2_dout :
-            sprite_3_cs ? sprite_3_dout :
-            sprite_size_cs ? sprite_size_cpu_dout :
-            frame_done_cs ? { 16 { vblank } } : // get vblank state
-            vblank_cs ? { 15'b0, vblank } :
-            int_en_cs ? 16'hffff :
-            16'd0;
+				vblank_cs ? { 15'b0, vblank } :
+				tile_attr_cs ? ( cpu_tile_dout_attr | { 4'b0, cpu_tile_dout_attr[15:12], cpu_tile_dout_attr[5:4], 6'b0 } ) :
+				sprite_ram_cs ? sprite_ram_dout :
+				int_en_cs ? { 15'b0, int_en } : 16'hffff;	
+			end else begin					
+				cpu_din <= prog_rom_cs ? prog_rom_data :
+            m68k_ram_cs ? ram_dout :
+            tile_palette_cs ?  tile_palette_cpu_dout :
+            sprite_palette_cs ?  sprite_palette_cpu_dout :
+            shared_ram_cs ? cpu_shared_dout :
+            tile_ofs_cs ? curr_tile_ofs :
+            sprite_ofs_cs ? curr_sprite_ofs :
+            tile_attr_cs ? cpu_tile_dout_attr :
+				vblank_cs ? { 15'b0, vblank } :
+				tile_num_cs ? cpu_tile_dout_num :
+				sprite_0_cs ? sprite_0_dout :
+				sprite_1_cs ? sprite_1_dout :
+				sprite_2_cs ? sprite_2_dout :
+				sprite_3_cs ? sprite_3_dout :
+				sprite_size_cs ? sprite_size_cpu_dout :
+				frame_done_cs ? { 16 { vblank } } : // get vblank state 			
+				int_en_cs ? 16'hffff :	16'hffff;	
+			end
     end
 end
 
