@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-# Date created = 16:51:06  July 10, 2023
+# Date created = 12:02:53  July 13, 2023
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		DemonsWorld_assignment_defaults.qdf
+#		ToaplanV1_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -44,6 +44,15 @@ set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
 set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ToaplanV1.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/ToaplanV1_Top.sv
+set_global_assignment -name VERILOG_FILE rtl/chip_select.v
+set_global_assignment -name QIP_FILE rtl/TMS320C1X/TMS320C1X.qip
+set_global_assignment -name QIP_FILE ../../common/Sound/jtopl/jt26.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
+set_global_assignment -name QIP_FILE ../../common/CPU/68000/FX68k/fx68k.qip
+set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE rtl/common.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -177,67 +186,58 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-# -------------------------
-# start ENTITY(DemonsWorld)
+# -----------------------
+# start ENTITY(ToaplanV1)
 
 	# Pin & Location Assignments
 	# ==========================
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
+	set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+	set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+	set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 
 	# Fitter Assignments
 	# ==================
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
 
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
-# end ENTITY(DemonsWorld)
-# -----------------------
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ToaplanV1.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/ToaplanV1_Top.sv
-set_global_assignment -name VERILOG_FILE rtl/chip_select.v
-set_global_assignment -name QIP_FILE rtl/TMS320C1X/TMS320C1X.qip
-set_global_assignment -name QIP_FILE ../../common/Sound/jtopl/jt26.qip
-set_global_assignment -name QIP_FILE ../../common/CPU/T80/T80.qip
-set_global_assignment -name QIP_FILE ../../common/CPU/68000/FX68k/fx68k.qip
-set_global_assignment -name QIP_FILE ../../common/mist/mist.qip
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_A[*]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[0]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_BA[1]
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQMH
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQML
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
-set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
-set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_A[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQ[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_BA[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQML
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_DQMH
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nRAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCAS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nWE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_nCS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CKE
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_CLK
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_R[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_G[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_B[*]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
-set_global_assignment -name QIP_FILE rtl/common.qip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+# end ENTITY(ToaplanV1)
+# ---------------------
