@@ -1,26 +1,16 @@
 module ToaplanV1_Top(
 	input					clk_sys,
 	input					pll_locked,
-	input					turbo_68k,//cpu_turbo
 	input					reset,
 	input		[6:0]  	core_mod,
 	input					pause_cpu,
+	input					turbo_68k,
 //------------------------------------
 	input					scrollDBG,
-	input					p1_right,
-	input					p1_left,
-	input					p1_down,
-	input					p1_up,
-	input		[3:0]  	p1_buttons,
-	input					p2_right,
-	input					p2_left,
-	input					p2_down,
-	input					p2_up,
-	input		[3:0]  	p2_buttons,
-	input					start1,
-	input					start2,
-	input					coin_a,
-	input					coin_b,
+	input		[7:0]  	p1_in,
+	input		[7:0]  	p2_in,
+	input		[1:0] 	start,
+	input		[1:0] 	coin,
 	input					b_pause,
 	input					service,
 	input					key_tilt,
@@ -78,18 +68,19 @@ reg [7:0] z80_dswb;
 reg [7:0] z80_tjump;
 reg [7:0] system;
 
+
 always @ (posedge clk_sys ) begin
-			p1        <= { 1'b0, p1_buttons[2:0], p1_right, p1_left, p1_down, p1_up };
-			p2        <= { 1'b0, p2_buttons[2:0], p2_right, p2_left, p2_down, p2_up };
+			p1        <= { 1'b0, p1_in[6:4], p1_in[3], p1_in[2], p1_in[1], p1_in[0] };
+			p2        <= { 1'b0, p2_in[6:4], p2_in[3], p2_in[2], p2_in[1], p2_in[0] };
 case (core_mod)
 	0,1:	begin
 			z80_dswa  <= sw0;
 			z80_dswb  <= sw1;
 			z80_tjump <= sw2;
 				if ( scrollDBG == 1 ) begin
-					system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service | scrollDBG, key_tilt, key_service };
+					system    <= { vblank, start[1] | p1_in[7], start[0] | p1_in[7], coin[1], coin[0], service | scrollDBG, 	key_tilt, key_service };
 				end else begin
-					system    <= { vblank, start2,                 start1,                 coin_b, coin_a, service,              key_tilt, key_service };
+					system    <= { vblank, start[1],            start[0],            coin[1], coin[0], service,             	key_tilt, key_service };
 				end
 			end		
 	2,3:	begin
@@ -98,10 +89,10 @@ case (core_mod)
 			z80_tjump <= sw2;
 				if ( scrollDBG == 1 ) begin
 					z80_dswb  <= { sw1[7], sw1[6] | scrollDBG, sw1[5:0] };
-					system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service, key_tilt, key_service };
+					system    <= { vblank, start[1] | p1_in[7], start[0] | p1_in[7], coin[1], coin[0], service, 					key_tilt, key_service };
 				end else begin
 					z80_dswb  <= sw1;
-					system    <= { vblank, start2,                 start1,                 coin_b, coin_a, service, key_tilt, key_service };
+					system    <= { vblank, start[1],            start[0],            coin[1], coin[0], service, 					key_tilt, key_service };
 				end
 			end
 	 4,5,6,7,8:	begin
@@ -110,17 +101,17 @@ case (core_mod)
         // zerowing, hellfire, outzone, outzone conversion debug options
 					z80_dswa  <= sw0;
 					z80_dswb  <= { sw1[7], sw1[6] | scrollDBG, sw1[5:0] };
-					system    <= { vblank, start2 | p1_buttons[3], start1 | p1_buttons[3], coin_b, coin_a, service, key_tilt, key_service };
+					system    <= { vblank, start[1] | p1_in[7], start[0] | p1_in[7], coin[1], coin[0], service, 					key_tilt, key_service };
 				end else if ( core_mod == 5 && scrollDBG == 1 ) begin
         // truxton debug options
 					z80_dswa  <= { sw0[7:3], sw0[2] | scrollDBG, sw0[1:0] };
 					z80_dswb  <= sw1;
-					system    <= { vblank, start2, start1, coin_b, coin_a, service, key_tilt, key_service };
+					system    <= { vblank, start[1], 			  start[0], 			  coin[1], coin[0], service, 					key_tilt, key_service };
 				end else begin
         // default
 					z80_dswa  <= sw0;
 					z80_dswb  <= sw1;
-					system    <= { vblank, start2, start1, coin_b, coin_a, service, key_tilt, key_service };
+					system    <= { vblank, start[1], 			  start[0], 			  coin[1], coin[0], service, 					key_tilt, key_service };
 				end
 			end
 endcase
@@ -180,16 +171,7 @@ always @ (posedge clk_sys ) begin
     end
 end
 
-wire [8:0] hc;
-wire [8:0] vc;
-
-
-reg hbl_delay, vbl_delay;
-
-always @ ( posedge clk_7M ) begin
-    hbl_delay <= hblank;
-    vbl_delay <= vblank;
-end
+wire [8:0] hc, vc;
 
 video_timing video_timing (
     .clk(clk_7M),
