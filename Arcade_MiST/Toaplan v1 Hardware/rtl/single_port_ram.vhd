@@ -73,7 +73,7 @@ begin
   generic map (
     clock_enable_input_a          => "BYPASS",
     clock_enable_output_a         => "BYPASS",
-    intended_device_family        => "Cyclone V",
+    intended_device_family        => "Cyclone III",
     lpm_hint                      => "ENABLE_RUNTIME_MOD=NO",
     lpm_type                      => "altsyncram",
     numwords_a                    => 2**ADDR_WIDTH,
