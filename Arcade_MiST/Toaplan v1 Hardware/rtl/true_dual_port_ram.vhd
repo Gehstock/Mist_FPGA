@@ -78,7 +78,7 @@ begin
     clock_enable_output_a         => "BYPASS",
     clock_enable_output_b         => "BYPASS",
     indata_reg_b                  => "CLOCK1",
-    intended_device_family        => "Cyclone V",
+    intended_device_family        => "Cyclone III",
     lpm_type                      => "altsyncram",
     numwords_a                    => 2**ADDR_WIDTH_A,
     numwords_b                    => 2**ADDR_WIDTH_B,
