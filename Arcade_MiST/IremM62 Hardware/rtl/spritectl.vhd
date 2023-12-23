@@ -70,7 +70,7 @@ begin
           yMat := yMatNext;
         else
           -- determine if the sprite is visible on the next line during active display
-          y := 640 - unsigned(reg_i.y) - unsigned(video_ctl.y) - 3;
+          y := 640 - unsigned(reg_i.y) - unsigned(video_ctl.y) - 1;
 
           -- hande sprite height, placement
           code := reg_i.n(10 downto 0); -- default

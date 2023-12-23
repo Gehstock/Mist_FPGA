@@ -186,18 +186,22 @@ begin
         -- G Board
         -- JP1-4 - Tiles with color code >= the value set here have priority over sprites
         -- J1: selects whether bit 4 of obj color code selects or not high priority over tiles
-        prio := '0';
+        -- prio := '0';
         if ((hwsel = HW_YOUJYUDN or hwsel = HW_HORIZON) and attr_d_r(4 downto 1) >= x"8") or
            (hwsel = HW_LDRUN and attr_d_r(4 downto 1) >= x"c") or
            ((hwsel = HW_LDRUN2 or hwsel = HW_LDRUN3 or hwsel = HW_BATTROAD) and attr_d_r(4 downto 1) >= x"4") or
-           (hwsel = HW_KIDNIKI and attr_d_r(7 downto 5) = "111")
+           (hwsel = HW_KIDNIKI and attr_d_r(7 downto 5) = "111") or
+			  --For Kung Fu Master, not sure how the hardware actually does it, and couldn't determine from color code for sprite priority
+			  --so, as a hack, giving tiles priority over sprites for the first ~106 lines to hide sprite above top rung of stairs.
+			  (hwsel = HW_KUNGFUM and unsigned(video_ctl.y) < x"150") 
             then
           prio := '1';
+			 		  else prio := '0';
         end if;
 
-        if (pel = "000") then
-          prio := '0';
-        end if;
+--        if (pel = "000") then
+--          prio := '0';
+--        end if;
 
         ctl_o.pal_a <= attr_d_r(4 downto 0) & pel;
         ctl_o.prio <= prio;
