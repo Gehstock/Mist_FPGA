@@ -51,7 +51,6 @@ set_global_assignment -name VHDL_FILE rtl/pace.vhd
 set_global_assignment -name VHDL_FILE rtl/pace_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/platform.vhd
 set_global_assignment -name VHDL_FILE rtl/platform_pkg.vhd
-set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/target_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/project_pkg.vhd
 set_global_assignment -name VHDL_FILE rtl/moon_patrol_sound_board.vhd
@@ -61,7 +60,6 @@ set_global_assignment -name VHDL_FILE rtl/Graphics.vhd
 set_global_assignment -name VHDL_FILE rtl/clk_div.vhd
 set_global_assignment -name VHDL_FILE rtl/Z80.vhd
 set_global_assignment -name VHDL_FILE rtl/sprom.vhd
-set_global_assignment -name VHDL_FILE rtl/dprom_2r.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/spram.vhd
 set_global_assignment -name VHDL_FILE rtl/iremm52_video_controller.vhd

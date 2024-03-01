@@ -4,7 +4,6 @@ use ieee.numeric_std.all;
 
 library work;
 use work.video_controller_pkg.all;
-use work.platform_variant_pkg.all;
 
 entity iremm52_video_controller is
   port

@@ -7,7 +7,6 @@ library work;
 use work.pace_pkg.all;
 use work.video_controller_pkg.all;
 use work.sprite_pkg.all;
-use work.platform_variant_pkg.all;
 use work.platform_pkg.all;
 
 entity platform is
@@ -404,38 +403,26 @@ port map(
 
 tilemap_o(1).tile_d(15 downto 0) <= chr_rom_d(0) & chr_rom_d(1);
 
-
-rom71 : entity work.mpb_23m
+rom7 : entity work.mpb_23m
 port map(
 	clk  => clk_video,
-	addr => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
-	data => spr_rom_left(0)
+	addr_a => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
+	data_a => spr_rom_left(0),
+	addr_b => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
+	data_b => spr_rom_right(0)
 );
 
-rom72 : entity work.mpb_23m
+rom8 : entity work.mpb_13n
 port map(
 	clk  => clk_video,
-	addr => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
-	data => spr_rom_right(0)
+	addr_a => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
+	data_a => spr_rom_left(1),
+	addr_b => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
+	data_b => spr_rom_right(1)
 );
 
-rom81 : entity work.mpb_13n
-port map(
-	clk  => clk_video,
-	addr => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
-	data => spr_rom_left(1)
-);
-
-rom82 : entity work.mpb_13n
-port map(
-	clk  => clk_video,
-	addr => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
-	data => spr_rom_right(1)
-);
-
-    sprite_o.d(sprite_o.d'left downto 32) <= (others => '0');
-    sprite_o.d(31 downto 0) <=  spr_rom_left(0) & spr_rom_right(0) & 
-                                spr_rom_left(1) & spr_rom_right(1);
+sprite_o.d(sprite_o.d'left downto 32) <= (others => '0');
+sprite_o.d(31 downto 0) <=  spr_rom_left(0) & spr_rom_right(0) & spr_rom_left(1) & spr_rom_right(1);
 
 rom9 : entity work.mpe_13l
 port map(
@@ -478,7 +465,8 @@ vram_inst : entity work.dpram
 			data_a			=> (others => 'X'),
 			q_a					=> tilemap_o(1).map_d(7 downto 0)
 		);
-  tilemap_o(1).map_d(15 downto 8) <= (others => '0');
+		
+tilemap_o(1).map_d(15 downto 8) <= (others => '0');
 
 cram_inst : entity work.dpram
     generic map
@@ -501,7 +489,7 @@ cram_inst : entity work.dpram
 			q_a					=> tilemap_o(1).attr_d(7 downto 0)
 		);
 		
-  tilemap_o(1).attr_d(15 downto 8) <= (others => '0');
+tilemap_o(1).attr_d(15 downto 8) <= (others => '0');
   
 wram_inst : entity work.spram
       generic map

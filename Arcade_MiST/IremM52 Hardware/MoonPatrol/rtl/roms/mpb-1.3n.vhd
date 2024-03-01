@@ -4,8 +4,10 @@ use ieee.std_logic_1164.all,ieee.numeric_std.all;
 entity mpb_13n is
 port (
 	clk  : in  std_logic;
-	addr : in  std_logic_vector(11 downto 0);
-	data : out std_logic_vector(7 downto 0)
+	addr_a : in  std_logic_vector(11 downto 0);
+	data_a : out std_logic_vector(7 downto 0);
+	addr_b : in  std_logic_vector(11 downto 0);
+	data_b : out std_logic_vector(7 downto 0)
 );
 end entity;
 
@@ -272,7 +274,8 @@ begin
 process(clk)
 begin
 	if rising_edge(clk) then
-		data <= rom_data(to_integer(unsigned(addr)));
+		data_a <= rom_data(to_integer(unsigned(addr_a)));
+		data_b <= rom_data(to_integer(unsigned(addr_b)));
 	end if;
 end process;
 end architecture;

@@ -5,7 +5,6 @@ use IEEE.std_logic_unsigned.all;
 library work;
 use work.pace_pkg.all;
 use work.platform_pkg.all;
-use work.platform_variant_pkg.all;
 use work.video_controller_pkg.all;
 
 --
