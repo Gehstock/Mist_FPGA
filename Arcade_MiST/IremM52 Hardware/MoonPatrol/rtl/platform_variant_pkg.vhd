@@ -17,23 +17,23 @@ package platform_variant_pkg is
 	-- Platform-specific constants (optional)
 	--
 
-  constant PLATFORM_VARIANT             : string := "mpatrol";
+--  constant PLATFORM_VARIANT             : string := "mpatrol";
   constant PLATFORM_VARIANT_SRC_DIR     : string := "";
   type rom_a is array (natural range <>) of string;
-  constant M52_ROM                      : rom_a(0 to 3) := 
-                                          (
-                                            0 => "mpa-1.3m", 
-                                            1 => "mpa-2.3l",
-                                            2 => "mpa-3.3k",
-                                            3 => "mpa-4.3j"
-                                          );
-  constant M52_ROM_WIDTHAD              : natural := 12;
+--  constant M52_ROM                      : rom_a(0 to 3) := 
+--                                          (
+--                                            0 => "mpa-1.3m", 
+--                                            1 => "mpa-2.3l",
+--                                            2 => "mpa-3.3k",
+--                                            3 => "mpa-4.3j"
+--                                          );
+--  constant M52_ROM_WIDTHAD              : natural := 12;
 
-  constant M52_CHAR_ROM                 : rom_a(0 to 1) := 
-                                          (
-                                            0 => "mpe-5.3e", 
-                                            1 => "mpe-4.3f"
-                                          );
+--  constant M52_CHAR_ROM                 : rom_a(0 to 1) := 
+--                                          (
+--                                            0 => "mpe-5.3e", 
+--                                            1 => "mpe-4.3f"
+--                                          );
 
   constant M52_SPRITE_ROM               : rom_a(0 to 1) := 
                                           (
@@ -41,12 +41,12 @@ package platform_variant_pkg is
                                             1 => "mpb-1.3n"
                                           );
 
-  constant M52_BG_ROM                   : rom_a(0 to 2) := 
-                                          (
-                                            2 => "mpe-1.3l",  -- mountains
-                                            1 => "mpe-2.3k",  -- hills
-                                            0 => "mpe-3.3h"   -- cityscape
-                                          );
+--  constant M52_BG_ROM                   : rom_a(0 to 2) := 
+--                                          (
+--                                            2 => "mpe-1.3l",  -- mountains
+--                                            1 => "mpe-2.3k",  -- hills
+--                                            0 => "mpe-3.3h"   -- cityscape
+--                                          );
 
 	constant tile_pal : pal_a(0 to 127) :=
 	(

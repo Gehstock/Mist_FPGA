@@ -28,7 +28,11 @@ entity platform is
     -- controller inputs
     inputs_i        : in from_MAPPED_INPUTS_t(0 to NUM_INPUT_BYTES-1);
     -- graphics
-    
+		IN0			: in std_logic_vector(7 downto 0);
+		IN1			: in std_logic_vector(7 downto 0);
+		IN2			: in std_logic_vector(7 downto 0);
+		DIP1			: in std_logic_vector(7 downto 0);
+		DIP2			: in std_logic_vector(7 downto 0);    
     bitmap_i        : in from_BITMAP_CTL_a(1 to 3);
     bitmap_o        : out to_BITMAP_CTL_a(1 to 3);
     
@@ -90,16 +94,25 @@ architecture SYN of platform is
 	signal sprite_cs          : std_logic;
   
   -- misc signals      
-  signal in_cs               : std_logic;
-  signal in_d_o              : std_logic_vector(7 downto 0);
+	signal in_cs               : std_logic;
+	signal in_d_o              : std_logic_vector(7 downto 0);
 	signal prot_cs            : std_logic;
-  signal prot_d_o            : std_logic_vector(7 downto 0);
+	signal prot_d_o            : std_logic_vector(7 downto 0);
   
   -- other signals
-  signal rst_platform        : std_logic;
-  signal pause               : std_logic;
-  signal rot_en              : std_logic;
-
+	signal rst_platform        : std_logic;
+	signal pause               : std_logic;
+	signal rot_en              : std_logic;
+	signal vblank_int     : std_logic;
+	
+	    type rom_d_a is array(0 to 4) of std_logic_vector(7 downto 0);
+    signal rom_d          : rom_d_a;
+	 
+	    type gfx_rom_d_a is array(0 to 1) of std_logic_vector(7 downto 0);
+    signal chr_rom_d      : gfx_rom_d_a;
+    signal spr_rom_left   : gfx_rom_d_a;
+    signal spr_rom_right  : gfx_rom_d_a; 
+	 
 begin
 
   -- handle special keys
@@ -303,12 +316,7 @@ begin
         nmi    	=> '0'
       );
   end block BLK_CPU;
-  
-  BLK_INTERRUPTS : block
-  
-    signal vblank_int     : std_logic;
 
-  begin
   
 		process (clk_sys, rst_sys)
 			variable vblank_r : std_logic_vector(3 downto 0);
@@ -338,126 +346,119 @@ begin
 
     -- generate INT
     cpu_irq <= vblank_int;
-    
-  end block BLK_INTERRUPTS;
-  
-  BLK_INPUTS : block
-  begin
-  
-    in_d_o <= inputs_i(0).d when cpu_a(2 downto 0) = "000" else
-              inputs_i(1).d when cpu_a(2 downto 0) = "001" else
-              inputs_i(2).d when cpu_a(2 downto 0) = "010" else
-              inputs_i(3).d when cpu_a(2 downto 0) = "011" else
-              inputs_i(4).d when cpu_a(2 downto 0) = "100" else
+ 
+    in_d_o <= IN0 when cpu_a(2 downto 0) = "000" else
+              IN1 when cpu_a(2 downto 0) = "001" else
+              IN2 when cpu_a(2 downto 0) = "010" else
+              DIP1 when cpu_a(2 downto 0) = "011" else
+              DIP2 when cpu_a(2 downto 0) = "100" else
               X"FF";
   
-  end block BLK_INPUTS;
-  
-  BLK_CPU_ROMS : block
-  
-    type rom_d_a is array(0 to 4) of std_logic_vector(7 downto 0);
-    signal rom_d          : rom_d_a;
-
-  begin
-  
-    rom_d_o <=  rom_d(0) when cpu_a(M52_ROM_WIDTHAD+1 downto M52_ROM_WIDTHAD) = "00" else
-                rom_d(1) when cpu_a(M52_ROM_WIDTHAD+1 downto M52_ROM_WIDTHAD) = "01" else
-                rom_d(2) when cpu_a(M52_ROM_WIDTHAD+1 downto M52_ROM_WIDTHAD) = "10" else
+    rom_d_o <=  rom_d(0) when cpu_a(13 downto 12) = "00" else
+                rom_d(1) when cpu_a(13 downto 12) = "01" else
+                rom_d(2) when cpu_a(13 downto 12) = "10" else
                 rom_d(3);
 
-    GEN_CPU_ROMS : for i in M52_ROM'range generate
-      rom_inst : entity work.sprom
-        generic map
-        (
-          init_file		=> PLATFORM_VARIANT_SRC_DIR & "roms/" &
-                          M52_ROM(i) & ".hex",
-          widthad_a		=> M52_ROM_WIDTHAD
-        )
-        port map
-        (
-          clock			=> clk_sys,
-          address		=> cpu_a(M52_ROM_WIDTHAD-1 downto 0),
-          q					=> rom_d(i)
-        );
-    end generate GEN_CPU_ROMS;
 
-  end block BLK_CPU_ROMS;
-  
-  BLK_GFX_ROMS : block
-  
-    type gfx_rom_d_a is array(0 to 1) of std_logic_vector(7 downto 0);
-    signal chr_rom_d      : gfx_rom_d_a;
-    signal spr_rom_left   : gfx_rom_d_a;
-    signal spr_rom_right  : gfx_rom_d_a;
-    
-  begin
-  
-    GEN_CHAR_ROMS : for i in M52_CHAR_ROM'range generate
-      char_rom_inst : entity work.sprom
-        generic map
-        (
-          init_file		=> PLATFORM_VARIANT_SRC_DIR & "roms/" &
-                          M52_CHAR_ROM(i) & ".hex",
-          widthad_a		=> 12
-        )
-        port map
-        (
-          clock			=> clk_video,
-          address		=> tilemap_i(1).tile_a(11 downto 0),
-          q					=> chr_rom_d(i)
-        );
-    end generate GEN_CHAR_ROMS;
+rom1 : entity work.mpa_13m
+port map(
+	clk  	=> clk_sys,
+	addr 	=> cpu_a(11 downto 0),
+	data 	=> rom_d(0)
+);
 
-    tilemap_o(1).tile_d(15 downto 0) <= chr_rom_d(0) & chr_rom_d(1);
+rom2 : entity work.mpa_23l
+port map(
+	clk  	=> clk_sys,
+	addr 	=> cpu_a(11 downto 0),
+	data 	=> rom_d(1)
+);
 
-    GEN_SPRITE_ROMS : for i in M52_SPRITE_ROM'range generate
-      sprite_rom_inst : entity work.dprom_2r
-        generic map
-        (
-          init_file		=> PLATFORM_VARIANT_SRC_DIR & "roms/" &
-                          M52_SPRITE_ROM(i) & ".hex",
-          widthad_a		=> 12,
-          widthad_b		=> 12
-        )
-        port map
-        (
-          clock			              => clk_video,
-          address_a(11 downto 5)  => sprite_i.a(11 downto 5),
-          address_a(4)            => '0',
-          address_a(3 downto 0)   => sprite_i.a(3 downto 0),
-          q_a 			              => spr_rom_left(i),
-          address_b(11 downto 5)  => sprite_i.a(11 downto 5),
-          address_b(4)            => '1',
-          address_b(3 downto 0)   => sprite_i.a(3 downto 0),
-          q_b                     => spr_rom_right(i)
-        );
-    end generate GEN_SPRITE_ROMS;
+rom3 : entity work.mpa_33k
+port map(
+	clk  	=> clk_sys,
+	addr 	=> cpu_a(11 downto 0),
+	data 	=> rom_d(2)
+);
+
+rom4 : entity work.mpa_43j
+port map(
+	clk  	=> clk_sys,
+	addr 	=> cpu_a(11 downto 0),
+	data 	=> rom_d(3)
+);
+--Char
+rom5 : entity work.mpe_43f
+port map(
+	clk  => clk_video,
+	addr => tilemap_i(1).tile_a(11 downto 0),
+	data => chr_rom_d(1)
+);
+
+rom6 : entity work.mpe_53e
+port map(
+	clk  => clk_video,
+	addr => tilemap_i(1).tile_a(11 downto 0),
+	data => chr_rom_d(0)
+);
+
+tilemap_o(1).tile_d(15 downto 0) <= chr_rom_d(0) & chr_rom_d(1);
+
+
+rom71 : entity work.mpb_23m
+port map(
+	clk  => clk_video,
+	addr => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
+	data => spr_rom_left(0)
+);
+
+rom72 : entity work.mpb_23m
+port map(
+	clk  => clk_video,
+	addr => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
+	data => spr_rom_right(0)
+);
+
+rom81 : entity work.mpb_13n
+port map(
+	clk  => clk_video,
+	addr => sprite_i.a(11 downto 5) & '0' & sprite_i.a(3 downto 0),
+	data => spr_rom_left(1)
+);
+
+rom82 : entity work.mpb_13n
+port map(
+	clk  => clk_video,
+	addr => sprite_i.a(11 downto 5) & '1' & sprite_i.a(3 downto 0),
+	data => spr_rom_right(1)
+);
 
     sprite_o.d(sprite_o.d'left downto 32) <= (others => '0');
     sprite_o.d(31 downto 0) <=  spr_rom_left(0) & spr_rom_right(0) & 
                                 spr_rom_left(1) & spr_rom_right(1);
 
-    GEN_BG_ROMS : for i in M52_BG_ROM'range generate
-      bg_rom_inst : entity work.sprom
-        generic map
-        (
-          init_file		=> PLATFORM_VARIANT_SRC_DIR & "roms/" &
-                          M52_BG_ROM(i) & ".hex",
-          widthad_a		=> 12
-        )
-        port map
-        (
-          clock			=> clk_video,
-          address		=> bitmap_i(1+i).a(11 downto 0),
-          q					=> bitmap_o(1+i).d(7 downto 0)
-        );
-      bitmap_o(1+i).d(15 downto 8) <= (others => '0');
-    end generate GEN_BG_ROMS;
-                   
-  end block BLK_GFX_ROMS;
+rom9 : entity work.mpe_13l
+port map(
+	clk  => clk_video,
+	addr => bitmap_i(3).a(11 downto 0),
+	data => bitmap_o(3).d(7 downto 0)
+);
 
-	-- wren_a *MUST* be GND for CYCLONEII_SAFE_WRITE=VERIFIED_SAFE
-	vram_inst : entity work.dpram
+rom10 : entity work.mpe_23k
+port map(
+	clk  => clk_video,
+	addr => bitmap_i(2).a(11 downto 0),
+	data => bitmap_o(2).d(7 downto 0)
+);
+
+rom11 : entity work.mpe_33h
+port map(
+	clk  => clk_video,
+	addr => bitmap_i(1).a(11 downto 0),
+	data => bitmap_o(1).d(7 downto 0)
+);
+
+vram_inst : entity work.dpram
     generic map
     (
       init_file		=> "",
@@ -479,8 +480,7 @@ begin
 		);
   tilemap_o(1).map_d(15 downto 8) <= (others => '0');
 
-	-- wren_a *MUST* be GND for CYCLONEII_SAFE_WRITE=VERIFIED_SAFE
-	cram_inst : entity work.dpram
+cram_inst : entity work.dpram
     generic map
     (
       init_file		=> "",
@@ -503,7 +503,7 @@ begin
 		
   tilemap_o(1).attr_d(15 downto 8) <= (others => '0');
   
-     wram_inst : entity work.spram
+wram_inst : entity work.spram
       generic map
       (
       	widthad_a => 11

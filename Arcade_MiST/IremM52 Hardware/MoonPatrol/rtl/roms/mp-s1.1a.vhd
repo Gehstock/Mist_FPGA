@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all,ieee.numeric_std.all;
 
-entity moon_patrol_sound_prog is
+entity mp_s11a is
 port (
 	clk  : in  std_logic;
 	addr : in  std_logic_vector(11 downto 0);
@@ -9,7 +9,7 @@ port (
 );
 end entity;
 
-architecture prom of moon_patrol_sound_prog is
+architecture prom of mp_s11a is
 	type rom is array(0 to  4095) of std_logic_vector(7 downto 0);
 	signal rom_data: rom := (
 		X"88",X"08",X"14",X"3F",X"8D",X"51",X"0C",X"24",X"E0",X"91",X"00",X"F9",X"3A",X"1A",X"80",X"C2",

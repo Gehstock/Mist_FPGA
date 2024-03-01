@@ -18,7 +18,7 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.4 Build 182 03/12/2014 SJ Web Edition
-# Date created = 18:52:55  March 05, 2019
+# Date created = 16:56:58  March 01, 2024
 #
 # -------------------------------------------------------------------------- #
 #
@@ -41,10 +41,62 @@
 # ========================
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "12.1 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "09:07:52  FEBRUARY 01, 2013"
-set_global_assignment -name LAST_QUARTUS_VERSION "13.1 SP4.26"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:src/build_id.tcl"
+set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:rtl/build_id.tcl"
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/mpatrol.sv
+set_global_assignment -name VHDL_FILE rtl/mpatrol_top.vhd
+set_global_assignment -name VHDL_FILE rtl/pace.vhd
+set_global_assignment -name VHDL_FILE rtl/pace_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/platform.vhd
+set_global_assignment -name VHDL_FILE rtl/platform_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/platform_variant_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/target_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/project_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/moon_patrol_sound_board.vhd
+set_global_assignment -name VHDL_FILE rtl/video_controller_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_pkg.vhd
+set_global_assignment -name VHDL_FILE rtl/Graphics.vhd
+set_global_assignment -name VHDL_FILE rtl/clk_div.vhd
+set_global_assignment -name VHDL_FILE rtl/Z80.vhd
+set_global_assignment -name VHDL_FILE rtl/sprom.vhd
+set_global_assignment -name VHDL_FILE rtl/dprom_2r.vhd
+set_global_assignment -name VHDL_FILE rtl/dpram.vhd
+set_global_assignment -name VHDL_FILE rtl/spram.vhd
+set_global_assignment -name VHDL_FILE rtl/iremm52_video_controller.vhd
+set_global_assignment -name VHDL_FILE rtl/video_mixer.vhd
+set_global_assignment -name VHDL_FILE rtl/bitmapctl_e.vhd
+set_global_assignment -name VHDL_FILE rtl/bitmap1_ctl.vhd
+set_global_assignment -name VHDL_FILE rtl/bitmap2_ctl.vhd
+set_global_assignment -name VHDL_FILE rtl/bitmap3_ctl.vhd
+set_global_assignment -name VHDL_FILE rtl/tilemapctl_e.vhd
+set_global_assignment -name VHDL_FILE rtl/tilemapctl.vhd
+set_global_assignment -name VHDL_FILE rtl/video_controller_pkg_body.vhd
+set_global_assignment -name VHDL_FILE rtl/video_controller.vhd
+set_global_assignment -name VHDL_FILE rtl/spritectl.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_pkg_body.vhd
+set_global_assignment -name VHDL_FILE rtl/sprite_array.vhd
+set_global_assignment -name VHDL_FILE rtl/spritereg.vhd
+set_global_assignment -name VHDL_FILE rtl/pll_mist.vhd
+set_global_assignment -name VHDL_FILE "rtl/roms/mpa-1.3m.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpa-2.3l.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpa-3.3k.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpa-4.3j.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpe-4.3f.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpe-5.3e.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpe-1.3l.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpe-2.3k.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpe-3.3h.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpb-2.3m.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mpb-1.3n.vhd"
+set_global_assignment -name VHDL_FILE "rtl/roms/mp-s1.1a.vhd"
+set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
+set_global_assignment -name VHDL_FILE ../../../common/CPU/6800/cpu68.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
+set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
+set_global_assignment -name QIP_FILE ../../../common/Sound/jt5205/jt5205.qip
 
 # Pin & Location Assignments
 # ==========================
@@ -82,34 +134,6 @@ set_location_assignment PIN_91 -to SPI_SS3
 set_location_assignment PIN_90 -to SPI_SS4
 set_location_assignment PIN_13 -to CONF_DATA0
 
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[0]
-
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[0]
-
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
-
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to LED
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
-
 # Classic Timing Assignments
 # ==========================
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
@@ -132,9 +156,11 @@ set_global_assignment -name SEARCH_PATH src/platform/m52/ -tag from_archive
 set_global_assignment -name SEARCH_PATH src/platform/m52/mpatrol/ -tag from_archive
 set_global_assignment -name SEARCH_PATH src/platform/m52/mpatrol/roms/ -tag from_archive
 set_global_assignment -name SEARCH_PATH src/target/mist/ -tag from_archive
-set_global_assignment -name TOP_LEVEL_ENTITY mpatrol
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name TOP_LEVEL_ENTITY mpatrol
 
 # Fitter Assignments
 # ==================
@@ -146,6 +172,8 @@ set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO
 set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
+set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
 
 # Assembler Assignments
 # =====================
@@ -157,6 +185,11 @@ set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE Output/snd.stp
 
+# Power Estimation Assignments
+# ============================
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+
 # Advanced I/O Timing Assignments
 # ===============================
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
@@ -167,70 +200,45 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 # ---------------------
 # start ENTITY(mpatrol)
 
+	# Fitter Assignments
+	# ==================
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[5]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[4]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[3]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[2]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[1]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[0]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[5]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[4]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[3]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[2]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[1]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[0]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[5]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[4]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_HS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to VGA_VS
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to LED
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_R
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to AUDIO_L
+	set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SPI_DO
+
 	# start DESIGN_PARTITION(Top)
 	# ---------------------------
 
 		# Incremental Compilation Assignments
 		# ===================================
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+		set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+		set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+		set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 	# end DESIGN_PARTITION(Top)
 	# -------------------------
 
 # end ENTITY(mpatrol)
 # -------------------
-set_global_assignment -name DEVICE_FILTER_PACKAGE TQFP
-set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
-set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
-set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
-set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
-set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name VHDL_FILE src/bitmapctl_e.vhd
-set_global_assignment -name VHDL_FILE src/tilemapctl_e.vhd
-set_global_assignment -name VHDL_FILE src/target_pkg.vhd
-set_global_assignment -name VHDL_FILE src/project_pkg.vhd
-set_global_assignment -name VHDL_FILE src/platform_pkg.vhd
-set_global_assignment -name VHDL_FILE src/mpatrol.vhd
-set_global_assignment -name VHDL_FILE src/video_mixer.vhd
-set_global_assignment -name VHDL_FILE src/platform_variant_pkg.vhd
-set_global_assignment -name VHDL_FILE src/spritereg.vhd
-set_global_assignment -name VHDL_FILE src/spritectl.vhd
-set_global_assignment -name VHDL_FILE src/sprite_pkg_body.vhd
-set_global_assignment -name VHDL_FILE src/sprite_pkg.vhd
-set_global_assignment -name VHDL_FILE src/video_controller_pkg_body.vhd
-set_global_assignment -name VHDL_FILE src/video_controller_pkg.vhd
-set_global_assignment -name VHDL_FILE src/iremm52_video_controller.vhd
-set_global_assignment -name VHDL_FILE src/video_controller.vhd
-set_global_assignment -name VHDL_FILE src/moon_patrol_sound_board.vhd
-set_global_assignment -name VHDL_FILE src/moon_patrol_sound_prog.vhd
-set_global_assignment -name VHDL_FILE src/Z80.vhd
-set_global_assignment -name VHDL_FILE src/tilemapctl.vhd
-set_global_assignment -name VHDL_FILE src/sprom.vhd
-set_global_assignment -name VHDL_FILE src/spram.vhd
-set_global_assignment -name VHDL_FILE src/platform.vhd
-set_global_assignment -name VHDL_FILE src/pace_pkg.vhd
-set_global_assignment -name VHDL_FILE src/pace.vhd
-set_global_assignment -name VHDL_FILE src/Inputs.VHD
-set_global_assignment -name VHDL_FILE src/input_mapper.vhd
-set_global_assignment -name VHDL_FILE src/Graphics.VHD
-set_global_assignment -name VHDL_FILE src/dprom_2r.vhd
-set_global_assignment -name VHDL_FILE src/dpram.vhd
-set_global_assignment -name VHDL_FILE src/clk_div.vhd
-set_global_assignment -name VHDL_FILE src/bitmap3_ctl.vhd
-set_global_assignment -name VHDL_FILE src/bitmap2_ctl.vhd
-set_global_assignment -name VHDL_FILE src/bitmap1_ctl.vhd
-set_global_assignment -name VHDL_FILE src/i82c55.vhd
-set_global_assignment -name VERILOG_FILE src/keyboard.v
-set_global_assignment -name VHDL_FILE src/sprite_array.vhd
-set_global_assignment -name QIP_FILE src/Clock.qip
-set_global_assignment -name QIP_FILE src/pll_aud.qip
-set_global_assignment -name VHDL_FILE src/build_id.vhd
-set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
-set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
-set_global_assignment -name VHDL_FILE ../../../common/CPU/6800/cpu68.vhd
-set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
-set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
-set_global_assignment -name QIP_FILE ../../../common/Sound/jt5205/jt5205.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

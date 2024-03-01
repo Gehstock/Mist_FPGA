@@ -257,7 +257,7 @@ port map(
 -- rom_do <= snd_rom_do;
 
 -- cpu program rom
-cpu_prog_rom : entity work.moon_patrol_sound_prog
+cpu_prog_rom : entity work.mp_s11a
 port map(
  clk  => clock_E,
  addr => cpu_addr(11 downto 0),

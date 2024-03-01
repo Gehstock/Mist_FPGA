@@ -1,0 +1,3 @@
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_dcrm.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_fir.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_jt49_filters.v"]

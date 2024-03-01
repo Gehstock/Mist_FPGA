@@ -16,7 +16,11 @@ entity PACE is
   	-- clocks and resets
     clkrst_i        : in from_CLKRST_t;
     palmode         : in std_logic;
-
+		IN0			: in std_logic_vector(7 downto 0);
+		IN1			: in std_logic_vector(7 downto 0);
+		IN2			: in std_logic_vector(7 downto 0);
+		DIP1			: in std_logic_vector(7 downto 0);
+		DIP2			: in std_logic_vector(7 downto 0);
     -- misc I/O
     buttons_i       : in from_BUTTONS_t;
     switches_i      : in from_SWITCHES_t;
@@ -31,11 +35,6 @@ entity PACE is
 
 	 sound_data_o    : out std_logic_vector(7 downto 0)
 
-    -- custom i/o
- --   project_i       : in from_PROJECT_IO_t;
-  --  project_o       : out to_PROJECT_IO_t;
-  --  platform_i      : in from_PLATFORM_IO_t;
-  --  platform_o      : out to_PLATFORM_IO_t
   );
 end entity PACE;
 
@@ -62,24 +61,6 @@ architecture SYN of PACE is
 
 begin
 
-	inputs_inst : entity work.inputs
-		generic map
-		(
-      NUM_DIPS        => PACE_NUM_SWITCHES,
-			NUM_INPUTS	    => 6,
-			CLK_1US_DIV	    => CLK_1US_COUNTS
-		)
-	  port map
-	  (
-	    clk     	      => clkrst_i.clk(0),
-	    reset   	      => clkrst_i.rst(0),
-	    ps2clk  	      => inputs_i.ps2_kclk,
-	    ps2data 	      => inputs_i.ps2_kdat,
-			jamma			      => inputs_i.jamma_n,
-	
-	    dips     	      => switches_i,
-	    inputs		      => mapped_inputs
-	  );
 
   platform_inst : entity work.platform
     generic map
@@ -92,29 +73,33 @@ begin
       clkrst_i        => clkrst_i,
       
       -- misc inputs and outputs
-      buttons_i       => buttons_i,
-      switches_i      => switches_i,
-      leds_o          => leds_o,
+      buttons_i      => buttons_i,
+      switches_i     => switches_i,
+      leds_o         => leds_o,
       
       -- controller inputs
-      inputs_i        => mapped_inputs,
-      
+      inputs_i       => mapped_inputs,
+      IN0        		=> IN0,
+		IN1        		=> IN1,
+		IN2        		=> IN2,
+		DIP1        	=> DIP1,
+		DIP2        	=> DIP2,
       -- graphics
-      bitmap_i        => from_bitmap_ctl,
-      bitmap_o        => to_bitmap_ctl,
+      bitmap_i       => from_bitmap_ctl,
+      bitmap_o       => to_bitmap_ctl,
       
-      tilemap_i       => from_tilemap_ctl,
-      tilemap_o       => to_tilemap_ctl,
+      tilemap_i      => from_tilemap_ctl,
+      tilemap_o      => to_tilemap_ctl,
       
-      sprite_reg_o    => to_sprite_reg,
-      sprite_i        => from_sprite_ctl,
-      sprite_o        => to_sprite_ctl,
-		spr0_hit				=> spr0_hit,
+      sprite_reg_o   => to_sprite_reg,
+      sprite_i       => from_sprite_ctl,
+      sprite_o       => to_sprite_ctl,
+		spr0_hit			=> spr0_hit,
       
-      graphics_i      => from_graphics,
-      graphics_o      => to_graphics,
+      graphics_i     => from_graphics,
+      graphics_o     => to_graphics,
 		
-		sound_data_o    => sound_data_o
+		sound_data_o   => sound_data_o
     );
 
   graphics_inst : entity work.Graphics                                    
