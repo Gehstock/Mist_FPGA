@@ -158,6 +158,8 @@ port(
  input_2        : in  std_logic_vector( 7 downto 0);
  input_3        : in  std_logic_vector( 7 downto 0);
  input_4        : in  std_logic_vector( 7 downto 0);
+ 
+ output_4       : out std_logic_vector( 7 downto 0);
 
  cpu_rom_addr   : out std_logic_vector(15 downto 0);
  cpu_rom_do     : in std_logic_vector(7 downto 0);
@@ -850,6 +852,8 @@ port map(
  input_2 => input_2,
  input_3 => input_3,
  input_4 => input_4,
+ 
+ output_4 => output_4,
  
  separate_audio => separate_audio,
  audio_out_l    => audio_out_l,

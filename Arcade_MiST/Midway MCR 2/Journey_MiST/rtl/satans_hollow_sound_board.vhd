@@ -68,6 +68,7 @@ port(
  input_2 : in std_logic_vector(7 downto 0);
  input_3 : in std_logic_vector(7 downto 0);
  input_4 : in std_logic_vector(7 downto 0); 
+ output_4 : out std_logic_vector(7 downto 0);
  separate_audio : in std_logic;
  
  audio_out_l : out std_logic_vector(15 downto 0);
@@ -446,8 +447,12 @@ begin
 		iram_1_do <= (others => '0');
 		iram_2_do <= (others => '0');
 		iram_3_do <= (others => '0');
+		output_4 <= (others => '0');
 	else
 		if rising_edge(clock_snd) then
+			if ssio_iowe = '1' and main_cpu_addr(7 downto 2) = "000001" then  -- 0x04 - 0x07
+				output_4 <= ssio_di;
+			end if;
 			if ssio_iowe = '1' and main_cpu_addr(7 downto 2) = "000111" then  -- 0x1C - 0x1F
 				case main_cpu_addr(1 downto 0) is
 				when "00" => iram_0_do <= ssio_di;

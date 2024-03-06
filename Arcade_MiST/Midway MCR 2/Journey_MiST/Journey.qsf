@@ -181,7 +181,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/jo.stp
+set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp1.stp
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/Journey_MiST.sv
 set_global_assignment -name VHDL_FILE rtl/journey.vhd
 set_global_assignment -name VHDL_FILE rtl/satans_hollow_sound_board.vhd
@@ -196,4 +196,7 @@ set_global_assignment -name QIP_FILE ../../../common/CPU/T80/T80.qip
 set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/vol_table_array.vhd
 set_global_assignment -name VHDL_FILE ../../../common/Sound/ym2149/YM2149.vhd
 set_global_assignment -name QIP_FILE ../../../common/mist/mist.qip
+set_global_assignment -name VHDL_FILE ../../../common/Sound/diskimage_by_byte.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../common/Sound/wave_sound.sv
+set_global_assignment -name SIGNALTAP_FILE output_files/stp1.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

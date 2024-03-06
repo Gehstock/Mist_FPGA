@@ -5,7 +5,7 @@
     <year>1984</year>
     <manufacturer>Bally Midway</manufacturer>
     <category>Action</category>
-    <rbf>MCR3</rbf>
+    <rbf>Journey</rbf>
     <setname>journey</setname>
     <rom index="0" zip="journey.zip" md5="95d0859c7922308b094486d0d624c727" type="merged|nonmerged">
 	<part crc="f2618913" name="d2"/>
