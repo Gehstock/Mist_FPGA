@@ -5,7 +5,7 @@
     <year>1984</year>
     <manufacturer>Bally Midway</manufacturer>
     <category>Shooter</category>
-    <rbf>MCR2</rbf>
+    <rbf>twotigers</rbf>
     <setname>twotigerc</setname>
     <rom index="1">
 	<part>2</part>

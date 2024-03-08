@@ -1,5 +1,6 @@
 //============================================================================
-//  Arcade: Journey by DarFPGA
+//  Midway SatansHollow/Tron/DominoMan/Wacko/Kozmik Krooz'r/Two Tigers
+//  arcade top-level for MiST
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -15,18 +16,17 @@
 //  with this program; if not, write to the Free Software Foundation, Inc.,
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
-
 `default_nettype none
 
-module Journey_MiST(
-	output        LED,						
+module TwoTigers_MiST(
+	output        LED,
 	output  [5:0] VGA_R,
 	output  [5:0] VGA_G,
 	output  [5:0] VGA_B,
-	output    reg VGA_HS,
-	output    reg VGA_VS,
+	output        VGA_HS,
+	output        VGA_VS,
 	output        AUDIO_L,
-	output        AUDIO_R,	
+	output        AUDIO_R,
 	input         SPI_SCK,
 	output        SPI_DO,
 	input         SPI_DI,
@@ -50,39 +50,44 @@ module Journey_MiST(
 `include "rtl/build_id.v" 
 
 localparam CONF_STR = {
-	"JOURNEY;;",
+	"TWOTIGERC;;",
 	"O2,Rotate Controls,Off,On;",
 	"O5,Blend,Off,On;",
-	"O6,Service,Off,On;",
+	"O6,Swap Joysticks,Off,On;",
+	"O4,Spinner speed,Low,High;",
+	"DIP;",
+	"O7,Service,Off,On;",
 	"R2048,Save NVRAM;",
-//	"S0U,WAVVHD,Cas Audio:;",
 	"T0,Reset;",
-	"V,v1.0.",`BUILD_DATE
+	"V,v2.0.",`BUILD_DATE
 };
 
-wire       rotate = status[2];
-wire       blend  = status[5];
-wire       service = status[6];
+wire       rotate  = status[2];
+wire       blend   = status[5];
+wire       joyswap = status[6];
+wire       service = status[7];
+wire       spinspd = status[4];
 
-wire [1:0] orientation = 2'b11;
+wire       oneplayer = 1'b0;
+wire  [1:0] orientation; //left/right / portrait/landscape
+wire  [7:0] input_0 = ~{ service, 1'b0, m_tilt, m_three_players, m_two_players, m_one_player, m_coin2, m_coin1 };
+wire  [7:0] input_1 = ~{ 1'b0, spin_angle1 };
+wire  [7:0] input_2 = ~{ 4'b0000, m_fire2B, m_fire2A, m_fireB, m_fireA };
+wire  [7:0] input_3 = 8'hFF;
+wire  [7:0] input_4 = ~{ 1'b0, spin_angle2 };
 
-wire [7:0] input_0 = ~{ service, 1'b0, m_tilt, m_fireA, m_two_players, m_one_player, m_coin2, m_coin1 };
-wire [7:0] input_1 = ~{ 4'b0000, m_down, m_up, m_right, m_left };
-wire [7:0] input_2 = ~{ 3'b000, m_fire2A, m_down2, m_up2, m_right2, m_left2 };
-wire [7:0] input_3 = ~{ 8'b00000010 };
-wire [7:0] input_4 = 8'hFF;
+
 
 assign LED = ~ioctl_downl;
-assign SDRAM_CLK = clk_mem;
+assign SDRAM_CLK = clk_sys;
 assign SDRAM_CKE = 1;
 
-wire clk_sys, clk_mem;
+wire clk_sys;
 wire pll_locked;
 pll_mist pll(
 	.inclk0(CLOCK_27),
 	.areset(0),
 	.c0(clk_sys),
-	.c1(clk_mem),
 	.locked(pll_locked)
 	);
 
@@ -97,6 +102,10 @@ wire        no_csync;
 wire        key_pressed;
 wire  [7:0] key_code;
 wire        key_strobe;
+wire signed [8:0] mouse_x;
+wire signed [8:0] mouse_y;
+wire        mouse_strobe;
+reg   [7:0] mouse_flags;
 
 wire [31:0] sd_lba;
 wire sd_rd;
@@ -109,10 +118,9 @@ wire [63:0] img_size;
 
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)),
-	.SD_IMAGES(1)
-) user_io(
+	.SD_IMAGES(1))
+user_io(
 	.clk_sys        (clk_sys        ),
-	.clk_sd         (clk_sys        ),
 	.conf_str       (CONF_STR       ),
 	.SPI_CLK        (SPI_SCK        ),
 	.SPI_SS_IO      (CONF_DATA0     ),
@@ -126,9 +134,13 @@ user_io #(
 	.key_strobe     (key_strobe     ),
 	.key_pressed    (key_pressed    ),
 	.key_code       (key_code       ),
+	.mouse_x        (mouse_x        ),
+	.mouse_y        (mouse_y        ),
+	.mouse_strobe   (mouse_strobe   ),
+	.mouse_flags    (mouse_flags    ),
 	.joystick_0     (joystick_0     ),
 	.joystick_1     (joystick_1     ),
-
+	
 	// SD CARD
    .sd_lba         (sd_lba        ),
 	.sd_rd          (sd_rd         ),
@@ -144,7 +156,7 @@ user_io #(
 	.sd_buff_addr   ( ),
 	.img_mounted    (img_mounted   ),
 	.img_size       (img_size      ),
-
+	
 	.status         (status         )
 	);
 
@@ -152,8 +164,6 @@ wire [15:0] rom_addr;
 wire [15:0] rom_do;
 wire [13:0] snd_addr;
 wire [15:0] snd_do;
-wire [14:0] sp_addr;
-wire [31:0] sp_do;
 wire        ioctl_downl;
 wire        ioctl_upl;
 wire  [7:0] ioctl_index;
@@ -162,13 +172,13 @@ wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 wire  [7:0] ioctl_din;
 
-/*
-ROM Structure
-00000-09FFF Main CPU 40k  d2+d3+d4+d5+d6
-0A000-0DFFF Snd CPU  16k  a+b+c+d
-0E000-11FFF Gfx1     16k  g3+g4
-12000-      Gfx2     64k  a7+a8+a5+a6+a3+a4+a1+a2
+/* ROM structure
+00000 - 0BFFF  48k CPU1
+0C000 - 0FFFF  16k CPU2
+10000 - 13FFF  16k GFX1
+14000 - 1BFFF  32k GFX2
 */
+
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
 	.SPI_SCK       ( SPI_SCK      ),
@@ -183,16 +193,13 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   ),
 	.ioctl_din     ( ioctl_din    )
 );
-
-wire [24:0] sp_ioctl_addr = ioctl_addr - 17'h12000; //SP ROM offset: 0x12000
-
 reg port1_req, port2_req;
 sdram sdram(
 	.*,
 	.init_n        ( pll_locked   ),
-	.clk           ( clk_mem      ),
+	.clk           ( clk_sys      ),
 
-	// port1 used for main + sound CPU
+	// port1 used for main CPU
 	.port1_req     ( port1_req    ),
 	.port1_ack     ( ),
 	.port1_a       ( ioctl_addr[23:1] ),
@@ -201,25 +208,22 @@ sdram sdram(
 	.port1_d       ( {ioctl_dout, ioctl_dout} ),
 	.port1_q       ( ),
 
-	.cpu1_addr     ( ioctl_downl ? 16'hffff : {1'b0, rom_addr[15:1]} ),
+	.cpu1_addr     ( ioctl_downl ? 15'h7fff : rom_addr[15:1] ),
 	.cpu1_q        ( rom_do ),
-	.cpu2_addr     ( ioctl_downl ? 16'hffff : (16'h5000 + snd_addr[13:1]) ),
-	.cpu2_q        ( snd_do ),
 
-	// port2 for sprite graphics
+	// port2 for sound board
 	.port2_req     ( port2_req ),
 	.port2_ack     ( ),
-	.port2_a       ( {sp_ioctl_addr[23:16], sp_ioctl_addr[13:0], sp_ioctl_addr[15]} ), // merge sprite roms to 32-bit wide words
-	.port2_ds      ( {sp_ioctl_addr[14], ~sp_ioctl_addr[14]} ),
+	.port2_a       ( ioctl_addr[23:1] - 16'h6000 ),
+	.port2_ds      ( {ioctl_addr[0], ~ioctl_addr[0]} ),
 	.port2_we      ( ioctl_downl ),
 	.port2_d       ( {ioctl_dout, ioctl_dout} ),
 	.port2_q       ( ),
 
-	.sp_addr       ( ioctl_downl ? 15'h7fff : sp_addr ),
-	.sp_q          ( sp_do )
+	.snd_addr      ( ioctl_downl ? 15'h7fff : {2'b00, snd_addr[13:1]} ),
+	.snd_q         ( snd_do )
 );
 
-// ROM download controller
 always @(posedge clk_sys) begin
 	reg        ioctl_wr_last = 0;
 
@@ -232,34 +236,25 @@ always @(posedge clk_sys) begin
 	end
 end
 
-// reset signal generation
 reg reset = 1;
 reg rom_loaded = 0;
 always @(posedge clk_sys) begin
 	reg ioctl_downlD;
-	reg [15:0] reset_count;
 	ioctl_downlD <= ioctl_downl;
 
-	// generate a second reset signal - needed for some reason
-	if (status[0] | buttons[1] | ~rom_loaded) reset_count <= 16'hffff;
-	else if (reset_count != 0) reset_count <= reset_count - 1'd1;
-
 	if (ioctl_downlD & ~ioctl_downl) rom_loaded <= 1;
-	reset <= status[0] | buttons[1] | ~rom_loaded | (reset_count == 16'h0001);
-
+	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
 wire [15:0] audio_l, audio_r;
 wire        hs, vs, cs;
 wire        blankn;
 wire  [2:0] g, r, b;
-
 wire [7:0] output_4;
 
-journey journey(
+satans_hollow satans_hollow(
 	.clock_40(clk_sys),
 	.reset(reset),
-	.tv15Khz_mode(scandoublerD),
 	.video_r(r),
 	.video_g(g),
 	.video_b(b),
@@ -267,6 +262,7 @@ journey journey(
 	.video_hs(hs),
 	.video_vs(vs),
 	.video_csync(cs),
+	.tv15Khz_mode(scandoublerD),
 	.separate_audio(1'b1),
 	.audio_out_l(audio_l),
 	.audio_out_r(audio_r),
@@ -277,19 +273,18 @@ journey journey(
 	.input_3      ( input_3         ),
 	.input_4      ( input_4         ),
 	
-	.output_4     ( output_4        ),
+	
 
 	.cpu_rom_addr ( rom_addr        ),
 	.cpu_rom_do   ( rom_addr[0] ? rom_do[15:8] : rom_do[7:0] ),
 	.snd_rom_addr ( snd_addr        ),
 	.snd_rom_do   ( snd_addr[0] ? snd_do[15:8] : snd_do[7:0] ),
-	.sp_addr      ( sp_addr         ),
-	.sp_graphx32_do ( sp_do         ),
+
 	.dl_addr      ( ioctl_addr[16:0]),
-	.dl_data      ( ioctl_dout      ),
 	.dl_wr        ( ioctl_wr && ioctl_index == 0 ),
+	.dl_data      ( ioctl_dout ),
 	.up_data      ( ioctl_din  ),
-	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )	
+	.cmos_wr      ( ioctl_wr && ioctl_index == 8'hff )
 );
 
 wire vs_out;
@@ -314,12 +309,12 @@ mist_video #(.COLOR_DEPTH(3), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_B          ( VGA_B            ),
 	.VGA_VS         ( vs_out           ),
 	.VGA_HS         ( hs_out           ),
-	.rotate         ( { orientation[1], rotate }  ),
+	.rotate         ( { orientation[1], rotate } ),
 	.ce_divider     ( 1'b1             ),
 	.blend          ( blend            ),
-	.scandoubler_disable(1'b1),//scandoublerD ),
+	.scandoubler_disable( 1'b1         ),
 	.no_csync       ( 1'b1             ),
-	.scanlines      ( ),
+	.scanlines      (                  ),
 	.ypbpr          ( ypbpr            )
 	);
 
@@ -363,7 +358,7 @@ wire [15:0] wav_out_r;
 
 wire playing;
 
-assign playing = wav_mounted && output_4[0];
+assign playing = wav_mounted && output_4[1];
 
 wave_sound #(.SYSCLOCK(40000000)) waveplayer
 (
@@ -419,6 +414,63 @@ dac_r(
 	.dac_o(AUDIO_R)
 	);	
 
+// Mouse controls for Wacko
+reg signed [10:0] x_pos;
+reg signed [10:0] y_pos;
+
+always @(posedge clk_sys) begin
+	if (mouse_strobe) begin
+		if (rotate) begin
+			x_pos <= x_pos - mouse_y;
+			y_pos <= y_pos + mouse_x;
+		end else begin
+			x_pos <= x_pos + mouse_x;
+			y_pos <= y_pos + mouse_y;
+		end
+	end
+end
+
+// Controls for Kozmik Krooz'r
+reg  signed [9:0] x_pos_kroozr;
+reg  signed [9:0] y_pos_kroozr;
+wire signed [8:0] move_x = rotate ? -mouse_y : mouse_x;
+wire signed [8:0] move_y = rotate ?  mouse_x : mouse_y;
+wire signed [9:0] x_pos_new = x_pos_kroozr - move_x;
+wire signed [9:0] y_pos_new = y_pos_kroozr + move_y;
+reg  [1:0] mouse_btns;
+
+always @(posedge clk_sys) begin
+	if (mouse_strobe) begin
+		mouse_btns <= mouse_flags[1:0];
+		if (!((move_x[8] & ~x_pos_kroozr[9] &  x_pos_new[9]) || (~move_x[8] &  x_pos_kroozr[9] & ~x_pos_new[9]))) x_pos_kroozr <= x_pos_new;
+		if (!((move_y[8] &  y_pos_kroozr[9] & ~y_pos_new[9]) || (~move_y[8] & ~y_pos_kroozr[9] &  y_pos_new[9]))) y_pos_kroozr <= y_pos_new;
+	end
+end
+
+// Spinners for Tron, Two Tigers, Krooz'r
+wire [6:0] spin_angle1;
+spinner spinner1 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(spinspd),
+	.btn_left(m_left | m_up),
+	.btn_right(m_right | m_down),
+	.ctc_zc_to_2(vs),
+	.spin_angle(spin_angle1)
+);
+
+wire [6:0] spin_angle2;
+spinner spinner2 (
+	.clock_40(clk_sys),
+	.reset(reset),
+	.btn_acc(spinspd),
+	.btn_left(m_left2 | m_up2),
+	.btn_right(m_right2 | m_down2),
+	.ctc_zc_to_2(vs),
+	.spin_angle(spin_angle2)
+);
+
+// Arcade inputs
 wire m_up, m_down, m_left, m_right, m_fireA, m_fireB, m_fireC, m_fireD, m_fireE, m_fireF;
 wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D, m_fire2E, m_fire2F;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
@@ -432,8 +484,8 @@ arcade_inputs inputs (
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
 	.orientation ( orientation ),
-	.joyswap     ( 1'b0        ),
-	.oneplayer   ( 1'b1        ),
+	.joyswap     ( joyswap     ),
+	.oneplayer   ( oneplayer   ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
 	.player1     ( {m_fireF, m_fireE, m_fireD, m_fireC, m_fireB, m_fireA, m_up, m_down, m_left, m_right} ),
 	.player2     ( {m_fire2F, m_fire2E, m_fire2D, m_fire2C, m_fire2B, m_fire2A, m_up2, m_down2, m_left2, m_right2} )
