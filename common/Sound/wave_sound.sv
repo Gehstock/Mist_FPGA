@@ -42,11 +42,18 @@ reg [23:0] data_size;
 reg [27:0] START_ADDR;
 
 reg  [7:0] W_SAMPL_LSB;
-reg [15:0] W_SAMPL_L;
-reg [15:0] W_SAMPL_R;
+reg signed [15:0] W_SAMPL_L;
+reg signed [15:0] W_SAMPL_R;
 
 reg [31:0] sum;
 wire[31:0] sum_next = sum + ( stereo ? {sample_rate,1'b0} : sample_rate);
+
+reg signed [9:0] volume;
+reg signed [8:0] voldelay;
+reg signed [24:0] scaled_l;
+reg signed [24:0] scaled_r;
+
+reg playing;
 
 wire stereo = num_channels==16'h2 ? 1'b1 : 1'b0;
 reg channel_toggle;
@@ -145,7 +152,7 @@ always@(posedge I_CLK) begin
 			W_DMA_ADDR <= W_DMA_ADDR + 1'd1;
 		end
 
-		if(read_done && ce_sample && !I_PAUSE) begin
+		if(read_done && ce_sample && playing) begin
 			read_done <= 0;
 			channel_toggle<=~channel_toggle;
 			W_DMA_EN  <= ~(W_DMA_ADDR >= END_ADDR);
@@ -159,14 +166,47 @@ always@(posedge I_CLK) begin
 		end
 	end
 
-	if(I_RST || I_PAUSE || !W_DMA_EN) begin
+	if(I_RST || !playing || !W_DMA_EN) begin
 		W_SAMPL_L <= 0;
 		W_SAMPL_R <= 0;
 	end
 end
 
 assign O_ADDR = W_DMA_ADDR;
-assign O_PCM_L  = W_SAMPL_L;
-assign O_PCM_R  = W_SAMPL_R;
+
+always @(posedge I_CLK) begin
+
+	if(ce_sample) begin
+		voldelay <= voldelay + 1;
+   end
+end
+
+always @(posedge I_CLK) begin	
+	if(&voldelay && ce_sample) begin
+		if(I_PAUSE) begin
+			if(volume[8:0]!=9'h0) begin
+				volume<={volume[9:2],2'b00}-9'h4;
+			end else begin
+				playing <=1'b0;
+			end
+		end else begin
+			playing <=1'b1;
+			if(!volume[8]) begin
+				volume<=volume+7'b1;
+			end
+		end
+	end
+	
+	if(I_RST) begin
+		volume <= 9'b0;
+	end
+
+	scaled_l <= W_SAMPL_L * volume;
+	scaled_r <= W_SAMPL_R * volume;	
+	
+end
+
+assign O_PCM_L  = scaled_l[24:9];
+assign O_PCM_R  = scaled_r[24:9];
 
 endmodule
