@@ -21,7 +21,8 @@ module cofi (
     output reg       vs_out,
     output reg [VIDEO_DEPTH-1:0] red_out,
     output reg [VIDEO_DEPTH-1:0] green_out,
-    output reg [VIDEO_DEPTH-1:0] blue_out
+    output reg [VIDEO_DEPTH-1:0] blue_out,
+    output reg       pix_ce_out
 );
 
 parameter VIDEO_DEPTH=8;
@@ -41,19 +42,23 @@ reg [VIDEO_DEPTH-1:0] green_last;
 reg [VIDEO_DEPTH-1:0] blue_last;
 
 wire      ce = enable ? pix_ce : 1'b1;
-always @(posedge clk) if (ce) begin
-    hblank_out <= hblank;
-    vblank_out <= vblank;
-    vs_out     <= vs;
-    hs_out     <= hs;
+always @(posedge clk) begin
+	pix_ce_out <= 0;
+	if (ce) begin
+		hblank_out <= hblank;
+		vblank_out <= vblank;
+		vs_out     <= vs;
+		hs_out     <= hs;
+		pix_ce_out <= pix_ce;
 
-    red_last   <= red;
-    blue_last  <= blue;
-    green_last <= green;
+		red_last   <= red;
+		blue_last  <= blue;
+		green_last <= green;
 
-    red_out    <= enable ? color_blend(red_last,   red,   hblank_out) : red;
-    blue_out   <= enable ? color_blend(blue_last,  blue,  hblank_out) : blue;
-    green_out  <= enable ? color_blend(green_last, green, hblank_out) : green;
+		red_out    <= enable ? color_blend(red_last,   red,   hblank_out) : red;
+		blue_out   <= enable ? color_blend(blue_last,  blue,  hblank_out) : blue;
+		green_out  <= enable ? color_blend(green_last, green, hblank_out) : green;
+	end
 end
 
 endmodule

@@ -24,7 +24,7 @@
  
 module user_io (
 	input [(8*STRLEN)-1:0] conf_str,
-	output       [9:0]  conf_addr, // RAM address for config string, if STRLEN=0
+	output      [10:0]  conf_addr, // RAM address for config string, if STRLEN=0
 	input        [7:0]  conf_chr,
 
 	input               clk_sys, // clock for system-related messages (kbd, joy, etc...)
@@ -66,7 +66,7 @@ module user_io (
 	output reg          sd_dout_strobe = 0,
 	input         [7:0] sd_din,
 	output reg          sd_din_strobe = 0,
-	output reg    [8:0] sd_buff_addr,
+	output reg [8+SD_BLKSZ:0] sd_buff_addr,
 
 	output reg [SD_IMAGES-1:0] img_mounted, // rising edge if a new image is mounted
 	output reg   [63:0] img_size,    // size of image in bytes
@@ -98,6 +98,16 @@ module user_io (
 	output reg          mouse_strobe, // mouse data is valid on mouse_strobe
 	output reg          mouse_idx,    // which mouse?
 
+	// i2c bridge
+	output reg          i2c_start,
+	output reg          i2c_read,
+	output reg    [6:0] i2c_addr,
+	output reg    [7:0] i2c_subaddr,
+	output reg    [7:0] i2c_dout,
+	input         [7:0] i2c_din,
+	input               i2c_ack,
+	input               i2c_end,
+
 	// serial com port
 	input [7:0]         serial_data,
 	input               serial_strobe
@@ -110,13 +120,14 @@ parameter SD_IMAGES=2; // number of block-access images (max. 4 supported in cur
 parameter PS2BIDIR=0; // bi-directional PS2 interface
 parameter FEATURES=0; // requested features from the firmware
 parameter ARCHIE=0;
+parameter SD_BLKSZ=1'b0; // blocksize = 512<<SD_BLKSZ
 
 localparam W = $clog2(SD_IMAGES);
 
 reg [6:0]     sbuf;
-reg [7:0]     cmd;
+reg [7:0]     cmd;        // command in SPI_CLK domain
 reg [2:0]     bit_cnt;    // counts bits 0-7 0-7 ...
-reg [9:0]     byte_cnt;   // counts bytes
+reg [10:0]    byte_cnt;   // counts bytes
 reg [7:0]     but_sw;
 reg [2:0]     stick_idx;
 
@@ -126,7 +137,8 @@ assign scandoubler_disable = but_sw[4];
 assign ypbpr = but_sw[5];
 assign no_csync = but_sw[6];
 
-assign conf_addr = byte_cnt;
+assign conf_addr = byte_cnt + conf_offset - (cmd == 8'h24 ? 2'd3 : 2'd0);
+reg [10:0] conf_offset = 0;
 
 // bit 4 indicates ROM direct upload capability
 wire [7:0] core_type = ARCHIE ? 8'ha6 : ROM_DIRECT_UPLOAD ? 8'hb4 : 8'ha4;
@@ -237,7 +249,7 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin : spi_counter
 		byte_cnt <= 0;
 	end else begin
 		if((bit_cnt == 7)&&(~&byte_cnt)) 
-			byte_cnt <= byte_cnt + 8'd1;
+			byte_cnt <= byte_cnt + 1'd1;
 
 		bit_cnt <= bit_cnt + 1'd1;
 	end
@@ -254,11 +266,11 @@ always@(negedge spi_sck or posedge SPI_SS_IO) begin : spi_byteout
 	end
 end
 
-generate if (ARCHIE) begin
-reg  [7:0] kbd_out_status;
-reg  [7:0] kbd_out_data_r;
+reg  [7:0] kbd_out_status = 0;
+reg  [7:0] kbd_out_data_r = 0;
 reg        kbd_out_data_available = 0;
 
+generate if (ARCHIE) begin
 always@(negedge spi_sck or posedge SPI_SS_IO) begin : archie_kbd_out
 	if(SPI_SS_IO == 1) begin
 		kbd_out_data_r <= 0;
@@ -273,12 +285,13 @@ endgenerate
 
 always@(posedge spi_sck or posedge SPI_SS_IO) begin : spi_transmitter
 	reg [31:0] sd_lba_r;
-	reg  [W:0] drive_sel_r;
+	reg  [7:0] drive_sel_r;
 	reg        ps2_kbd_rx_strobeD;
 	reg        ps2_mouse_rx_strobeD;
 
 	if(SPI_SS_IO == 1) begin
 		spi_byte_out <= core_type;
+		cmd <= 0;
 	end else begin
 		// read the command byte to choose the response
 		if(bit_cnt == 7) begin
@@ -309,11 +322,18 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin : spi_transmitter
 			8'h14: if (STRLEN == 0) spi_byte_out <= conf_chr; else
 			       if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
 
+			// reading config string with offset
+			8'h24: if(byte_cnt == 0) spi_byte_out <= 8'hAA; else // indicating the command is supported
+			       if (STRLEN == 0) spi_byte_out <= conf_chr; else
+			       if((byte_cnt + conf_offset - 2'd3) < STRLEN) spi_byte_out <= conf_str[(STRLEN - (byte_cnt + conf_offset - 2'd3) - 1)<<3 +:8];
+
 			// reading sd card status
 			8'h16: if(byte_cnt == 0) begin
 					spi_byte_out <= sd_cmd;
 					sd_lba_r <= sd_lba;
-					drive_sel_r <= drive_sel;
+					drive_sel_r <= 0;
+					drive_sel_r[W:0] <= drive_sel;
+					drive_sel_r[4] <= SD_BLKSZ;
 				end 
 				else if(byte_cnt == 1) spi_byte_out <= drive_sel_r;
 				else if(byte_cnt < 6) spi_byte_out <= sd_lba_r[(5-byte_cnt)<<3 +:8];
@@ -330,6 +350,11 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin : spi_transmitter
 			8'h80:
 				if (byte_cnt == 0) spi_byte_out <= 8'h80;
 				else spi_byte_out <= FEATURES[(4-byte_cnt)<<3 +:8];
+
+			// i2c
+			8'h31:
+				if (byte_cnt == 0) spi_byte_out <= {6'd0, i2c_ack, i2c_end};
+				else spi_byte_out <= i2c_din;
 
 			endcase
 		end
@@ -390,6 +415,7 @@ always @(posedge clk_sys) begin : cmd_block
 	mouse_strobe <= 0;
 	ps2_kbd_tx_strobe <= 0;
 	ps2_mouse_tx_strobe <= 0;
+	i2c_start <= 0;
 
 	if(ARCHIE) begin
 		if (kbd_out_strobe) kbd_out_data_available <= 1;
@@ -406,6 +432,7 @@ always @(posedge clk_sys) begin : cmd_block
 		abyte_cnt <= 0;
 		mouse_fifo_ok <= 0;
 		kbd_fifo_ok <= 0;
+		conf_offset <= 0;
 	end else if (spi_receiver_strobeD ^ spi_receiver_strobe) begin
 
 		if(~&abyte_cnt) 
@@ -514,6 +541,16 @@ always @(posedge clk_sys) begin : cmd_block
 
 				// RTC
 				8'h22: if(abyte_cnt<9) rtc[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
+
+				// get_conf_str_ext
+				8'h24: if(abyte_cnt == 1) conf_offset[7:0] <= spi_byte_in;
+				       else if (abyte_cnt == 2) conf_offset[10:8] <= spi_byte_in[2:0];
+
+				// I2C bridge
+				8'h30: if(abyte_cnt == 1) {i2c_addr, i2c_read} <= spi_byte_in;
+				       else if (abyte_cnt == 2) i2c_subaddr <= spi_byte_in;
+				       else if (abyte_cnt == 3) begin i2c_dout <= spi_byte_in; i2c_start <= 1; end
+
 			endcase
 		end
 	end

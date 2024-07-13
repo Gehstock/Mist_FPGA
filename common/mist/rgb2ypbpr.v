@@ -2,6 +2,7 @@
 
 // Copyright 2020/2021 by Alastair M. Robinson
 
+(* altera_attribute = "-name AUTO_SHIFT_REGISTER_RECOGNITION OFF" *)
 module RGBtoYPbPr
 (
 	input clk,
@@ -12,6 +13,8 @@ module RGBtoYPbPr
 	input [WIDTH-1:0] blue_in,
 	input hs_in,
 	input vs_in,
+	input hb_in,
+	input vb_in,
 	input cs_in,
 	input pixel_in,
 
@@ -20,6 +23,8 @@ module RGBtoYPbPr
 	output [WIDTH-1:0] blue_out,
 	output reg hs_out,
 	output reg vs_out,
+	output reg hb_out,
+	output reg vb_out,
 	output reg cs_out,
 	output reg pixel_out
 );
@@ -46,6 +51,8 @@ reg hs_d;
 reg vs_d;
 reg cs_d;
 reg pixel_d;
+reg hb_d;
+reg vb_d;
 
 assign red_out = r[8+WIDTH-1:8];
 assign green_out = y[8+WIDTH-1:8];
@@ -57,6 +64,8 @@ always @(posedge clk) begin
 	vs_d <= vs_in;		// so they're delayed the same amount as the incoming video
 	cs_d <= cs_in;
 	pixel_d <= pixel_in;
+	hb_d <= hb_in;
+	vb_d <= vb_in;
 
 	if(ena) begin
 		// (Y  =  0.299*R + 0.587*G + 0.114*B)
@@ -88,6 +97,8 @@ always @(posedge clk) begin
 	vs_out <= vs_d;
 	cs_out <= cs_d;
 	pixel_out <= pixel_d;
+	hb_out <= hb_d;
+	vb_out <= vb_d;
 
 	if(ena) begin
 		y <= r_y + g_y + b_y;

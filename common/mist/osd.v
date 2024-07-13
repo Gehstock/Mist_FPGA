@@ -15,18 +15,18 @@ module osd (
 	input  [1:0] rotate, //[0] - rotate [1] - left or right
 
 	// VGA signals coming from core
-	input  [5:0] R_in,
-	input  [5:0] G_in,
-	input  [5:0] B_in,
+	input [OUT_COLOR_DEPTH-1:0] R_in,
+	input [OUT_COLOR_DEPTH-1:0] G_in,
+	input [OUT_COLOR_DEPTH-1:0] B_in,
 	input        HBlank,
 	input        VBlank,
 	input        HSync,
 	input        VSync,
 
 	// VGA signals going to video connector
-	output [5:0] R_out,
-	output [5:0] G_out,
-	output [5:0] B_out
+	output [OUT_COLOR_DEPTH-1:0] R_out,
+	output [OUT_COLOR_DEPTH-1:0] G_out,
+	output [OUT_COLOR_DEPTH-1:0] B_out
 );
 
 parameter OSD_X_OFFSET = 11'd0;
@@ -34,9 +34,12 @@ parameter OSD_Y_OFFSET = 11'd0;
 parameter OSD_COLOR    = 3'd0;
 parameter OSD_AUTO_CE  = 1'b1;
 parameter USE_BLANKS   = 1'b0;
+parameter OUT_COLOR_DEPTH = 6;
+parameter BIG_OSD = 1'b0;
 
 localparam OSD_WIDTH   = 11'd256;
 localparam OSD_HEIGHT  = 11'd128;
+localparam OSD_LINES   = 8 << BIG_OSD;
 
 localparam OSD_WIDTH_PADDED = OSD_WIDTH + (OSD_WIDTH >> 1);  // 25% padding left and right
 
@@ -47,12 +50,12 @@ localparam OSD_WIDTH_PADDED = OSD_WIDTH + (OSD_WIDTH >> 1);  // 25% padding left
 // this core supports only the display related OSD commands
 // of the minimig
 reg        osd_enable;
-(* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[2047:0];  // the OSD buffer itself
+(* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[256*OSD_LINES-1:0];  // the OSD buffer itself
 
 // the OSD has its own SPI interface to the io controller
 always@(posedge SPI_SCK, posedge SPI_SS3) begin
 	reg  [4:0] cnt;
-	reg [10:0] bcnt;
+	reg [11:0] bcnt;
 	reg  [7:0] sbuf;
 	reg  [7:0] cmd;
 
@@ -69,15 +72,15 @@ always@(posedge SPI_SCK, posedge SPI_SS3) begin
 		if(cnt == 7) begin
 			cmd <= {sbuf[6:0], SPI_DI};
 
-			// lower three command bits are line address
-			bcnt <= {sbuf[1:0], SPI_DI, 8'h00};
+			// lower four command bits are line address
+			bcnt <= {sbuf[2:0], SPI_DI, 8'h00};
 
 			// command 0x40: OSDCMDENABLE, OSDCMDDISABLE
 			if(sbuf[6:3] == 4'b0100) osd_enable <= SPI_DI;
 		end
 
 		// command 0x20: OSDCMDWRITE
-		if((cmd[7:3] == 5'b00100) && (cnt == 15)) begin
+		if((cmd[7:4] == 4'b0010) && (cnt == 15)) begin
 			osd_buffer[bcnt] <= {sbuf[6:0], SPI_DI};
 			bcnt <= bcnt + 1'd1;
 		end
@@ -103,20 +106,23 @@ wire [10:0] dsp_height = (vs_pol & !USE_BLANKS) ? vs_low : vs_high;
 wire doublescan = (dsp_height>350);
 
 reg auto_ce_pix;
-always @(posedge clk_sys) begin
+always @(posedge clk_sys) begin : cedetect
 	reg [15:0] cnt = 0;
 	reg  [2:0] pixsz;
 	reg  [2:0] pixcnt;
 	reg        hs;
+	reg        hb;
 
 	cnt <= cnt + 1'd1;
 	hs <= HSync;
+	hb <= HBlank;
 
 	pixcnt <= pixcnt + 1'd1;
 	if(pixcnt == pixsz) pixcnt <= 0;
 	auto_ce_pix <= !pixcnt;
 
-	if(hs && ~HSync) begin
+	if((!USE_BLANKS && hs && ~HSync) ||
+	   ( USE_BLANKS && ~hb && HBlank)) begin
 		cnt <= 0;
 		if(cnt <= OSD_WIDTH_PADDED * 2) pixsz <= 0;
 		else if(cnt <= OSD_WIDTH_PADDED * 3) pixsz <= 1;
@@ -128,6 +134,7 @@ always @(posedge clk_sys) begin
 		pixcnt <= 0;
 		auto_ce_pix <= 1;
 	end
+	if (USE_BLANKS && HBlank) cnt <= 0;
 end
 
 wire ce_pix = OSD_AUTO_CE ? auto_ce_pix : ce;
@@ -206,19 +213,29 @@ wire [10:0] osd_vcnt    = v_cnt - v_osd_start;
 wire [10:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd byte address register
 reg         osd_de;
 
-reg [10:0] osd_buffer_addr;
+reg [11:0] osd_buffer_addr;
 wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];
 reg        osd_pixel;
 
 always @(posedge clk_sys) begin
 	if(ce_pix) begin
-		osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next[7:5] : ~osd_hcnt_next[7:5],
-		                                rotate[1] ? (doublescan ? ~osd_vcnt[7:0] : ~{osd_vcnt[6:0], 1'b0}) :
-		                                            (doublescan ?  osd_vcnt[7:0]  : {osd_vcnt[6:0], 1'b0})} :
-		                               {doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt_next[7:0]};
+		if (!BIG_OSD) begin
+			osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next[7:5] : ~osd_hcnt_next[7:5],
+			                                rotate[1] ? (doublescan ? ~osd_vcnt[7:0] : ~{osd_vcnt[6:0], 1'b0}) :
+			                                (doublescan ?  osd_vcnt[7:0]  : {osd_vcnt[6:0], 1'b0})} :
+			                              {doublescan ? osd_vcnt[7:5] : osd_vcnt[6:4], osd_hcnt_next[7:0]};
 
-		osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt[4:2] : ~osd_hcnt[4:2]] :
-		                          osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
+			osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt[4:2] : ~osd_hcnt[4:2]] :
+			                          osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
+		end else begin
+			osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next[7:4] : ~osd_hcnt_next[7:4],
+			                                rotate[1] ? (doublescan ? ~osd_vcnt[7:0] : ~{osd_vcnt[6:0], 1'b0}) :
+			                                (doublescan ?  osd_vcnt[7:0]  : {osd_vcnt[6:0], 1'b0})} :
+			                              {doublescan ? osd_vcnt[7:4] : osd_vcnt[6:3], osd_hcnt_next[7:0]};
+
+			osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt[3:1] : ~osd_hcnt[3:1]] :
+			                          osd_byte[doublescan ? osd_vcnt[3:1] : osd_vcnt[2:0]];
+		end
 
 		osd_de <= osd_enable &&
 		    ((USE_BLANKS && !HBlank) || (!USE_BLANKS && HSync != hs_pol)) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
@@ -226,8 +243,8 @@ always @(posedge clk_sys) begin
 	end
 end
 
-assign R_out = !osd_de ? R_in : {osd_pixel, osd_pixel, OSD_COLOR[2], R_in[5:3]};
-assign G_out = !osd_de ? G_in : {osd_pixel, osd_pixel, OSD_COLOR[1], G_in[5:3]};
-assign B_out = !osd_de ? B_in : {osd_pixel, osd_pixel, OSD_COLOR[0], B_in[5:3]};
+assign R_out = !osd_de ? R_in : {osd_pixel, osd_pixel, OSD_COLOR[2], R_in[OUT_COLOR_DEPTH-1:3]};
+assign G_out = !osd_de ? G_in : {osd_pixel, osd_pixel, OSD_COLOR[1], G_in[OUT_COLOR_DEPTH-1:3]};
+assign B_out = !osd_de ? B_in : {osd_pixel, osd_pixel, OSD_COLOR[0], B_in[OUT_COLOR_DEPTH-1:3]};
 
 endmodule

@@ -78,20 +78,33 @@ port (
 	mouse_z           : out signed(3 downto 0);
 	mouse_flags       : out std_logic_vector(7 downto 0); -- YOvfl, XOvfl, dy8, dx8, 1, mbtn, rbtn, lbtn
 	mouse_strobe      : out std_logic;
-	mouse_idx         : out std_logic
+	mouse_idx         : out std_logic;
+
+	i2c_start         : out std_logic;
+	i2c_read          : out std_logic;
+	i2c_addr          : out std_logic_vector(6 downto 0);
+	i2c_subaddr       : out std_logic_vector(7 downto 0);
+	i2c_dout          : out std_logic_vector(7 downto 0);
+	i2c_din           : in std_logic_vector(7 downto 0) := (others => '0');
+	i2c_end           : in std_logic := '0';
+	i2c_ack           : in std_logic := '0'
 );
 end component user_io;
 
 component mist_video
 generic (
-	OSD_COLOR    : std_logic_vector(2 downto 0) := "110";
-	OSD_X_OFFSET : std_logic_vector(9 downto 0) := (others => '0');
-	OSD_Y_OFFSET : std_logic_vector(9 downto 0) := (others => '0');
-	SD_HCNT_WIDTH: integer := 9;
-	COLOR_DEPTH  : integer := 6;
-	OSD_AUTO_CE  : boolean := true;
-	SYNC_AND     : boolean := false;
-	USE_BLANKS   : boolean := false
+	OSD_COLOR       : std_logic_vector(2 downto 0) := "110";
+	OSD_X_OFFSET    : std_logic_vector(9 downto 0) := (others => '0');
+	OSD_Y_OFFSET    : std_logic_vector(9 downto 0) := (others => '0');
+	SD_HCNT_WIDTH   : integer := 9;
+	COLOR_DEPTH     : integer := 6;
+	OSD_AUTO_CE     : boolean := true;
+	SYNC_AND        : boolean := false;
+	USE_BLANKS      : boolean := false;
+	SD_HSCNT_WIDTH  : integer := 12;
+	OUT_COLOR_DEPTH : integer := 6;
+	BIG_OSD         : boolean := false;
+	VIDEO_CLEANER   : boolean := false
 );
 port (
 	clk_sys     : in std_logic;
@@ -118,10 +131,37 @@ port (
 
 	VGA_HS      : out std_logic;
 	VGA_VS      : out std_logic;
-	VGA_R       : out std_logic_vector(5 downto 0);
-	VGA_G       : out std_logic_vector(5 downto 0);
-	VGA_B       : out std_logic_vector(5 downto 0)
+	VGA_HB      : out std_logic;
+	VGA_VB      : out std_logic;
+	VGA_DE      : out std_logic;
+	VGA_R       : out std_logic_vector(OUT_COLOR_DEPTH-1 downto 0);
+	VGA_G       : out std_logic_vector(OUT_COLOR_DEPTH-1 downto 0);
+	VGA_B       : out std_logic_vector(OUT_COLOR_DEPTH-1 downto 0)
 );
 end component mist_video;
+
+component i2c_master
+generic (
+	CLK_Freq    : integer := 50000000;
+	I2C_Freq    : integer := 400000
+);
+port (
+	CLK         : in std_logic;
+
+	I2C_START   : in std_logic;
+	I2C_READ    : in std_logic;
+	I2C_ADDR    : in std_logic_vector(6 downto 0);
+	I2C_SUBADDR : in std_logic_vector(7 downto 0);
+	I2C_WDATA   : in std_logic_vector(7 downto 0);
+	I2C_RDATA   : out std_logic_vector(7 downto 0);
+	I2C_END     : out std_logic;
+	I2C_ACK     : out std_logic;
+
+	-- I2C bus
+	I2C_SCL     : inout std_logic;
+	I2C_SDA     : inout std_logic
+);
+
+end component i2c_master;
 
 end package;
