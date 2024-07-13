@@ -1,0 +1,52 @@
+<misterromdescription>
+	<name>Missile + Circuit</name>
+
+	<setname>alphahob</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="3,4" name="Circuit Lives" values="0,1"></dip>
+		<dip bits="1,2" ids="3,4,5,6" name="Missile Lives" values="0,1,2,3"></dip>
+		<dip bits="3" ids="1000,1500" name="Missile Bonus life at" values="0,1"></dip>
+		<dip bits="4" ids="Off,On" name="Missile Life for final UFO" values="1,0"></dip>
+	</switches>
+
+	<rom index="1"><part>00</part></rom>
+	<rom index="0" md5="none" zip="alphahob.zip|alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="87de1bb0" name="03.bin" />
+		<part crc="bd6dbd8e" name="13.bin" />
+		<part crc="4c043d8b" name="16.bin" />
+		<part crc="10005956" name="04.bin" />
+		<part crc="bbdaf42a" name="05.bin" />
+		<part crc="07d4c69a" name="06.bin" />
+		<part crc="8f766b30" name="07.bin" />
+		<part crc="88032202" name="08.bin" />
+		<part crc="eb8278b3" name="01.bin" />
+		<part crc="e5f622f7" name="09.bin" />
+		<part crc="5673be86" name="11.bin" />
+		<part crc="939903c6" name="12.bin" />
+		<part crc="404f120c" name="02.bin" />
+		<part crc="be76baac" name="14.bin" />
+		<part crc="ced0a642" name="15.bin" />
+		<part crc="ba978bca" name="10.bin" />
+
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="prom.u49" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="prom.u14" />
+		<part crc="e60a7960" name="prom.u15" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

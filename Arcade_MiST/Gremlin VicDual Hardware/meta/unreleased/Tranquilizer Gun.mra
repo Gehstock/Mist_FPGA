@@ -1,0 +1,45 @@
+<misterromdescription>
+	<name>Tranquilizer Gun</name>
+
+	<setname>tranqgun</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+
+	<rom index="1"><part>15</part></rom>
+	<rom index="0" md5="none" zip="tranqgun.zip">
+		<!-- GAME ROMS -->
+		<part crc="6d50e902" name="epr-767.u33" />
+		<part crc="f0ba0e60" name="epr-768.u32" />
+		<part crc="9fe440d3" name="epr-769.u31" />
+		<part crc="1041608e" name="epr-770.u30" />
+		<part crc="fb5de95f" name="epr-771.u29" />
+		<part crc="03fd8727" name="epr-772.u28" />
+		<part crc="3d93239b" name="epr-773.u27" />
+		<part crc="20f64a7f" name="epr-774.u26" />
+		<part crc="5121c695" name="epr-775.u8" />
+		<part crc="b13d21f7" name="epr-776.u7" />
+		<part crc="603cee59" name="epr-777.u6" />
+		<part crc="7f25475f" name="epr-778.u5" />
+		<part crc="57dc3123" name="epr-779.u4" />
+		<part crc="7aa7829b" name="epr-780.u3" />
+		<part crc="a9b10df5" name="epr-781.u2" />
+		<part crc="431a7449" name="epr-782.u1" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="6481445b" name="pr-23.u49" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+	<nvram></nvram>
+
+</misterromdescription>

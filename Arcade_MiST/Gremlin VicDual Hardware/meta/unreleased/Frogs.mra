@@ -1,0 +1,47 @@
+<misterromdescription>
+	<name>Frogs</name>
+
+	<setname>frogs</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,R,L" names="Fire,-,-,-,-,Coin,Pause"></buttons>
+	<switches default="0F">
+		<dip bits="0" ids="Off,On" name="Demo sounds" values="1,0"></dip>
+		<dip bits="1" ids="No,Yes" name="Free game" values="0,1"></dip>
+		<dip bits="2" ids="60,90" name="Game time" values="0,1"></dip>
+		<dip bits="3" ids="2C 1C,1C 1C" name="Coinage" values="0,1"></dip> 
+	</switches>
+
+	<rom index="1"><part>05</part></rom>
+	<rom index="0" md5="none" zip="frogs.zip">
+		<!-- GAME ROMS -->
+		<part crc="b1d1fce4" name="316-119a.u48" />
+		<part crc="12fdcc05" name="316-118a.u47" />
+		<part crc="8a5be424" name="316-117a.u46" />
+		<part crc="09b82619" name="316-116b.u45" />
+		<part crc="3d4e4fa8" name="316-115a.u44" />
+		<part crc="04a21853" name="316-114a.u43" />
+		<part crc="02786692" name="316-113a.u42" />
+		<part crc="0be2a058" name="316-112a.u41" />
+		
+		<!-- PADDING -->
+		<part repeat="8192">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- NO COLOUR PROM -->
+		<part repeat="32">00</part>
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

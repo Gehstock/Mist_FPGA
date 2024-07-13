@@ -1,0 +1,50 @@
+<misterromdescription>
+	<name>Heiankyo Alien</name>
+
+	<setname>heiankyo</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Alternating,Simultaneous" name="2 Players Mode" values="1,0"></dip>
+		<dip bits="1" ids="3,5" name="Lives" values="0,1"></dip>
+	</switches>
+
+	<rom index="1"><part>08</part></rom>
+	<rom index="0" md5="none" zip="heiankyo.zip">
+		<!-- GAME ROMS -->
+		<part crc="1eec8b36" name="ha16.u33" />
+		<part crc="c1b9a1a5" name="ha15.u32" />
+		<part crc="5b7b582e" name="ha14.u31" />
+		<part crc="4aa67e01" name="ha13.u30" />
+		<part crc="75889ca6" name="ha12.u29" />
+		<part crc="d469226a" name="ha11.u28" />
+		<part crc="4e203074" name="ha10.u27" />
+		<part crc="9c3a3dd2" name="ha9.u26" />
+		<part crc="6cc64878" name="ha8.u8" />
+		<part crc="6d2f9527" name="ha7.u7" />
+		<part crc="e467c353" name="ha6.u6" />
+		<part crc="6a55eda8" name="ha3.u3" />
+		<part repeat="1024">00</part>
+		<part repeat="1024">00</part>
+		<part crc="056b3b8b" name="ha2.u2" />
+		<part crc="b8da2b5e" name="ha1.u1" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+		
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="316-138.u49" />
+
+		<!-- TIMING -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

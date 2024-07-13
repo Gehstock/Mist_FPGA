@@ -1,0 +1,45 @@
+<misterromdescription>
+	<name>Sub Hunt</name>
+
+	<setname>subhunt</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,R,L" names="Shoot,-,-,-,-,Coin,Pause"></buttons>
+
+	<rom index="1"><part>14</part></rom>
+	<rom index="0" md5="none" zip="depthch.zip|subhunt.zip">
+		<!-- GAME ROMS -->
+		<part crc="0ace1aef" name="dp04.u63" />
+		<part crc="da9e835b" name="dp01.u51" />
+		<part crc="de752f20" name="dp10.u89" />
+		<part crc="597ae441" name="316-0028.u77" />
+		<part crc="1c0530cf" name="dp05.u64" />
+		<part crc="9244b613" name="316-0023.u52" />
+		<part crc="0007044a" name="dp11.u90" />
+		<part crc="4d4e3ec8" name="dp08.u78" />
+		<part crc="63e1184b" name="dp06.u65" />
+		<part crc="d70dbfd8" name="dp03.u53" />
+		<part crc="170d7718" name="dp12.u91" />
+		<part crc="97466803" name="dp09.u79" />
+
+		<!-- PADDING -->
+		<part repeat="6144">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- NO COLOUR PROM -->
+		<part repeat="32">00</part>
+
+		<!-- TIMING -->
+		<part crc="7b7a8492" name="316-0014.u28" />
+		<part crc="690ef530" name="316-0013.u27" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

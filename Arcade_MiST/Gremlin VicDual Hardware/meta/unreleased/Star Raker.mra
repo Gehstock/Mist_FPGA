@@ -1,0 +1,52 @@
+<misterromdescription>
+	<name>Star Raker</name>
+
+	<setname>brdrline</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Cocktail,Upright" name="Cabinet" values="1,0"></dip>
+		<dip bits="1" ids="15000,20000" name="Bonus life" values="1,0"></dip>
+	</switches>
+
+	<rom index="1"><part>13</part></rom>
+	<rom index="0" md5="none" zip="brdrline.zip|starrkr.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="2cfe979c" name="epr-767.u33" />
+		<part crc="cf85f158" name="epr-768.u32" />
+		<part crc="22ac6362" name="epr-769.u31" />
+		<part crc="d8d2fc6a" name="epr-770.u30" />
+		<part crc="9a88d577" name="epr-771.u29" />
+		<part crc="bab1574f" name="epr-772.u28" />
+		<part crc="c2406abd" name="epr-773.u27" />
+		<part crc="77686d3b" name="epr-774.u26" />
+		<part crc="1d00b276" name="epr-775.u8" />
+		<part crc="7215a72b" name="epr-776.u7" />
+		<part crc="59176c4c" name="epr-777.u6" />
+		<part crc="b4586631" name="epr-778.u5" />
+		<part crc="1f9a736d" name="epr-779.u4" />
+		<part crc="01d89786" name="epr-780.u3" />
+		<part crc="7d1238a2" name="epr-781.u2" />
+		<part crc="121ce164" name="epr-782.u1" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="0a2156b3" name="pr-23.u49" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+
+		<!--<part crc="none" name="pr-34.u14" />-->
+		<!--<part crc="none" name="pr-33.u15" />-->
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+	<nvram></nvram>
+
+</misterromdescription>

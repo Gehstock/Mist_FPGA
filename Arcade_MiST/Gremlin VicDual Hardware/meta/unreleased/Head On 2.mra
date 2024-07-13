@@ -1,0 +1,45 @@
+<misterromdescription>
+	<name>Head On 2</name>
+
+	<setname>headon2</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="High speed,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Off,On" name="Demo sounds" values="1,0"></dip>
+		<dip bits="1,2" ids="4,5,6" name="Lives" values="3,2,0"></dip>
+	</switches>
+
+	<rom index="1"><part>07</part></rom>
+	<rom index="0" md5="none" zip="headon2.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="fa47d2fb" name="u27.bin" />
+		<part crc="61c47b15" name="u26.bin" />
+		<part crc="bb16db92" name="u25.bin" />
+		<part crc="17a09f24" name="u24.bin" />
+		<part crc="0024895e" name="u23.bin" />
+		<part crc="f798304d" name="u22.bin" />
+		<part crc="4c19dd40" name="u21.bin" />
+		<part crc="25887ff2" name="u20.bin" />
+
+		<!-- PADDING -->
+		<part repeat="8192">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="316-0138.u44" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

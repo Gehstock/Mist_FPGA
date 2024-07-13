@@ -1,0 +1,43 @@
+<misterromdescription>
+	<name>Safari</name>
+
+	<setname>safari</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,R,L" names="Shoot,-,-,-,-,Coin,Pause"></buttons>
+
+	<rom index="1"><part>0E</part></rom>
+	<rom index="0" md5="none" zip="safari.zip">
+		<!-- GAME ROMS -->
+		<part crc="2a26b098" name="316-0066.u48" />
+		<part crc="b776f7db" name="316-0065.u47" />
+		<part crc="19d8c196" name="316-0064.u46" />
+		<part crc="028bad25" name="316-0063.u45" />
+		<part crc="504e0575" name="316-0062.u44" />
+		<part crc="d4c528e0" name="316-0061.u43" />
+		<part crc="48c7b0cc" name="316-0060.u42" />
+		<part crc="3f7baaff" name="316-0059.u41" />
+		<part crc="0d5058f1" name="316-0058.u40" />
+		<part crc="298e8c41" name="316-0057.u39" />
+
+		<!-- PADDING -->
+		<part repeat="6144">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- NO COLOUR PROM -->
+		<part repeat="32">00</part>
+
+		<!-- TIMING -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

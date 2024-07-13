@@ -1,0 +1,73 @@
+<misterromdescription>
+	<name>Carnival</name>
+	<setname>carnival</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause">
+	</buttons>
+	<switches default="00">
+		<dip bits="0" ids="Off,On" name="Demo sounds" values="1,0">
+		</dip>
+	</switches>
+	<rom index="1">
+		<part>03</part>
+	</rom>
+	<rom index="0" md5="none" zip="carnival.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="9f2736e6" name="epr-651.u33" />
+		<part crc="a1f58beb" name="epr-652.u32" />
+		<part crc="67b17922" name="epr-653.u31" />
+		<part crc="befb09a5" name="epr-654.u30" />
+		<part crc="623fcdad" name="epr-655.u29" />
+		<part crc="53040332" name="epr-656.u28" />
+		<part crc="f2537467" name="epr-657.u27" />
+		<part crc="fcc3854e" name="epr-658.u26" />
+		<part crc="28be8d69" name="epr-659.u8" />
+		<part crc="3873ccdb" name="epr-660.u7" />
+		<part crc="d9a96dff" name="epr-661.u6" />
+		<part crc="d893ca72" name="epr-662.u5" />
+		<part crc="df8c63c5" name="epr-663.u4" />
+		<part crc="689a73e8" name="epr-664.u3" />
+		<part crc="28e7b2b6" name="epr-665.u2" />
+		<part crc="4eec7fae" name="epr-666.u1" />
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+		<!-- COLOUR PROM -->
+		<part crc="f0084d80" name="316-0633.u49" />
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+		<!-- MUSIC PROM -->
+		<part crc="0dbaa2b0" name="epr-412.u5" />
+	</rom>
+	<rom index="2" md5="none" zip="/sound/carnival.zip">
+		<part crc="3bd7fb3d" name="bear.wav" />
+		<part crc="b5884504" name="bonus1.wav" />
+		<part crc="268b993f" name="bonus2.wav" />
+		<part crc="a8bdab94" name="clang.wav" />
+		<part crc="2e7bed9e" name="duck1.wav" />
+		<part crc="1163621d" name="duck2.wav" />
+		<part crc="5dc0d9af" name="duck3.wav" />
+		<part crc="2b7d6b2e" name="pipehit.wav" />
+		<part crc="5ce203ed" name="ranking.wav" />
+		<part crc="d8be6931" name="rifle.wav" />
+	</rom>
+	<rom index="3" md5="none">
+		<part>
+			00 00 00 00 0A 00 00 00 
+			00 00 4E 9A 06 00 00 00 
+			00 05 79 5E 07 00 00 00 
+			00 06 0C 9A 01 00 00 00 
+			00 07 09 F2 02 03 00 00 
+			00 07 61 B6 03 03 00 00 
+			00 07 A3 46 04 03 00 00 
+			00 08 49 08 05 00 00 00 
+			00 08 C9 8A 0D 00 00 00 
+			00 09 39 38 00 00 00 00 
+		</part>
+	</rom>
+	<rom index="4">
+	</rom>
+	<nvram>
+	</nvram>
+</misterromdescription>

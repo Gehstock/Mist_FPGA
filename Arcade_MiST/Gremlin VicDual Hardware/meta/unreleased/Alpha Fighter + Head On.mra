@@ -1,0 +1,52 @@
+<misterromdescription>
+	<name>Alpha Fighter + Head On</name>
+
+	<setname>alphaho</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="3,4" name="H.O. Lives" values="0,1"></dip>
+		<dip bits="1,2" ids="3,4,5,6" name="A.F. Lives" values="0,1,2,3"></dip>
+		<dip bits="3" ids="1000,1500" name="A.F. Bonus life at" values="0,1"></dip>
+		<dip bits="4" ids="Off,On" name="A.F. Life for final UFO" values="1,0"></dip>
+	</switches>
+
+	<rom index="1"><part>00</part></rom>
+	<rom index="0" md5="none" zip="alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="db774c23" name="c0.bin" />
+		<part crc="b63f4695" name="c1.bin" />
+		<part crc="4ebf0ba4" name="c2.bin" />
+		<part crc="126f17ec" name="c3.bin" />
+		<part crc="52798c61" name="c4.bin" />
+		<part crc="4827cb36" name="c5.bin" />
+		<part crc="8b2ff47e" name="c6.bin" />
+		<part crc="44921df4" name="c7.bin" />
+		<part crc="9fb12fca" name="c8.bin" />
+		<part crc="e5f622f7" name="c9.bin" />
+		<part crc="82b28e77" name="ca.bin" />
+		<part crc="94fba0ad" name="cb.bin" />
+		<part crc="de338b6d" name="cc.bin" />
+		<part crc="be76baac" name="cd.bin" />
+		<part crc="3c409d57" name="ce.bin" />
+		<part crc="d03c5a09" name="cf.bin" />
+
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="316-0138.u44" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

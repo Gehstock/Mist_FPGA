@@ -1,0 +1,52 @@
+<misterromdescription>
+	<name>Wanted</name>
+
+	<setname>wantsega</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Attack,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Cocktail,Upright" name="Cabinet" values="1,0"></dip>
+		<dip bits="1" ids="20k,30k" name="Bonus life at" values="1,0"></dip>
+		<dip bits="2,3" ids="3,4,5,6" name="Lives" values="0,1,2,3"></dip>
+	</switches>
+
+	<rom index="1"><part>16</part></rom>
+	<rom index="0" md5="none" zip="wantsega.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="fc2ccf14" name="4-19_1_9afc.u33" />
+		<part crc="c1c59576" name="4-19_2_d170c.u32" />
+		<part crc="862b7303" name="4-19_3_f291.u31" />
+		<part crc="0dfab42b" name="4-19_4_a49b.u30" />
+		<part crc="530b9a43" name="4-19_5_7b35.u29" />
+		<part crc="d038b76e" name="4-19_6_bc98.u28" />
+		<part crc="e1bf29bd" name="4-19_7_f852.u27" />
+		<part crc="1b8a52cf" name="4-19_8_35df.u26" />
+		<part crc="bd84a06a" name="4-19_9_ffa9.u8" />
+		<part crc="bd321dd9" name="4-19_10_b2be.u7" />
+		<part crc="2cb222ca" name="4-19_11_d8fb.u6" />
+		<part crc="390e3c32" name="4-19_12_0bc6.u5" />
+		<part crc="3779e91c" name="4-19_13_e95d.u4" />
+		<part crc="7e70b2f7" name="4-19_14_dfca.u3" />
+		<part crc="46b71a75" name="4-19_15_7032.u2" />
+		<part crc="f1e8ba9e" name="4-19_16_0000.u1" />
+
+		<!-- COLOUR PROM -->
+		<part crc="3470a4b6" name="82s123.u49" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+		
+		<!-- TIMING PROMS -->
+		<!-- <part crc="98579402" name="pr33_82s123.u15" />
+		<part crc="c6452647" name="pr3_82s123.u14" /> -->
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

@@ -1,0 +1,47 @@
+<misterromdescription>
+	<name>Space Attack</name>
+
+	<setname>sspaceat</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="On,Off" name="Bonus life for final UFO" values="0,1"></dip>
+		<dip bits="1,2" ids="3,4,5,6" name="Lives" values="0,1,2,3"></dip>
+		<dip bits="3" ids="15000,10000" name="Bonus life at" values="1,0"></dip>
+		<dip bits="4" ids="On,Off" name="Credits display" values="0,1"></dip>
+	</switches> 
+
+	<rom index="1"><part>10</part></rom>
+	<rom index="0" md5="none" zip="sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="ba7bb86f" name="155.u27" />
+		<part crc="0b3a491c" name="156.u26" />
+		<part crc="3d3fac3b" name="157.u25" />
+		<part crc="843b80f6" name="158.u24" />
+		<part crc="1eacf60d" name="159.u23" />
+		<part crc="e61d482f" name="160.u22" />
+		<part crc="eb5e0993" name="161.u21" />
+		<part crc="5f84d550" name="162.u20" />
+		
+		<!-- PADDING -->
+		<part repeat="8192">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="316-0138.u44" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

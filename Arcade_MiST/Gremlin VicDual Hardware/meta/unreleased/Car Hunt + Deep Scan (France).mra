@@ -1,0 +1,51 @@
+<misterromdescription>
+	<name>Car Hunt + Deep Scan (France)</name>
+
+	<setname>carhntds</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0,1" ids="1,2,3,4" name="C.H. Lives" values="0,1,2,3"></dip>
+		<dip bits="2,3" ids="1,2,3,4" name="D.S. Lives" values="1,2,3,0"></dip>
+	</switches>
+
+	<rom index="1"><part>02</part></rom>
+	<rom index="0" md5="none" zip="carhntds.zip|alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="0bbfdb4e" name="epr617.u33" length="1024" />
+		<part crc="5a080b1d" name="epr618.u32" />
+		<part crc="c6f2f399" name="epr619.u31" />
+		<part crc="d9deb88f" name="epr620.u30" />
+		<part crc="43e5de5c" name="epr621.u29" />
+		<part crc="c881a3bc" name="epr622.u28" />
+		<part crc="297e7f42" name="epr623.u27" />
+		<part crc="dc943125" name="epr624.u26" />
+		<part crc="c86a0842" name="epr625.u8" />
+		<part crc="9a48c939" name="epr626.u7" />
+		<part crc="b4b147e2" name="epr627.u6" />
+		<part crc="aecf3c26" name="epr628.u5" />
+		<part crc="c5be665b" name="epr629.u4" />
+		<part crc="4312388b" name="epr630.u3" />
+		<part crc="6766c7e5" name="epr631.u2" />
+		<part crc="ae68b7d5" name="epr632.u1" />
+		<part crc="0bbfdb4e" name="epr617.u33" offset="1024" length="1024" />
+
+		<!-- PADDING -->
+		<part repeat="15360">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="a0811288" name="316-0390.u49" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

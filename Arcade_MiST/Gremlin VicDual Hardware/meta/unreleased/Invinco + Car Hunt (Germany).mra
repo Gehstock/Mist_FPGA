@@ -1,0 +1,51 @@
+<misterromdescription>
+	<name>Invinco + Car Hunt (Germany)</name>
+
+	<setname>invcarht</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0,1" ids="1,2,3,4" name="Invinco Lives" values="0,1,2,3"></dip>
+		<dip bits="2,3" ids="1,2,3,4" name="Car Hunt Lives" values="1,2,3,0"></dip>
+	</switches>
+
+	<rom index="1"><part>02</part></rom>
+	<rom index="0" md5="none" zip="invcarht.zip|alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="efefba5f" name="411.u33" length="1024" />
+		<part crc="8fe401e2" name="412.u32" />
+		<part crc="61ba1046" name="413.u31" />
+		<part crc="4a521dbb" name="414.u30" />
+		<part crc="ce12b71c" name="415.u29" />
+		<part crc="6899d59c" name="416.u28" />
+		<part crc="26cef14e" name="417.u27" />
+		<part crc="02b1f507" name="418.u26" />
+		<part crc="42385c4d" name="419.u8" />
+		<part crc="ee83d873" name="420.u7" />
+		<part crc="2faa2e76" name="421.u6" />
+		<part crc="f8e5dc61" name="422.u5" />
+		<part crc="d783eb72" name="423.u4" />
+		<part crc="8fd4f3d4" name="424.u3" />
+		<part crc="b0552cd4" name="425.u2" />
+		<part crc="b611061b" name="426.u1" />
+		<part crc="efefba5f" name="411.u33" offset="1024" length="1024" />
+
+		<!-- PADDING -->
+		<part repeat="15360">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="95cfe0d2" name="316-0389.u49" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

@@ -1,0 +1,50 @@
+<misterromdescription>
+	<name>Invinco + Deep Scan</name>
+
+	<setname>invds</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0,1" ids="1,2,3,4" name="Invinco Lives" values="0,1,2,3"></dip>
+		<dip bits="2,3" ids="1,2,3,4" name="Deep Scan Lives" values="1,2,3,0"></dip>
+	</switches>
+
+	<rom index="1"><part>0A</part></rom>
+	<rom index="0" md5="none" zip="invds.zip|alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="e6a33eae" name="367.u33" />
+		<part crc="421554a8" name="368.u32" />
+		<part crc="531e917a" name="369.u31" />
+		<part crc="2ad68f8c" name="370.u30" />
+		<part crc="1b98dc5c" name="371.u29" />
+		<part crc="3a72190a" name="372.u28" />
+		<part crc="3d361520" name="373.u27" />
+		<part crc="e606e7d9" name="374.u26" />
+		<part crc="adbe8d32" name="375.u8" />
+		<part crc="79409a46" name="376.u7" />
+		<part crc="3f021a71" name="377.u6" />
+		<part crc="49a542b0" name="378.u5" />
+		<part crc="ee140e49" name="379.u4" />
+		<part crc="688ba831" name="380.u3" />
+		<part crc="798ba0c7" name="381.u2" />
+		<part crc="8d195c24" name="382.u1" />
+
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="fe4406cb" name="316-0246.u44" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

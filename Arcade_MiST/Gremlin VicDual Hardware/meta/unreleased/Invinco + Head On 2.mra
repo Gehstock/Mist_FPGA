@@ -1,0 +1,50 @@
+<misterromdescription>
+	<name>Invinco + Head On 2</name>
+
+	<setname>invho2</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L,X" names="Fire/Speed,-,-,Start 1P,Start 2P,Coin,Pause,Switch game"></buttons>
+	<switches default="00">
+		<dip bits="0,1" ids="2,3,4" name="Head On 2 Lives" values="3,1,0"></dip>
+		<dip bits="2,3" ids="5,6" name="Invinco Lives" values="0,3"></dip>
+	</switches>
+
+	<rom index="1"><part>0B</part></rom>
+	<rom index="0" md5="none" zip="invho2.zip|alphaho.zip">
+		<!-- GAME ROMS -->
+		<part crc="44356a73" name="271b.u33" />
+		<part crc="bd251265" name="272b.u32" />
+		<part crc="2fc80cd9" name="273b.u31" />
+		<part crc="4fac4210" name="274b.u30" />
+		<part crc="85af508e" name="275b.u29" />
+		<part crc="e305843a" name="276b.u28" />
+		<part crc="b6b4221e" name="277b.u27" />
+		<part crc="74d42250" name="278b.u26" />
+		<part crc="8d30a3e0" name="279b.u8" />
+		<part crc="b5ee60ec" name="280b.u7" />
+		<part crc="21a6d4f2" name="281b.u6" />
+		<part crc="07d54f8a" name="282b.u5" />
+		<part crc="bdbe7ec1" name="283b.u4" />
+		<part crc="ae9e9f16" name="284b.u3" />
+		<part crc="8dc3ec34" name="285b.u2" />
+		<part crc="4bab9ba2" name="286b.u1" />
+
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="d4374b01" name="316-0287.u49" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

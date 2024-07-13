@@ -1,0 +1,50 @@
+<misterromdescription>
+	<name>Space Trek</name>
+
+	<setname>spacetrk</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,B,Start,C,R,L" names="Fire 1,Fire 2,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="3,4" name="Lives" values="1,0"></dip>
+		<dip bits="1" ids="On,Off" name="Bonus life" values="1,0"></dip>
+	</switches> 
+
+	<rom index="1"><part>12</part></rom>
+	<rom index="0" md5="none" zip="spacetrk.zip">
+		<!-- GAME ROMS -->
+		<part crc="9033fe50" name="u33.bin" />
+		<part crc="08f61f0d" name="u32.bin" />
+		<part crc="1088a8c4" name="u31.bin" />
+		<part crc="55560cc8" name="u30.bin" />
+		<part crc="71713958" name="u29.bin" />
+		<part crc="7bcf5ca3" name="u28.bin" />
+		<part crc="ad7a2065" name="u27.bin" />
+		<part crc="6060fe77" name="u26.bin" />
+		<part crc="75a90624" name="u8.bin" />
+		<part crc="7b31a2ab" name="u7.bin" />
+		<part crc="94135b33" name="u6.bin" />
+		<part crc="cfbf2538" name="u5.bin" />
+		<part crc="b4b95129" name="u4.bin" />
+		<part crc="03ca1d70" name="u3.bin" />
+		<part crc="a968584b" name="u2.bin" />
+		<part crc="e6e300e8" name="u1.bin" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="aabae4cd" name="u49.bin" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

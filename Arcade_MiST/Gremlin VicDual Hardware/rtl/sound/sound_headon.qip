@@ -1,0 +1,4 @@
+set_global_assignment -name VERILOG_FILE rtl/sound/sound_headon.v
+set_global_assignment -name VERILOG_FILE rtl/sound/sound_headon_bonus.v
+set_global_assignment -name VERILOG_FILE rtl/sound/sound_headon_car.v
+set_global_assignment -name VERILOG_FILE rtl/sound/sound_headon_crash.v

@@ -1,0 +1,51 @@
+<misterromdescription>
+	<name>Borderline</name>
+
+	<setname>brdrline</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Fire,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Cocktail,Upright" name="Cabinet" values="1,0"></dip>
+		<dip bits="1" ids="15000,20000" name="Bonus life" values="1,0"></dip>
+		<dip bits="2,4" ids="3,4,5,Infinite (Cheat)" name="Lives" values="7,5,3,0"></dip>
+	</switches>
+
+	<rom index="1"><part>01</part></rom>
+	<rom index="0" md5="none" zip="brdrline.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="df182769" name="b1.bin" />
+		<part crc="e1d1c4ce" name="b2.bin" />
+		<part crc="4ec4afa2" name="b3.bin" />
+		<part crc="88de95f6" name="b4.bin" />
+		<part crc="2e4e13b9" name="b5.bin" />
+		<part crc="c181e87a" name="b6.bin" />
+		<part crc="21180015" name="b7.bin" />
+		<part crc="56a7fee0" name="b8.bin" />
+		<part crc="bb532e63" name="b9.bin" />
+		<part crc="64793709" name="b10.bin" />
+		<part crc="2ae2f928" name="b11.bin" />
+		<part crc="e14cfaf5" name="b12.bin" />
+		<part crc="605e0d27" name="b13.bin" />
+		<part crc="93f5714f" name="b14.bin" />
+		<part crc="2f8a9b1c" name="b15.bin" />
+		<part crc="cc138bed" name="b16.bin" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="bc6be94e" name="borderc.49" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

@@ -1,0 +1,51 @@
+<misterromdescription>
+	<name>Samurai</name>
+
+	<setname>samurai</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,Start,C,R,L" names="Attack,-,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="3,4" name="Lives" values="1,0"></dip>
+		<dip bits="1" ids="On,Off" name="Infinite Lives" values="0,1"></dip>
+	</switches> 
+
+	<rom index="1"><part>0F</part></rom>
+	<rom index="0" md5="none" zip="samurai.zip">
+		<!-- GAME ROMS -->
+		<part crc="a1a9cb03" name="epr-289.u33" />
+		<part crc="49fede51" name="epr-290.u32" />
+		<part crc="6503dd72" name="epr-291.u31" />
+		<part crc="179c224f" name="epr-292.u30" />
+		<part crc="3df2abec" name="epr-366.u29" />
+		<part crc="b24517a4" name="epr-355.u28" />
+		<part crc="992a6e5a" name="epr-367.u27" />
+		<part crc="403c72ce" name="epr-368.u26" />
+		<part crc="3cfd115b" name="epr-369.u8" />
+		<part crc="2c30db12" name="epr-370.u7" />
+		<part crc="87c71139" name="epr-299.u6" />
+		<part crc="761f56cf" name="epr-371.u5" />
+		<part crc="23de1ff7" name="epr-301.u4" />
+		<part crc="292cfd89" name="epr-372.u3" />
+
+		<!-- PADDING -->
+		<part repeat="2048">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="975f5fb0" name="pr55.clr" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

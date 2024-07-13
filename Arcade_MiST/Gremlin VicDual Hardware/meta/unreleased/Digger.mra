@@ -1,0 +1,44 @@
+<misterromdescription>
+	<name>Digger</name>
+
+	<setname>digger</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,B,Start,C,R,L" names="Dig,Fill,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0,1" ids="6,5,4,3" name="Lives" values="0,1,2,3"></dip>
+	</switches>
+
+	<rom index="1"><part>04</part></rom>
+	<rom index="0" md5="none" zip="digger.zip|sspaceat.zip">
+		<!-- GAME ROMS -->
+		<part crc="bba0d7c2" name="684.u27" />
+		<part crc="85210d8b" name="685.u26" />
+		<part crc="2d87238c" name="686.u25" />
+		<part crc="0dd0604e" name="687.u24" />
+		<part crc="2f649667" name="688.u23" />
+		<part crc="89fd63d9" name="689.u22" />
+		<part crc="a86622a6" name="690.u21" />
+		<part crc="8aca72d8" name="691.u20" />
+
+		<!-- PADDING -->
+		<part repeat="8192">00</part>
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="fdb22e8f" name="316-507" />
+
+		<!-- TIMING - uses Space Attack PROMS -->
+		<part crc="a1506b9d" name="316-0042.u66" />
+		<part crc="e60a7960" name="316-0043.u65" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

@@ -1,0 +1,47 @@
+<misterromdescription>
+	<name>Head On</name>
+
+	<setname>headon</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,R,L" names="High speed,-,-,-,-,Coin,Pause"></buttons>
+	<switches default="00">
+		<dip bits="0" ids="Off,On" name="Demo sounds" values="1,0"></dip>
+		<dip bits="1,2" ids="3,4,5,6" name="Lives" values="0,1,2,3"></dip>
+	</switches>
+
+	<rom index="1"><part>06</part></rom>
+	<rom index="0" md5="none" zip="headon.zip">
+		<!-- GAME ROMS -->
+		<part crc="4bb51259" name="316-163a.u27" />
+		<part crc="aeac8c5f" name="316-164a.u26" />
+		<part crc="f1a0cb72" name="316-165a.u25" />
+		<part crc="65d12951" name="316-166c.u24" />
+		<part crc="2280831e" name="316-167c.u23" />
+		<part crc="ed4666f2" name="316-192a.u22" />
+		<part crc="37a1df4c" name="316-193a.u21" />
+
+		<!-- PADDING -->
+		<part repeat="1024">00</part>
+
+		<!-- PADDING -->
+		<part repeat="8192">00</part>
+
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="67104ea9" name="316-0138.u44" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="316-0042.u88" />
+		<part crc="e60a7960" name="316-0043.u87" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>

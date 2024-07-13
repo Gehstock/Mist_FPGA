@@ -1,0 +1,46 @@
+<misterromdescription>
+	<name>N-Sub</name>
+
+	<setname>nsub</setname>
+	<mameversion>0240</mameversion>
+	<rbf>SegaVICZ80</rbf>
+
+	<buttons default="A,R,L" names="Fire,-,-,-,-,Coin,Pause"></buttons>
+
+	<rom index="1"><part>0C</part></rom>
+	<rom index="0" md5="none" zip="nsub.zip|s97269pb.zip">
+		<!-- GAME ROMS -->
+		<part crc="485b4704" name="epr-268.u48" />
+		<part crc="32774ac9" name="epr-269.u47" />
+		<part crc="af7ca40a" name="epr-270.u46" />
+		<part crc="3f9c180b" name="epr-271.u45" />
+		<part crc="d818aa51" name="epr-272.u44" />
+		<part crc="03a6f12a" name="epr-273.u43" />
+		<part crc="d69eb098" name="epr-274.u42" />
+		<part crc="1c7d90cc" name="epr-275.u41" />
+		
+		<!-- PADDING -->
+		<part repeat="16384">00</part>
+
+		<!-- COLOUR PROM -->
+		<part crc="c94dd091" name="pr-69.u11" />
+
+		<!-- TIMING PROMS -->
+		<part crc="a1506b9d" name="pr-34.u83" />
+		<part crc="e60a7960" name="pr-33.u82" />
+
+		<!-- PADDING -->
+		<part repeat="160">00</part>
+
+		<!-- 97269-B-P daughterboard PROMS -->
+		<part crc="8e633b5c" name="pr-02.a1" />
+		<part crc="f79c8e91" name="pr-56.b2" />
+		<part crc="00d52430" name="pr-57.a3" />
+	</rom>
+	<rom index="2"></rom>
+	<rom index="3"></rom>
+	<rom index="4"></rom>
+
+	<nvram></nvram>
+
+</misterromdescription>
