@@ -26,3 +26,6 @@ console_history
 *.rbf
 *.exe
 *.url
+/Arcade_MiST/Gremlin VicDual Hardware/meta_x
+Arcade_MiST/Gremlin VicDual Hardware/vicdual.cpp
+Arcade_MiST/Gremlin VicDual Hardware/vicdual.h
