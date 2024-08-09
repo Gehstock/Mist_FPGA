@@ -45,6 +45,9 @@ localparam GAME_SUBHUNT = 20;
 localparam GAME_TRANQUILIZERGUN = 21;
 localparam GAME_WANTED = 22;
 
+localparam GAME_DEPTHCHARGE = 23;
+localparam GAME_DEPTHCHARGEO = 24;
+
 // Per game DIP setting constants for simulation
 // - Alpha Fighter + Head On
 localparam DIP_ALPHAFIGHTER_HEADON_LIVES_3 = 1'd0;
