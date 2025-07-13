@@ -1,0 +1,24 @@
+<misterromdescription>
+	<name>TriviaM</name>
+	<mratimestamp>20250316000000</mratimestamp>
+	<mameversion>0217</mameversion>
+	<year>1985</year>
+	<manufacturer>Enerdyne Technologies Inc.</manufacturer>
+	<category>Trivia</category>
+	<rbf>NBoy</rbf>
+
+	<rom index="1"></rom>
+	<rom index='0' md5='31f41f483f5977d24385d13a3eaca4d1' type='merged|nonmerged|split' zip='trvmstr.zip'>
+		<part crc="4ccd0537" name="ic30.bin"></part>
+		<part crc="782a2b8c" name="ic28.bin"></part>
+		<part crc="1362010a" name="ic26.bin"></part>
+		<part crc="1362010a" name="ic26.bin"></part>
+
+
+		<part crc="dac8cff7" name="ic44.bin"></part>
+		<part crc="a97ab879" name="ic46.bin"></part>
+
+		<part crc="79952015" name="ic48.bin"></part>
+		<part crc="f09da428" name="ic50.bin"></part>
+		</rom>
+</misterromdescription>
