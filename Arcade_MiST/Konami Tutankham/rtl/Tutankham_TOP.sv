@@ -28,6 +28,7 @@ module Tutankham_TOP
 (
 	input                reset,
 	input                clk_49m,                  //Actual frequency: 49.152MHz
+	input						juno,
 	input          [1:0] coin,                     //0 = coin 1, 1 = coin 2
 	input          [1:0] start_buttons,            //0 = Player 1, 1 = Player 2
 	input          [3:0] p1_joystick, p2_joystick, //0 = up, 1 = down, 2 = left, 3 = right
@@ -46,10 +47,9 @@ module Tutankham_TOP
 	//Screen centering (alters HSync, VSync and VBlank timing in the Konami 082 to reposition the video output)
 	input          [3:0] h_center, v_center,
 	
-	output		  [15:0] cpu_A,	
-	input				[7:0] mainrom_D,
-//	input				[7:0] bank_rom_D,
-
+	output		  [15:0] CPU_Addr,	
+	input				[7:0] CPU_Rom_Data,
+	input				[7:0] GFX_Rom_Data,
 	output		  [12:0] Sound_Rom_Addr,
 	input				[7:0] Sound_Rom_Data,
 	input         [24:0] ioctl_addr,
@@ -111,6 +111,7 @@ Tutankham_CPU main_pcb
 (
 	.reset(reset),
 	.clk_49m(clk_49m),
+	.juno(juno),
 	.red(video_r),
 	.green(video_g),
 	.blue(video_b),
@@ -150,14 +151,13 @@ Tutankham_CPU main_pcb
 	.bank6_cs_i(bank6_cs_i),
 	.bank7_cs_i(bank7_cs_i),
 	.bank8_cs_i(bank8_cs_i),
-	.cpu_A(cpu_A),	
-	.mainrom_D(mainrom_D),
-//	.bank_rom_D(bank_rom_D),
+//Rom Signals	
+	.CPU_Addr(CPU_Addr),
+	.CPU_Rom_Data(CPU_Rom_Data),
+	.GFX_Rom_Data(GFX_Rom_Data),
 
 	.cpubrd_Dout(cpubrd_D),
-	
-//	.cpubrd_A5(A5),
-//	.cpubrd_A6(A6),
+
 	.ioctl_addr(ioctl_addr),
 	.ioctl_wr(ioctl_wr_cpu),
 	.ioctl_data(ioctl_data),
@@ -185,23 +185,16 @@ TimePilot_SND sound_pcb
 	.p1_fire(~m_fire1_l),
 	.p2_fire(~m_fire2_l),
 	.btn_service(btn_service),
-	
 	.cs_controls_dip1(cs_controls_dip1),
 	.cs_dip2(cs_dip2),
-	.cpubrd_A5(cpu_A[5]),
-	.cpubrd_A6(cpu_A[6]),
+	.cpubrd_A5(CPU_Addr[6]),//swapped? todo
+	.cpubrd_A6(CPU_Addr[5]),
 	.cpubrd_Din(cpubrd_D),	
 	.controls_dip(controls_dip),
 	.sound(sound),
-	
 	.underclock(underclock),
-	
-	.ep7_cs_i(ep7_cs_i),
 	.Sound_Rom_Addr(Sound_Rom_Addr),
-	.Sound_Rom_Data(Sound_Rom_Data),
-	.ioctl_addr(ioctl_addr),
-	.ioctl_wr(ioctl_wr_snd),
-	.ioctl_data(ioctl_data)
+	.Sound_Rom_Data(Sound_Rom_Data)
 );
 
 endmodule

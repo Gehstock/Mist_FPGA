@@ -49,7 +49,7 @@ localparam CONF_STR = {
 wire       rotate = status[2];
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
-
+wire [1:0] orientation = 'b10;
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
 assign SDRAM_CLK = clk_sys;
@@ -104,7 +104,8 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 wire [12:0] Sound_Rom_Addr;
-wire  [7:0] Sound_Rom_Data;
+wire [15:0] CPU_Addr;
+wire  [7:0] CPU_Rom_Data, GFX_Rom_Data, Sound_Rom_Data;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -133,11 +134,11 @@ sdram #(49) sdram(
 	.port1_q       ( ),
 
 	.cpu1_addr     ( 16'hffff),//ioctl_downl ? 16'hffff : {2'b00, main_rom_addr[14:1]} ),
-	.cpu1_q        ( ),
+	.cpu1_q        ( CPU_Rom_Data ),
 	.cpu2_addr     ( 16'hffff),//ioctl_downl ? 16'hffff : Sound_Rom_Addr[12:1] + 16'h3000 ),
 	.cpu2_q        ( Sound_Rom_Data ),
 	.cpu3_addr     ( 16'hffff),//),
-	.cpu3_q        ( ),
+	.cpu3_q        ( GFX_Rom_Data ),
 
 	// port2 for sprite graphics
 	.port2_req     ( port2_req ),
@@ -177,6 +178,7 @@ end
 
 wire [15:0] audio;
 wire        hs, vs, cs, hb, vb;
+wire        blankn = ~(hb | vb);
 wire  [4:0] r,g,b;
 wire [ 3:0] hoffset, voffset;
 assign { voffset, hoffset } = status[31:24];
@@ -185,20 +187,19 @@ Tutankham_TOP Tutankham_TOP_inst
 (
 	.reset(~reset),
 	.clk_49m(clk_sys),
-//	.juno(),
+	.juno(0),
 	.coin({m_coin2, m_coin1}),
 	.start_buttons({m_two_players, m_one_player}),
-//	.p1_joystick(p1_joystick_sig) ,	// input [3:0] p1_joystick_sig
-//	.p2_joystick(p2_joystick_sig) ,	// input [3:0] p2_joystick_sig
-//	.p1_fire(p1_fire_sig) ,	// input  p1_fire_sig
-//	.p2_fire(p2_fire_sig) ,	// input  p2_fire_sig
-//	.m_fire1_l(m_fire1_l_sig) ,	// input  m_fire1_l_sig
-//	.m_fire1_r(m_fire1_r_sig) ,	// input  m_fire1_r_sig
-//	.m_flash1(m_flash1_sig) ,	// input  m_flash1_sig
-//	.m_fire2_l(m_fire2_l_sig) ,	// input  m_fire2_l_sig
-//	.m_fire2_r(m_fire2_r_sig) ,	// input  m_fire2_r_sig
-//	.m_flash2(m_flash2_sig) ,	// input  m_flash2_sig
-
+	.p1_joystick(),//todo
+	.p2_joystick(),
+	.p1_fire(m_fireA),
+	.p2_fire(m_fire2A),
+	.m_fire1_l(m_fireB),
+	.m_fire1_r(m_fireC),
+	.m_flash1(m_fireD),
+	.m_fire2_l(m_fire2B),
+	.m_fire2_r(m_fire2C),
+	.m_flash2(m_fire2D),
 	.btn_service(status[6]),
 //	.dip_sw(dip_sw_sig) ,	// input [15:0] dip_sw_sig
 	.video_hsync(hs),
@@ -214,8 +215,9 @@ Tutankham_TOP Tutankham_TOP_inst
 	.h_center(hoffset),
 	.v_center(voffset),
 //Rom Data	
-//	.cpu_A(cpu_A_sig) ,	// output [15:0] cpu_A_sig
-//	.mainrom_D(mainrom_D_sig) ,	// input [7:0] mainrom_D_sig
+	.CPU_Addr(CPU_Addr),	
+	.CPU_Rom_Data(CPU_Rom_Data),
+	.GFX_Rom_Data(GFX_Rom_Data),
 	.Sound_Rom_Addr(Sound_Rom_Addr),
 	.Sound_Rom_Data(Sound_Rom_Data),
 	
@@ -237,9 +239,9 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(11)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( r                ),//add blankn
-	.G              ( g                ),
-	.B              ( b                ),
+	.R              ( blankn ? r : 0   ),
+	.G              ( blankn ? g : 0   ),
+	.B              ( blankn ? b : 0	  ),
 	.HSync          ( ~hs              ),
 	.VSync          ( ~vs              ),
 	.VGA_R          ( VGA_R            ),

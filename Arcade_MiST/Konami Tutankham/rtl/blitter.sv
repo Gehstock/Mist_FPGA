@@ -41,8 +41,8 @@ module blitter (
     reg [2:0] state;
 
     // Blitter Register Process
-    always @(posedge clk_30M or posedge rst_30M) begin
-        if (rst_30M) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             blitter_src_r <= 16'h0;
             blitter_dst_r <= 16'h0;
             blitter_go    <= 1'b0;
@@ -65,8 +65,8 @@ module blitter (
     end
 
     // Blitter State Machine Process
-    always @(posedge clk_30M or posedge rst_30M) begin
-        if (rst_30M) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             cpu_halt   <= 1'b0;
             blitting   <= 1'b0;
             blitter_wr <= 2'b00;
@@ -85,7 +85,6 @@ module blitter (
                 S_HALTING: begin
                     if (cpu_ba && cpu_bs) begin
                         blitting    <= 1'b1;
-                        // VHDL logic: (src[15:2] & "00") + 1
                         blitter_src <= {blitter_src_r[15:2], 2'b00} + 16'd1;
                         blitter_dst <= blitter_dst_r;
                         y <= 0;

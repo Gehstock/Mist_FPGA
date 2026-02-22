@@ -28,6 +28,7 @@ module Tutankham_CPU
 (
 	input         reset,
 	input         clk_49m,          //Actual frequency: 49.152MHz
+	input			  juno,
 	output  [4:0] red, green, blue, //15-bit RGB, 5 bits per color
 	output        video_hsync, video_vsync, video_csync, //CSync not needed for MISTer
 	output        video_hblank, video_vblank,
@@ -40,10 +41,9 @@ module Tutankham_CPU
 	input   [3:0] p1_joy,         // {down, up, right, left} active-HIGH
 	input   [3:0] p2_joy,         // {down, up, right, left} active-HIGH
 	output  [7:0] cpubrd_Dout,
-	output reg   [15:0] cpu_A,	
-	input   [7:0] mainrom_D,
-//	input   [7:0] bank_rom_D,
-//	output        cpubrd_A5, cpubrd_A6,
+	output reg   [15:0] CPU_Addr,	
+	input   [7:0] CPU_Rom_Data,
+	input   [7:0] GFX_Rom_Data,
 	output        cs_sounddata, irq_trigger,
 	output        cs_dip2, cs_controls_dip1,
 
@@ -176,7 +176,7 @@ end
 //------------------------------------------------------------ CPUs ------------------------------------------------------------//
 
 //Primary CPU - Motorola MC6809E ( Konami1 for Juno First)
-//wire [15:0] cpu_A;
+wire [15:0] cpu_A;
 wire [7:0] cpu_Dout;
 wire cpu_RnW;
 mc6809e E3
@@ -301,6 +301,7 @@ wire [7:0] cpu_Din = cs_palette                              ? palette_D :
 //Main program ROMs (m1.1h through j6.6h, 6x 4KB = 24KB at 0xA000-0xFFFF)
 //wire [7:0] rom_m1_D, rom_m2_D, rom_m3_D, rom_m4_D, rom_m5_D, rom_m6_D;
 //
+wire [7:0] mainrom_D = CPU_Rom_Data;
 //wire [7:0] mainrom_D = (cpu_A[15:12] == 4'hA) ? rom_m1_D :
 //                       (cpu_A[15:12] == 4'hB) ? rom_m2_D :
 //                       (cpu_A[15:12] == 4'hC) ? rom_m3_D :
@@ -334,17 +335,17 @@ wire [7:0] cpu_Din = cs_palette                              ? palette_D :
 //Bank select register chooses which 4KB bank is visible at 0x9000-0x9FFF
 wire [7:0] bank0_D, bank1_D, bank2_D, bank3_D, bank4_D;
 wire [7:0] bank5_D, bank6_D, bank7_D, bank8_D;
-//
-wire [7:0] bank_rom_D = (rom_bank == 4'd0) ? bank0_D :
-                        (rom_bank == 4'd1) ? bank1_D :
-                        (rom_bank == 4'd2) ? bank2_D :
-                        (rom_bank == 4'd3) ? bank3_D :
-                        (rom_bank == 4'd4) ? bank4_D :
-                        (rom_bank == 4'd5) ? bank5_D :
-                        (rom_bank == 4'd6) ? bank6_D :
-                        (rom_bank == 4'd7) ? bank7_D :
-                        (rom_bank == 4'd8) ? bank8_D :
-                        8'hFF;
+wire [7:0] bank_rom_D = GFX_Rom_Data;//todo bank handling
+//wire [7:0] bank_rom_D = (rom_bank == 4'd0) ? bank0_D :
+//                        (rom_bank == 4'd1) ? bank1_D :
+//                        (rom_bank == 4'd2) ? bank2_D :
+//                        (rom_bank == 4'd3) ? bank3_D :
+//                        (rom_bank == 4'd4) ? bank4_D :
+//                        (rom_bank == 4'd5) ? bank5_D :
+//                        (rom_bank == 4'd6) ? bank6_D :
+//                        (rom_bank == 4'd7) ? bank7_D :
+//                        (rom_bank == 4'd8) ? bank8_D :
+//                        8'hFF;
 
 eprom_4k bank0 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank0_D),
                 .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
