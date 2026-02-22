@@ -16,7 +16,10 @@ module mist_video
 	input  [1:0] scanlines,
 
 	// non-scandoubled pixel clock divider:
-	// 0 - clk_sys/4, 1 - clk_sys/2, 2 - clk_sys/3, 3 - clk_sys/4, etc
+	// 0 - clk_sys/1, 
+	//1 - clk_sys/2, 
+	//2 - clk_sys/3, 
+	//3 - clk_sys/4, etc
 	input  [2:0] ce_divider,
 
 	// 0 = HVSync 31KHz, 1 = CSync 15KHz
