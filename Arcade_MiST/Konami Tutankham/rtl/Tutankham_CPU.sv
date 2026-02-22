@@ -177,10 +177,12 @@ end
 
 //Primary CPU - Motorola MC6809E ( Konami1 for Juno First)
 wire [15:0] cpu_A;
+assign CPU_Addr = cpu_A;
 wire [7:0] cpu_Dout;
 wire cpu_RnW;
 mc6809e E3
 (
+	.CLK(CLK),//check here no clk signal in original code
 	.D(cpu_Din),
 	.DOut(cpu_Dout),
 	.ADDR(cpu_A),
@@ -190,53 +192,45 @@ mc6809e E3
 	.nIRQ(n_irq),
 	.nFIRQ(1'b1),
 	.nNMI(1'b1),
-	.BS(),
-	.BA(),
-	.AVMA(),
-	.BUSY(),
-	.LIC(),
 	.nHALT(1'b1),
 	.nRESET(reset)
 );
 
+//KONAMI1 KONAMI1(
+//	.CLK(),
+//	.fallE_en(),
+//	.fallQ_en(),
+//	.D(),
+//	.DOut(),
+//	.ADDR(),
+//	.RnW(),
+//	.nIRQ(),
+//	.nFIRQ(),
+//	.nNMI(),
+//	.nHALT(),
+//	.nRESET(reset)
+//);
+
 //------------------------------------------------------ Address decoding ------------------------------------------------------//
 //  tutankham
-//  
 //    -- DIPS2 $8160
-//    dip2_cs <=		'1' when STD_MATCH(cpu_a, X"816"&"----") else '0';
 //    -- IN0 $8180
-//    in0_cs <=			'1' when STD_MATCH(cpu_a, X"818"&"----") else '0';
 //    -- IN1 $81A0
-//    in1_cs <=			'1' when STD_MATCH(cpu_a, X"81A"&"----") else '0';
 //    -- IN2 $81C0
-//    in2_cs <=			'1' when STD_MATCH(cpu_a, X"81C"&"----") else '0';
 //    -- DIPS1 $81E0
-//    dip1_cs <=		'1' when STD_MATCH(cpu_a, X"81E"&"----") else '0';
 //    -- Interrupt Enable $8200
-//    intena_cs <= 	'1' when STD_MATCH(cpu_a, X"8200") else '0';
 //    -- RAM $8800-$8FFF
-//    wram_cs <=		'1' when STD_MATCH(cpu_a, X"8"&"1-----------") else '0';
-//
 
-  
 //  junofrst
-//
 //    -- DIPS2 $8010
-//    dip2_cs <=		'1' when STD_MATCH(cpu_a, X"8010") else '0';
 //    -- IN0 $8020
-//    in0_cs <=			'1' when STD_MATCH(cpu_a, X"8020") else '0';
 //    -- IN1 $8024
-//    in1_cs <=			'1' when STD_MATCH(cpu_a, X"8024") else '0';
 //    -- IN2 $8028
-//    in2_cs <=			'1' when STD_MATCH(cpu_a, X"8028") else '0';
 //    -- DIPS1 $802C
-//    dip1_cs <=		'1' when STD_MATCH(cpu_a, X"802C") else '0';
 //    -- Interrupt Enable $8030
-//    intena_cs <= 	'1' when STD_MATCH(cpu_a, X"8030") else '0';
-//    -- blitter
-//    blitter_cs <= '1' when STD_MATCH(cpu_a, X"807" & "00--") else '0';
+//    -- blitter $8073
 //    -- RAM $8100-$8FFF
-//    wram_cs <=		'1' when STD_MATCH(cpu_a, X"8"&"------------") else '0';
+
 
 //Tutankham memory map
 wire n_cs_videoram = ~(cpu_A[15] == 1'b0);               // 0x0000-0x7FFF (32KB video RAM)
@@ -261,9 +255,10 @@ wire cs_in1        = (cpu_A[15:4] == 12'h81A);             // 0x81A0 (IN1: P1 co
 wire cs_in2        = (cpu_A[15:4] == 12'h81C);             // 0x81C0 (IN2: P2 controls)
 wire cs_dsw1       = (cpu_A[15:4] == 12'h81E);             // 0x81E0 (DIP SW1)
 wire cs_mainlatch  = (cpu_A[15:3] == 13'h1040) & ~cpu_RnW; // 0x8200-0x8207 (main latch)
-wire cs_banksel_wr = (cpu_A[15:8] == 8'h83) & ~cpu_RnW;    // 0x8300 (bank select)	 (8060 for Juno First)
+wire cs_banksel_wr = juno ? ((cpu_A[15:0] == 16'h8060) & ~cpu_RnW) : ((cpu_A[15:8] == 8'h83) & ~cpu_RnW);    // 0x8300 (bank select)	 (8060 for Juno First)
 wire cs_soundon    = (cpu_A[15:8] == 8'h86) & ~cpu_RnW;    // 0x8600 (sound enable)
 wire cs_soundcmd   = (cpu_A[15:8] == 8'h87) & ~cpu_RnW;    // 0x8700 (sound command)
+wire cs_blitter;
 
 //ROM bank select register (0x8300)
 reg [3:0] rom_bank = 4'd0;
@@ -347,33 +342,33 @@ wire [7:0] bank_rom_D = GFX_Rom_Data;//todo bank handling
 //                        (rom_bank == 4'd8) ? bank8_D :
 //                        8'hFF;
 
-eprom_4k bank0 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank0_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank0_cs_i), .WR(ioctl_wr));
-eprom_4k bank1 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank1_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank1_cs_i), .WR(ioctl_wr));
-eprom_4k bank2 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank2_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank2_cs_i), .WR(ioctl_wr));
-eprom_4k bank3 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank3_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank3_cs_i), .WR(ioctl_wr));
-eprom_4k bank4 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank4_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank4_cs_i), .WR(ioctl_wr));
-eprom_4k bank5 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank5_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank5_cs_i), .WR(ioctl_wr));
-eprom_4k bank6 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank6_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank6_cs_i), .WR(ioctl_wr));
-eprom_4k bank7 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank7_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank7_cs_i), .WR(ioctl_wr));
-eprom_4k bank8 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank8_D),
-                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
-                .CS_DL(bank8_cs_i), .WR(ioctl_wr));
+//eprom_4k bank0 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank0_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank0_cs_i), .WR(ioctl_wr));
+//eprom_4k bank1 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank1_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank1_cs_i), .WR(ioctl_wr));
+//eprom_4k bank2 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank2_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank2_cs_i), .WR(ioctl_wr));
+//eprom_4k bank3 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank3_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank3_cs_i), .WR(ioctl_wr));
+//eprom_4k bank4 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank4_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank4_cs_i), .WR(ioctl_wr));
+//eprom_4k bank5 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank5_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank5_cs_i), .WR(ioctl_wr));
+//eprom_4k bank6 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank6_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank6_cs_i), .WR(ioctl_wr));
+//eprom_4k bank7 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank7_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank7_cs_i), .WR(ioctl_wr));
+//eprom_4k bank8 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank8_D),
+//                .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
+//                .CS_DL(bank8_cs_i), .WR(ioctl_wr));
 					 
 //Blitter ToDo		
 

@@ -3,3 +3,4 @@ set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809.
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809i.v     ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809e.v     ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) mc6809is.v    ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) KONAMI1.sv    ]
