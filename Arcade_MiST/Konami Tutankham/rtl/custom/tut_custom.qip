@@ -1,0 +1,7 @@
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k082.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k083.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k501.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k502.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k503.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k526.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/custom/k528.sv

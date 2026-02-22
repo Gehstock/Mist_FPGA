@@ -31,7 +31,7 @@ module jt49_dcrm2 #(parameter sw=8) (
     output signed [sw-1:0]  dout
 );
 
-localparam dw=10; // width of the decimal portion
+localparam dw=10; // widht of the decimal portion
 
 reg  signed [sw+dw:0] integ, exact, error;
 //reg  signed [2*(9+dw)-1:0] mult;
@@ -55,9 +55,7 @@ always @(posedge clk)
         integ <= {sw+dw+1{1'b0}};
         error <= {sw+dw+1{1'b0}};
     end else if( cen ) begin
-        /* verilator lint_off WIDTH */
         integ <= integ + pre_dout; //mult[sw+dw*2:dw];
-        /* verilator lint_on WIDTH */
         error <= exact-{q, {dw{1'b0}}};
     end
 

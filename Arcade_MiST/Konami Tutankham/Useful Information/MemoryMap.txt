@@ -1,0 +1,715 @@
+| ROM    | Address Range   | Size  | Description                     | Notes                      |
+|--------|-----------------|-------|---------------------------------|----------------------------|
+| m1.1h  | 0xA000-0xA2D0   | 721B  | Unknown (Code/Data)             | Unknown                    |
+| m1.1h  | 0xA2D1-0xA2E0   | 16B   | Map 1 Palette Data              | Used for Map 1 Wall Colors |
+| m1.1h  | 0xA2E1-0xA2F0   | 16B   | Map 2 Palette Data              | Used for Map 2 Wall Colors |
+| m1.1h  | 0xA2F1-0xA300   | 16B   | Map 3 Palette Data              | Used for Map 3 Wall Colors |
+| m1.1h  | 0xA301-0xA310   | 16B   | Map 4 Palette Data              | Used for Map 4 Wall Colors |
+| m1.1h  | 0xA311-0xA320   | 16B   | High Score Palette Data         | Used for High Score Screen |
+| m1.1h  | 0xA321-0xA330   | 16B   | UI Palette Data                 | Used for Title Screen      |
+| m1.1h  | 0xA331-0xA340   | 16B   | UI Palette Data                 | Used for Player Start      |
+| m1.1h  | 0xA341-0xA49F   | 351B  | Unknown (Code/Data)             |                            |
+| m1.1h  | 0xA4A0-0xA4A2   | 3B    | HIGH SCORE                      | 03 58 40 (035840)          |
+| m1.1h  | 0xA4A3-0xA4A5   | 3B    | 1ST Score                       | 03 58 40 (035840)          |
+| m1.1h  | 0xA4A6-0xA4A8   | 3B    | 1ST Name                        | 48 54 41 (HTA in ASCII)    |
+| m1.1h  | 0xA4A9-0xA4AB   | 3B    | 2ND Score                       | 03 40 60 (034060)          |
+| m1.1h  | 0xA4AC-0xA4AE   | 3B    | 2ND Name                        | 4D 4E 55 (MNU in ASCII)    |
+| m1.1h  | 0xA4AF-0xA4B1   | 3B    | 3RD Score                       | 03 38 60 (033860)          |
+| m1.1h  | 0xA4B2-0xA4B4   | 3B    | 3RD Name                        | 53 49 53 (SIS in ASCII)    |
+| m1.1h  | 0xA4B5-0xA4B7   | 3B    | 4TH Score                       | 02 96 60 (029660)          |
+| m1.1h  | 0xA4B8-0xA4BA   | 3B    | 4TH Name                        | 4B 4B 4F (KKO in ASCII)    |
+| m1.1h  | 0xA4BB-0xA4BD   | 3B    | 5TH Score                       | 02 34 60 (023460)          |
+| m1.1h  | 0xA4BE-0xA4C0   | 3B    | 5TH Name                        | 59 4E 41 (YNA in ASCII)    |
+| m1.1h  | 0xA4C1-0xA4C3   | 3B    | 6TH Score                       | 01 58 60 (015860)          |
+| m1.1h  | 0xA4C4-0xA4C6   | 3B    | 6TH Name                        | 46 55 4A (FUJ in ASCII)    |
+| m1.1h  | 0xA4C7-0xA4C9   | 3B    | 7TH Score                       | 01 20 60 (012060)          |
+| m1.1h  | 0xA4CA-0xA4CC   | 3B    | 7TH Name                        | 4D 41 54 (MAT in ASCII)    |
+| m1.1h  | 0xA4CD-0xA4CD   | 1B    | 1ST Stage                       | 02 (Level 3)               |
+| m1.1h  | 0xA4CE-0xA4CE   | 1B    | 2ND Stage                       | 02 (Level 3)               |
+| m1.1h  | 0xA4CF-0xA4CF   | 1B    | 3RD Stage                       | 02 (Level 3)               |
+| m1.1h  | 0xA4D0-0xA4D0   | 1B    | 4TH Stage                       | 01 (Level 2)               |
+| m1.1h  | 0xA4D1-0xA4D1   | 1B    | 5TH Stage                       | 01 (Level 2)               |
+| m1.1h  | 0xA4D2-0xA4D2   | 1B    | 6TH Stage                       | 01 (Level 2)               |
+| m1.1h  | 0xA4D3-0xA4D3   | 1B    | 7TH Stage                       | 01 (Level 2)               |
+| m1.1h  | 0xA4D4-0xA4D5   | 2B    | Coin Mech A - 1 Coin/1 Credit   | 01 01 (DS 1 - xxxx0000)    |
+| m1.1h  | 0xA4D6-0xA4D7   | 2B    | Coin Mech A - 1 Coin/2 Credits  | 01 02 (DS 1 - xxxx0001)    |
+| m1.1h  | 0xA4D8-0xA4D9   | 2B    | Coin Mech A - 1 Coin/3 Credits  | 01 03 (DS 1 - xxxx0010)    |
+| m1.1h  | 0xA4DA-0xA4DB   | 2B    | Coin Mech A - 1 Coin/4 Credits  | 01 04 (DS 1 - xxxx0011)    |
+| m1.1h  | 0xA4DC-0xA4DD   | 2B    | Coin Mech A - 1 Coin/5 Credits  | 01 05 (DS 1 - xxxx0100)    |
+| m1.1h  | 0xA4DE-0xA4DF   | 2B    | Coin Mech A - 1 Coin/6 Credits  | 01 06 (DS 1 - xxxx0101)    |
+| m1.1h  | 0xA4E0-0xA4E1   | 2B    | Coin Mech A - 1 Coin/7 Credits  | 01 07 (DS 1 - xxxx0110)    |
+| m1.1h  | 0xA4E2-0xA4E3   | 2B    | Coin Mech A - 2 Coins/1 Credit  | 02 01 (DS 1 - xxxx0111)    |
+| m1.1h  | 0xA4E4-0xA4E5   | 2B    | Coin Mech A - 2 Coins/3 Credits | 02 03 (DS 1 - xxxx1000)    |
+| m1.1h  | 0xA4E6-0xA4E7   | 2B    | Coin Mech A - 2 Coins/5 Credits | 02 05 (DS 1 - xxxx1001)    |
+| m1.1h  | 0xA4E8-0xA4E9   | 2B    | Coin Mech A - 3 Coins/1 Credit  | 03 01 (DS 1 - xxxx1010)    |
+| m1.1h  | 0xA4EA-0xA4EB   | 2B    | Coin Mech A - 3 Coins/2 Credits | 03 02 (DS 1 - xxxx1011)    |
+| m1.1h  | 0xA4EC-0xA4ED   | 2B    | Coin Mech A - 3 Coins/4 Credits | 03 04 (DS 1 - xxxx1100)    |
+| m1.1h  | 0xA4EE-0xA4EF   | 2B    | Coin Mech A - 4 Coins/1 Credit  | 04 01 (DS 1 - xxxx1101)    |
+| m1.1h  | 0xA4F0-0xA4F1   | 2B    | Coin Mech A - 4 Coins/3 Credits | 04 03 (DS 1 - xxxx1110)    |
+| m1.1h  | 0xA4F2-0xA4F3   | 2B    | Coin Mech A - Free Play         | 01 00 (DS 1 - xxxx1111)    |
+| m1.1h  | 0xA4F4-0xA4F5   | 2B    | Coin Mech B - 1 Coin/1 Credit   | 01 01 (DS 1 - 0000xxxx)    |
+| m1.1h  | 0xA4F6-0xA4F7   | 2B    | Coin Mech B - 1 Coin/2 Credits  | 01 02 (DS 1 - 0001xxxx)    |
+| m1.1h  | 0xA4F8-0xA4F9   | 2B    | Coin Mech B - 1 Coin/3 Credits  | 01 03 (DS 1 - 0010xxxx)    |
+| m1.1h  | 0xA4FA-0xA4FB   | 2B    | Coin Mech B - 1 Coin/4 Credits  | 01 04 (DS 1 - 0011xxxx)    |
+| m1.1h  | 0xA4FC-0xA4FD   | 2B    | Coin Mech B - 1 Coin/5 Credits  | 01 05 (DS 1 - 0100xxxx)    |
+| m1.1h  | 0xA4FE-0xA4FF   | 2B    | Coin Mech B - 1 Coin/6 Credits  | 01 06 (DS 1 - 0101xxxx)    |
+| m1.1h  | 0xA500-0xA501   | 2B    | Coin Mech B - 1 Coin/7 Credits  | 01 07 (DS 1 - 0110xxxx)    |
+| m1.1h  | 0xA502-0xA503   | 2B    | Coin Mech B - 2 Coins/1 Credit  | 02 01 (DS 1 - 0111xxxx)    |
+| m1.1h  | 0xA504-0xA505   | 2B    | Coin Mech B - 2 Coins/3 Credits | 02 03 (DS 1 - 1000xxxx)    |
+| m1.1h  | 0xA506-0xA507   | 2B    | Coin Mech B - 2 Coins/5 Credits | 02 05 (DS 1 - 1001xxxx)    |
+| m1.1h  | 0xA508-0xA509   | 2B    | Coin Mech B - 3 Coins/1 Credit  | 03 01 (DS 1 - 1010xxxx)    |
+| m1.1h  | 0xA50A-0xA50B   | 2B    | Coin Mech B - 3 Coins/2 Credits | 03 02 (DS 1 - 1011xxxx)    |
+| m1.1h  | 0xA50C-0xA50D   | 2B    | Coin Mech B - 3 Coins/4 Credits | 03 04 (DS 1 - 1100xxxx)    |
+| m1.1h  | 0xA50E-0xA50F   | 2B    | Coin Mech B - 4 Coins/1 Credit  | 04 01 (DS 1 - 1101xxxx)    |
+| m1.1h  | 0xA510-0xA511   | 2B    | Coin Mech B - 4 Coins/3 Credits | 04 03 (DS 1 - 1110xxxx)    |
+| m1.1h  | 0xA512-0xA513   | 2B    | Coin Mech B - Invalid?          | 01 00 (DS 1 - 1111xxxx)    |
+| m1.1h  | 0xA514-0xA553   | 64B   | Unknown (Code/Data)             | Unknown                    |
+| m1.1h  | 0xA554-0xA55D   | 10B   | Unknown Block Range Start       | Unknown purpose            |
+| m1.1h  | 0xA55E-0xA57D   | 32B   | Unknown Range 1                 | Unknown purpose            |
+| m1.1h  | 0xA57E-0xA59D   | 32B   | Unknown Range 2                 | Unknown purpose            |
+| m1.1h  | 0xA59E-0xA5BD   | 32B   | Unknown Range 3                 | Unknown purpose            |
+| m1.1h  | 0xA5BE-0xA5DD   | 32B   | Unknown Range 4                 | Unknown purpose            |
+| m1.1h  | 0xA5DE-0xA5FD   | 32B   | Unknown Range 5                 | Unknown purpose            |
+| m1.1h  | 0xA5FE-0xA61D   | 32B   | Map Block Range Start           | Pointers to map blocks     |
+| m1.1h  | 0xA61E-0xA61F   | 2B    | Map 1/D1 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xA620-0xA621   | 2B    | Map 1/D1 Visual Map Pointer     | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xA622-0xA622   | 1B    | Map 1/D1 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xA623-0xA623   | 1B    | Map 1/D1 Time Limit             | Seconds, e.g., 0x3C=60s    |
+| m1.1h  | 0xA624-0xA628   | 5B    | Map 1/D1 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xA629-0xA62B   | 3B    | Map 1/D1 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA62C-0xA62E   | 3B    | Map 1/D1 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA62F-0xA631   | 3B    | Map 1/D1 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA632-0xA634   | 3B    | Map 1/D1 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA635-0xA635   | 1B    | Map 1/D1 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xA636-0xA636   | 1B    | Map 1/D1 Ring 1    - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA637-0xA63A   | 4B    | Map 1/D1 Ring 1    - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA63B-0xA63D   | 3B    | Map 1/D1 Ring 1    - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA63E-0xA644   | 7B    | Map 1/D1 Ring 1    - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA645-0xA645   | 1B    | Map 1/D1 Ring 1    - Tile ID    | 0x6F                       |
+| m1.1h  | 0xA646-0xA646   | 1B    | Map 1/D1 Ring 2    - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA647-0xA64A   | 4B    | Map 1/D1 Ring 2    - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA64B-0xA64D   | 3B    | Map 1/D1 Ring 2    - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA64E-0xA654   | 7B    | Map 1/D1 Ring 2    - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA655-0xA655   | 1B    | Map 1/D1 Ring 2    - Tile ID    | 0x6F                       |
+| m1.1h  | 0xA656-0xA656   | 1B    | Map 1/D1 Ring 3    - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA657-0xA65A   | 4B    | Map 1/D1 Ring 3    - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA65B-0xA65D   | 3B    | Map 1/D1 Ring 3    - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA65E-0xA664   | 7B    | Map 1/D1 Ring 3    - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA665-0xA665   | 1B    | Map 1/D1 Ring 3    - Tile ID    | 0x6F                       |
+| m1.1h  | 0xA666-0xA666   | 1B    | Map 1/D1 Ring 4    - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA667-0xA66A   | 4B    | Map 1/D1 Ring 4    - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA66B-0xA66D   | 3B    | Map 1/D1 Ring 4    - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA66E-0xA674   | 7B    | Map 1/D1 Ring 4    - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA675-0xA675   | 1B    | Map 1/D1 Ring 4    - Tile ID    | 0x6F                       |
+| m1.1h  | 0xA676-0xA676   | 1B    | Map 1/D1 Key 1     - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA677-0xA67A   | 4B    | Map 1/D1 Key 1     - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA67B-0xA67D   | 3B    | Map 1/D1 Key 1     - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA67E-0xA684   | 7B    | Map 1/D1 Key 1     - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA685-0xA685   | 1B    | Map 1/D1 Key 1     - Tile ID    | 0x70                       |
+| m1.1h  | 0xA686-0xA686   | 1B    | Map 1/D1 Key 2     - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA687-0xA68A   | 4B    | Map 1/D1 Key 2     - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA68B-0xA68D   | 3B    | Map 1/D1 Key 2     - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA68E-0xA694   | 7B    | Map 1/D1 Key 2     - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA695-0xA695   | 1B    | Map 1/D1 Key 2     - Tile ID    | 0x70                       |
+| m1.1h  | 0xA696-0xA696   | 1B    | Map 1/D1 Key 3     - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA697-0xA69A   | 4B    | Map 1/D1 Key 3     - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA69B-0xA69D   | 3B    | Map 1/D1 Key 3     - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA69E-0xA6A4   | 7B    | Map 1/D1 Key 3     - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6A5-0xA6A5   | 1B    | Map 1/D1 Key 3     - Tile ID    | 0x70                       |
+| m1.1h  | 0xA6A6-0xA6A6   | 1B    | Map 1/D1 Key 4     - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6A7-0xA6AA   | 4B    | Map 1/D1 Key 4     - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6AB-0xA6AD   | 3B    | Map 1/D1 Key 4     - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6AE-0xA6B4   | 7B    | Map 1/D1 Key 4     - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6B5-0xA6B5   | 1B    | Map 1/D1 Key 4     - Tile ID    | 0x70                       |
+| m1.1h  | 0xA6B6-0xA6B6   | 1B    | Map 1/D1 Keyhole 1 - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6B7-0xA6BA   | 4B    | Map 1/D1 Keyhole 1 - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6BB-0xA6BD   | 3B    | Map 1/D1 Keyhole 1 - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6BE-0xA6C4   | 7B    | Map 1/D1 Keyhole 1 - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6C5-0xA6C5   | 1B    | Map 1/D1 Keyhole 1 - Tile ID    | 0x72                       |
+| m1.1h  | 0xA6C6-0xA6C6   | 1B    | Map 1/D1 Keyhole 2 - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6C7-0xA6CA   | 4B    | Map 1/D1 Keyhole 2 - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6CB-0xA6CD   | 3B    | Map 1/D1 Keyhole 2 - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6CE-0xA6D4   | 7B    | Map 1/D1 Keyhole 2 - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6D5-0xA6D5   | 1B    | Map 1/D1 Keyhole 2 - Tile ID    | 0x72                       |
+| m1.1h  | 0xA6D6-0xA6D6   | 1B    | Map 1/D1 Keyhole 3 - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6D7-0xA6DA   | 4B    | Map 1/D1 Keyhole 3 - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6DB-0xA6DD   | 3B    | Map 1/D1 Keyhole 3 - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6DE-0xA6E4   | 7B    | Map 1/D1 Keyhole 3 - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6E5-0xA6E5   | 1B    | Map 1/D1 Keyhole 3 - Tile ID    | 0x72                       |
+| m1.1h  | 0xA6E6-0xA6E6   | 1B    | Map 1/D1 Keyhole 4 - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6E7-0xA6EA   | 4B    | Map 1/D1 Keyhole 4 - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6EB-0xA6ED   | 3B    | Map 1/D1 Keyhole 4 - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6EE-0xA6F4   | 7B    | Map 1/D1 Keyhole 4 - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA6F5-0xA6F5   | 1B    | Map 1/D1 Keyhole 4 - Tile ID    | 0x72                       |
+| m1.1h  | 0xA6F6-0xA6F6   | 1B    | Map 1/D1 Crown 1   - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA6F7-0xA6FA   | 4B    | Map 1/D1 Crown 1   - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA6FB-0xA6FD   | 3B    | Map 1/D1 Crown 1   - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA6FE-0xA704   | 7B    | Map 1/D1 Crown 1   - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA705-0xA705   | 1B    | Map 1/D1 Crown 1   - Tile ID    | 0x62                       |
+| m1.1h  | 0xA706-0xA706   | 1B    | Map 1/D1 Crown 2   - Active     | 0x00 Inactive/0x01 Active  |
+| m1.1h  | 0xA707-0xA70A   | 4B    | Map 1/D1 Crown 2   - Padding    | 00 00 00 00                |
+| m1.1h  | 0xA70B-0xA70D   | 3B    | Map 1/D1 Crown 2   - Location   | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA70E-0xA714   | 7B    | Map 1/D1 Crown 2   - Padding    | 00 00 00 00 00 00 00       |
+| m1.1h  | 0xA715-0xA715   | 1B    | Map 1/D1 Crown 2   - Tile ID    | 0x62                       |
+| m1.1h  | 0xA716-0xA716   | 1B    | Map 1/D1 Separator              | Always 0x00                |
+| m1.1h  | 0xA717-0xA71A   | 4B    | Map 1/D1 Teleport 1 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA71B-0xA71E   | 4B    | Map 1/D1 Teleport 1 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA71F-0xA722   | 4B    | Map 1/D1 Teleport 2 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA723-0xA726   | 4B    | Map 1/D1 Teleport 2 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA727-0xA72A   | 4B    | Map 1/D1 Teleport 3 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA72B-0xA72E   | 4B    | Map 1/D1 Teleport 3 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA72F-0xA732   | 4B    | Map 1/D1 Teleport 4 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA733-0xA736   | 4B    | Map 1/D1 Teleport 4 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA737-0xA73A   | 4B    | Map 1/D1 Teleport 5 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA73B-0xA73E   | 4B    | Map 1/D1 Teleport 5 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA73F-0xA742   | 4B    | Map 1/D1 Teleport 6 - Location  | BIG-ENDIAN, YY YY BRow TRow|
+| m1.1h  | 0xA743-0xA746   | 4B    | Map 1/D1 Teleport 6 - Padding   | 00 00 00 00                |
+| m1.1h  | 0xA747-0xA749   | 3B    | Map 1/D1 Spawner 1  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA74A-0xA74A   | 1B    | Map 1/D1 Spawner 1  - Padding   | Always 0x00                |
+| m1.1h  | 0xA74B-0xA74D   | 3B    | Map 1/D1 Spawner 2  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA74E-0xA74E   | 1B    | Map 1/D1 Spawner 2  - Padding   | Always 0x00                |
+| m1.1h  | 0xA74F-0xA751   | 3B    | Map 1/D1 Spawner 3  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA752-0xA752   | 1B    | Map 1/D1 Spawner 3  - Padding   | Always 0x00                |
+| m1.1h  | 0xA753-0xA755   | 3B    | Map 1/D1 Spawner 4  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA756-0xA756   | 1B    | Map 1/D1 Spawner 4  - Padding   | Always 0x00                |
+| m1.1h  | 0xA757-0xA759   | 3B    | Map 1/D1 Spawner 5  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA75A-0xA74A   | 1B    | Map 1/D1 Spawner 5  - Padding   | Always 0x00                |
+| m1.1h  | 0xA75B-0xA75D   | 3B    | Map 1/D1 Spawner 6  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA75E-0xA75E   | 1B    | Map 1/D1 Spawner 6  - Padding   | Always 0x00                |
+| m1.1h  | 0xA75F-0xA761   | 3B    | Map 1/D1 Spawner 7  - Location  | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA762-0xA762   | 1B    | Map 1/D1 Spawner 7  - Padding   | Always 0x00                |
+| m1.1h  | 0xA763-0xA765   | 3B    | Map 1/D1 Separator              | 00 00 00                   |
+| m1.1h  | 0xA766-0xA767   | 2B    | Map 2/D1 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m1.1h  | 0xA768-0xA769   | 2B    | Map 2/D1 Visual Map Pointer     | BIG-ENDIAN, 0x9300         |
+| m1.1h  | 0xA76A-0xA76A   | 1B    | Map 2/D1 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xA76B-0xA76B   | 1B    | Map 2/D1 Time Limit             | Seconds, e.g., 0x5A=90s    |
+| m1.1h  | 0xA76C-0xA770   | 5B    | Map 2/D1 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xA771-0xA773   | 3B    | Map 2/D1 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA774-0xA776   | 3B    | Map 2/D1 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA777-0xA779   | 3B    | Map 2/D1 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA77A-0xA77C   | 3B    | Map 2/D1 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA77D-0xA77D   | 1B    | Map 2/D1 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xA77E-0xA85D   | 224B  | Map 2/D1 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xA85E-0xA85E   | 1B    | Map 2/D1 Separator              | Always 0x00                |
+| m1.1h  | 0xA85F-0xA88E   | 48B   | Map 2/D1 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xA88F-0xA8AD   | 31B   | Map 2/D1 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xA8AE-0xA8AF   | 2B    | Map 3/D1 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xA8B0-0xA8B1   | 2B    | Map 3/D1 Visual Map Pointer     | BIG-ENDIAN, 0x9600         |
+| m1.1h  | 0xA8B2-0xA8B2   | 1B    | Map 3/D1 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xA8B3-0xA8B3   | 1B    | Map 3/D1 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m1.1h  | 0xA8B4-0xA8B8   | 5B    | Map 3/D1 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xA8B9-0xA8BB   | 3B    | Map 3/D1 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA8BC-0xA8BE   | 3B    | Map 3/D1 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA8BF-0xA8C1   | 3B    | Map 3/D1 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA8C2-0xA8C4   | 3B    | Map 3/D1 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xA8C5-0xA8C5   | 1B    | Map 3/D1 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xA8C6-0xA9A5   | 224B  | Map 3/D1 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xA9A6-0xA9A6   | 1B    | Map 3/D1 Separator              | Always 0x00                |
+| m1.1h  | 0xA9A7-0xA9D6   | 48B   | Map 3/D1 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xA9D7-0xA9F5   | 31B   | Map 3/D1 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xA9F6-0xA9F7   | 2B    | Map 4/D1 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m1.1h  | 0xA9F8-0xA9F9   | 2B    | Map 4/D1 Visual Map Pointer     | BIG-ENDIAN, 0x9900         |
+| m1.1h  | 0xA9FA-0xA9FA   | 1B    | Map 4/D1 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xA9FB-0xA9FB   | 1B    | Map 4/D1 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m1.1h  | 0xA9FC-0xAA00   | 5B    | Map 4/D1 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xAA01-0xAA03   | 3B    | Map 4/D1 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAA04-0xAA06   | 3B    | Map 4/D1 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAA07-0xAA09   | 3B    | Map 4/D1 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAA0A-0xAA0C   | 3B    | Map 4/D1 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAA0D-0xAA0D   | 1B    | Map 4/D1 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xAA0E-0xAAED   | 224B  | Map 4/D1 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xAAEE-0xAAEE   | 1B    | Map 4/D1 Separator              | Always 0x00                |
+| m1.1h  | 0xAAEF-0xAB1E   | 48B   | Map 4/D1 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xAB1F-0xAB3D   | 31B   | Map 4/D1 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xAB3E-0xAB3F   | 2B    | Map 1/D2 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xAB40-0xAB41   | 2B    | Map 1/D2 Visual Map Pointer     | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xAB42-0xAB42   | 1B    | Map 1/D2 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xAB43-0xAB43   | 1B    | Map 1/D2 Time Limit             | Seconds, e.g., 0x3C=60s    |
+| m1.1h  | 0xAB44-0xAB48   | 5B    | Map 1/D2 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xAB49-0xAB4B   | 3B    | Map 1/D2 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAB4C-0xAB4E   | 3B    | Map 1/D2 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAB4F-0xAB51   | 3B    | Map 1/D2 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAB52-0xAB54   | 3B    | Map 1/D2 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAB55-0xAB55   | 1B    | Map 1/D2 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xAB56-0xAC35   | 224B  | Map 1/D2 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xAC36-0xAC36   | 1B    | Map 1/D2 Separator              | Always 0x00                |
+| m1.1h  | 0xAC37-0xAC66   | 48B   | Map 1/D2 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xAC67-0xAC85   | 31B   | Map 1/D2 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xAC86-0xAC87   | 2B    | Map 2/D2 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m1.1h  | 0xAC88-0xAC89   | 2B    | Map 2/D2 Visual Map Pointer     | BIG-ENDIAN, 0x9300         |
+| m1.1h  | 0xAC8A-0xAC8A   | 1B    | Map 2/D2 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xAC8B-0xAC8B   | 1B    | Map 2/D2 Time Limit             | Seconds, e.g., 0x5A=90s    |
+| m1.1h  | 0xAC8C-0xAC90   | 5B    | Map 2/D2 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xAC91-0xAC93   | 3B    | Map 2/D2 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAC94-0xAC96   | 3B    | Map 2/D2 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAC97-0xAC99   | 3B    | Map 2/D2 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAC9A-0xAC9C   | 3B    | Map 2/D2 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAC9D-0xAC9D   | 1B    | Map 2/D2 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xAC9E-0xAD7D   | 224B  | Map 2/D2 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xAD7E-0xAD7E   | 1B    | Map 2/D2 Separator              | Always 0x00                |
+| m1.1h  | 0xAD7F-0xADAE   | 48B   | Map 2/D2 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xADAF-0xADCD   | 31B   | Map 2/D2 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xADCE-0xADCF   | 2B    | Map 3/D2 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m1.1h  | 0xADD0-0xADD1   | 2B    | Map 3/D2 Visual Map Pointer     | BIG-ENDIAN, 0x9600         |
+| m1.1h  | 0xADD2-0xADD2   | 1B    | Map 3/D2 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xADD3-0xADD3   | 1B    | Map 3/D2 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m1.1h  | 0xADD4-0xADD8   | 5B    | Map 3/D2 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xADD9-0xADDB   | 3B    | Map 3/D2 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xADDC-0xADDE   | 3B    | Map 3/D2 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xADDF-0xADE1   | 3B    | Map 3/D2 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xADE2-0xADE4   | 3B    | Map 3/D2 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xADE5-0xADE5   | 1B    | Map 3/D2 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xADE6-0xAEC5   | 224B  | Map 3/D2 Items Block            | See M1/D1 For Breakout     |
+| m1.1h  | 0xAEC6-0xAEC6   | 1B    | Map 3/D2 Separator              | Always 0x00                |
+| m1.1h  | 0xAEC7-0xAEF6   | 48B   | Map 3/D2 Teleports Block        | See M1/D1 For Breakout     |
+| m1.1h  | 0xAEF7-0xAF15   | 31B   | Map 3/D2 Spawners Block         | See M1/D1 For Breakout     |
+| m1.1h  | 0xAF16-0xAF17   | 2B    | Map 4/D2 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m1.1h  | 0xAF18-0xAF19   | 2B    | Map 4/D2 Visual Map Pointer     | BIG-ENDIAN, 0x9900         |
+| m1.1h  | 0xAF1A-0xAF1A   | 1B    | Map 4/D2 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m1.1h  | 0xAF1B-0xAF1B   | 1B    | Map 4/D2 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m1.1h  | 0xAF1C-0xAF20   | 5B    | Map 4/D2 Unknown Data           | Unknown purpose            |
+| m1.1h  | 0xAF21-0xAF23   | 3B    | Map 4/D2 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAF24-0xAF26   | 3B    | Map 4/D2 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAF27-0xAF29   | 3B    | Map 4/D2 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAF2A-0xAF2C   | 3B    | Map 4/D2 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m1.1h  | 0xAF2D-0xAF2D   | 1B    | Map 4/D2 Map Width              | (Value + 0x01) Screens     |
+| m1.1h  | 0xAF2E-0xAFFF   | 210B  | Map 4/D2 Items Block            | See M1/D1 For Breakout (P1)|
+| m2.2h  | 0xB000-0xB00D   | 14B   | Map 4/D2 Items Block            | See M1/D1 For Breakout (P2)|
+| m2.2h  | 0xB00E-0xB00E   | 1B    | Map 4/D2 Separator              | Always 0x00                |
+| m2.2h  | 0xB00F-0xB03E   | 48B   | Map 4/D2 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB03F-0xB05D   | 31B   | Map 4/D2 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB05E-0xB05F   | 2B    | Map 1/D3 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB060-0xB061   | 2B    | Map 1/D3 Visual Map Pointer     | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB062-0xB062   | 1B    | Map 1/D3 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB063-0xB063   | 1B    | Map 1/D3 Time Limit             | Seconds, e.g., 0x3C=60s    |
+| m2.2h  | 0xB064-0xB068   | 5B    | Map 1/D3 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB069-0xB06B   | 3B    | Map 1/D3 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB06C-0xB06E   | 3B    | Map 1/D3 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB06F-0xB071   | 3B    | Map 1/D3 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB072-0xB074   | 3B    | Map 1/D3 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB075-0xB075   | 1B    | Map 1/D3 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB076-0xB155   | 224B  | Map 1/D3 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB156-0xB156   | 1B    | Map 1/D3 Separator              | Always 0x00                |
+| m2.2h  | 0xB157-0xB186   | 48B   | Map 1/D3 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB187-0xB1A5   | 31B   | Map 1/D3 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB1A6-0xB1A7   | 2B    | Map 2/D3 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m2.2h  | 0xB1A8-0xB1A9   | 2B    | Map 2/D3 Visual Map Pointer     | BIG-ENDIAN, 0x9300         |
+| m2.2h  | 0xB1AA-0xB1AA   | 1B    | Map 2/D3 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB1AB-0xB1AB   | 1B    | Map 2/D3 Time Limit             | Seconds, e.g., 0x5A=90s    |
+| m2.2h  | 0xB1AC-0xB1B0   | 5B    | Map 2/D3 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB1B1-0xB1B3   | 3B    | Map 2/D3 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB1B4-0xB1B6   | 3B    | Map 2/D3 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB1B7-0xB1B9   | 3B    | Map 2/D3 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB1BA-0xB1BC   | 3B    | Map 2/D3 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB1BD-0xB1BD   | 1B    | Map 2/D3 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB1BE-0xB29D   | 224B  | Map 2/D3 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB29E-0xB29E   | 1B    | Map 2/D3 Separator              | Always 0x00                |
+| m2.2h  | 0xB29F-0xB2CE   | 48B   | Map 2/D3 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB2CF-0xB2ED   | 31B   | Map 2/D3 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB2EE-0xB2EF   | 2B    | Map 3/D3 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB2F0-0xB2F1   | 2B    | Map 3/D3 Visual Map Pointer     | BIG-ENDIAN, 0x9600         |
+| m2.2h  | 0xB2F2-0xB2F2   | 1B    | Map 3/D3 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB2F3-0xB2F3   | 1B    | Map 3/D3 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m2.2h  | 0xB2F4-0xB2F8   | 5B    | Map 3/D3 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB2F9-0xB2FB   | 3B    | Map 3/D3 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB2FC-0xB2FE   | 3B    | Map 3/D3 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB2FF-0xB301   | 3B    | Map 3/D3 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB302-0xB304   | 3B    | Map 3/D3 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB305-0xB305   | 1B    | Map 3/D3 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB306-0xB3E5   | 224B  | Map 3/D3 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB3E6-0xB3E6   | 1B    | Map 3/D3 Separator              | Always 0x00                |
+| m2.2h  | 0xB3E7-0xB416   | 48B   | Map 3/D3 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB417-0xB435   | 31B   | Map 3/D3 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB436-0xB437   | 2B    | Map 4/D3 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m2.2h  | 0xB438-0xB439   | 2B    | Map 4/D3 Visual Map Pointer     | BIG-ENDIAN, 0x9900         |
+| m2.2h  | 0xB43A-0xB43A   | 1B    | Map 4/D3 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB43B-0xB43B   | 1B    | Map 4/D3 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m2.2h  | 0xB43C-0xB440   | 5B    | Map 4/D3 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB441-0xB443   | 3B    | Map 4/D3 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB444-0xB446   | 3B    | Map 4/D3 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB447-0xB449   | 3B    | Map 4/D3 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB44A-0xB44C   | 3B    | Map 4/D3 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB44D-0xB44D   | 1B    | Map 4/D3 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB44E-0xB52D   | 224B  | Map 4/D3 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB52E-0xB52E   | 1B    | Map 4/D3 Separator              | Always 0x00                |
+| m2.2h  | 0xB52F-0xB55E   | 48B   | Map 4/D3 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB55F-0xB57D   | 31B   | Map 4/D3 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB57E-0xB57F   | 2B    | Map 1/D4 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB580-0xB581   | 2B    | Map 1/D4 Visual Map Pointer     | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB582-0xB582   | 1B    | Map 1/D4 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB583-0xB583   | 1B    | Map 1/D4 Time Limit             | Seconds, e.g., 0x3C=60s    |
+| m2.2h  | 0xB584-0xB588   | 5B    | Map 1/D4 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB589-0xB58B   | 3B    | Map 1/D4 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB58C-0xB58E   | 3B    | Map 1/D4 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB58F-0xB591   | 3B    | Map 1/D4 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB592-0xB594   | 3B    | Map 1/D4 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB595-0xB595   | 1B    | Map 1/D4 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB596-0xB675   | 224B  | Map 1/D4 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB676-0xB676   | 1B    | Map 1/D4 Separator              | Always 0x00                |
+| m2.2h  | 0xB677-0xB6A6   | 48B   | Map 1/D4 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB6A7-0xB6C5   | 31B   | Map 1/D4 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB6C6-0xB6C7   | 2B    | Map 2/D4 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m2.2h  | 0xB6C8-0xB6C9   | 2B    | Map 2/D4 Visual Map Pointer     | BIG-ENDIAN, 0x9300         |
+| m2.2h  | 0xB6CA-0xB6CA   | 1B    | Map 2/D4 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB6CB-0xB6CB   | 1B    | Map 2/D4 Time Limit             | Seconds, e.g., 0x5A=90s    |
+| m2.2h  | 0xB6CC-0xB6D0   | 5B    | Map 2/D4 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB6D1-0xB6D3   | 3B    | Map 2/D4 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB6D4-0xB6D6   | 3B    | Map 2/D4 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB6D7-0xB6D9   | 3B    | Map 2/D4 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB6DA-0xB6DC   | 3B    | Map 2/D4 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB6DD-0xB6DD   | 1B    | Map 2/D4 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB6DE-0xB7BD   | 224B  | Map 2/D4 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB7BE-0xB7BE   | 1B    | Map 2/D4 Separator              | Always 0x00                |
+| m2.2h  | 0xB7BF-0xB7EE   | 48B   | Map 2/D4 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB7EF-0xB80D   | 31B   | Map 2/D4 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB80E-0xB80F   | 2B    | Map 3/D4 Logical Map Pointer    | BIG-ENDIAN, 0x9000         |
+| m2.2h  | 0xB810-0xB811   | 2B    | Map 3/D4 Visual Map Pointer     | BIG-ENDIAN, 0x9600         |
+| m2.2h  | 0xB812-0xB812   | 1B    | Map 3/D4 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB813-0xB813   | 1B    | Map 3/D4 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m2.2h  | 0xB814-0xB818   | 5B    | Map 3/D4 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB819-0xB81B   | 3B    | Map 3/D4 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB81C-0xB81E   | 3B    | Map 3/D4 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB81F-0xB821   | 3B    | Map 3/D4 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB822-0xB824   | 3B    | Map 3/D4 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB825-0xB825   | 1B    | Map 3/D4 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB826-0xB905   | 224B  | Map 3/D4 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xB906-0xB906   | 1B    | Map 3/D4 Separator              | Always 0x00                |
+| m2.2h  | 0xB907-0xB936   | 48B   | Map 3/D4 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xB937-0xB955   | 31B   | Map 3/D4 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xB956-0xB957   | 2B    | Map 4/D4 Logical Map Pointer    | BIG-ENDIAN, 0x9700         |
+| m2.2h  | 0xB958-0xB959   | 2B    | Map 4/D4 Visual Map Pointer     | BIG-ENDIAN, 0x9900         |
+| m2.2h  | 0xB95A-0xB95A   | 1B    | Map 4/D4 Enemy Spawn Rate       | 0x05-0x08 range            |
+| m2.2h  | 0xB95B-0xB95B   | 1B    | Map 4/D4 Time Limit             | Seconds, e.g., 0x8C=140s   |
+| m2.2h  | 0xB95C-0xB960   | 5B    | Map 4/D4 Unknown Data           | Unknown purpose            |
+| m2.2h  | 0xB961-0xB963   | 3B    | Map 4/D4 Player Start           | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB964-0xB966   | 3B    | Map 4/D4 Respawn Point 1        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB967-0xB969   | 3B    | Map 4/D4 Respawn Point 2        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB96A-0xB96C   | 3B    | Map 4/D4 Respawn Point 3        | BIG-ENDIAN, YY YY XX       |
+| m2.2h  | 0xB96D-0xB96D   | 1B    | Map 4/D4 Map Width              | (Value + 0x01) Screens     |
+| m2.2h  | 0xB96E-0xBA4D   | 224B  | Map 4/D4 Items Block            | See M1/D1 For Breakout     |
+| m2.2h  | 0xBA4E-0xBA4E   | 1B    | Map 4/D4 Separator              | Always 0x00                |
+| m2.2h  | 0xBA4F-0xBA7E   | 48B   | Map 4/D4 Teleports Block        | See M1/D1 For Breakout     |
+| m2.2h  | 0xBA7F-0xBA9D   | 31B   | Map 4/D4 Spawners Block         | See M1/D1 For Breakout     |
+| m2.2h  | 0xBA9E-0xBCF6   | 601B  | Unknown (Code/Data)             | Unknown                    |
+| m2.2h  | 0xBCF7-0xBD05   | 15B   | Player Animation - Walk Down    | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD06-0xBD14   | 15B   | Player Animation - Walk Right   | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD15-0xBD23   | 15B   | Player Animation - Walk Left    | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD24-0xBD32   | 15B   | Player Animation - Up    + Key  | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD33-0xBD41   | 15B   | Player Animation - Down  + Key  | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD42-0xBD50   | 15B   | Player Animation - Right + Key  | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD51-0xBD5F   | 15B   | Player Animation - Left  + Key  | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD60-0xBD6E   | 15B   | Poison Animation - Unused       | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBD6F-0xBDA7   | 57B   | Unknown (Code/Data)             | Unknown                    |
+| m2.2h  | 0xBDA8-0xBDA9   | 2B    | Unknown Pointer                 | BD B2                      |
+| m2.2h  | 0xBDAA-0xBDAB   | 2B    | Unknown Pointer                 | BE 02                      |
+| m2.2h  | 0xBDAC-0xBDAD   | 2B    | Unknown Pointer                 | BE 52                      |
+| m2.2h  | 0xBDAE-0xBDAF   | 2B    | Unknown Pointer                 | BE A9                      |
+| m2.2h  | 0xBDB0-0xBDB1   | 2B    | Unknown Pointer                 | BE A9                      |
+| m2.2h  | 0xBDB2-0xBE01   | 80B   | Unknown Data                    | Unknown                    |
+| m2.2h  | 0xBE02-0xBE51   | 80B   | Unknown Data                    | Unknown                    |
+| m2.2h  | 0xBE52-0xBEA8   | 87B   | Unknown Data                    | Unknown                    |
+| m2.2h  | 0xBEA9-0xBEA9   | 1B    | Unknown Data                    | Unknown                    |
+| m2.2h  | 0xBEAA-0xBEB8   | 15B   | Player Animation - Walk Up      | 6 Tiles, 1 Frame per Tile  |
+| m2.2h  | 0xBEB9-0xBFFF   | 327B  | Unknown (Code/Data)             | Unknown                    |
+| 3j.3h  | 0xC000-0xC107   | 264B  | Unknown (Code/Data)             | Unknown                    |
+| 3j.3h  | 0xC108-0xC112   | 11B   | Enemy Animation - Snake Left    | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC113-0xC11D   | 11B   | Enemy Animation - Snake Right   | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC11E-0xC128   | 11B   | Enemy Animation - Vulture Right | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC129-0xC133   | 11B   | Enemy Animation - Vulture Left  | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC134-0xC144   | 17B   | Enemy Animation - Bat           | 7 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC145-0xC14F   | 11B   | Enemy Animation - Dragon Left   | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC150-0xC15A   | 11B   | Enemy Animation - Dragon Right  | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC15B-0xC165   | 11B   | Enemy Animation - Gryphon Right | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC166-0xC170   | 11B   | Enemy Animation - Gryphon Left  | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC171-0xC17B   | 11B   | Enemy Animation - Glaive        | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC17C-0xC18A   | 15B   | Enemy Animation - Poof Cloud    | 6 Tiles, 3 Frame per Tile  |
+| 3j.3h  | 0xC18B-0xC195   | 11B   | Enemy Animation - Snake Left    | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC196-0xC1A0   | 11B   | Enemy Animation - Snake Right   | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1A1-0xC1A7   | 7B    | Enemy Animation - Explosion 1   | 2 Tiles, 2 Frame per Tile  |
+| 3j.3h  | 0xC1A8-0xC1BA   | 19B   | Enemy Animation - Explosion 2   | 8 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1BB-0xC1C5   | 11B   | Enemy Animation - Vulture Right | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1C6-0xC1D0   | 11B   | Enemy Animation - Vulture Left  | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1D1-0xC1E1   | 17B   | Enemy Animation - Bat           | 7 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1E2-0xC1F2   | 17B   | Enemy Animation - Bat           | 7 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1F3-0xC1FD   | 11B   | Enemy Animation - Snake Right   | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC1FE-0xC208   | 11B   | Enemy Animation - Snake Left    | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC209-0xC213   | 11B   | Player Animation - Walk Right   | 4 Tiles, 1 Frame per Tile  |
+| 3j.3h  | 0xC214-0xC222   | 15B   | Unused Animation                | 6 Tiles, 2 Frame per Tile  |
+| 3j.3h  | 0xC223-0xC8ED   | 1739B | Unknown (Code/Data)             | Unknown                    |
+| 3j.3h  | 0xC8EE-0xC8EE   | 1B    | Reference Table                 | Unknown purpose            |
+| 3j.3h  | 0xC8EF-0xCE24   | 1658B | Unknown (Code/Data)             | Unknown                    |
+| 3j.3h  | 0xCE25-0xCE26   | 2B    | Copyright Checksum              | Konami: 14A3 / Stern: 1A4C |
+| 3j.3h  | 0xCE27-0xCFFF   | 217B  | Unknown (Code/Data)             | Unknown                    |
+| m4.4h  | 0xD000-0xD788   | 1928B | Unknown (Code/Data)             | Unknown                    |
+| m4.4h  | 0xD789-0xD7B8   | 48B   | Monster Point Values Array      | (Address - 3 Bytes)        |
+| m4.4h  | 0xD7B9-0xD7BB   | 3B    | Snake Kill Value                | 00 00 20  (  20 Points)    |
+| m4.4h  | 0xD7BC-0xD7BE   | 3B    | Vulture Kill Value              | 00 00 40  (  40 Points)    |
+| m4.4h  | 0xD7BF-0xD7C1   | 3B    | Bat Kill Value                  | 00 00 60  (  60 Points)    |
+| m4.4h  | 0xD7C2-0xD7C4   | 3B    | Value 04                        | 00 00 40                   |
+| m4.4h  | 0xD7C5-0xD7C7   | 3B    | Value 05                        | 00 00 50                   |
+| m4.4h  | 0xD7C8-0xD7CA   | 3B    | Value 06                        | 00 01 00                   |
+| m4.4h  | 0xD7CB-0xD7CD   | 3B    | Value 07                        | 00 02 00                   |
+| m4.4h  | 0xD7CE-0xD7D0   | 3B    | Key Pickup Value                | 00 05 00  ( 500 Points)    |
+| m4.4h  | 0xD7D1-0xD7D3   | 3B    | Value 09                        | 00 04 00                   |
+| m4.4h  | 0xD7D4-0xD7D6   | 3B    | Unlock Keyhole                  | 00 10 00                   |
+| m4.4h  | 0xD7D7-0xD7D9   | 3B    | First Treasure Pickup Value     | 00 05 00  ( 500 Points)    |
+| m4.4h  | 0xD7DA-0xD7DC   | 3B    | Second Treasure Pickup Value    | 00 10 00  (1000 Points)    |
+| m4.4h  | 0xD7DD-0xD7DF   | 3B    | Third Treasure Pickup Value     | 00 15 00  (1500 Points)    |
+| m4.4h  | 0xD7E0-0xD7E2   | 3B    | Fourth Treasure Pickup Value    | 00 20 00  (2000 Points)    |
+| m4.4h  | 0xD7E3-0xD7E5   | 3B    | Fifth Treasure Pickup Value     | 00 30 00  (3000 Points)    |
+| m4.4h  | 0xD7E6-0xD7E8   | 3B    | Sixth Treasure Pickup Value     | 00 40 00  (4000 Points)    |
+| m4.4h  | 0xD7E9-0xD7EB   | 3B    | Value 17                        | 00 40 00                   |
+| m4.4h  | 0xD7EC-0xD7EE   | 3B    | Value 18                        | 00 50 00                   |
+| m4.4h  | 0xD7EF-0xD7F1   | 3B    | Value 19                        | 00 60 00                   |
+| m4.4h  | 0xD7F2-0xD7F4   | 3B    | Value 20                        | 00 70 00                   |
+| m4.4h  | 0xD7F5-0xD7F7   | 3B    | Value 21                        | 00 80 00                   |
+| m4.4h  | 0xD7F8-0xD7FA   | 3B    | Value 22                        | 00 90 00                   |
+| m4.4h  | 0xD7FB-0xD7FD   | 3B    | Value 23                        | 00 99 00                   |
+| m4.4h  | 0xD7FE-0xD800   | 3B    | Value 24                        | 11 00 00                   |
+| m4.4h  | 0xD801-0xD803   | 3B    | Likely Invalid Pointer          | 0D 22 27                   |
+| m4.4h  | 0xD804-0xD978   | 372B  | Unknown (Code/Data)             | Unknown                    |
+| m4.4h  | 0xD979-0xD980   | 8B    | Map Level Block Range           | Pointers to map data       |
+| m4.4h  | 0xD981-0xD9A0   | 32B   | Map Level Data                  | 8B per map                 |
+| m4.4h  | 0xD9A1-0xDFFF   | 1631B | Unknown (Code/Data)             | Unknown                    |
+| m5.5h  | 0xE000-0xE55F   | 1376B | Unknown (Code/Data)             | Unknown                    |
+| m5.5h  | 0xE560-0xE560   | 1B    | Unknown Table                   | Unknown                    |
+| m5.5h  | 0xE561-0xEFFF   | 2719B | Unknown (Code/Data)             | Unkonwn                    |
+| j6.6h  | 0x0000-0x001F   | 32B   | Font Graphic : 0                | 8×8px, 4bpp                |
+| j6.6h  | 0x0020-0x003F   | 32B   | Font Graphic : 1                | 8×8px, 4bpp                |
+| j6.6h  | 0x0040-0x005F   | 32B   | Font Graphic : 2                | 8×8px, 4bpp                |
+| j6.6h  | 0x0060-0x007F   | 32B   | Font Graphic : 3                | 8×8px, 4bpp                |
+| j6.6h  | 0x0080-0x009F   | 32B   | Font Graphic : 4                | 8×8px, 4bpp                |
+| j6.6h  | 0x00A0-0x00BF   | 32B   | Font Graphic : 5                | 8×8px, 4bpp                |
+| j6.6h  | 0x00C0-0x00DF   | 32B   | Font Graphic : 6                | 8×8px, 4bpp                |
+| j6.6h  | 0x00E0-0x00FF   | 32B   | Font Graphic : 7                | 8×8px, 4bpp                |
+| j6.6h  | 0x0100-0x011F   | 32B   | Font Graphic : 8                | 8×8px, 4bpp                |
+| j6.6h  | 0x0120-0x013F   | 32B   | Font Graphic : 9                | 8×8px, 4bpp                |
+| j6.6h  | 0x0140-0x015F   | 32B   | Font Graphic : Copyright Symbol | 8×8px, 4bpp                |
+| j6.6h  | 0x0160-0x017F   | 32B   | Font Graphic : Box              | 8×8px, 4bpp                |
+| j6.6h  | 0x0180-0x019F   | 32B   | Font Graphic : Period (.)       | 8×8px, 4bpp                |
+| j6.6h  | 0x01A0-0x01BF   | 32B   | Font Graphic : Exclamation (!)  | 8×8px, 4bpp                |
+| j6.6h  | 0x01C0-0x01DF   | 32B   | Font Graphic : Question Mark (?)| 8×8px, 4bpp                |
+| j6.6h  | 0x01E0-0x01FF   | 32B   | Font Graphic : Musical Note     | 8×8px, 4bpp                |
+| j6.6h  | 0x0200-0x021F   | 32B   | Font Graphic : Blank Space ( )  | 8×8px, 4bpp                |
+| j6.6h  | 0x0220-0x023F   | 32B   | Font Graphic : A                | 8×8px, 4bpp                |
+| j6.6h  | 0x0240-0x025F   | 32B   | Font Graphic : B                | 8×8px, 4bpp                |
+| j6.6h  | 0x0260-0x027F   | 32B   | Font Graphic : C                | 8×8px, 4bpp                |
+| j6.6h  | 0x0280-0x029F   | 32B   | Font Graphic : D                | 8×8px, 4bpp                |
+| j6.6h  | 0x02A0-0x02BF   | 32B   | Font Graphic : E                | 8×8px, 4bpp                |
+| j6.6h  | 0x02C0-0x02DF   | 32B   | Font Graphic : F                | 8×8px, 4bpp                |
+| j6.6h  | 0x02E0-0x02FF   | 32B   | Font Graphic : G                | 8×8px, 4bpp                |
+| j6.6h  | 0x0300-0x031F   | 32B   | Font Graphic : H                | 8×8px, 4bpp                |
+| j6.6h  | 0x0320-0x033F   | 32B   | Font Graphic : I                | 8×8px, 4bpp                |
+| j6.6h  | 0x0340-0x035F   | 32B   | Font Graphic : J                | 8×8px, 4bpp                |
+| j6.6h  | 0x0360-0x037F   | 32B   | Font Graphic : K                | 8×8px, 4bpp                |
+| j6.6h  | 0x0380-0x039F   | 32B   | Font Graphic : L                | 8×8px, 4bpp                |
+| j6.6h  | 0x03A0-0x03BF   | 32B   | Font Graphic : M                | 8×8px, 4bpp                |
+| j6.6h  | 0x03C0-0x03DF   | 32B   | Font Graphic : N                | 8×8px, 4bpp                |
+| j6.6h  | 0x03E0-0x03FF   | 32B   | Font Graphic : O                | 8×8px, 4bpp                |
+| j6.6h  | 0x0400-0x041F   | 32B   | Font Graphic : P                | 8×8px, 4bpp                |
+| j6.6h  | 0x0420-0x043F   | 32B   | Font Graphic : Q                | 8×8px, 4bpp                |
+| j6.6h  | 0x0440-0x045F   | 32B   | Font Graphic : R                | 8×8px, 4bpp                |
+| j6.6h  | 0x0460-0x047F   | 32B   | Font Graphic : S                | 8×8px, 4bpp                |
+| j6.6h  | 0x0480-0x049F   | 32B   | Font Graphic : T                | 8×8px, 4bpp                |
+| j6.6h  | 0x04A0-0x04BF   | 32B   | Font Graphic : U                | 8×8px, 4bpp                |
+| j6.6h  | 0x04C0-0x04DF   | 32B   | Font Graphic : V                | 8×8px, 4bpp                |
+| j6.6h  | 0x04E0-0x04FF   | 32B   | Font Graphic : W                | 8×8px, 4bpp                |
+| j6.6h  | 0x0500-0x051F   | 32B   | Font Graphic : X                | 8×8px, 4bpp                |
+| j6.6h  | 0x0520-0x053F   | 32B   | Font Graphic : Y                | 8×8px, 4bpp                |
+| j6.6h  | 0x0540-0x055F   | 32B   | Font Graphic : Z                | 8×8px, 4bpp                |
+| j6.6h  | 0xF560-0xF59F   | 64B   | Player Weapon/Bullet Sprite     | Needs Decode               |
+| j6.6h  | 0xF5A0-0xF5BF   | 32B   | Player Count Sprite             | 8x8px,   4bpp, interleaved |
+| j6.6h  | 0xF5C0-0xF8EF   | 815B  | Copyright Graphic               | 102x16px,4bpp, interleaved |
+| j6.6h  | 0xF8F0-0xFB5F   | 624B  | Timer Banner Graphic            | 32x39px, 4bpp, interleaved |
+| j6.6h  | 0xFB60-0xFBDF   | 128B  | Smart Bomb/Genie Lamp Sprite    | 16x14px, 4bpp, interleaved |
+| j6.6h  | 0xFBE0-0xFC5F   | 128B  | Unknown Graphic(s)              | Likely UI element          |
+| j6.6h  | 0xFC60-0xFE3F   | 480B  | Stage Banner Graphic            | 30x32px, 4bpp, interleaved |
+| j6.6h  | 0xFE40-0xFFF7   | 440B  | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |
+| j6.6h  | 0xFFF8-0xFFF9   | 2B    | Code Execution Start Address    | Value: A0 06               |
+| j6.6h  | 0xFFFA-0xFFFD   | 4B    | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |
+| j6.6h  | 0xFFFE-0xFFFF   | 2B    | Starting ROM Page               | Value: A0 00               |
+| c1.1i  | 0x10000-0x1001F | 32B   | Tile 0x00 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10020-0x1003F | 32B   | Tile 0x01 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10040-0x1005F | 32B   | Tile 0x02 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10060-0x1007F | 32B   | Tile 0x03 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10080-0x1009F | 32B   | Tile 0x04 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x100A0-0x100BF | 32B   | Tile 0x05 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x100C0-0x100DF | 32B   | Tile 0x06 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x100E0-0x100FF | 32B   | Tile 0x07 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10100-0x1011F | 32B   | Tile 0x08 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10120-0x1013F | 32B   | Tile 0x09 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10140-0x1015F | 32B   | Tile 0x0A - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10160-0x1017F | 32B   | Tile 0x0B - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10180-0x1019F | 32B   | Tile 0x0C - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x101A0-0x101BF | 32B   | Tile 0x0D - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x101C0-0x101DF | 32B   | Tile 0x0E - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x101E0-0x101FF | 32B   | Tile 0x0F - Spawner Top Center  | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10200-0x1021F | 32B   | Tile 0x10 - Spawner Top Right   | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10220-0x1023F | 32B   | Tile 0x11 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10240-0x1025F | 32B   | Tile 0x12 - Spawner Mid Right   | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10260-0x1027F | 32B   | Tile 0x13 - Wall                | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10280-0x1029F | 32B   | Tile 0x14 - Spawner Bot Right   | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x102A0-0x102BF | 32B   | Tile 0x15 - Spawner Bot Center  | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x102C0-0x102DF | 32B   | Tile 0x16 - Keyhole Rising 1    | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x102E0-0x102FF | 32B   | Tile 0x17 - Flame (Unused)      | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10300-0x1031F | 32B   | Tile 0x18 - Spawner Bot Left    | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10320-0x1033F | 32B   | Tile 0x19 - Flame (Unused)      | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10340-0x1035F | 32B   | Tile 0x1A - Flame (Unused)      | 16×16px, 4bpp, interleaved |
+| c1.1i  | 0x10360-0x1037F | 32B   | Tile 0x1B - Spawner Mid Left    | 16×16px, 4bpp, interleaved |
+| c1.1h  | 0x10380-0x1039F | 32B   | Tile 0x1C - Flame (Unused)      | 16×16px, 4bpp, interleaved |
+| c1.1h  | 0x103A0-0x103BF | 32B   | Tile 0x1D - Spawner Top Left    | 16×16px, 4bpp, interleaved |
+| c1.1h  | 0x103C0-0x103DF | 32B   | Tile 0x1E - Keyhole Rising 2    | 16×16px, 4bpp, interleaved |
+| c1.1h  | 0x103E0-0x103FF | 32B   | Tile 0x1F - Wall                | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11000-0x1101F | 32B   | Tile 0x20 - Wall                | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11020-0x1103F | 32B   | Tile 0x21 - Empty Ring Box      | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11040-0x1105F | 32B   | Tile 0x22 - Empty Key Box       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11060-0x1107F | 32B   | Tile 0x23 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11080-0x1109F | 32B   | Tile 0x24 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x110A0-0x110BF | 32B   | Tile 0x25 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x110C0-0x110DF | 32B   | Tile 0x26 - Empty Path          | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x110E0-0x110FF | 32B   | Tile 0x27 - Wall                | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11100-0x1111F | 32B   | Tile 0x28 - Wall                | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11120-0x1113F | 32B   | Tile 0x29 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11140-0x1115F | 32B   | Tile 0x2A - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11160-0x1117F | 32B   | Tile 0x2B - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11180-0x1119F | 32B   | Tile 0x2C - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x111A0-0x111BF | 32B   | Tile 0x2D - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x111C0-0x111DF | 32B   | Tile 0x2E - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x111E0-0x111FF | 32B   | Tile 0x2F - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11200-0x1121F | 32B   | Tile 0x30 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11220-0x1123F | 32B   | Tile 0x31 - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11240-0x1125F | 32B   | Tile 0x32 - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11260-0x1127F | 32B   | Tile 0x33 - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11280-0x1129F | 32B   | Tile 0x34 - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x112A0-0x112BF | 32B   | Tile 0x35 - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x112C0-0x112DF | 32B   | Tile 0x36 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x112E0-0x112FF | 32B   | Tile 0x37 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11300-0x1131F | 32B   | Tile 0x38 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11320-0x1133F | 32B   | Tile 0x39 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11340-0x1135F | 32B   | Tile 0x3A - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11360-0x1137F | 32B   | Tile 0x3B - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x11380-0x1139F | 32B   | Tile 0x3C - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x113A0-0x113BF | 32B   | Tile 0x3D - Player Sprite       | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x113C0-0x113DF | 32B   | Tile 0x3E - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c2.2i  | 0x113E0-0x113FF | 32B   | Tile 0x3F - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12000-0x1201F | 32B   | Tile 0x40 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12020-0x1203F | 32B   | Tile 0x41 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12040-0x1205F | 32B   | Tile 0x42 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12060-0x1207F | 32B   | Tile 0x43 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12080-0x1209F | 32B   | Tile 0x44 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x120A0-0x120BF | 32B   | Tile 0x45 - Vulture Sprite      | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x120C0-0x120DF | 32B   | Tile 0x46 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x120E0-0x120FF | 32B   | Tile 0x47 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12100-0x1211F | 32B   | Tile 0x48 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12120-0x1213F | 32B   | Tile 0x49 - Cobra Sprite        | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12140-0x1215F | 32B   | Tile 0x4A - Empty Crown Box     | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12160-0x1217F | 32B   | Tile 0x4B - Score Box (Unused)  | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12180-0x1219F | 32B   | Tile 0x4C - Score Box (Unused)  | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x121A0-0x121BF | 32B   | Tile 0x4D - Keyhole Rising 3    | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x121C0-0x121DF | 32B   | Tile 0x4E - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x121E0-0x121FF | 32B   | Tile 0x4F - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12200-0x1221F | 32B   | Tile 0x50 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12220-0x1223F | 32B   | Tile 0x51 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12240-0x1225F | 32B   | Tile 0x52 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12260-0x1227F | 32B   | Tile 0x53 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12280-0x1229F | 32B   | Tile 0x54 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x122A0-0x122BF | 32B   | Tile 0x55 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x122C0-0x122DF | 32B   | Tile 0x56 - Poof Cloud Sprite   | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x122E0-0x122FF | 32B   | Tile 0x57 - Poof Cloud Sprite   | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12300-0x1231F | 32B   | Tile 0x58 - Poof Cloud Sprite   | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12320-0x1233F | 32B   | Tile 0x59 - Poof Cloud Sprite   | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12340-0x1235F | 32B   | Tile 0x5A - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12360-0x1237F | 32B   | Tile 0x5B - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x12380-0x1239F | 32B   | Tile 0x5C - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x123A0-0x123BF | 32B   | Tile 0x5D - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x123C0-0x123DF | 32B   | Tile 0x5E - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c3.3i  | 0x123E0-0x123FF | 32B   | Tile 0x5F - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13000-0x1301F | 32B   | Tile 0x60 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13020-0x1303F | 32B   | Tile 0x61 - Player + Key Sprite | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13040-0x1305F | 32B   | Tile 0x62 - Filled Crown Box    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13060-0x1307F | 32B   | Tile 0x63 - Poof Cloud Sprite   | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13080-0x1309F | 32B   | Tile 0x64 - Left Teleport Tile  | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x130A0-0x130BF | 32B   | Tile 0x65 - Right Teleport Tile | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x130C0-0x130DF | 32B   | Tile 0x66 - Keyhole Rising 4    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x130E0-0x130FF | 32B   | Tile 0x67 - Poison (Unused)     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13100-0x1311F | 32B   | Tile 0x68 - Poison (Unused)     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13120-0x1313F | 32B   | Tile 0x69 - Poison (Unused)     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13140-0x1315F | 32B   | Tile 0x6A - Poison (Unused)     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13160-0x1317F | 32B   | Tile 0x6B - Explosion Sprite    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13180-0x1319F | 32B   | Tile 0x6C - Explosion Sprite    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x131A0-0x131BF | 32B   | Tile 0x6D - Explosion Sprite    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x131C0-0x131DF | 32B   | Tile 0x6E - Explosion Sprite    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x131E0-0x131FF | 32B   | Tile 0x6F - Filled Ring Box     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13200-0x1321F | 32B   | Tile 0x70 - Filled Key Box      | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13220-0x1323F | 32B   | Tile 0x71 - Keyhole Rising 5    | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13240-0x1325F | 32B   | Tile 0x72 - Keyhole             | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13260-0x1327F | 32B   | Tile 0x73 - Door Top Left       | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13280-0x1329F | 32B   | Tile 0x74 - Door Top Center     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x132A0-0x132BF | 32B   | Tile 0x75 - Door Top Right      | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x132C0-0x132DF | 32B   | Tile 0x76 - Door Mid Left       | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x132E0-0x132FF | 32B   | Tile 0x77 - Door Mid Center     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13300-0x1331F | 32B   | Tile 0x78 - Door Mid Right      | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13320-0x1333F | 32B   | Tile 0x79 - Door Bot Left       | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13340-0x1335F | 32B   | Tile 0x7A - Door Bot Center     | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13360-0x1337F | 32B   | Tile 0x7B - Door Bot Right      | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x13380-0x1339F | 32B   | Tile 0x7C - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x133A0-0x133BF | 32B   | Tile 0x7D - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x133C0-0x133DF | 32B   | Tile 0x7E - Bat Sprite          | 16×16px, 4bpp, interleaved |
+| c4.4i  | 0x133E0-0x133FF | 32B   | Tile 0x7F - Rock (Unused)       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14000-0x1401F | 32B   | Tile 0x80 - 500 Score Box       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14020-0x1403F | 32B   | Tile 0x81 - 1000 Score Box      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14040-0x1405F | 32B   | Tile 0x82 - 1500 Score Box      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14060-0x1407F | 32B   | Tile 0x83 - 2000 Score Box      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14080-0x1409F | 32B   | Tile 0x84 - 3000 Score Box      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x140A0-0x140BF | 32B   | Tile 0x85 - 4000 Score Box      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x140C0-0x140DF | 32B   | Tile 0x86 - Tut Sprite          | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x140E0-0x140FF | 32B   | Tile 0x87 - Tut Sprite          | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14100-0x1411F | 32B   | Tile 0x88 - Tut Sprite          | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14120-0x1413F | 32B   | Tile 0x89 - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14140-0x1415F | 32B   | Tile 0x8A - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14160-0x1417F | 32B   | Tile 0x8B - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14180-0x1419F | 32B   | Tile 0x8C - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x141A0-0x141BF | 32B   | Tile 0x8D - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x141C0-0x141DF | 32B   | Tile 0x8E - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x141E0-0x141FF | 32B   | Tile 0x8F - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14200-0x1421F | 32B   | Tile 0x90 - Dragon Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14220-0x1423F | 32B   | Tile 0x91 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14240-0x1425F | 32B   | Tile 0x92 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14260-0x1427F | 32B   | Tile 0x93 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14280-0x1429F | 32B   | Tile 0x94 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x142A0-0x142BF | 32B   | Tile 0x95 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x142C0-0x142DF | 32B   | Tile 0x96 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x142E0-0x142FF | 32B   | Tile 0x97 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14300-0x1431F | 32B   | Tile 0x98 - Gryphon Sprite      | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14320-0x1433F | 32B   | Tile 0x99 - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14340-0x1435F | 32B   | Tile 0x9A - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14360-0x1437F | 32B   | Tile 0x9B - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x14380-0x1439F | 32B   | Tile 0x9C - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x143A0-0x143BF | 32B   | Tile 0x9D - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x143C0-0x143DF | 32B   | Tile 0x9E - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c5.5i  | 0x143E0-0x143FF | 32B   | Tile 0x9F - Glaive Sprite       | 16×16px, 4bpp, interleaved |
+| c6.6i  | 0x15000-0x156FF | 1792B | Logical Map 1 (Collisions)      | Bank 0x05, mapped to 0x9000|
+| c6.6i  | 0x15700-0x15DFF | 1792B | Logical Map 2 (Collisions)      | Bank 0x05, mapped to 0x9700|
+| c6.6i  | 0x15E00-0x15EC7 | 200B  | Game Title - Lowercase a        | 20x20px, 4bpp, interleaved |
+| c6.6i  | 0x15EC8-0x15FF3 | 300B  | Game Title - Lowercase k        | 30x20px, 4bpp, interleaved |
+| c6.6i  | 0x15FF4-0x15FFF | 12B   | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |
+| c7.7i  | 0x16000-0x166FF | 1792B | Logical Map 3 (Collisions)      | Bank 0x06, mapped to 0x9000|
+| c7.7i  | 0x16700-0x16DFF | 1792B | Logical Map 4 (Collisions)      | Bank 0x06, mapped to 0x9700|
+| c7.7i  | 0x16E00-0x16EC7 | 200B  | Game Title - Lowercase n        | 20x20px, 4bpp, interleaved |
+| c7.7i  | 0x16EC8-0x16FF3 | 300B  | Game Title - Lowercase h        | 30x20px, 4bpp, interleaved |
+| c7.7i  | 0x16FF4-0x16FFF | 12B   | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |
+| c8.8i  | 0x17000-0x172FF | 768B  | Visual Map 1 (Tile Mapping)     | Bank 0x07, mapped to 0x9000|
+| c8.8i  | 0x17300-0x175FF | 768B  | Visual Map 2 (Tile Mapping)     | Bank 0x07, mapped to 0x9300|
+| c8.8i  | 0x17600-0x178FF | 768B  | Visual Map 3 (Tile Mapping)     | Bank 0x07, mapped to 0x9600|
+| c8.8i  | 0x17900-0x17BFF | 768B  | Visual Map 4 (Tile Mapping)     | Bank 0x07, mapped to 0x9900|
+| c8.8i  | 0x17C00-0x17D76 | 375B  | Game Title - Uppercase T        | 30x25px, 4bpp, interleaved |
+| c8.8i  | 0x17D77-0x17E3E | 200B  | Game Title - Lowercase u        | 20x20px, 4bpp, interleaved |
+| c8.8i  | 0x17E3F-0x17EF4 | 182B  | Game Title - Lowercase t        | 26x14px, 4bpp, interleaved |
+| c8.8i  | 0x17EF5-0x17FF8 | 260B  | Game Title - Lowercase m        | 20x26px, 4bpp, interleaved |
+| c8.8i  | 0x17FF9-0x17FFF | 7B    | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |
+| c9.9i  | 0x18000-0x183DD | 990B  | Treasure 1 (Map)                | 44x44px, 4bpp, interleaved |
+| c9.9i  | 0x183DE-0x187BB | 990B  | Treasure 2 (Genie Lamp)         | 44x44px, 4bpp, interleaved |
+| c9.9i  | 0x187BC-0x18B99 | 990B  | Treasure 3 (Treasure Chest)     | 44x44px, 4bpp, interleaved |
+| c9.9i  | 0x18B9A-0x18F77 | 990B  | Treasure 4 (Tutankham Mask)     | 44x44px, 4bpp, interleaved |
+| c9.9i  | 0x18F78-0x18F8D | 22B   | Extra Graphics Padding (0x11)   | Likely Error Bytes, ignored|
+| c9.9i  | 0x18F8E-0x18FFF | 114B  | Padding / Unused Bytes (0xFF)   | Unprogrammed Bytes         |

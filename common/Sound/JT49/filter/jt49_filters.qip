@@ -1,3 +1,8 @@
-set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_dcrm.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "audio_iir_filter.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jt49_dcrm.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jt49_dcrm2.v"]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_fir.v"]
-set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "jtframe_jt49_filters.v"]
+
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "tp_lpf_light.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "tp_lpf_medium.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "tp_lpf_heavy.v"]
