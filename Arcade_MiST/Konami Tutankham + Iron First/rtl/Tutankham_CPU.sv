@@ -378,8 +378,8 @@ eprom_4k bank8 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank8_D),
 
 //blitter blitter_inst
 //(
-//	.clk_30M(clk_30M_sig) ,	// input  clk_30M_sig
-//	.rst_30M(rst_30M_sig) ,	// input  rst_30M_sig
+//	.clk(clk_49m),   
+//	.rst(reset),
 //	.clk_1M5_en(clk_1M5_en_sig) ,	// input  clk_1M5_en_sig
 //	.blitter_cs(blitter_cs_sig) ,	// input  blitter_cs_sig
 //	.cpu_a(cpu_a_sig) ,	// input [1:0] cpu_a_sig

@@ -237,7 +237,7 @@ mist_video #(.COLOR_DEPTH(5), .SD_HCNT_WIDTH(11)) mist_video(
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
 	.SPI_DI         ( SPI_DI           ),
-	.R              ( r                ),
+	.R              ( r                ),//add blankn
 	.G              ( g                ),
 	.B              ( b                ),
 	.HSync          ( ~hs              ),
