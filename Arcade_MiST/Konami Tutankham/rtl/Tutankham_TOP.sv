@@ -49,8 +49,9 @@ module Tutankham_TOP
 	output		  [15:0] cpu_A,	
 	input				[7:0] mainrom_D,
 //	input				[7:0] bank_rom_D,
-	output	  	  [15:0] sound_A,//13bit used
-	input				[7:0] eprom7_D,
+
+	output		  [12:0] Sound_Rom_Addr,
+	input				[7:0] Sound_Rom_Data,
 	input         [24:0] ioctl_addr,
 	input          [7:0] ioctl_data,
 	input                ioctl_wr,
@@ -196,8 +197,8 @@ TimePilot_SND sound_pcb
 	.underclock(underclock),
 	
 	.ep7_cs_i(ep7_cs_i),
-	.sound_A(sound_A),
-	.eprom7_D(eprom7_D),
+	.Sound_Rom_Addr(Sound_Rom_Addr),
+	.Sound_Rom_Data(Sound_Rom_Data),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_wr(ioctl_wr_snd),
 	.ioctl_data(ioctl_data)

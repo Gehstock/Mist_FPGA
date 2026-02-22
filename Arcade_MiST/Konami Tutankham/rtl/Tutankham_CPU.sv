@@ -175,7 +175,7 @@ end
 
 //------------------------------------------------------------ CPUs ------------------------------------------------------------//
 
-//Primary CPU - Motorola MC6809E
+//Primary CPU - Motorola MC6809E ( Konami1 for Juno First)
 //wire [15:0] cpu_A;
 wire [7:0] cpu_Dout;
 wire cpu_RnW;
@@ -200,6 +200,43 @@ mc6809e E3
 );
 
 //------------------------------------------------------ Address decoding ------------------------------------------------------//
+//  tutankham
+//  
+//    -- DIPS2 $8160
+//    dip2_cs <=		'1' when STD_MATCH(cpu_a, X"816"&"----") else '0';
+//    -- IN0 $8180
+//    in0_cs <=			'1' when STD_MATCH(cpu_a, X"818"&"----") else '0';
+//    -- IN1 $81A0
+//    in1_cs <=			'1' when STD_MATCH(cpu_a, X"81A"&"----") else '0';
+//    -- IN2 $81C0
+//    in2_cs <=			'1' when STD_MATCH(cpu_a, X"81C"&"----") else '0';
+//    -- DIPS1 $81E0
+//    dip1_cs <=		'1' when STD_MATCH(cpu_a, X"81E"&"----") else '0';
+//    -- Interrupt Enable $8200
+//    intena_cs <= 	'1' when STD_MATCH(cpu_a, X"8200") else '0';
+//    -- RAM $8800-$8FFF
+//    wram_cs <=		'1' when STD_MATCH(cpu_a, X"8"&"1-----------") else '0';
+//
+
+  
+//  junofrst
+//
+//    -- DIPS2 $8010
+//    dip2_cs <=		'1' when STD_MATCH(cpu_a, X"8010") else '0';
+//    -- IN0 $8020
+//    in0_cs <=			'1' when STD_MATCH(cpu_a, X"8020") else '0';
+//    -- IN1 $8024
+//    in1_cs <=			'1' when STD_MATCH(cpu_a, X"8024") else '0';
+//    -- IN2 $8028
+//    in2_cs <=			'1' when STD_MATCH(cpu_a, X"8028") else '0';
+//    -- DIPS1 $802C
+//    dip1_cs <=		'1' when STD_MATCH(cpu_a, X"802C") else '0';
+//    -- Interrupt Enable $8030
+//    intena_cs <= 	'1' when STD_MATCH(cpu_a, X"8030") else '0';
+//    -- blitter
+//    blitter_cs <= '1' when STD_MATCH(cpu_a, X"807" & "00--") else '0';
+//    -- RAM $8100-$8FFF
+//    wram_cs <=		'1' when STD_MATCH(cpu_a, X"8"&"------------") else '0';
 
 //Tutankham memory map
 wire n_cs_videoram = ~(cpu_A[15] == 1'b0);               // 0x0000-0x7FFF (32KB video RAM)
@@ -224,7 +261,7 @@ wire cs_in1        = (cpu_A[15:4] == 12'h81A);             // 0x81A0 (IN1: P1 co
 wire cs_in2        = (cpu_A[15:4] == 12'h81C);             // 0x81C0 (IN2: P2 controls)
 wire cs_dsw1       = (cpu_A[15:4] == 12'h81E);             // 0x81E0 (DIP SW1)
 wire cs_mainlatch  = (cpu_A[15:3] == 13'h1040) & ~cpu_RnW; // 0x8200-0x8207 (main latch)
-wire cs_banksel_wr = (cpu_A[15:8] == 8'h83) & ~cpu_RnW;    // 0x8300 (bank select)
+wire cs_banksel_wr = (cpu_A[15:8] == 8'h83) & ~cpu_RnW;    // 0x8300 (bank select)	 (8060 for Juno First)
 wire cs_soundon    = (cpu_A[15:8] == 8'h86) & ~cpu_RnW;    // 0x8600 (sound enable)
 wire cs_soundcmd   = (cpu_A[15:8] == 8'h87) & ~cpu_RnW;    // 0x8700 (sound command)
 
@@ -336,6 +373,28 @@ eprom_4k bank7 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank7_D),
 eprom_4k bank8 (.ADDR(cpu_A[11:0]), .CLK(clk_49m), .DATA(bank8_D),
                 .ADDR_DL(ioctl_addr), .CLK_DL(clk_49m), .DATA_IN(ioctl_data),
                 .CS_DL(bank8_cs_i), .WR(ioctl_wr));
+					 
+//Blitter ToDo		
+
+//blitter blitter_inst
+//(
+//	.clk_30M(clk_30M_sig) ,	// input  clk_30M_sig
+//	.rst_30M(rst_30M_sig) ,	// input  rst_30M_sig
+//	.clk_1M5_en(clk_1M5_en_sig) ,	// input  clk_1M5_en_sig
+//	.blitter_cs(blitter_cs_sig) ,	// input  blitter_cs_sig
+//	.cpu_a(cpu_a_sig) ,	// input [1:0] cpu_a_sig
+//	.cpu_d_o(cpu_d_o_sig) ,	// input [7:0] cpu_d_o_sig
+//	.cpu_rw(cpu_rw_sig) ,	// input  cpu_rw_sig
+//	.cpu_ba(cpu_ba_sig) ,	// input  cpu_ba_sig
+//	.cpu_bs(cpu_bs_sig) ,	// input  cpu_bs_sig
+//	.vram_cs(vram_cs_sig) ,	// input  vram_cs_sig
+//	.blitter_copy(blitter_copy_sig) ,	// input  blitter_copy_sig
+//	.blitter_d_o(blitter_d_o_sig) ,	// input [7:0] blitter_d_o_sig
+//	.cpu_halt(cpu_halt_sig) ,	// output  cpu_halt_sig
+//	.vram_a(vram_a_sig) ,	// output [15:0] vram_a_sig
+//	.vram_d_i(vram_d_i_sig) ,	// output [7:0] vram_d_i_sig
+//	.vram_wr(vram_wr_sig) 	// output [1:0] vram_wr_sig
+//);			 
 
 //------------------------------------------------------------ RAM ------------------------------------------------------------//
 

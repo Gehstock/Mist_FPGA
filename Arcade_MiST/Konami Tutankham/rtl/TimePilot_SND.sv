@@ -47,8 +47,8 @@ module TimePilot_SND
 	input                underclock,
 	
 	input                ep7_cs_i,
-	output reg	  [15:0] sound_A,
-	input				[7:0] eprom7_D,
+	output		  [12:0] Sound_Rom_Addr,
+	input				[7:0] Sound_Rom_Data,
 	input         [24:0] ioctl_addr,
 	input          [7:0] ioctl_data,
 	input                ioctl_wr
@@ -90,7 +90,7 @@ jtframe_frac_cen #(10) sound_cen
 //------------------------------------------------------------ CPU -------------------------------------------------------------//
 
 //Sound CPU - Zilog Z80 (uses T80s version of the T80 soft core)
-//wire [15:0] sound_A;
+wire [15:0] sound_A;
 wire [7:0] sound_Dout;
 wire n_m1, n_mreq, n_iorq, n_rd, n_wr, n_rfsh;
 T80s C8
@@ -126,7 +126,8 @@ wire [7:0] sound_Din =
 		8'hFF;
 
 //Sound ROM
-//wire [7:0] eprom7_D;
+assign Sound_Rom_Addr = sound_A[12:0];
+wire [7:0] eprom7_D = Sound_Rom_Data;
 //eprom_7 A6
 //(
 //	.ADDR(sound_A[12:0]),

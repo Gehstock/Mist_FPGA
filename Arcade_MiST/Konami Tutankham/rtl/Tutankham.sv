@@ -36,6 +36,9 @@ localparam CONF_STR = {
 	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	
+	"O6,Service,Off,On;",
+	
 	"OOR,CRT H adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
    "OSV,CRT V adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"DIP;",
@@ -72,7 +75,7 @@ wire        no_csync;
 wire        key_strobe;
 wire        key_pressed;
 wire  [7:0] key_code;
-wire  [6:0] core_mod;
+wire  [6:0] core_mod;// for Juno First(later)
 
 user_io #(.STRLEN(($size(CONF_STR)>>3)))user_io(
 	.clk_sys        (clk_sys        ),
@@ -100,6 +103,8 @@ wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire [12:0] Sound_Rom_Addr;
+wire  [7:0] Sound_Rom_Data;
 
 data_io data_io(
 	.clk_sys       ( clk_sys      ),
@@ -128,9 +133,9 @@ sdram #(49) sdram(
 	.port1_q       ( ),
 
 	.cpu1_addr     ( 16'hffff),//ioctl_downl ? 16'hffff : {2'b00, main_rom_addr[14:1]} ),
-	.cpu1_q        ( main_rom_do ),
-	.cpu2_addr     ( 16'hffff),//ioctl_downl ? 16'hffff : sub_rom_addr[12:1] + 16'h3000 ),
-	.cpu2_q        ( sub_rom_do ),
+	.cpu1_q        ( ),
+	.cpu2_addr     ( 16'hffff),//ioctl_downl ? 16'hffff : Sound_Rom_Addr[12:1] + 16'h3000 ),
+	.cpu2_q        ( Sound_Rom_Data ),
 	.cpu3_addr     ( 16'hffff),//),
 	.cpu3_q        ( ),
 
@@ -179,9 +184,10 @@ assign { voffset, hoffset } = status[31:24];
 Tutankham_TOP Tutankham_TOP_inst
 (
 	.reset(~reset),
-	.clk_49m(clk_sys) ,	// input  clk_49m_sig
-//	.coin(coin_sig) ,	// input [1:0] coin_sig
-//	.start_buttons(start_buttons_sig) ,	// input [1:0] start_buttons_sig
+	.clk_49m(clk_sys),
+//	.juno(),
+	.coin({m_coin2, m_coin1}),
+	.start_buttons({m_two_players, m_one_player}),
 //	.p1_joystick(p1_joystick_sig) ,	// input [3:0] p1_joystick_sig
 //	.p2_joystick(p2_joystick_sig) ,	// input [3:0] p2_joystick_sig
 //	.p1_fire(p1_fire_sig) ,	// input  p1_fire_sig
@@ -192,7 +198,8 @@ Tutankham_TOP Tutankham_TOP_inst
 //	.m_fire2_l(m_fire2_l_sig) ,	// input  m_fire2_l_sig
 //	.m_fire2_r(m_fire2_r_sig) ,	// input  m_fire2_r_sig
 //	.m_flash2(m_flash2_sig) ,	// input  m_flash2_sig
-//	.btn_service(btn_service_sig) ,	// input  btn_service_sig
+
+	.btn_service(status[6]),
 //	.dip_sw(dip_sw_sig) ,	// input [15:0] dip_sw_sig
 	.video_hsync(hs),
 	.video_vsync(vs),
@@ -204,16 +211,19 @@ Tutankham_TOP Tutankham_TOP_inst
 	.video_g(g),
 	.video_b(b),
 	.sound(audio),
-	.h_center					(hoffset),
-	.v_center					(voffset),
+	.h_center(hoffset),
+	.v_center(voffset),
+//Rom Data	
 //	.cpu_A(cpu_A_sig) ,	// output [15:0] cpu_A_sig
 //	.mainrom_D(mainrom_D_sig) ,	// input [7:0] mainrom_D_sig
-//	.sound_A(sound_A_sig) ,	// output [15:0] sound_A_sig
-	.eprom7_D(eprom7_D_sig),
+	.Sound_Rom_Addr(Sound_Rom_Addr),
+	.Sound_Rom_Data(Sound_Rom_Data),
+	
 	.ioctl_addr(ioctl_addr),
-	.ioctl_data(ioctl_data),
+	.ioctl_data(ioctl_dout),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_index(ioctl_index),
+	
 	.pause(0),
 	.underclock(0),
 	.hs_address(),
