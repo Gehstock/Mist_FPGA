@@ -44,7 +44,6 @@ localparam GAME_STARRAKER = 19;
 localparam GAME_SUBHUNT = 20;
 localparam GAME_TRANQUILIZERGUN = 21;
 localparam GAME_WANTED = 22;
-
 localparam GAME_DEPTHCHARGE = 23;
 localparam GAME_DEPTHCHARGEO = 24;
 

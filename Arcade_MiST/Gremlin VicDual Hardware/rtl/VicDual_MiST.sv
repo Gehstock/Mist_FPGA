@@ -30,16 +30,43 @@ module VicDual_MiST(
 
 `include "rtl\build_id.v" 
 
+//`define CORE_NAME "alphaho"					//Alpha Fighter / Head On		//no Sound	how switch Games?
+//`define CORE_NAME "Borderline"				//Borderline						//Check MRA Starraker
+//`define CORE_NAME "carhntds"				//CarHunt_Dual"					//DIP? French No Sound
+//`define CORE_NAME "Carnival"				//Carnival							//Samples
+//`define CORE_NAME "Digger"					//Digger								//Freeze
+//`define CORE_NAME "Frogs"					//Frogs								//Black Screen/Not Working			Rom?
+//`define CORE_NAME "Headon"					//Headon								//Menu Rotate
+//`define CORE_NAME "Headon2"					//Headon2							//Menu Rotate
+//`define CORE_NAME "Heiankyo"//Alien		//Heiankyo Alien					//Blue Screen
+//`define CORE_NAME "Invico"
+//`define CORE_NAME "Invico_Deepscan"
+//`define CORE_NAME "Invico_HeadOn2"
+//`define CORE_NAME "NSub"						//N-Sub								//Freeze, No Control, Adjust Screen
+//`define CORE_NAME "Pulsar"
+//`define CORE_NAME "Safari"
+//`define CORE_NAME "Samurai"
+//`define CORE_NAME "SpaceAttack"
+//`define CORE_NAME "SpaceAttack_HeadOn"
+//`define CORE_NAME "Spacetrek"
+//`define CORE_NAME "Starraker"
+//`define CORE_NAME "SubHunt"					//SubHunt							//Check MRA, No Sync			Rom?
+//`define CORE_NAME "TranquillizerGun"
+//`define CORE_NAME "Wanted"
+//`define CORE_NAME "depthch"					//Depthcharge						//Black Screen/Not Working
+//`define CORE_NAME "depthcho"				//DepthchargeOlder				//Black Screen/Not Working
+
 localparam CONF_STR = {
-	"Carnival;ROM;",
-	"O2,Rotate Controls,Off,On;",
+	`CORE_NAME,";;",
+//	"O2,Rotate Controls,Off,On;",
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
+	"DIP;",
 	"T0,Reset;",
 	"V,v0.00.",`BUILD_DATE
 };
 
-wire       rotate = status[2];
+wire [1:0] orientation = 2'b01;
 wire [1:0] scanlines = status[4:3];
 wire       blend = status[5];
 
@@ -105,8 +132,6 @@ data_io data_io(
 	.ioctl_dout    ( ioctl_dout   )
 );
 
-//wire [24:0] sdram_addr_sig;
-
 reg reset = 1;
 reg rom_loaded = 0;
 always @(posedge clk_sys) begin
@@ -151,7 +176,7 @@ system system_inst(
 	.sdram_dout			(sdram_dout)
 );
 
-mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10)) mist_video(
+mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(9)) mist_video(
 	.clk_sys        ( clk_vid          ),
 	.SPI_SCK        ( SPI_SCK          ),
 	.SPI_SS3        ( SPI_SS3          ),
@@ -167,7 +192,7 @@ mist_video #(.COLOR_DEPTH(6), .SD_HCNT_WIDTH(10)) mist_video(
 	.VGA_VS         ( VGA_VS           ),
 	.VGA_HS         ( VGA_HS           ),
 	.ce_divider     ( 1'b0             ),
-	.rotate         ( { 1'b0, rotate } ),
+	.rotate         ( {1'b0, rotate}   ),
 	.scandoubler_disable( scandoublerD ),
 	.scanlines      ( scanlines        ),
 	.blend          ( blend            ),
@@ -195,7 +220,7 @@ arcade_inputs inputs (
 	.joystick_0  ( joystick_0  ),
 	.joystick_1  ( joystick_1  ),
 	.rotate      ( rotate      ),
-	.orientation ( 2'b01       ),
+	.orientation ( orientation ),
 	.joyswap     ( 1'b0        ),
 	.oneplayer   ( 1'b0        ),
 	.controls    ( {m_tilt, m_coin4, m_coin3, m_coin2, m_coin1, m_four_players, m_three_players, m_two_players, m_one_player} ),
@@ -314,7 +339,8 @@ wire dip_starraker_bonuslife = sw[0][1];
 wire dip_wanted_cabinet = sw[0][0];
 wire dip_wanted_bonuslife = sw[0][1];
 wire [1:0] dip_wanted_lives = sw[0][3:2];
-
+//Depth Charge
+wire [1:0] dip_depth_coin = sw[0][1:0];
 
 ///////////////////   CORE INPUTS   ////////////////////
 reg [4:0] game_mode /*verilator public_flat*/;
@@ -322,15 +348,14 @@ reg	[7:0]	IN_P1;
 reg	[7:0]	IN_P2;
 reg	[7:0]	IN_P3;
 reg	[7:0]	IN_P4;
-reg			landscape;
-
+//Menu Rotate
+reg		  rotate;
 always @(posedge clk_sys) 
 begin
 	// Set game mode
 	if (ioctl_wr && (ioctl_index==8'd1)) game_mode <= ioctl_dout[4:0];
 
 	// Set defaults
-	landscape <= 1'b0;
 	simultaneous2player <= 1'b0;
 
 	IN_P1 <= 8'hFF;
@@ -346,6 +371,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_alphafighter_lives[1], 1'b1, ~p2_right };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_alphafighter_bonuslife, 1'b1, ~p2_down };
 			IN_P4 <= { 2'b11, ~start_p2, 2'b11, dip_alphafighter_bonuslifeforfinalufo, 1'b1, ~p2_left };
+			rotate <= 1'b1;
 		end
 		GAME_BORDERLINE:
 		begin
@@ -353,6 +379,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_borderline_lives[1], ~p1_fire1, ~p1_right };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_borderline_lives[2], 1'b1, ~p1_down };
 			IN_P4 <= { 2'b11, ~start_p2, 2'b11, dip_borderline_bonuslife, 1'b1, ~p1_left };
+			rotate <= 1'b1;
 		end
 		GAME_CARHUNT_DUAL:
 		begin
@@ -360,6 +387,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_carhunt_dual_game1_lives[1], 2'b11 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_carhunt_dual_game2_lives[0], 2'b11 };
 			IN_P4 <= { 2'b11, ~start_p2, ~p1_fire2, 1'b1, dip_carhunt_dual_game2_lives[1], 2'b11 };
+			rotate <= 1'b1;
 		end
 		GAME_CARNIVAL:
 		begin
@@ -367,28 +395,30 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 4'b1011 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 4'b1111 };
 			IN_P4 <= { 2'b11, ~start_p2, 5'b11111 };
+			rotate <= 1'b1;
 		end
 		GAME_DIGGER:
 		begin
 			IN_P1 <= { ~p1_up, ~p1_left, ~p1_down, ~p1_right, ~p1_fire2, ~p1_fire1, ~start_p2, ~start_p1 };
 			IN_P3 <= { 6'b111111, dip_digger_lives };
+			rotate <= 1'b1;
 		end
 		GAME_FROGS:
 		begin
 			IN_P1 <= { ~p1_fire1, dip_frogs_coinage, dip_frogs_gametime, dip_frogs_freegame, dip_frogs_demosounds, ~p1_left, ~p1_up, ~p1_right };
-			landscape <= 1'b1;
+			rotate <= 1'b0;
 		end
 		GAME_HEADON:
 		begin
 			IN_P1 <= { ~p1_up, ~p1_left, ~p1_down, ~p1_right, ~p1_fire1, dip_headon_demosounds, dip_headon_lives };
-			landscape <= 1'b1;
+			rotate <= 1'b0;
 		end
 		GAME_HEADON2:
 		begin
 			IN_P1 <= { ~p1_up, ~p1_left, ~p1_down, ~p1_right, ~p1_fire1, 1'b1, ~start_p2, ~start_p1 };
 			IN_P3 <= { 3'b111, dip_headon2_lives, 3'b111 };
 			IN_P4 <= { 6'b111111, dip_headon2_demosounds, 1'b1 };
-			landscape <= 1'b1;
+			rotate <= 1'b0;
 		end
 		GAME_HEIANKYO:
 		begin
@@ -397,11 +427,13 @@ begin
 			IN_P3 <= { 3'b110, ~p1_down, 3'b110, ~p1_down };
 			IN_P4 <= { 2'b11, ~start_p1, ~p1_left, 1'b1, dip_heiankyo_lives, ~start_p2, ~p2_left };
 			simultaneous2player <= ~dip_heiankyo_2player;
+			rotate <= 1'b1;
 		end
 		GAME_INVINCO:
 		begin
 			IN_P1 <= { 1'b1, ~p1_left, 1'b1, ~p1_right, ~p1_fire1, 1'b1, ~start_p2, ~start_p1 };
 			IN_P3 <= { 6'b11, dip_invinco_lives };
+			rotate <= 1'b1;
 		end
 		GAME_INVINCO_DEEPSCAN:
 		begin
@@ -409,6 +441,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_invinco_deepscan_game1_lives[1], 2'b11 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_invinco_deepscan_game2_lives[0], 2'b11 };
 			IN_P4 <= { 2'b11, ~start_p2, ~p1_fire2, 1'b1, dip_invinco_deepscan_game2_lives[1], 2'b11 };
+			rotate <= 1'b1;
 		end
 		GAME_INVINCO_HEADON2:
 		begin
@@ -416,10 +449,12 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_invinco_headon2_game1_lives[1], 2'b11 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_invinco_headon2_game2_lives[0], 2'b11 };
 			IN_P4 <= { 2'b11, ~start_p2, ~p1_fire2, 1'b1, dip_invinco_headon2_game2_lives[1], 2'b11 };
+			rotate <= 1'b1;
 		end
 		GAME_NSUB:
 		begin
 			IN_P1 <= ~{ p1_up, p1_left, p1_down, p1_right, p1_fire2, p1_fire1, start_p2, start_p1 };
+			rotate <= 1'b1;
 		end
 		GAME_PULSAR:
 		begin
@@ -427,11 +462,12 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_pulsar_lives[1], 2'b11 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 4'b1111 };
 			IN_P4 <= { 2'b11, ~start_p2, 5'b11111 };
+			rotate <= 1'b1;
 		end
 		GAME_SAFARI:
 		begin
 			IN_P1 <= { ~p1_fire1, 1'b0, ~p1_fire3, ~p1_fire2, ~p1_left, ~p1_right, ~p1_down, ~p1_up };
-			landscape <= 1'b1;
+			rotate <= 1'b0;
 		end
 		GAME_SAMURAI:
 		begin
@@ -439,11 +475,13 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 4'b1111 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 4'b1111 };
 			IN_P4 <= { 2'b11, ~start_p2, 5'b11111 };
+			rotate <= 1'b1;
 		end
 		GAME_SPACEATTACK:
 		begin
 			IN_P1 <= { ~p1_left, ~p2_left, ~p2_right, ~p2_fire1, ~start_p2, ~start_p1, ~p1_fire1, ~p1_right };
 			IN_P3 <= { dip_spaceattack_creditsdisplay, 2'b11, dip_spaceattack_bonuslife, dip_spaceattack_lives, dip_spaceattack_bonuslifeforfinalufo };
+			rotate <= 1'b1;
 		end
 		GAME_SPACEATTACK_HEADON:
 		begin
@@ -451,6 +489,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_spaceattack_headon_game1_lives[1], 1'b1, ~p2_right };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_spaceattack_headon_bonuslife, 1'b1, ~p2_down };
 			IN_P4 <= { 2'b11, ~start_p2, 2'b11, dip_spaceattack_headon_bonuslifeforfinalufo, 1'b1, ~p2_left };
+			rotate <= 1'b1;
 		end
 		GAME_SPACETREK:
 		begin
@@ -458,6 +497,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_up, ~p1_down, 4'b1111 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_spacetrek_bonuslife, 2'b11 };
 			IN_P4 <= { 2'b11, ~start_p2, ~p1_fire2, 4'b1111 };
+			rotate <= 1'b1;
 		end
 		GAME_STARRAKER:
 		begin
@@ -465,13 +505,15 @@ begin
 			IN_P2 <= { 2'b11, ~p1_up, ~p1_down, 2'b11, ~p1_fire1, ~p1_right };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 3'b111, ~p1_down };
 			IN_P4 <= { 2'b11, ~start_p2, 2'b11, dip_starraker_bonuslife, 1'b1, ~p1_left };
+			rotate <= 1'b1;
 		end
 		GAME_SUBHUNT:
 		begin
-			// IN_P1 <= ~{ 2'b0, p1_left, p1_right, 2'b0, p1_fire1, p1_up };
-			// IN_P2 <= ~{ 2'b0, p1_up, p1_down, 2'b0, p1_fire1, p1_right };
-			// IN_P3 <= ~{ 2'b0, p1_fire1, start_p1, 3'b0, p1_down };
-			// IN_P4 <= ~{ 2'b0, start_p2, 4'b0, p1_left };
+			 IN_P1 <= ~{ 2'b0, p1_left, p1_right, 2'b0, p1_fire1, p1_up };
+			 IN_P2 <= ~{ 2'b0, p1_up, p1_down, 2'b0, p1_fire1, p1_right };
+			 IN_P3 <= ~{ 2'b0, p1_fire1, start_p1, 3'b0, p1_down };
+			 IN_P4 <= ~{ 2'b0, start_p2, 4'b0, p1_left };
+			rotate <= 1'b1;
 		end
 		GAME_TRANQUILIZERGUN:
 		begin
@@ -479,6 +521,7 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 3'b111, ~p1_right };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 3'b111, ~p1_down };
 			IN_P4 <= { 2'b11, ~start_p2, 4'b1111, ~p1_left };
+			rotate <= 1'b1;
 		end
 		GAME_WANTED:
 		begin
@@ -486,7 +529,18 @@ begin
 			IN_P2 <= { 2'b11, ~p1_right, ~p1_left, 1'b1, dip_wanted_lives[1], 2'b11 };
 			IN_P3 <= { 2'b11, ~p1_fire1, ~start_p1, 1'b1, dip_wanted_cabinet, 2'b11 };
 			IN_P4 <= { 2'b11, ~start_p2, ~p1_fire2, 1'b1, dip_wanted_bonuslife, 2'b11 };
+			rotate <= 1'b1;
 		end
+		GAME_DEPTHCHARGE:
+		begin
+			IN_P1 <= { 2'b11,dip_depth_coin,~p1_left,~p1_right,~p1_fire1,~p1_fire2 };
+			rotate <= 1'b1;
+		end		
+		GAME_DEPTHCHARGEO:
+		begin
+			IN_P1 <= { 2'b11,dip_depth_coin,~p1_left,~p1_right,~p1_fire1,~p1_fire2 };
+			rotate <= 1'b1;
+		end		
 	endcase
 end
 

@@ -471,16 +471,16 @@ begin
 			in_p3_data[3] <= vcnt[5];
 			in_p4_data[3] <= coin_latch_enable;
 		end
-		// GAME_SUBHUNT:
-		// begin
-		// 	in_p1_cs = (in && cpu_addr[1:0] == 2'd0);
-		// 	in_p2_cs = (in && cpu_addr[1:0] == 2'd1);
-		// 	in_p3_cs = (in && cpu_addr[1:0] == 2'd2);
-		// 	in_p4_cs = (in && cpu_addr[1:0] == 2'd3);
-		// 	in_p2_data[3] <= ~vblank;
-		// 	in_p3_data[3] <= vcnt[5];
-		// 	in_p4_data[3] <= coin_latch_enable;
-		// end
+//		 GAME_SUBHUNT:
+//		 begin
+//		 	in_p1_cs = (in && cpu_addr[1:0] == 2'd0);
+//		 	in_p2_cs = (in && cpu_addr[1:0] == 2'd1);
+//		 	in_p3_cs = (in && cpu_addr[1:0] == 2'd2);
+//		 	in_p4_cs = (in && cpu_addr[1:0] == 2'd3);
+//		 	in_p2_data[3] <= ~vblank;
+//		 	in_p3_data[3] <= vcnt[5];
+//		 	in_p4_data[3] <= coin_latch_enable;
+//		 end
 		GAME_TRANQUILIZERGUN:
 		begin
 			config_inputstyle <= 1'b1;
@@ -497,7 +497,24 @@ begin
 			in_p3_data[3] <= timer_enable;
 			in_p4_data[3] <= coin_latch_enable;
 		end
-
+		GAME_DEPTHCHARGE:
+		begin
+//			config_invertcolprom <= 1'b1;
+//			config_coinlatchstyle <= 1'b1;
+			//in_p4_data[0] <= cblank_n;
+			in_p4_data[0] <= vcnt_64;
+//			in_p4_data[7] <= ~coin_latch_enable;		
+			config_largerom <= 1'b1;///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		end
+		GAME_DEPTHCHARGEO:
+		begin
+//			config_invertcolprom <= 1'b1;
+//			config_coinlatchstyle <= 1'b1;
+			//in_p4_data[0] <= cblank_n;
+			in_p4_data[0] <= vcnt_64;
+//			in_p4_data[7] <= ~coin_latch_enable;
+			config_largerom <= 1'b1;///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		end
 	endcase
 end
 
@@ -728,6 +745,7 @@ begin
 			GAME_NSUB: if(out_p2_rising) colprom_bank <= cpu_data_out[1:0]; // N-Sub uses OUT P2 to select colour bank
 			GAME_SAMURAI: if(out_p3_rising) colprom_bank <= cpu_data_out[1:0]; // Samurai uses OUT P2 to select colour bank
 			GAME_TRANQUILIZERGUN: colprom_bank <= 2'b01;
+
 		endcase
 	end
 end
@@ -880,9 +898,9 @@ end
 
 // Sound boards
 // ------------
-localparam SOUND_NONE = 0;
-localparam SOUND_CARNIVAL = 1;
-localparam SOUND_HEADON = 2;
+localparam SOUND_NONE = 2'b00;
+localparam SOUND_CARNIVAL = 2'b01;
+localparam SOUND_HEADON = 2'b11;
 reg [1:0] sound_board = SOUND_NONE;
 always @(posedge clk)
 begin
