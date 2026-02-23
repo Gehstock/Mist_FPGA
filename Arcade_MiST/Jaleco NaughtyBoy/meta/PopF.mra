@@ -8,7 +8,7 @@
 	<rbf>NBoy</rbf>
 
 	<rom index="1"></rom>
-	<rom index='0' md5='fdc3e6937e974389705145449ec71d2c' type='merged|nonmerged|split' zip='popflame.zip | popflamea.zip'>
+	<rom index='0' md5='fdc3e6937e974389705145449ec71d2c' type='merged|nonmerged|split' zip='popflame.zip|popflamea.zip'>
 		<part crc="5e32bbdf" name="ic86.pop"></part>
 		<part crc="b77abf3d" name="ic80.pop"></part>
 		<part crc="945a3c0f" name="ic94.pop"></part>
