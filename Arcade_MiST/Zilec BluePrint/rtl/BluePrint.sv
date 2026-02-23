@@ -100,16 +100,15 @@ wire  [4:0] r, g, b;
 wire [ 3:0] hoffset, voffset;
 assign { voffset, hoffset } = status[31:24];
 
+wire [7:0] p1_controls = {m_down, m_up, m_right, m_left, m_fireA, m_fireB, m_one_player, m_coin1};
+wire [7:0] p2_controls = {m_down2, m_up2, m_right2, m_left2, m_fire2A, m_fire2B, m_two_players, m_coin2};
+
 // DIP SWITCHES
 reg [7:0] dip_sw[8];	// Active-LOW
 always @(posedge clk_sys) begin
 	if(ioctl_wr && (ioctl_index==254) && !ioctl_addr[24:3])
 		dip_sw[ioctl_addr[2:0]] <= ioctl_dout;
 end
-
-wire [7:0] p1_controls = {m_down, m_up, m_right, m_left, m_fireA, 1'b0, m_one_player, m_coin1};
-wire [7:0] p2_controls = {m_down2, m_up2, m_right2, m_left2, m_fire2A, 1'b0, m_two_players, m_coin2};
-
 user_io #(
 	.STRLEN(($size(CONF_STR)>>3)))
 user_io(

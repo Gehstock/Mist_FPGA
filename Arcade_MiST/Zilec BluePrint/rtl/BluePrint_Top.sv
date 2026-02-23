@@ -72,7 +72,7 @@ wire [7:0] dipsw_readback_from_snd;
 wire [7:0] dipsw_readback = dipsw_readback_from_snd;
 
 // ROM loader signals for MISTer (loads ROMs from SD card)
-wire main1_cs_i, main2_cs_i, main3_cs_i, main4_cs_i, main5_cs_i;
+wire main1_cs_i, main2_cs_i, main3_cs_i, main4_cs_i, main5_cs_i, main6_cs_i;
 wire tile0_cs_i, tile1_cs_i;
 wire spr_r_cs_i, spr_b_cs_i, spr_g_cs_i;
 
@@ -93,6 +93,7 @@ selector DLSEL
 	.main3_cs(main3_cs_i),
 	.main4_cs(main4_cs_i),
 	.main5_cs(main5_cs_i),
+	.main6_cs(main6_cs_i),
 	.tile0_cs(tile0_cs_i),
 	.tile1_cs(tile1_cs_i),
 	.spr_r_cs(spr_r_cs_i),
@@ -131,6 +132,7 @@ BluePrint_CPU main_pcb
 	.main3_cs_i(main3_cs_i),
 	.main4_cs_i(main4_cs_i),
 	.main5_cs_i(main5_cs_i),
+	.main6_cs_i(main6_cs_i),
 	.tile0_cs_i(tile0_cs_i),
 	.tile1_cs_i(tile1_cs_i),
 	.spr_r_cs_i(spr_r_cs_i),

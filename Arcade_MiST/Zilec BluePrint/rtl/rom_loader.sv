@@ -29,22 +29,24 @@
 // 0x2000 - 0x2FFF = main_rom3 (bp-3.1p)
 // 0x3000 - 0x3FFF = main_rom4 (bp-4.1r)
 // 0x4000 - 0x4FFF = main_rom5 (bp-5.1s)
-// 0x5000 - 0x5FFF = tile_rom0 (bg-1.3c)
-// 0x6000 - 0x6FFF = tile_rom1 (bg-2.3d)
-// 0x7000 - 0x7FFF = spr_rom_r (red.17d)
-// 0x8000 - 0x8FFF = spr_rom_b (blue.18d)
-// 0x9000 - 0x9FFF = spr_rom_g (green.20d)
+// 0x4000 - 0x5FFF = main_rom6 (bp-5.1s)
+
+// 0x6000 - 0x6FFF = tile_rom0 (bg-1.3c)
+// 0x7000 - 0x7FFF = tile_rom1 (bg-2.3d)
+// 0x8000 - 0x8FFF = spr_rom_r (red.17d)
+// 0x9000 - 0x9FFF = spr_rom_b (blue.18d)
+// 0xA000 - 0xAFFF = spr_rom_g (green.20d)
 // Sound board ROMs loaded separately via index 1
 
 module selector
 (
     input logic [24:0] ioctl_addr,
-    output logic main1_cs, main2_cs, main3_cs, main4_cs, main5_cs,
+    output logic main1_cs, main2_cs, main3_cs, main4_cs, main5_cs, main6_cs,
     output logic tile0_cs, tile1_cs,
     output logic spr_r_cs, spr_b_cs, spr_g_cs
 );
     always_comb begin
-        {main1_cs, main2_cs, main3_cs, main4_cs, main5_cs,
+        {main1_cs, main2_cs, main3_cs, main4_cs, main5_cs, main6_cs,
          tile0_cs, tile1_cs, spr_r_cs, spr_b_cs, spr_g_cs} = 0;
 
         if(ioctl_addr < 'h1000)      main1_cs = 1;
@@ -52,11 +54,13 @@ module selector
         else if(ioctl_addr < 'h3000) main3_cs = 1;
         else if(ioctl_addr < 'h4000) main4_cs = 1;
         else if(ioctl_addr < 'h5000) main5_cs = 1;
-        else if(ioctl_addr < 'h6000) tile0_cs = 1;
-        else if(ioctl_addr < 'h7000) tile1_cs = 1;
-        else if(ioctl_addr < 'h8000) spr_r_cs = 1;
-        else if(ioctl_addr < 'h9000) spr_b_cs = 1;
-        else if(ioctl_addr < 'hA000) spr_g_cs = 1;
+        else if(ioctl_addr < 'h6000) main6_cs = 1;
+		  
+        else if(ioctl_addr < 'h7000) tile0_cs = 1;
+        else if(ioctl_addr < 'h8000) tile1_cs = 1;
+        else if(ioctl_addr < 'h9000) spr_r_cs = 1;
+        else if(ioctl_addr < 'hA000) spr_b_cs = 1;
+        else if(ioctl_addr < 'hB000) spr_g_cs = 1;
     end
 endmodule
 

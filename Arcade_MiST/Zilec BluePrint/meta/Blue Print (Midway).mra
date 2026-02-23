@@ -25,7 +25,7 @@
     <joystick>4-way</joystick>
     <special_controls></special_controls>
     <num_buttons>1</num_buttons>
-    <button_names></button_names>
+    <button_names>Run</button_names>
 
     <switches default="00,00">
         <!-- DIP Switch 1 -->
@@ -44,6 +44,7 @@
         <part crc="6866ca07" name="bp-3.1p"/>
         <part crc="5d3cfac3" name="bp-4.1r"/>
         <part crc="a556cac4" name="bp-5.1s"/>
+        <part repeat="0x1000">FF</part>  // BluePrint Doesn't Use 6th Rom Slot
         <!-- Tile ROMs (2× 4KB = 8KB) -->
         <part crc="ac2a61bc" name="bg-1.3c"/>
         <part crc="81fe85d7" name="bg-2.3d"/>
@@ -57,6 +58,16 @@
         <part crc="fd38777a" name="snd-1.3u"/>
         <part crc="33d5bf5b" name="snd-2.3v"/>
     </rom>
+	<rom index="2"></rom>
+	<rom index="3" md5="none">
+		<part>
+		01 FF FF FF 00 FF 00 02 00 02 00 01 00 FF 00 00
+		00 00 01 00 00 40 00 00
+		</part>
+	</rom>
+	<rom index="4"></rom>
+
+	<nvram index="4" size="40"></nvram>
 
     <remark></remark>
     <mratimestamp>20260213000000</mratimestamp>

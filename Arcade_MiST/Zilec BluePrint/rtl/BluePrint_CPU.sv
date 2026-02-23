@@ -49,7 +49,7 @@ module BluePrint_CPU
 	input   [3:0] h_center, v_center,
 
 	// ROM loading
-	input         main1_cs_i, main2_cs_i, main3_cs_i, main4_cs_i, main5_cs_i,
+	input         main1_cs_i, main2_cs_i, main3_cs_i, main4_cs_i, main5_cs_i, main6_cs_i,
 	input         tile0_cs_i, tile1_cs_i,
 	input         spr_r_cs_i, spr_b_cs_i, spr_g_cs_i,
 	input  [24:0] ioctl_addr,
@@ -99,30 +99,32 @@ assign ce_pix = cen_5m;
 
 // H counter 0-319, V counter 0-263
 // From MAME: set_raw(5MHz, 320, 0, 256, 264, 16, 240)
-reg [8:0] h_cnt = 9'd0;
+reg [8:0] base_h_cnt = 9'd0;
 reg [8:0] v_cnt = 9'd0;
 always_ff @(posedge clk_49m) begin
 	if (cen_5m) begin
-		if (h_cnt == 9'd319) begin
-			h_cnt <= 9'd0;
+		if (base_h_cnt == 9'd319) begin
+			base_h_cnt <= 9'd0;
 			v_cnt <= (v_cnt == 9'd263) ? 9'd0 : v_cnt + 9'd1;
 		end else
-			h_cnt <= h_cnt + 9'd1;
+			base_h_cnt <= base_h_cnt + 9'd1;
 	end
 end
 
+wire [8:0] h_cnt = (base_h_cnt <= 9'd248) ? base_h_cnt : 9'd248;
+
 // Blanking
-wire hblk = (h_cnt >= 9'd256);
+wire hblk = (base_h_cnt >= 9'd256);
 wire vblk = (v_cnt < 9'd16) | (v_cnt >= 9'd240);
 assign video_hblank = hblk;
 assign video_vblank = vblk;
 
 // Sync generation with screen centering offsets
-wire [8:0] hs_start = 9'd280 + {5'd0, h_center};
+wire [8:0] hs_start = 9'd280 + {5'd0, h_center};  // Was 9'd280 + {5'd0, h_center};
 wire [8:0] hs_end   = hs_start + 9'd32;
 wire [8:0] vs_start = 9'd248 + {5'd0, v_center};
 wire [8:0] vs_end   = vs_start + 9'd4;
-assign video_hsync = (h_cnt >= hs_start && h_cnt < hs_end);
+assign video_hsync = (base_h_cnt >= hs_start && base_h_cnt < hs_end);
 assign video_vsync = (v_cnt >= vs_start && v_cnt < vs_end);
 assign video_csync = ~(video_hsync ^ video_vsync);
 
@@ -186,12 +188,13 @@ wire cs_cram   = mem_valid & (z80_A[15:12] == 4'hF);                // 0xF000-0x
 //------------------------------------------------------------ ROMs ------------------------------------------------------------//
 
 // Main program ROMs (5x 4KB)
-wire [7:0] rom1_D, rom2_D, rom3_D, rom4_D, rom5_D;
+wire [7:0] rom1_D, rom2_D, rom3_D, rom4_D, rom5_D, rom6_D;
 eprom_4k main_rom1(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main1_cs_i), .WR(ioctl_wr), .DATA(rom1_D));
 eprom_4k main_rom2(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main2_cs_i), .WR(ioctl_wr), .DATA(rom2_D));
 eprom_4k main_rom3(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main3_cs_i), .WR(ioctl_wr), .DATA(rom3_D));
 eprom_4k main_rom4(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main4_cs_i), .WR(ioctl_wr), .DATA(rom4_D));
 eprom_4k main_rom5(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main5_cs_i), .WR(ioctl_wr), .DATA(rom5_D));
+eprom_4k main_rom6(.CLK(clk_49m), .ADDR(z80_A[11:0]), .CLK_DL(clk_49m), .ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(main6_cs_i), .WR(ioctl_wr), .DATA(rom6_D));
 
 // ROM data mux based on address
 wire [7:0] rom_D = (z80_A[14:12] == 3'd0) ? rom1_D :
@@ -199,6 +202,7 @@ wire [7:0] rom_D = (z80_A[14:12] == 3'd0) ? rom1_D :
                    (z80_A[14:12] == 3'd2) ? rom3_D :
                    (z80_A[14:12] == 3'd3) ? rom4_D :
                    (z80_A[14:12] == 3'd4) ? rom5_D :
+						 (z80_A[14:12] == 3'd4) ? rom6_D :
                    8'hFF;
 
 // Tile ROMs (2x 4KB) — addressed by rendering pipeline
@@ -476,11 +480,11 @@ reg       spr_flipy;          // flipY for current sprite (from previous sprite'
 reg       prev_sprite_flipy;  // Carry flipY forward
 reg [7:0] spr_rom_r_lat, spr_rom_b_lat, spr_rom_g_lat;
 reg [2:0] spr_pix_cnt;
-reg [7:0] spr_clear_addr;
+
 reg [7:0] next_scanline;      // v_cnt of the line being prepared
 
 localparam SPR_IDLE     = 4'd0;
-localparam SPR_CLEAR    = 4'd1;
+
 localparam SPR_INIT_RD  = 4'd2;
 localparam SPR_INIT_LAT = 4'd3;
 localparam SPR_RD_B0    = 4'd4;
@@ -498,28 +502,15 @@ always_ff @(posedge clk_49m) begin
 		spr_state         <= SPR_IDLE;
 		spr_idx           <= 6'd0;
 		prev_sprite_flipy <= 1'b0;
-		spr_clear_addr    <= 8'd0;
 	end else begin
 		case (spr_state)
 
 			SPR_IDLE: begin
-				if (cen_5m && h_cnt == 9'd256) begin
+				if (cen_5m && base_h_cnt == 9'd256) begin
 					next_scanline  <= v_cnt[7:0] + 8'd1;
-					spr_clear_addr <= 8'd0;
-					spr_state      <= SPR_CLEAR;
-				end
-			end
-
-			SPR_CLEAR: begin
-				if (~linebuf_sel)
-					linebuf1[spr_clear_addr] <= 3'd0;
-				else
-					linebuf0[spr_clear_addr] <= 3'd0;
-				if (spr_clear_addr == 8'd255) begin
-					sprite_scan_addr <= 8'hFE; // sprite 63, byte 2
+					sprite_scan_addr <= 8'hFE;
 					spr_state        <= SPR_INIT_RD;
-				end else
-					spr_clear_addr <= spr_clear_addr + 8'd1;
+				end
 			end
 
 			SPR_INIT_RD: begin
@@ -580,7 +571,6 @@ always_ff @(posedge clk_49m) begin
 			end
 
 			SPR_ROMWAIT: begin
-				// ROM data valid this cycle; latch all three planes
 				spr_state <= SPR_ROMWAIT2;
 			end
 
@@ -588,8 +578,6 @@ always_ff @(posedge clk_49m) begin
 				spr_rom_r_lat <= spr_r_D;
 				spr_rom_b_lat <= spr_b_D;
 				spr_rom_g_lat <= spr_g_D;
-				spr_pix_cnt   <= 3'd0;
-				spr_state     <= SPR_PIXELS;
 				spr_pix_cnt <= 3'd0;
 				spr_state <= SPR_PIXELS;
 			end
@@ -602,7 +590,7 @@ always_ff @(posedge clk_49m) begin
 					// flipX: bit0 first (pixel 0 = LSB); normal: bit7 first (pixel 0 = MSB)
 					bit_pos   = spr_byte2[6] ? spr_pix_cnt : (3'd7 - spr_pix_cnt);
 					pixel_val = {spr_rom_g_lat[bit_pos], spr_rom_b_lat[bit_pos], spr_rom_r_lat[bit_pos]};
-					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} + 8'd2;
+					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} + 8'd0;  // + 8'd2
 					if (pixel_val != 3'd0) begin
 						if (~linebuf_sel)
 							linebuf1[x_pos] <= pixel_val;
@@ -631,9 +619,21 @@ always_ff @(posedge clk_49m) begin
 	end
 end
 
+
 //--- Sprite pixel readout ---
 
-wire [2:0] sprite_pixel     = linebuf_sel ? linebuf1[h_cnt[7:0]] : linebuf0[h_cnt[7:0]];
+//wire [2:0] sprite_pixel     = linebuf_sel ? linebuf1[h_cnt[7:0]] : linebuf0[h_cnt[7:0]];
+wire [2:0] sprite_pixel       = linebuf_sel ? linebuf1[h_cnt[7:0] - 8'd3] : linebuf0[h_cnt[7:0] - 8'd3];
+// Clear display buffer as we read (becomes write buffer next line)
+always_ff @(posedge clk_49m) begin
+    if (cen_5m && visible_line) begin
+        if (linebuf_sel)
+            linebuf1[h_cnt[7:0] - 8'd3] <= 3'd0;
+        else
+            linebuf0[h_cnt[7:0] - 8'd3] <= 3'd0;
+    end
+end
+
 wire       sprite_transparent = (sprite_pixel == 3'b000);
 
 // Sprite pixel bits: bit0=R, bit1=B, bit2=G (full brightness only)
