@@ -1,4 +1,4 @@
-//		Port to MiST
+        //		Port to MiST
 //  	Copyright (C) 2026 Rodimus
 //
 //	 Blue Print for MiST
@@ -63,7 +63,6 @@ wire       rotate    = status[2];
 wire  [1:0] orientation = 2'b10;
 wire [1:0] scanlines = status[4:3];
 
-//wire       service   = status[7];
 
 assign LED = ~ioctl_downl;
 assign AUDIO_R = AUDIO_L;
@@ -216,7 +215,7 @@ dac #(
 	.C_bits(16))
 dac(
 	.clk_i(clk_sys),
-	.res_n_i(1'b1),
+	.res_n_i(~reset),
 	.dac_i({~audio[15],audio[14:0]}),
 	.dac_o(AUDIO_L)
 	);
