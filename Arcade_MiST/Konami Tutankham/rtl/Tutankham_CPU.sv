@@ -176,17 +176,20 @@ end
 //------------------------------------------------------------ CPUs ------------------------------------------------------------//
 
 //Primary CPU - Motorola MC6809E ( Konami1 for Juno First)
-wire [15:0] cpu_A;
-assign CPU_Addr = cpu_A;
-wire [7:0] cpu_Dout;
-wire cpu_RnW;
+wire [15:0] cpu_A, cpu_A_J, cpu_A_T;
+wire [7:0] cpu_Dout, cpu_Dout_J, cpu_Dout_T;
+wire cpu_RnW, cpu_RnW_J, cpu_RnW_T;
+
+assign CPU_Addr = juno ? cpu_A_J : cpu_A_T;//to Lazy, maybe later
+assign cpu_A = juno ? cpu_A_J : cpu_A_T;
+assign cpu_Dout = juno ? cpu_Dout_J : cpu_Dout_T;
+assign cpu_RnW = juno ? cpu_RnW_J : cpu_RnW_T;
 mc6809e E3
 (
-	.CLK(CLK),//check here no clk signal in original code
 	.D(cpu_Din),
-	.DOut(cpu_Dout),
-	.ADDR(cpu_A),
-	.RnW(cpu_RnW),
+	.DOut(cpu_Dout_T),
+	.ADDR(cpu_A_T),
+	.RnW(cpu_RnW_T),
 	.E(cpu_E),
 	.Q(cpu_Q),
 	.nIRQ(n_irq),
@@ -196,20 +199,20 @@ mc6809e E3
 	.nRESET(reset)
 );
 
-//KONAMI1 KONAMI1(
-//	.CLK(),
-//	.fallE_en(),
-//	.fallQ_en(),
-//	.D(),
-//	.DOut(),
-//	.ADDR(),
-//	.RnW(),
-//	.nIRQ(),
-//	.nFIRQ(),
-//	.nNMI(),
-//	.nHALT(),
-//	.nRESET(reset)
-//);
+KONAMI1 KONAMI1(
+	.CLK(clk_49m),
+	.fallE_en(cpu_E),
+	.fallQ_en(cpu_Q),
+	.D(cpu_Din),
+	.DOut(cpu_Dout_J),
+	.ADDR(cpu_A_J),
+	.RnW(cpu_RnW_J),
+	.nIRQ(n_irq),
+	.nFIRQ(1'b1),
+	.nNMI(1'b1),
+	.nHALT(1'b1),
+	.nRESET(reset)
+);
 
 //------------------------------------------------------ Address decoding ------------------------------------------------------//
 //  tutankham
